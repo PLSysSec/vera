@@ -1,5 +1,13 @@
-module Wrapper where
-import           Boolector                  hiding (rol, ror, sll, sra, srl)
+module Wrapper ( safeSll
+               , safeSrl
+               , safeSra
+               , safeRol
+               , safeRor
+               , castToWidth
+               , module Boolector
+               ) where
+import           Boolector                  hiding (apply, exists, forall, rol,
+                                             ror, sll, sra, srl, uf)
 import qualified Boolector                  as B
 import           Control.Monad.State.Strict (unless)
 import           Data.Word                  (Word32)
