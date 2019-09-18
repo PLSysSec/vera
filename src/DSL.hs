@@ -1,4 +1,19 @@
-module DSL where
+module DSL ( i64
+           , i32
+           , i16
+           , i8
+           , i1
+           , i64c
+           , i32c
+           , i16c
+           , i8c
+           , i1c
+           , smin
+           , smax
+           , umin
+           , umax
+           , module B
+           ) where
 import           Prelude hiding (max, min)
 import qualified Wrapper as B
 
