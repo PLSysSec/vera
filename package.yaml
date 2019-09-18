@@ -54,4 +54,7 @@ tests:
     dependencies:
     - lejit
     - tasty
+    - tasty-golden    
     - tasty-hunit
+    - criterion
+    - bytestring

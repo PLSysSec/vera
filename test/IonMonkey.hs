@@ -1,4 +1,5 @@
 module IonMonkey where
+import           BenchUtils
 import           DSL
 import           Test.Tasty
 import           Test.Tasty.Golden
