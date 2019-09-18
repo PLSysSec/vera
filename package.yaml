@@ -53,3 +53,5 @@ tests:
     - -Wall
     dependencies:
     - lejit
+    - tasty
+    - tasty-hunit
