@@ -12,10 +12,11 @@ module DSL ( i64
            , smax
            , umin
            , umax
-           , module B
+           , module BoolectorWrapper
            ) where
-import           Prelude hiding (max, min)
-import qualified Wrapper as B
+import           BoolectorWrapper
+import qualified BoolectorWrapper as B
+import           Prelude          hiding (max, min)
 
 -- Standard sorts
 

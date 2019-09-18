@@ -1,10 +1,5 @@
-module Lib
-    ( someFunc
-    ) where
+module Lib (proveRange) where
 import           DSL
 
-
-
-
-someFunc :: IO ()
-someFunc = putStrLn "someFunc"
+proveRange :: Integer -> Integer -> String -> IO Status
+proveRange = undefined
