@@ -8,6 +8,11 @@ module DSL ( i64
            , i16c
            , i8c
            , i1c
+           , i64v
+           , i32v
+           , i16v
+           , i8v
+           , i1v
            , smin
            , smax
            , umin
@@ -61,6 +66,26 @@ i8c val | val <= 255 = i8 >>= B.unsignedInt val
 i1c :: (B.MonadBoolector m) => Integer -> m B.Node
 i1c val | val <= 1 = i1 >>= B.unsignedInt val
        | otherwise = error $ unwords $ [show val, "is past the range of i1s"]
+
+-- Integer variables
+
+var' :: (B.MonadBoolector m) => m B.Sort -> String -> m B.Node
+var' sort name = sort >>= \s -> B.var s name
+
+i64v :: (B.MonadBoolector m) => String -> m B.Node
+i64v name = var' i64 name
+
+i32v :: (B.MonadBoolector m) => String -> m B.Node
+i32v name = var' i32 name
+
+i16v :: (B.MonadBoolector m) => String -> m B.Node
+i16v name = var' i16 name
+
+i8v :: (B.MonadBoolector m) => String -> m B.Node
+i8v name = var' i8 name
+
+i1v :: (B.MonadBoolector m) => String -> m B.Node
+i1v name = var' i1 name
 
 -- Functions
 
