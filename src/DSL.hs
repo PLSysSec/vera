@@ -4,10 +4,20 @@ module DSL ( i64
            , i8
            , i1
            , i64c
+           , i64max
+           , i64min
            , i32c
+           , i32max
+           , i32min
            , i16c
+           , i16max
+           , i16min
            , i8c
+           , i8max
+           , i8min
            , i1c
+           , i1max
+           , i1min
            , i64v
            , i32v
            , i16v
@@ -47,25 +57,55 @@ i64c :: (B.MonadBoolector m) => Integer -> m B.Node
 i64c val | val <= 18446744073709551615 = i64 >>= B.unsignedInt val
         | otherwise = error $ unwords $ [show val, "is past the range of i64s"]
 
+i64max :: (B.MonadBoolector m) => m B.Node
+i64max = i64c 9223372036854775807
+
+i64min :: (B.MonadBoolector m) => m B.Node
+i64min = undefined
+
 -- | 32-bit constant
 i32c :: (B.MonadBoolector m) => Integer -> m B.Node
 i32c val | val <= 4294967295 = i32 >>= B.unsignedInt val
         | otherwise = error $ unwords $ [show val, "is past the range of i32s"]
+
+i32max :: (B.MonadBoolector m) => m B.Node
+i32max = i32c 2147483647
+
+i32min :: (B.MonadBoolector m) => m B.Node
+i32min = i32c 2147483648
 
 -- | 16-bit constant
 i16c :: (B.MonadBoolector m) => Integer -> m B.Node
 i16c val | val <= 65535 = i16 >>= B.unsignedInt val
         | otherwise = error $ unwords $ [show val, "is past the range of i16s"]
 
+i16max :: (B.MonadBoolector m) => m B.Node
+i16max = undefined
+
+i16min :: (B.MonadBoolector m) => m B.Node
+i16min = undefined
+
 -- | 8-bit constant
 i8c :: (B.MonadBoolector m) => Integer -> m B.Node
 i8c val | val <= 255 = i8 >>= B.unsignedInt val
        | otherwise = error $ unwords $ [show val, "is past the range of i8s"]
 
+i8max :: (B.MonadBoolector m) => m B.Node
+i8max = undefined
+
+i8min :: (B.MonadBoolector m) => m B.Node
+i8min = undefined
+
 -- | 1-bit constant
 i1c :: (B.MonadBoolector m) => Integer -> m B.Node
 i1c val | val <= 1 = i1 >>= B.unsignedInt val
        | otherwise = error $ unwords $ [show val, "is past the range of i1s"]
+
+i1max :: (B.MonadBoolector m) => m B.Node
+i1max = undefined
+
+i1min :: (B.MonadBoolector m) => m B.Node
+i1min = undefined
 
 -- Integer variables
 

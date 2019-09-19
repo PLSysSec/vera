@@ -58,3 +58,4 @@ tests:
     - tasty-hunit
     - criterion
     - bytestring
+    - mtl >= 2.2.2

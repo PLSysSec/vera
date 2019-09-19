@@ -1,19 +1,21 @@
 module IonMonkey where
 import           BenchUtils
-import qualified DSL               as D
+import           Control.Monad.State.Strict (liftIO)
+import qualified DSL                        as D
 import           Test.Tasty
 import           Test.Tasty.Golden
 import           Test.Tasty.HUnit
 
 ionMonkeyTests :: BenchTest
-ionMonkeyTests = benchTestGroup "Ion Monkey tests" []
+ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ lsh ]
 
 -- | IonMonkey's leftshift operation
 -- https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#999
 -- lshTest :: BenchTestCase
 -- lshTest = undefined
 
-lsh = do
+lsh :: BenchTest
+lsh = benchTestCase "lsh" $ do
   bs <- D.newBoolectorState Nothing
   result <- D.evalBoolector bs $ do
     -- Do the shift of the constant input
@@ -32,19 +34,38 @@ lsh = do
     -- lower << shift << 1 >> shift >> 1 == lower &&
     -- upper << shift << 1 >> shift >> 1 == upper
     -- range is lower << shift, upper << shift
+    -- Lower
     t1 <- D.safeSll lower shift
     t2 <- D.i32c 1 >>= D.safeSll t1
     t3 <- D.safeSrl t2 shift
     t4 <- D.i32c 1 >>= D.safeSrl t3
     check1 <- D.eq t4 lower
+    -- Upper
     t5 <- D.safeSll upper shift
     t6 <- D.i32c 1 >>= D.safeSll t5
     t7 <- D.safeSll t6 shift
     t8 <- D.i32c 1 >>= D.safeSll t7
     check2 <- D.eq t8 upper
 
-    D.sat
-  print result
+    -- Set new range bounds
+    defaultLower <- D.i32min
+    defaultUpper <- D.i32max
+    D.cond check1 t1 defaultLower >>= D.eq finalLower
+    D.cond check2 t5 defaultUpper >>= D.eq finalUpper
+
+    -- Verify that the operation is always in bounds
+    operand <- D.i32v "the shifted variable"
+    D.slte operand upper >>= D.assert
+    D.sgte operand lower >>= D.assert
+    shiftResult <- D.safeSll operand c
+    D.slte shiftResult finalUpper >>= D.assert
+    D.sgte shiftResult finalLower >>= D.assert
+    result <- D.sat
+    lowerConcrete <- D.signedBvAssignment finalLower
+    liftIO $ print lowerConcrete
+    return result
+
+  result @=? D.Sat
 
 
 
