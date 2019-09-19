@@ -7,18 +7,17 @@ import           Test.Tasty.Golden
 import           Test.Tasty.HUnit
 
 ionMonkeyTests :: BenchTest
-ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ lsh ]
+ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ lsh
+                                                   , rsh
+                                                   ]
 
--- | IonMonkey's leftshift operation
+-- | IonMonkey's left shift operation
 -- https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#999
--- lshTest :: BenchTestCase
--- lshTest = undefined
-
 lsh :: BenchTest
 lsh = benchTestCase "lsh" $ do
   bs <- D.newBoolectorState Nothing
   result <- D.evalBoolector bs $ do
-    -- Do the shift of the constant input
+    -- Compute the shift amount
     c <- D.i32v "c"
     const <- D.i32c 31
     shift <- D.and c const
@@ -29,6 +28,7 @@ lsh = benchTestCase "lsh" $ do
     finalLower <- D.i32v "final lower bound"
     finalUpper <- D.i32v "final upper bound"
     D.slte lower upper >>= D.assert
+    D.slte finalLower finalUpper >>= D.assert
 
     -- Do their if-checking:
     -- lower << shift << 1 >> shift >> 1 == lower &&
@@ -67,8 +67,37 @@ lsh = benchTestCase "lsh" $ do
 
   result @=? D.Sat
 
+-- | IonMonkey's right shift operation
+-- https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1016
+rsh :: BenchTest
+rsh = benchTestCase "rsh" $ do
+  bs <- D.newBoolectorState Nothing
+  result <- D.evalBoolector bs $ do
+    -- Compute the shift amount
+    c <- D.i32v "c"
+    const <- D.i32c 31
+    shift <- D.and c const
 
+    -- Setup the current bounds on the range
+    lower <- D.i32v "lower bound"
+    upper <- D.i32v "upper bound"
+    finalLower <- D.i32v "final lower bound"
+    finalUpper <- D.i32v "final upper bound"
+    D.slte lower upper >>= D.assert
+    D.slte lower upper >>= D.assert
 
+    -- Calculate the new range
+    D.safeSrl lower shift >>= D.eq finalLower
+    D.safeSrl upper shift >>= D.eq finalUpper
 
+    -- Verify that the operation is always in bounds
+    operand <- D.i32v "the shifted variable"
+    D.slte operand upper >>= D.assert
+    D.sgte operand lower >>= D.assert
+    shiftResult <- D.safeSrl operand c
+    D.slte shiftResult finalUpper >>= D.assert
+    D.sgte shiftResult finalLower >>= D.assert
+    D.sat
 
+  result @=? D.Sat
 

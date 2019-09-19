@@ -27,6 +27,7 @@ module DSL ( i64
            , smax
            , umin
            , umax
+           , var'
            , module BoolectorWrapper
            ) where
 import           BoolectorWrapper
@@ -148,6 +149,8 @@ umax :: (B.MonadBoolector m) => B.Node -> B.Node -> m B.Node
 umax x y = do
   isMore <- B.ugte x y
   B.cond isMore x y
+
+
 
 
 
