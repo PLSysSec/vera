@@ -1,38 +1,38 @@
-module DSL ( i64
-           , i32
-           , i16
-           , i8
-           , i1
-           , i64c
-           , i64max
-           , i64min
-           , i32c
-           , i32max
-           , i32min
-           , i16c
-           , i16max
-           , i16min
-           , i8c
-           , i8max
-           , i8min
-           , i1c
-           , i1max
-           , i1min
-           , i64v
-           , i32v
-           , i16v
-           , i8v
-           , i1v
-           , smin
-           , smax
-           , umin
-           , umax
-           , var'
-           , module BoolectorWrapper
-           ) where
-import           BoolectorWrapper
-import qualified BoolectorWrapper as B
-import           Prelude          hiding (max, min)
+module DSL.DSL ( i64
+               , i32
+               , i16
+               , i8
+               , i1
+               , i64c
+               , i64max
+               , i64min
+               , i32c
+               , i32max
+               , i32min
+               , i16c
+               , i16max
+               , i16min
+               , i8c
+               , i8max
+               , i8min
+               , i1c
+               , i1max
+               , i1min
+               , i64v
+               , i32v
+               , i16v
+               , i8v
+               , i1v
+               , smin
+               , smax
+               , umin
+               , umax
+               , var'
+               , module DSL.BoolectorWrapper
+               ) where
+import           DSL.BoolectorWrapper
+import qualified DSL.BoolectorWrapper as B
+import           Prelude              hiding (max, min)
 
 -- Standard sorts
 

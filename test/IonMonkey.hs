@@ -1,8 +1,8 @@
 module IonMonkey where
 import           BenchUtils
-import           Control.Monad.State.Strict (liftIO)
-import qualified DSL                        as D
-import           IonMonkeyObjects
+import           Control.Monad.State.Strict    (liftIO)
+import qualified DSL.DSL                       as D
+import           IonMonkeyOps.IonMonkeyObjects
 import           Test.Tasty
 import           Test.Tasty.Golden
 import           Test.Tasty.HUnit

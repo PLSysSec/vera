@@ -1,11 +1,11 @@
-module BoolectorWrapper ( safeSll
-                        , safeSrl
-                        , safeSra
-                        , safeRol
-                        , safeRor
-                        , castToWidth
-                        , module Boolector
-                        ) where
+module DSL.BoolectorWrapper ( safeSll
+                            , safeSrl
+                            , safeSra
+                            , safeRol
+                            , safeRor
+                            , castToWidth
+                            , module Boolector
+                            ) where
 import           Boolector                  hiding (apply, exists, forall, rol,
                                              ror, sll, sra, srl, uf)
 import qualified Boolector                  as B

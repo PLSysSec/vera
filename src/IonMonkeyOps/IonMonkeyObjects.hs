@@ -1,11 +1,11 @@
-module IonMonkeyObjects ( Range
-                        , lower
-                        , upper
-                        , newRange
-                        , operandWithRange
-                        , verifyInRange
-                        ) where
-import qualified DSL as D
+module IonMonkeyOps.IonMonkeyObjects ( Range
+                                     , lower
+                                     , upper
+                                     , newRange
+                                     , operandWithRange
+                                     , verifyInRange
+                                     ) where
+import qualified DSL.DSL as D
 
 -- IonMonkey's range object
 -- https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#119
