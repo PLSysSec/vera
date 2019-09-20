@@ -1,10 +1,10 @@
 module IonMonkey where
 import           BenchUtils
 --import           Control.Monad.State.Strict    (liftIO)
-import qualified DSL.DSL                       as D
-import           IonMonkeyOps.IonMonkeyObjects
-import           IonMonkeyOps.Operations       (and)
-import           Prelude                       hiding (and)
+import qualified DSL.DSL              as D
+import           IonMonkey.Objects
+import           IonMonkey.Operations (and)
+import           Prelude              hiding (and)
 import           Test.Tasty.HUnit
 
 ionMonkeyTests :: BenchTest

@@ -1,25 +1,24 @@
-module IonMonkeyOps.Operations ( add
-                               , sub
-                               , and
-                               , or
-                               , xor
-                               , not
-                               , mul
-                               , lsh
-                               , rsh
-                               , ursh
-                               , lsh'
-                               , rsh'
-                               , ursh'
-                               , abs
-                               , min
-                               , max
-                               ) where
+module IonMonkey.Operations ( add
+                            , sub
+                            , and
+                            , or
+                            , xor
+                            , not
+                            , mul
+                            , lsh
+                            , rsh
+                            , ursh
+                            , lsh'
+                            , rsh'
+                            , ursh'
+                            , abs
+                            , min
+                            , max
+                            ) where
 -- import           Control.Monad.State.Strict    (liftIO)
-import qualified DSL.DSL                       as D
-import           IonMonkeyOps.IonMonkeyObjects
-import           Prelude                       hiding (abs, and, max, min, not,
-                                                or)
+import qualified DSL.DSL           as D
+import           IonMonkey.Objects
+import           Prelude           hiding (abs, and, max, min, not, or)
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#744
 add :: (D.MonadBoolector m) => m Range

@@ -1,11 +1,11 @@
-module IonMonkeyOps.IonMonkeyObjects ( Range
-                                     , lower
-                                     , upper
-                                     , rangeName
-                                     , newRange
-                                     , operandWithRange
-                                     , verifyInRange
-                                     ) where
+module IonMonkey.Objects ( Range
+                         , lower
+                         , upper
+                         , rangeName
+                         , newRange
+                         , operandWithRange
+                         , verifyInRange
+                         ) where
 import qualified DSL.DSL as D
 
 -- IonMonkey's range object
