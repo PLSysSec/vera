@@ -1,8 +1,25 @@
-module IonMonkeyOps.Operations (and) where
-import           Control.Monad.State.Strict    (liftIO)
+module IonMonkeyOps.Operations ( add
+                               , sub
+                               , and
+                               , or
+                               , xor
+                               , not
+                               , mul
+                               , lsh
+                               , rsh
+                               , ursh
+                               , lsh'
+                               , rsh'
+                               , ursh'
+                               , abs
+                               , min
+                               , max
+                               ) where
+-- import           Control.Monad.State.Strict    (liftIO)
 import qualified DSL.DSL                       as D
 import           IonMonkeyOps.IonMonkeyObjects
-import           Prelude                       hiding (and)
+import           Prelude                       hiding (abs, and, max, min, not,
+                                                or)
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#744
 add :: (D.MonadBoolector m) => m Range
@@ -37,8 +54,9 @@ and lhs rhs = do
   -- -1 & 5 = 5
   notBothNeg <- D.not bothNeg
   upperTemp <- D.smin (upper lhs) (upper rhs)
-  D.condsAssign [notBothNeg, lhsNeg] (upper result) (upper rhs)
-  D.condsAssign [notBothNeg, rhsNeg] (upper result) (upper lhs)
+  D.condsAssign [notBothNeg, lhsNeg] upperTemp (upper rhs)
+  D.condsAssign [notBothNeg, rhsNeg] upperTemp (upper lhs)
+  D.condAssign notBothNeg (upper result) upperTemp
   return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#834

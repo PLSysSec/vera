@@ -1,4 +1,3 @@
-module Lib (proveRange) where
-import           DSL.DSL
+module Lib () where
 
-proveRange = undefined
+

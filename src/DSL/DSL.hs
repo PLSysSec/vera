@@ -37,11 +37,11 @@ module DSL.DSL ( i64
                , condsAssign
                , module DSL.BoolectorWrapper
                ) where
-import           Control.Monad              (foldM, mapM)
-import           Control.Monad.State.Strict (liftIO)
-import           DSL.BoolectorWrapper       hiding (false, true)
-import qualified DSL.BoolectorWrapper       as B
-import           Prelude                    hiding (max, min)
+import           Control.Monad        (foldM)
+--import           Control.Monad.State.Strict (liftIO)
+import           DSL.BoolectorWrapper hiding (false, true)
+import qualified DSL.BoolectorWrapper as B
+import           Prelude              hiding (max, min)
 
 -- Standard sorts
 

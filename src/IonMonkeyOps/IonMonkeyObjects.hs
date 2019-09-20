@@ -1,6 +1,7 @@
 module IonMonkeyOps.IonMonkeyObjects ( Range
                                      , lower
                                      , upper
+                                     , rangeName
                                      , newRange
                                      , operandWithRange
                                      , verifyInRange
@@ -10,9 +11,9 @@ import qualified DSL.DSL as D
 -- IonMonkey's range object
 -- https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#119
 data Range = Range {
-      name  :: String
-    , lower :: D.Node
-    , upper :: D.Node
+      rangeName :: String
+    , lower     :: D.Node
+    , upper     :: D.Node
     }
 
 newRange :: (D.MonadBoolector m) => String -> m D.Sort -> m Range
