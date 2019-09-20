@@ -62,17 +62,21 @@ and lhs rhs = do
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#834
 -- IonMonkey function only applies to i32s
 or :: (D.MonadBoolector m) => Range -> Range -> m Range
-or lhs rhs = do
-  result <- newRange "result" D.i32
-  error ""
+or _lhs _rhs = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#893
 xor :: (D.MonadBoolector m) => m Range
 xor = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#955
-not :: (D.MonadBoolector m) => m Range
-not = undefined
+not :: (D.MonadBoolector m) => Range -> m Range
+not op = do
+  result <- newRange "result" D.i32
+  zero <- D.i32c 0
+  D.assign (upper result) zero
+  -- D.not (lower op) >>= D.assign (lower result)
+  -- D.not (upper op) >>= D.assign (upper result)
+  return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#960
 mul :: (D.MonadBoolector m) => m Range

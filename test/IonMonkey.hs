@@ -3,12 +3,13 @@ import           BenchUtils
 import           Control.Monad.State.Strict (liftIO)
 import qualified DSL.DSL                    as D
 import           IonMonkey.Objects
-import           IonMonkey.Operations       (and)
-import           Prelude                    hiding (and)
+import           IonMonkey.Operations       (and, not)
+import           Prelude                    hiding (and, not)
 import           Test.Tasty.HUnit
 
 ionMonkeyTests :: BenchTest
 ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ andTest
+                                                   , notTest
                                                    ]
 andTest :: BenchTest
 andTest = benchTestCase "and" $ do
@@ -29,6 +30,23 @@ andTest = benchTestCase "and" $ do
     return (noContradictions, verifies)
 
   nc @=? D.Sat
+  v @=? D.Unsat
+
+notTest :: BenchTest
+notTest = benchTestCase "not" $ do
+  bs <- D.newBoolectorState Nothing
+  (nc, v) <- D.evalBoolector bs $ do
+    opRange <- newRange "operand start range" D.i32
+    resultRange <- not opRange
+    noContradictions <- D.sat
+
+    op <- operandWithRange "op" D.i32 opRange
+    result <- D.not op
+    verifyInRange result resultRange
+    verifies <- D.sat
+    return (noContradictions, verifies)
+
+--  nc @=? D.Sat
   v @=? D.Unsat
 
 -- orTest :: BenchTest
