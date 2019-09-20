@@ -1,10 +1,10 @@
 module IonMonkey where
 import           BenchUtils
---import           Control.Monad.State.Strict    (liftIO)
-import qualified DSL.DSL              as D
+import           Control.Monad.State.Strict (liftIO)
+import qualified DSL.DSL                    as D
 import           IonMonkey.Objects
-import           IonMonkey.Operations (and)
-import           Prelude              hiding (and)
+import           IonMonkey.Operations       (and)
+import           Prelude                    hiding (and)
 import           Test.Tasty.HUnit
 
 ionMonkeyTests :: BenchTest
@@ -13,20 +13,23 @@ ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ andTest
 andTest :: BenchTest
 andTest = benchTestCase "and" $ do
   bs <- D.newBoolectorState Nothing
-  result <- D.evalBoolector bs $ do
+  (nc, v) <- D.evalBoolector bs $ do
 
     lhsRange <- newRange "lhs start range" D.i32
     rhsRange <- newRange "rhs start range" D.i32
     resultRange <- and lhsRange rhsRange
+    noContradictions <- D.sat
 
     -- Verify that the result range is true for all possible input ranges
     lhs <- operandWithRange "lhs" D.i32 lhsRange
     rhs <- operandWithRange "rhs" D.i32 rhsRange
     result <- D.and lhs rhs
     verifyInRange result resultRange
-    D.sat
+    verifies <- D.sat
+    return (noContradictions, verifies)
 
-  result @=? D.Sat
+  nc @=? D.Sat
+  v @=? D.Unsat
 
 -- orTest :: BenchTest
 -- orTest = error "Nope"

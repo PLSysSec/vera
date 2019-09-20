@@ -28,13 +28,14 @@ newRange operandName sort = do
 operandWithRange :: (D.MonadBoolector m) => String -> m D.Sort -> Range -> m D.Node
 operandWithRange name sort range = do
   operand <- D.var' sort name
-  verifyInRange operand range
+  D.slte operand (upper range) >>= D.assert
+  D.sgte operand (lower range) >>= D.assert
   return operand
 
 verifyInRange :: (D.MonadBoolector m) => D.Node -> Range -> m ()
 verifyInRange node range = do
-  D.slte node (upper range) >>= D.assert
-  D.sgte node (lower range) >>= D.assert
+  D.sgt node (upper range) >>= D.assert
+  D.slte node (lower range) >>= D.assert
 
 
 

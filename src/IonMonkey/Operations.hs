@@ -29,6 +29,7 @@ sub :: (D.MonadBoolector m) => m Range
 sub = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#805
+-- IonMonkey function only applies to i32s
 -- Qutoes copied from the source comments
 and :: (D.MonadBoolector m) => Range -> Range -> m Range
 and lhs rhs = do
@@ -59,8 +60,11 @@ and lhs rhs = do
   return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#834
-or :: (D.MonadBoolector m) => m Range
-or = undefined
+-- IonMonkey function only applies to i32s
+or :: (D.MonadBoolector m) => Range -> Range -> m Range
+or lhs rhs = do
+  result <- newRange "result" D.i32
+  error ""
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#893
 xor :: (D.MonadBoolector m) => m Range
