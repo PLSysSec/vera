@@ -18,6 +18,8 @@ module DSL.DSL ( i64
                , i1c
                , i1max
                , i1min
+               , true
+               , false
                , i64v
                , i32v
                , i16v
@@ -28,11 +30,18 @@ module DSL.DSL ( i64
                , umin
                , umax
                , var'
+               , assign
+               , conjunction
+               , disjunction
+               , condAssign
+               , condsAssign
                , module DSL.BoolectorWrapper
                ) where
-import           DSL.BoolectorWrapper
-import qualified DSL.BoolectorWrapper as B
-import           Prelude              hiding (max, min)
+import           Control.Monad              (foldM, mapM)
+import           Control.Monad.State.Strict (liftIO)
+import           DSL.BoolectorWrapper       hiding (false, true)
+import qualified DSL.BoolectorWrapper       as B
+import           Prelude                    hiding (max, min)
 
 -- Standard sorts
 
@@ -108,6 +117,12 @@ i1max = undefined
 i1min :: (B.MonadBoolector m) => m B.Node
 i1min = undefined
 
+true :: (B.MonadBoolector m) => m B.Node
+true = i1c 1
+
+false :: (B.MonadBoolector m) => m B.Node
+false = i1c 0
+
 -- Integer variables
 
 var' :: (B.MonadBoolector m) => m B.Sort -> String -> m B.Node
@@ -149,6 +164,28 @@ umax :: (B.MonadBoolector m) => B.Node -> B.Node -> m B.Node
 umax x y = do
   isMore <- B.ugte x y
   B.cond isMore x y
+
+assign :: (B.MonadBoolector m) => B.Node -> B.Node -> m ()
+assign x y = B.eq x y >>= B.assert
+
+conjunction :: (B.MonadBoolector m) => [B.Node] -> m B.Node
+conjunction [] = error "Cannot have a conjunction of zero nodes"
+conjunction xs = foldM B.and (head xs) (tail xs)
+
+disjunction :: (B.MonadBoolector m) => [B.Node] -> m B.Node
+disjunction [] = error "Cannot have a disjunction of zero nodes"
+disjunction xs = foldM B.or (head xs) (tail xs)
+
+condAssign :: (B.MonadBoolector m) => B.Node -> B.Node -> B.Node -> m ()
+condAssign c x y = B.cond c x y >>= assign x
+
+condsAssign :: (B.MonadBoolector m) => [B.Node] -> B.Node -> B.Node -> m ()
+condsAssign [] _ _ = error "Cannot conditionally assign with empty condition"
+condsAssign cs x y = do
+  conj <- conjunction cs
+  condAssign conj x y
+
+
 
 
 

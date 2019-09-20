@@ -3,14 +3,36 @@ import           BenchUtils
 import           Control.Monad.State.Strict    (liftIO)
 import qualified DSL.DSL                       as D
 import           IonMonkeyOps.IonMonkeyObjects
+import           IonMonkeyOps.Operations       (and)
+import           Prelude                       hiding (and)
 import           Test.Tasty
 import           Test.Tasty.Golden
 import           Test.Tasty.HUnit
 
 ionMonkeyTests :: BenchTest
-ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ lsh
+ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ andTest
+                                                   , lsh
                                                    , rsh
                                                    ]
+
+andTest :: BenchTest
+andTest = benchTestCase "and" $ do
+  bs <- D.newBoolectorState Nothing
+  result <- D.evalBoolector bs $ do
+
+    lhsRange <- newRange "lhs start range" D.i32
+    rhsRange <- newRange "rhs start range" D.i32
+    resultRange <- and lhsRange rhsRange
+
+    -- Verify that the result range is true for all possible input ranges
+    lhs <- operandWithRange "lhs" D.i32 lhsRange
+    rhs <- operandWithRange "rhs" D.i32 rhsRange
+    result <- D.and lhs rhs
+    verifyInRange result resultRange
+    D.sat
+
+  result @=? D.Sat
+
 
 -- | IonMonkey's left shift operation
 -- https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#999
