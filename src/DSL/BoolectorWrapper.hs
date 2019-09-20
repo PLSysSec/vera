@@ -6,8 +6,8 @@ module DSL.BoolectorWrapper ( safeSll
                             , castToWidth
                             , module Boolector
                             ) where
-import           Boolector                  hiding (apply, exists, forall, rol,
-                                             ror, sll, sra, srl, uf)
+import           Boolector                  hiding (apply, exists, rol, ror,
+                                             sll, sra, srl, uf)
 import qualified Boolector                  as B
 import           Control.Monad.State.Strict (unless)
 import           Data.Word                  (Word32)

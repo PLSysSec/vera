@@ -8,46 +8,65 @@ import           Prelude                    hiding (and, not)
 import           Test.Tasty.HUnit
 
 ionMonkeyTests :: BenchTest
-ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ andTest
-                                                   , notTest
+ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ --andTest
+                                                   notTest
                                                    ]
-andTest :: BenchTest
-andTest = benchTestCase "and" $ do
-  bs <- D.newBoolectorState Nothing
-  (nc, v) <- D.evalBoolector bs $ do
+-- andTest :: BenchTest
+-- andTest = benchTestCase "and" $ do
+--   bs <- D.newBoolectorState Nothing
+--   (nc, v) <- D.evalBoolector bs $ do
 
-    lhsRange <- newRange "lhs start range" D.i32
-    rhsRange <- newRange "rhs start range" D.i32
-    resultRange <- and lhsRange rhsRange
-    noContradictions <- D.sat
+--     lhsRange <- newRange "lhs start range" D.i32
+--     rhsRange <- newRange "rhs start range" D.i32
+--     resultRange <- and lhsRange rhsRange
+--     noContradictions <- D.sat
 
-    -- Verify that the result range is true for all possible input ranges
-    lhs <- operandWithRange "lhs" D.i32 lhsRange
-    rhs <- operandWithRange "rhs" D.i32 rhsRange
-    result <- D.and lhs rhs
-    verifyInRange result resultRange
-    verifies <- D.sat
-    return (noContradictions, verifies)
+--     -- Verify that the result range is true for all possible input ranges
+--     lhs <- operandWithRange "lhs" D.i32 lhsRange
+--     rhs <- operandWithRange "rhs" D.i32 rhsRange
+--     result <- D.and lhs rhs
+--     verifyInRange result resultRange
+--     verifies <- D.sat
+--     return (noContradictions, verifies)
 
-  nc @=? D.Sat
-  v @=? D.Unsat
+--   nc @=? D.Sat
+--   v @=? D.Unsat
 
 notTest :: BenchTest
 notTest = benchTestCase "not" $ do
   bs <- D.newBoolectorState Nothing
-  (nc, v) <- D.evalBoolector bs $ do
-    opRange <- newRange "operand start range" D.i32
-    resultRange <- not opRange
-    noContradictions <- D.sat
+  (internalCheck, check1, check2) <- D.evalBoolector bs $ do
 
+    opRange <- newInputRange "operand start range" D.i32
+    resultRange <- not opRange
+
+    -- Make sure the result range is not messed up:
+    -- It should be impossible for the upper bound to be less than the lower bound
+    D.push 1
+    D.slt (upper resultRange) (lower resultRange) >>= D.assert
+    internalCheck <- D.sat
+    D.pop 1
+
+    -- Make sure that the result range actually corresponds to the range of the operator
     op <- operandWithRange "op" D.i32 opRange
     result <- D.not op
-    verifyInRange result resultRange
-    verifies <- D.sat
-    return (noContradictions, verifies)
 
---  nc @=? D.Sat
-  v @=? D.Unsat
+    D.push 1
+    D.sgt result (upper resultRange) >>= D.assert
+    c1 <- D.sat
+    D.pop 1
+
+    D.push 1
+    D.slt result (lower resultRange) >>= D.assert
+    c2 <- D.sat
+    D.pop 1
+
+    return (internalCheck, c1, c2)
+
+
+  D.Unsat @=? internalCheck
+  D.Unsat @=? check1
+  D.Unsat @=? check2
 
 -- orTest :: BenchTest
 -- orTest = error "Nope"

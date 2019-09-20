@@ -15,10 +15,10 @@ module IonMonkey.Operations ( add
                             , min
                             , max
                             ) where
--- import           Control.Monad.State.Strict    (liftIO)
-import qualified DSL.DSL           as D
+import           Control.Monad.State.Strict (liftIO)
+import qualified DSL.DSL                    as D
 import           IonMonkey.Objects
-import           Prelude           hiding (abs, and, max, min, not, or)
+import           Prelude                    hiding (abs, and, max, min, not, or)
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#744
 add :: (D.MonadBoolector m) => m Range
@@ -32,32 +32,32 @@ sub = undefined
 -- IonMonkey function only applies to i32s
 -- Qutoes copied from the source comments
 and :: (D.MonadBoolector m) => Range -> Range -> m Range
-and lhs rhs = do
-  -- MLFB: The updated range after the 'and' operation
-  result <- newRange "result" D.i32
+and lhs rhs = undefined
+  -- -- MLFB: The updated range after the 'and' operation
+  -- result <- newRange "result" D.i32
 
-  -- If both numbers can be negative, result can be negative in the whole range
-  zero <- D.i32c 0
-  i32min <- D.i32min
-  lhsNeg <- D.slt (lower lhs) zero
-  rhsNeg <- D.slt (lower rhs) zero
-  bothNeg <- D.and lhsNeg rhsNeg
-  maxUpper <- D.smax (upper lhs) (upper rhs)
-  D.condAssign bothNeg (lower result) i32min
-  D.condAssign bothNeg (upper result) maxUpper
+  -- -- If both numbers can be negative, result can be negative in the whole range
+  -- zero <- D.i32c 0
+  -- i32min <- D.i32min
+  -- lhsNeg <- D.slt (lower lhs) zero
+  -- rhsNeg <- D.slt (lower rhs) zero
+  -- bothNeg <- D.and lhsNeg rhsNeg
+  -- maxUpper <- D.smax (upper lhs) (upper rhs)
+  -- D.condAssign bothNeg (lower result) i32min
+  -- D.condAssign bothNeg (upper result) maxUpper
 
-  -- Only one of both numbers can be negative.
-  -- - result can't be negative
-  -- - Upper bound is minimum of both upper range
-  -- EXCEPT when upper bound of non negative number is max value,
-  -- because negative value can return the whole max value.
-  -- -1 & 5 = 5
-  notBothNeg <- D.not bothNeg
-  upperTemp <- D.smin (upper lhs) (upper rhs)
-  D.condsAssign [notBothNeg, lhsNeg] upperTemp (upper rhs)
-  D.condsAssign [notBothNeg, rhsNeg] upperTemp (upper lhs)
-  D.condAssign notBothNeg (upper result) upperTemp
-  return result
+  -- -- Only one of both numbers can be negative.
+  -- -- - result can't be negative
+  -- -- - Upper bound is minimum of both upper range
+  -- -- EXCEPT when upper bound of non negative number is max value,
+  -- -- because negative value can return the whole max value.
+  -- -- -1 & 5 = 5
+  -- notBothNeg <- D.not bothNeg
+  -- upperTemp <- D.smin (upper lhs) (upper rhs)
+  -- D.condsAssign [notBothNeg, lhsNeg] upperTemp (upper rhs)
+  -- D.condsAssign [notBothNeg, rhsNeg] upperTemp (upper lhs)
+  -- D.condAssign notBothNeg (upper result) upperTemp
+  -- return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#834
 -- IonMonkey function only applies to i32s
@@ -71,11 +71,9 @@ xor = undefined
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#955
 not :: (D.MonadBoolector m) => Range -> m Range
 not op = do
-  result <- newRange "result" D.i32
-  zero <- D.i32c 0
-  D.assign (upper result) zero
-  -- D.not (lower op) >>= D.assign (lower result)
-  -- D.not (upper op) >>= D.assign (upper result)
+  result <- newResultRange "result" D.i32
+  D.not (upper op) >>= D.assign (lower result)
+  D.not (lower op) >>= D.assign (upper result)
   return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#960
