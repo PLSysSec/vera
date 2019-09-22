@@ -93,7 +93,9 @@ lshTest = benchTestCase "lsh" $ do
     c1 <- verifySaneRange [shifteeRange] resultRange
 
     shiftee <- operandWithRange "shiftee" D.i32 shifteeRange
-    result <- D.safeSll shiftee val
+    -- Need to mask https://www.ecma-international.org/ecma-262/5.1/#sec-11.7.1
+    maskedVal <- D.i32c 31 >>= D.and val
+    result <- D.safeSll shiftee maskedVal
     c2 <- verifyUpperBound result resultRange
     c3 <- verifyLowerBound result resultRange
 
