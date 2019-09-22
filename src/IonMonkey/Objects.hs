@@ -22,7 +22,7 @@ data Range = Range {
 
 -- | We assume that an input range will have the invariant
 -- that lower <= upper, since we assume inputs are working correctly
-newInputRange :: (D.MonadBoolector m) => String -> m D.Sort -> m Range
+newInputRange :: String -> D.Verif D.Sort -> D.Verif Range
 newInputRange operandName sort = do
   let lowerName = operandName ++ "_lower"
       upperName = operandName ++ "_upper"
@@ -33,7 +33,7 @@ newInputRange operandName sort = do
 
 -- | We do *not* assume that output ranges are working correctly.
 -- That is an invariant that we will check
-newResultRange :: (D.MonadBoolector m) => String -> m D.Sort -> m Range
+newResultRange :: String -> D.Verif D.Sort -> D.Verif Range
 newResultRange operandName sort = do
   let lowerName = operandName ++ "_lower"
       upperName = operandName ++ "_upper"
@@ -43,7 +43,7 @@ newResultRange operandName sort = do
 
 -- | Make a new operand with name 'name' of sort 'sort' that is in the range
 --'range'---ie is greater than the range's lower and less than the range's upper
-operandWithRange :: (D.MonadBoolector m) => String -> m D.Sort -> Range -> m D.Node
+operandWithRange :: String -> D.Verif D.Sort -> Range -> D.Verif D.Node
 operandWithRange name sort range = do
   operand <- D.var' sort name
   D.slte operand (upper range) >>= D.assert

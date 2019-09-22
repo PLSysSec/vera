@@ -32,7 +32,7 @@ sub = undefined
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#805
 -- IonMonkey function only applies to i32s
 -- Qutoes copied from the source comments
-and :: (D.MonadBoolector m) => Range -> Range -> m Range
+and :: Range -> Range -> D.Verif Range
 and left right = do
   -- MLFB: The updated range after the 'and' operation
   result <- newResultRange "result" D.i32
@@ -70,7 +70,7 @@ xor :: (D.MonadBoolector m) => Range -> Range -> m Range
 xor left right = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#955
-not :: (D.MonadBoolector m) => Range -> m Range
+not :: Range -> D.Verif Range
 not op = do
   result <- newResultRange "result" D.i32
   D.not (upper op) >>= D.assign (lower result)
@@ -82,7 +82,7 @@ mul :: (D.MonadBoolector m) => m Range
 mul = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#999
-lsh :: (D.MonadBoolector m) => Range -> D.Node -> m Range
+lsh :: Range -> D.Node -> D.Verif Range
 lsh shiftee val = do
   -- Setup the shift
   thirtyOne <- D.i32c 31
@@ -92,7 +92,7 @@ lsh shiftee val = do
   -- Desired range
   shiftedLower <- D.safeSll (lower shiftee) shift
   shiftedUpper <- D.safeSll (upper shiftee) shift
-  
+
   -- Compute the branch conditions
   doesntLoseBits <- do
     lowerDoesntLoseBits <- do
@@ -107,13 +107,13 @@ lsh shiftee val = do
       tmp3 <- D.safeSrl tmp2 one
       D.eq tmp3 (upper shiftee)
 
-    D.and lowerDoesntLoseBits upperDoesntLoseBits 
+    D.and lowerDoesntLoseBits upperDoesntLoseBits
 
   result <- newResultRange "result" D.i32
 
   -- fallback range
-  i32min <- D.i32min 
-  i32max <- D.i32max 
+  i32min <- D.i32min
+  i32max <- D.i32max
 
   D.cond doesntLoseBits shiftedLower i32min >>= D.assign (lower result)
   D.cond doesntLoseBits shiftedUpper i32max >>= D.assign (upper result)
@@ -123,7 +123,7 @@ lsh shiftee val = do
 
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1016
-rsh :: (D.MonadBoolector m) => Range -> D.Node -> m Range
+rsh :: Range -> D.Node -> D.Verif Range
 rsh shiftee val = do
   -- Setup the shift
   thirtyOne <- D.i32c 31
@@ -135,7 +135,7 @@ rsh shiftee val = do
   return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1023
-ursh :: (D.MonadBoolector m) => Range -> D.Node -> m Range
+ursh :: Range -> D.Node -> D.Verif Range
 ursh shiftee val = do
   -- Setup the shift
   thirtyOne <- D.i32c 31
@@ -158,7 +158,7 @@ ursh shiftee val = do
   return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1042
-lsh' :: (D.MonadBoolector m) => Range -> Range -> m Range
+lsh' :: Range -> Range -> D.Verif Range
 lsh' _ _ = do
   -- Trivially correct
   result <- newResultRange "result" D.i32
