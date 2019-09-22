@@ -85,8 +85,16 @@ lsh :: (D.MonadBoolector m) => m Range
 lsh = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1016
-rsh :: (D.MonadBoolector m) => m Range
-rsh = undefined
+rsh :: (D.MonadBoolector m) => Range -> D.Node -> m Range
+rsh shiftee val = do
+  -- Setup the shift
+  thirtyOne <- D.i32c 31
+  shift <- D.and val thirtyOne
+  -- Make a new range whose low bound is shiftee_l >> shift, shiftee_h >> shift
+  result <- newResultRange "result" D.i32
+  D.safeSrl (lower shiftee) shift >>= D.assign (lower result)
+  D.safeSrl (upper shiftee) shift >>= D.assign (upper result)
+  return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1023
 ursh :: (D.MonadBoolector m) => m Range
