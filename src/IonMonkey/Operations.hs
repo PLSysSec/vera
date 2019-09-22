@@ -82,8 +82,45 @@ mul :: (D.MonadBoolector m) => m Range
 mul = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#999
-lsh :: (D.MonadBoolector m) => m Range
-lsh = undefined
+lsh :: (D.MonadBoolector m) => Range -> D.Node -> m Range
+lsh shiftee val = do
+  -- Setup the shift
+  thirtyOne <- D.i32c 31
+  one <- D.i32c 1
+  shift <- D.and val thirtyOne
+
+  -- Desired range
+  shiftedLower <- D.safeSll (lower shiftee) shift
+  shiftedUpper <- D.safeSll (upper shiftee) shift
+  
+  -- Compute the branch conditions
+  doesntLoseBits <- do
+    lowerDoesntLoseBits <- do
+      tmp1 <- D.safeSll shiftedLower one
+      tmp2 <- D.safeSrl tmp1 shift
+      tmp3 <- D.safeSrl tmp2 one
+      D.eq tmp3 (lower shiftee)
+
+    upperDoesntLoseBits <- do
+      tmp1 <- D.safeSll shiftedUpper one
+      tmp2 <- D.safeSrl tmp1 shift
+      tmp3 <- D.safeSrl tmp2 one
+      D.eq tmp3 (upper shiftee)
+
+    D.and lowerDoesntLoseBits upperDoesntLoseBits 
+
+  result <- newResultRange "result" D.i32
+
+  -- fallback range
+  i32min <- D.i32min 
+  i32max <- D.i32max 
+
+  D.cond doesntLoseBits shiftedLower i32min >>= D.assign (lower result)
+  D.cond doesntLoseBits shiftedUpper i32max >>= D.assign (upper result)
+
+  return result
+
+
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1016
 rsh :: (D.MonadBoolector m) => Range -> D.Node -> m Range
@@ -121,8 +158,14 @@ ursh shiftee val = do
   return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1042
-lsh' :: (D.MonadBoolector m) => m Range
-lsh' = undefined
+lsh' :: (D.MonadBoolector m) => Range -> Range -> m Range
+lsh' _ _ = do
+  -- Trivially correct
+  result <- newResultRange "result" D.i32
+  D.i32min >>= D.assign (lower result)
+  D.i32max >>= D.assign (upper result)
+  return result
+
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1048
 rsh' :: (D.MonadBoolector m) => m Range

@@ -3,7 +3,7 @@ import           BenchUtils
 import           Control.Monad.State.Strict (liftIO)
 import qualified DSL.DSL                    as D
 import           IonMonkey.Objects
-import           IonMonkey.Operations       (and, not, rsh, ursh)
+import           IonMonkey.Operations       (and, not, rsh, ursh, lsh, lsh')
 import           Prelude                    hiding (and, not)
 import           Test.Tasty.HUnit
 
@@ -11,6 +11,8 @@ ionMonkeyTests :: BenchTest
 ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ notTest
                                                    , rshTest
                                                    , urshTest
+                                                   , lshTest
+                                                   , lsh'Test
                                                    ]
 
 notTest :: BenchTest
@@ -81,7 +83,50 @@ urshTest = benchTestCase "ursh" $ do
 -- orTest :: BenchTest
 -- orTest = error "Nope"
 
+lshTest :: BenchTest
+lshTest = benchTestCase "lsh" $ do
+  bs <- D.newBoolectorState Nothing
+  (c1, c2, c3) <- D.evalBoolector bs $ do
 
+    shifteeRange <- newInputRange "shiftee range" D.i32
+    val <- D.i32v "val"
+    resultRange <- lsh shifteeRange val
+    c1 <- verifySaneRange [shifteeRange] resultRange
+
+    shiftee <- operandWithRange "shiftee" D.i32 shifteeRange
+    result <- D.safeSll shiftee val
+    c2 <- verifyUpperBound result resultRange
+    c3 <- verifyLowerBound result resultRange
+
+    return (c1, c2, c3)
+
+  RangeVerified @=? c1
+
+  D.Unsat @=? c2
+  D.Unsat @=? c3
+
+
+lsh'Test :: BenchTest
+lsh'Test = benchTestCase "lsh'" $ do
+  bs <- D.newBoolectorState Nothing
+  (c1, c2, c3) <- D.evalBoolector bs $ do
+
+    lhs <- newInputRange "range ov value to shift" D.i32
+    rhs <- newInputRange "shift by" D.i32
+    resultRange <- lsh' lhs rhs
+    c1 <- verifySaneRange [lhs, rhs] resultRange
+
+    lhsOp <- operandWithRange "value to shift" D.i32 lhs
+    rhsOp <- operandWithRange "shit by" D.i32 rhs
+    result <- D.safeSll lhsOp rhsOp
+    c2 <- verifyUpperBound result resultRange
+    c3 <- verifyLowerBound result resultRange
+
+    return (c1, c2, c3)
+
+  RangeVerified @=? c1
+  D.Unsat @=? c2
+  D.Unsat @=? c3
 
 
 
