@@ -1,3 +1,4 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module DSL.DSL ( i64
                , i32
                , i16
@@ -38,11 +39,23 @@ module DSL.DSL ( i64
                , condsAssign
                , module DSL.BoolectorWrapper
                ) where
-import           Control.Monad        (foldM)
---import           Control.Monad.State.Strict (liftIO)
-import           DSL.BoolectorWrapper hiding (false, true)
-import qualified DSL.BoolectorWrapper as B
-import           Prelude              hiding (max, min)
+import           Control.Monad              (foldM)
+import           Control.Monad.State.Strict
+import qualified Data.Map.Strict            as M
+import           DSL.BoolectorWrapper       hiding (false, true)
+import qualified DSL.BoolectorWrapper       as B
+import           Prelude                    hiding (max, min)
+
+-- | Verification state. I'm assuming we'll eventually need
+-- to keep track of more things
+data VerifState = VerifState { vars :: M.Map String B.Node }
+
+newtype Verif m = Verif (StateT VerifState B.Boolector m)
+    deriving (Functor, Applicative, Monad, MonadState VerifState, MonadIO)
+
+instance B.MonadBoolector Verif where
+    getBoolectorState = Verif $ lift $ get
+    putBoolectorState state = Verif $ lift $ put state
 
 -- Standard sorts
 

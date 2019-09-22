@@ -68,10 +68,10 @@ urshTest = benchTestCase "ursh" $ do
     c1 <- verifySaneRange [shifteeRange] resultRange
 
     shiftee <- operandWithRange "shiftee" D.i32 shifteeRange
-    result <- D.safeSrl shiftee val
+    result <- D.safeSra shiftee val
     c2 <- verifyUpperBound result resultRange
     c3 <- verifyLowerBound result resultRange
-
+    D.dumpAll
     return (c1, c2, c3)
 
   RangeVerified @=? c1

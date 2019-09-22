@@ -28,6 +28,7 @@ library:
   - -Wall
   dependencies:
   - boolector >= 0.0.0.8
+  - containers >= 0.6
   - mtl >= 2.2.2
 
 executables:
