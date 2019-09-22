@@ -92,8 +92,8 @@ rsh shiftee val = do
   shift <- D.and val thirtyOne
   -- Make a new range whose low bound is shiftee_l >> shift, shiftee_h >> shift
   result <- newResultRange "result" D.i32
-  D.safeSrl (lower shiftee) shift >>= D.assign (lower result)
-  D.safeSrl (upper shiftee) shift >>= D.assign (upper result)
+  D.safeSra (lower shiftee) shift >>= D.assign (lower result)
+  D.safeSra (upper shiftee) shift >>= D.assign (upper result)
   return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1023
