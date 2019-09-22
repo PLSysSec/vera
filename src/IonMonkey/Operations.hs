@@ -33,16 +33,16 @@ sub = undefined
 -- IonMonkey function only applies to i32s
 -- Qutoes copied from the source comments
 and :: (D.MonadBoolector m) => Range -> Range -> m Range
-and lhs rhs = undefined
-  -- -- MLFB: The updated range after the 'and' operation
-  -- result <- newRange "result" D.i32
-
-  -- -- If both numbers can be negative, result can be negative in the whole range
+and left right = do
+  -- MLFB: The updated range after the 'and' operation
+  result <- newResultRange "result" D.i32
+  error ""
+  -- if both numbers can be negative, result can be negative in the whole range
   -- zero <- D.i32c 0
   -- i32min <- D.i32min
-  -- lhsNeg <- D.slt (lower lhs) zero
-  -- rhsNeg <- D.slt (lower rhs) zero
-  -- bothNeg <- D.and lhsNeg rhsNeg
+  -- leftNeg <- D.slt (lower left) zero
+  -- rightNeg <- D.slt (lower right) zero
+  -- bothNeg <- D.and leftNeg rightNeg
   -- maxUpper <- D.smax (upper lhs) (upper rhs)
   -- D.condAssign bothNeg (lower result) i32min
   -- D.condAssign bothNeg (upper result) maxUpper
@@ -66,8 +66,8 @@ or :: (D.MonadBoolector m) => Range -> Range -> m Range
 or _lhs _rhs = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#893
-xor :: (D.MonadBoolector m) => m Range
-xor = undefined
+xor :: (D.MonadBoolector m) => Range -> Range -> m Range
+xor left right = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#955
 not :: (D.MonadBoolector m) => Range -> m Range

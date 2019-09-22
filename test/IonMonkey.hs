@@ -73,7 +73,6 @@ urshTest = benchTestCase "ursh" $ do
     result <- D.safeSra shiftee val
     c2 <- verifyUpperBound result resultRange
     c3 <- verifyLowerBound result resultRange
-    D.dumpAll
     return (c1, c2, c3)
 
   RangeVerified @=? c1
