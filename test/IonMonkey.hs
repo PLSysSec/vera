@@ -3,13 +3,14 @@ import           BenchUtils
 import           Control.Monad.State.Strict (liftIO)
 import qualified DSL.DSL                    as D
 import           IonMonkey.Objects
-import           IonMonkey.Operations       (and, not, rsh)
+import           IonMonkey.Operations       (and, not, rsh, ursh)
 import           Prelude                    hiding (and, not)
 import           Test.Tasty.HUnit
 
 ionMonkeyTests :: BenchTest
 ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ notTest
                                                    , rshTest
+                                                   , urshTest
                                                    ]
 
 notTest :: BenchTest
@@ -56,6 +57,26 @@ rshTest = benchTestCase "rsh" $ do
   D.Unsat @=? c2
   D.Unsat @=? c3
 
+urshTest :: BenchTest
+urshTest = benchTestCase "rsh" $ do
+  bs <- D.newBoolectorState Nothing
+  (c1, c2, c3) <- D.evalBoolector bs $ do
+
+    shifteeRange <- newInputRange "shiftee range" D.i32
+    val <- D.i32v "val"
+    resultRange <- ursh shifteeRange val
+    c1 <- verifySaneRange resultRange
+
+    shiftee <- operandWithRange "shiftee" D.i32 shifteeRange
+    result <- D.safeSrl shiftee val
+    c2 <- verifyUpperBound result resultRange
+    c3 <- verifyLowerBound result resultRange
+
+    return (c1, c2, c3)
+
+  D.Unsat @=? c1
+  -- D.Unsat @=? c2
+  -- D.Unsat @=? c3
 
 -- orTest :: BenchTest
 -- orTest = error "Nope"

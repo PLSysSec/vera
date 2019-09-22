@@ -8,6 +8,7 @@ module DSL.DSL ( i64
                , i64min
                , i32c
                , i32max
+               , ui32max
                , i32min
                , i16c
                , i16max
@@ -77,6 +78,9 @@ i64min = undefined
 i32c :: (B.MonadBoolector m) => Integer -> m B.Node
 i32c val | val <= 4294967295 = i32 >>= B.unsignedInt val
         | otherwise = error $ unwords $ [show val, "is past the range of i32s"]
+
+ui32max :: (B.MonadBoolector m) => m B.Node
+ui32max = i32c 4294967295
 
 i32max :: (B.MonadBoolector m) => m B.Node
 i32max = i32c 2147483647

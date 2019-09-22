@@ -17,6 +17,7 @@ module IonMonkey.Operations ( add
                             ) where
 import           Control.Monad.State.Strict (liftIO)
 import qualified DSL.DSL                    as D
+import           IonMonkey.Helpers
 import           IonMonkey.Objects
 import           Prelude                    hiding (abs, and, max, min, not, or)
 
@@ -97,8 +98,27 @@ rsh shiftee val = do
   return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1023
-ursh :: (D.MonadBoolector m) => m Range
-ursh = undefined
+ursh :: (D.MonadBoolector m) => Range -> D.Node -> m Range
+ursh shiftee val = do
+  -- Setup the shift
+  thirtyOne <- D.i32c 31
+  shift <- D.and val thirtyOne
+
+  -- "If the value is always non-negative or always negative, we can simply
+  -- compute the correct range by shifting."
+  result <- newResultRange "result" D.i32
+  isNeg <- isFiniteNegative shiftee
+  isNonNeg <- isFiniteNonNegative shiftee
+  isNegOrNonNeg <- D.or isNeg isNonNeg
+
+  trueLower <- D.safeSrl (lower result) shift
+  trueUpper <- D.safeSrl (upper result) shift
+  falseLower <- D.i32c 0
+  falseUpper <- D.ui32max >>= \max -> D.safeSrl max shift
+
+  D.cond isNegOrNonNeg trueLower falseLower >>= D.assign (lower result)
+  D.cond isNegOrNonNeg trueUpper falseUpper >>= D.assign (upper result)
+  return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1042
 lsh' :: (D.MonadBoolector m) => m Range
