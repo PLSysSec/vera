@@ -21,7 +21,7 @@ notTest = benchTestCase "not" $ do
     -- Setup the result range and make sure lower < upper
     opRange <- newInputRange "operand start range" D.i32
     resultRange <- not opRange
-    internalCheck <- verifySaneRange resultRange
+    internalCheck <- verifySaneRange [opRange] resultRange
 
     -- Make sure that the result range actually corresponds to the range of the operator
     op <- operandWithRange "op" D.i32 opRange
@@ -32,7 +32,7 @@ notTest = benchTestCase "not" $ do
     return (internalCheck, c1, c2)
 
 
-  D.Unsat @=? internalCheck
+  RangeVerified @=? internalCheck
   D.Unsat @=? check1
   D.Unsat @=? check2
 
@@ -44,7 +44,7 @@ rshTest = benchTestCase "rsh" $ do
     shifteeRange <- newInputRange "shiftee range" D.i32
     val <- D.i32v "val"
     resultRange <- rsh shifteeRange val
-    c1 <- verifySaneRange resultRange
+    c1 <- verifySaneRange [shifteeRange] resultRange
 
     shiftee <- operandWithRange "shiftee" D.i32 shifteeRange
     result <- D.safeSra shiftee val
@@ -53,19 +53,19 @@ rshTest = benchTestCase "rsh" $ do
 
     return (c1, c2, c3)
 
-  D.Unsat @=? c1
+  RangeVerified @=? c1
   D.Unsat @=? c2
   D.Unsat @=? c3
 
 urshTest :: BenchTest
-urshTest = benchTestCase "rsh" $ do
+urshTest = benchTestCase "ursh" $ do
   bs <- D.newBoolectorState Nothing
   (c1, c2, c3) <- D.evalBoolector bs $ do
 
     shifteeRange <- newInputRange "shiftee range" D.i32
     val <- D.i32v "val"
     resultRange <- ursh shifteeRange val
-    c1 <- verifySaneRange resultRange
+    c1 <- verifySaneRange [shifteeRange] resultRange
 
     shiftee <- operandWithRange "shiftee" D.i32 shifteeRange
     result <- D.safeSrl shiftee val
@@ -74,7 +74,7 @@ urshTest = benchTestCase "rsh" $ do
 
     return (c1, c2, c3)
 
-  D.Unsat @=? c1
+  RangeVerified @=? c1
   -- D.Unsat @=? c2
   -- D.Unsat @=? c3
 

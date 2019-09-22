@@ -1,4 +1,5 @@
 module IonMonkey.Objects ( Range
+                         , RangeResult(..)
                          , lower
                          , upper
                          , rangeName
@@ -49,16 +50,39 @@ operandWithRange name sort range = do
   D.sgte operand (lower range) >>= D.assert
   return operand
 
+-- Verification functions and datatypes
+
+data RangeResult = RangeVerified
+                 | RangeBroken { inputsLower  :: [Integer]
+                               , inputsUpper  :: [Integer]
+                               , counterLower :: Integer
+                               , counterUpper :: Integer
+                               }
+                 deriving (Eq, Ord, Show)
+
+data BoundsResult = BoundsVerified
+                  | BoundsBroken { counterResult :: Integer
+                                 , counterBound  :: Integer
+                                 }
+
 -- | Verify that the upper bound of a range is greater than the lower
 -- Expects UNSAT
 -- TODO: make an informative datatype with a counterexample
-verifySaneRange :: (D.MonadBoolector m) => Range -> m D.Status
-verifySaneRange range = do
+verifySaneRange :: (D.MonadBoolector m) => [Range] -> Range -> m RangeResult
+verifySaneRange inputRanges resultRange = do
   D.push 1
-  D.slt (upper range) (lower range) >>= D.assert
+  D.slt (upper resultRange) (lower resultRange) >>= D.assert
   check <- D.sat
   D.pop 1
-  return check
+  case check of
+    D.Unsat -> return RangeVerified
+    D.Sat -> do
+      inputsLowerAssign <- mapM (D.signedBvAssignment . lower) inputRanges
+      inputsUpperAssign <- mapM (D.signedBvAssignment . upper) inputRanges
+      lowerAssign <- D.signedBvAssignment (lower resultRange)
+      upperAssign <- D.signedBvAssignment (upper resultRange)
+      return $ RangeBroken inputsLowerAssign inputsUpperAssign lowerAssign upperAssign
+    e -> error $ unwords ["Solver error when verifying the range:", show e]
 
 -- | Verify that a node is less than the upper bound
 -- Expects UNSAT
