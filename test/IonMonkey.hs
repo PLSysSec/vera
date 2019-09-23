@@ -181,6 +181,10 @@ rsh'Test = benchTestCase "rsh'" $ do
 
     left <- operandWithRange "value to shift" D.i32 leftRange
     right <- operandWithRange "shit by" D.i32 rightRange
+    -- Need to mask https://www.ecma-international.org/ecma-262/5.1/#sec-11.7.3
+    maskedRight <- D.i32c 31 >>= D.and right
+    result <- D.safeSrl left maskedRight
+
     result <- D.safeSra left right
     c2 <- verifyUpperBound result resultRange
     c3 <- verifyLowerBound result resultRange
