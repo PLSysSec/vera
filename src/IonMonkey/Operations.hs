@@ -164,10 +164,50 @@ lsh' _ _ = do
   D.i32max >>= D.assign (upper result)
   return result
 
-
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1048
 rsh' :: Range -> Range -> D.Verif Range
-rsh' shiftee shifter = undefined
+rsh' shiftee shifter = do
+
+  thirtyOne32 <- D.i32c 31
+  zero <- D.i32c 0
+
+  -- Cannonicalize shift range from 0-31
+  cond <- do
+    extShiftLower <- D.sext (lower shifter) 64
+    extShiftUpper <- D.sext (upper shifter) 64
+    sub <- D.sub extShiftUpper extShiftLower
+    thirtyOne <- D.i64c 31
+    D.slt sub thirtyOne
+
+  trueShiftLower <- D.i32c 0
+  trueShiftUpper <- D.i32c 31
+
+  tmpLower <- D.and thirtyOne32 (lower shifter)
+  tmpUpper <- D.and thirtyOne32 (upper shifter)
+  tmpCond <- D.sgt tmpLower tmpUpper
+  falseShiftLower <- D.cond tmpCond tmpLower zero
+  falseShiftUpper <- D.cond tmpCond tmpUpper thirtyOne32
+
+  shiftLower <- D.cond cond trueShiftLower falseShiftLower
+  shiftUpper <- D.cond cond trueShiftUpper falseShiftUpper
+
+  -- Do the actual shifting
+  min <- do
+    shifteeNeg <- D.slt (lower shiftee) zero
+    trueMin <- D.safeSra (lower shiftee) shiftLower
+    falseMin <- D.safeSra (lower shiftee) shiftUpper
+    D.cond shifteeNeg trueMin falseMin
+
+  max <- do
+    shifteeNeg <- D.sgte (upper shiftee) zero
+    trueMax <- D.safeSra (upper shiftee) shiftLower
+    falseMax <- D.safeSra (upper shiftee) shiftUpper
+    D.cond shifteeNeg trueMax falseMax
+
+  result <- newResultRange "result" D.i32
+  D.assign (lower result) min
+  D.assign (upper result) max
+  return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1079
 ursh' :: (D.MonadBoolector m) => m Range
