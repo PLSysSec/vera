@@ -16,6 +16,7 @@ ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ andTest
                                                    , urshTest_UInt32Range
                                                    , lsh'Test
                                                    , rsh'Test
+                                                   , ursh'Test
                                                    ]
 
 andTest :: BenchTest
@@ -183,9 +184,32 @@ rsh'Test = benchTestCase "rsh'" $ do
     right <- operandWithRange "shit by" D.i32 rightRange
     -- Need to mask https://www.ecma-international.org/ecma-262/5.1/#sec-11.7.3
     maskedRight <- D.i32c 31 >>= D.and right
-    result <- D.safeSrl left maskedRight
+    result <- D.safeSra left maskedRight
 
+    c2 <- verifyUpperBound result resultRange
+    c3 <- verifyLowerBound result resultRange
+
+    return (c1, c2, c3)
+
+  Verified @=? c1
+  Verified @=? c2
+  Verified @=? c3
+
+ursh'Test :: BenchTest
+ursh'Test = benchTestCase "ursh'" $ do
+  (c1, c2, c3) <- D.evalVerif Nothing $ do
+
+    leftRange <- newInputRange "shitee range" D.i32
+    rightRange <- newInputRange "shifter range" D.i32
+    resultRange <- ursh' leftRange rightRange
+    c1 <- verifySaneRange resultRange
+
+    left <- operandWithRange "value to shift" D.i32 leftRange
+    right <- operandWithRange "shit by" D.i32 rightRange
+    -- Need to mask https://www.ecma-international.org/ecma-262/5.1/#sec-11.7.3
+    maskedRight <- D.i32c 31 >>= D.and right
     result <- D.safeSra left right
+
     c2 <- verifyUpperBound result resultRange
     c3 <- verifyLowerBound result resultRange
 

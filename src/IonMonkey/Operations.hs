@@ -31,7 +31,6 @@ sub = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#805
 -- IonMonkey function only applies to i32s
--- Qutoes copied from the source comments
 and :: Range -> Range -> D.Verif Range
 and left right = do
 
@@ -67,7 +66,6 @@ or _lhs _rhs = undefined
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#893
 xor :: (D.MonadBoolector m) => Range -> Range -> m Range
 xor left right = undefined
-
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#955
 not :: Range -> D.Verif Range
@@ -210,8 +208,16 @@ rsh' shiftee shifter = do
   return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1079
-ursh' :: (D.MonadBoolector m) => m Range
-ursh' = undefined
+ursh' :: Range -> Range -> D.Verif Range
+ursh' left _ = do
+  isNonNeg <- isFiniteNonNegative left
+  zero <- D.i32c 0
+  uint32max <- D.ui32max
+
+  result <- newResultRange "result" D.i32
+  D.assign (lower result) zero
+  D.cond isNonNeg (upper left) uint32max >>= D.assign (upper result)
+  return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1089
 abs :: (D.MonadBoolector m) => m Range
