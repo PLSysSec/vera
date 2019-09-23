@@ -3,17 +3,38 @@ import           BenchUtils
 import           Control.Monad.State.Strict (liftIO)
 import qualified DSL.DSL                    as D
 import           IonMonkey.Objects
-import           IonMonkey.Operations       (and, not, rsh, ursh, lsh, lsh')
+import           IonMonkey.Operations       (and, lsh, lsh', not, rsh, ursh)
 import           Prelude                    hiding (and, not)
 import           Test.Tasty.HUnit
 
 ionMonkeyTests :: BenchTest
-ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ notTest
+ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ andTest
+                                                   , notTest
                                                    , rshTest
                                                    , urshTest
                                                    , lshTest
                                                    , lsh'Test
                                                    ]
+
+andTest :: BenchTest
+andTest = benchTestCase "and" $ do
+  (c1, c2, c3) <- D.evalVerif Nothing $ do
+
+    leftRange <- newInputRange "left start range" D.i32
+    rightRange <- newInputRange "right start range" D.i32
+    resultRange <- and leftRange rightRange
+    c1 <- verifySaneRange resultRange
+
+    left <- operandWithRange "left" D.i32 leftRange
+    right <- operandWithRange "right" D.i32 rightRange
+    result <- D.and left right
+    c2 <- verifyLowerBound result resultRange
+    c3 <- verifyUpperBound result resultRange
+    return (c1, c2, c3)
+
+  Verified @=? c1
+  Verified @=? c2
+  Verified @=? c3
 
 notTest :: BenchTest
 notTest = benchTestCase "not" $ do
