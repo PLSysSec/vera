@@ -9,6 +9,9 @@ module IonMonkey.Objects ( Range
                          , verifySaneRange
                          , verifyUpperBound
                          , verifyLowerBound
+                         , uVerifySaneRange
+                         , uVerifyUpperBound
+                         , uVerifyLowerBound
                          ) where
 import qualified Data.Map.Strict as M
 import qualified DSL.DSL         as D
@@ -70,9 +73,16 @@ getResult status = case status of
 -- Expects UNSAT
 -- TODO: make an informative datatype with a counterexample
 verifySaneRange :: Range -> D.Verif VerifResult
-verifySaneRange resultRange = do
+verifySaneRange = verifySaneRange_ D.slt
+
+-- | Same as verifySaneRange but unsigned comparison
+uVerifySaneRange :: Range -> D.Verif VerifResult
+uVerifySaneRange = verifySaneRange_ D.ult
+
+verifySaneRange_ :: (D.Node -> D.Node -> D.Verif D.Node) -> Range -> D.Verif VerifResult
+verifySaneRange_ cmp resultRange = do
   D.push 1
-  D.slt (upper resultRange) (lower resultRange) >>= D.assert
+  cmp (upper resultRange) (lower resultRange) >>= D.assert
   check <- D.sat
   D.pop 1
   getResult check
@@ -81,20 +91,24 @@ verifySaneRange resultRange = do
 -- Expects UNSAT
 -- TODO same as above
 verifyUpperBound :: D.Node -> Range -> D.Verif VerifResult
-verifyUpperBound node range = do
-  D.push 1
-  D.sgt node (upper range) >>= D.assert
-  check <- D.sat
-  D.pop 1
-  getResult check
+verifyUpperBound = verifyBound D.sgt upper
 
 -- | Verify that a node is greater than the lower bound
 -- Expects UNSAT
 -- TODO same as above
 verifyLowerBound :: D.Node -> Range -> D.Verif VerifResult
-verifyLowerBound node range = do
+verifyLowerBound = verifyBound D.slt lower
+
+uVerifyUpperBound :: D.Node -> Range -> D.Verif VerifResult
+uVerifyUpperBound = verifyBound D.ugt upper
+
+uVerifyLowerBound :: D.Node -> Range -> D.Verif VerifResult
+uVerifyLowerBound = verifyBound D.ult lower
+
+verifyBound :: (D.Node -> D.Node -> D.Verif D.Node) -> (Range -> D.Node) -> D.Node -> Range -> D.Verif VerifResult
+verifyBound cmp lowOrUp node range = do
   D.push 1
-  D.slt node (lower range) >>= D.assert
+  cmp node (lowOrUp range) >>= D.assert
   check <- D.sat
   D.pop 1
   getResult check

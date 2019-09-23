@@ -87,14 +87,14 @@ urshTest = benchTestCase "ursh" $ do
     shifteeRange <- newInputRange "shiftee range" D.i32
     val <- D.i32v "val"
     resultRange <- ursh shifteeRange val
-    c1 <- verifySaneRange resultRange
+    c1 <- uVerifySaneRange resultRange
 
     shiftee <- operandWithRange "shiftee" D.i32 shifteeRange
     -- Need to mask https://www.ecma-international.org/ecma-262/5.1/#sec-11.7.3
     maskedVal <- D.i32c 31 >>= D.and val
     result <- D.safeSrl shiftee maskedVal
-    c2 <- verifyUpperBound result resultRange
-    c3 <- verifyLowerBound result resultRange
+    c2 <- uVerifyUpperBound result resultRange
+    c3 <- uVerifyLowerBound result resultRange
     return (c1, c2, c3)
 
   Verified @=? c1

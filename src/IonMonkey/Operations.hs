@@ -134,23 +134,23 @@ rsh shiftee val = do
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1023
 ursh :: Range -> D.Node -> D.Verif Range
-ursh shiftee val = do
+ursh lhs c = do
   -- Setup the shift
   thirtyOne <- D.i32c 31
-  shift <- D.and val thirtyOne
+  shift <- D.and c thirtyOne
 
   -- "If the value is always non-negative or always negative, we can simply
   -- compute the correct range by shifting."
-  result <- newResultRange "result" D.i32
-  isNeg <- D.named "isNeg" $ isFiniteNegative shiftee
-  isNonNeg <- D.named "isNonNeg" $ isFiniteNonNegative shiftee
-  isNegOrNonNeg <- D.named "isNegOrNonNeg" $ D.or isNeg isNonNeg
+  isNeg         <- isFiniteNegative lhs
+  isNonNeg      <- isFiniteNonNegative lhs
+  isNegOrNonNeg <- D.or isNeg isNonNeg
 
-  trueLower <- D.safeSrl (lower result) shift
-  trueUpper <- D.safeSrl (upper result) shift
+  trueLower  <- D.safeSrl (lower lhs) shift
+  trueUpper  <- D.safeSrl (upper lhs) shift
   falseLower <- D.i32c 0
   falseUpper <- D.ui32max >>= \max -> D.safeSrl max shift
 
+  result <- newResultRange "result" D.i32
   D.cond isNegOrNonNeg trueLower falseLower >>= D.assign (lower result)
   D.cond isNegOrNonNeg trueUpper falseUpper >>= D.assign (upper result)
   return result
