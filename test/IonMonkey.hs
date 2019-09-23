@@ -81,25 +81,26 @@ rshTest = benchTestCase "rsh" $ do
   Verified @=? c3
 
 urshTest :: BenchTest
-urshTest = benchTestCase "ursh" $ do
-  (c1, c2, c3) <- D.evalVerif Nothing $ do
+urshTest = benchTestCase "ursh" $ D.evalVerif Nothing $ do
 
     shifteeRange <- newInputRange "shiftee range" D.i32
     val <- D.i32v "val"
     resultRange <- ursh shifteeRange val
     c1 <- uVerifySaneRange resultRange
 
+    liftIO $ Verified @=? c1
+
     shiftee <- operandWithRange "shiftee" D.i32 shifteeRange
     -- Need to mask https://www.ecma-international.org/ecma-262/5.1/#sec-11.7.3
     maskedVal <- D.i32c 31 >>= D.and val
     result <- D.safeSrl shiftee maskedVal
-    c2 <- uVerifyUpperBound result resultRange
-    c3 <- uVerifyLowerBound result resultRange
-    return (c1, c2, c3)
 
-  Verified @=? c1
-  Verified @=? c2
-  Verified @=? c3
+    c2 <- uVerifyUpperBound result resultRange
+    liftIO $ Verified @=? c2
+
+    c3 <- uVerifyLowerBound result resultRange
+    liftIO $ Verified @=? c3
+
 
 -- orTest :: BenchTest
 -- orTest = error "Nope"
