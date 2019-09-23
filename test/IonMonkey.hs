@@ -17,13 +17,12 @@ ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ notTest
 
 notTest :: BenchTest
 notTest = benchTestCase "not" $ do
-  bs <- D.newBoolectorState Nothing
-  (internalCheck, check1, check2) <- D.evalBoolector bs $ do
+  (internalCheck, check1, check2) <- D.evalVerif Nothing $ do
 
     -- Setup the result range and make sure lower < upper
     opRange <- newInputRange "operand start range" D.i32
     resultRange <- not opRange
-    internalCheck <- verifySaneRange [opRange] resultRange
+    internalCheck <- verifySaneRange resultRange
 
     -- Make sure that the result range actually corresponds to the range of the operator
     op <- operandWithRange "op" D.i32 opRange
@@ -34,19 +33,18 @@ notTest = benchTestCase "not" $ do
     return (internalCheck, c1, c2)
 
 
-  RangeVerified @=? internalCheck
-  D.Unsat @=? check1
-  D.Unsat @=? check2
+  Verified @=? internalCheck
+  Verified @=? check1
+  Verified @=? check2
 
 rshTest :: BenchTest
 rshTest = benchTestCase "rsh" $ do
-  bs <- D.newBoolectorState Nothing
-  (c1, c2, c3) <- D.evalBoolector bs $ do
+  (c1, c2, c3) <- D.evalVerif Nothing $ do
 
     shifteeRange <- newInputRange "shiftee range" D.i32
     val <- D.i32v "val"
     resultRange <- rsh shifteeRange val
-    c1 <- verifySaneRange [shifteeRange] resultRange
+    c1 <- verifySaneRange resultRange
 
     shiftee <- operandWithRange "shiftee" D.i32 shifteeRange
     result <- D.safeSra shiftee val
@@ -55,19 +53,18 @@ rshTest = benchTestCase "rsh" $ do
 
     return (c1, c2, c3)
 
-  RangeVerified @=? c1
-  D.Unsat @=? c2
-  D.Unsat @=? c3
+  Verified @=? c1
+  Verified @=? c2
+  Verified @=? c3
 
 urshTest :: BenchTest
 urshTest = benchTestCase "ursh" $ do
-  bs <- D.newBoolectorState Nothing
-  (c1, c2, c3) <- D.evalBoolector bs $ do
+  (c1, c2, c3) <- D.evalVerif Nothing $ do
 
     shifteeRange <- newInputRange "shiftee range" D.i32
     val <- D.i32v "val"
     resultRange <- ursh shifteeRange val
-    c1 <- verifySaneRange [shifteeRange] resultRange
+    c1 <- verifySaneRange resultRange
 
     shiftee <- operandWithRange "shiftee" D.i32 shifteeRange
     result <- D.safeSra shiftee val
@@ -75,22 +72,21 @@ urshTest = benchTestCase "ursh" $ do
     c3 <- verifyLowerBound result resultRange
     return (c1, c2, c3)
 
-  RangeVerified @=? c1
-  -- D.Unsat @=? c2
-  -- D.Unsat @=? c3
+  Verified @=? c1
+  -- Verified @=? c2
+  -- Verified @=? c3
 
 -- orTest :: BenchTest
 -- orTest = error "Nope"
 
 lshTest :: BenchTest
 lshTest = benchTestCase "lsh" $ do
-  bs <- D.newBoolectorState Nothing
-  (c1, c2, c3) <- D.evalBoolector bs $ do
+  (c1, c2, c3) <- D.evalVerif Nothing $ do
 
     shifteeRange <- newInputRange "shiftee range" D.i32
     val <- D.i32v "val"
     resultRange <- lsh shifteeRange val
-    c1 <- verifySaneRange [shifteeRange] resultRange
+    c1 <- verifySaneRange resultRange
 
     shiftee <- operandWithRange "shiftee" D.i32 shifteeRange
     -- Need to mask https://www.ecma-international.org/ecma-262/5.1/#sec-11.7.1
@@ -101,21 +97,20 @@ lshTest = benchTestCase "lsh" $ do
 
     return (c1, c2, c3)
 
-  RangeVerified @=? c1
+  Verified @=? c1
 
-  D.Unsat @=? c2
-  D.Unsat @=? c3
+  Verified @=? c2
+  Verified @=? c3
 
 
 lsh'Test :: BenchTest
 lsh'Test = benchTestCase "lsh'" $ do
-  bs <- D.newBoolectorState Nothing
-  (c1, c2, c3) <- D.evalBoolector bs $ do
+  (c1, c2, c3) <- D.evalVerif Nothing $ do
 
     lhs <- newInputRange "range ov value to shift" D.i32
     rhs <- newInputRange "shift by" D.i32
     resultRange <- lsh' lhs rhs
-    c1 <- verifySaneRange [lhs, rhs] resultRange
+    c1 <- verifySaneRange resultRange
 
     lhsOp <- operandWithRange "value to shift" D.i32 lhs
     rhsOp <- operandWithRange "shit by" D.i32 rhs
@@ -125,9 +120,9 @@ lsh'Test = benchTestCase "lsh'" $ do
 
     return (c1, c2, c3)
 
-  RangeVerified @=? c1
-  D.Unsat @=? c2
-  D.Unsat @=? c3
+  Verified @=? c1
+  Verified @=? c2
+  Verified @=? c3
 
 
 

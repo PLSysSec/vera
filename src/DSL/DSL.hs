@@ -70,14 +70,19 @@ getVars = vars `liftM` get
 emptyVerifState :: VerifState
 emptyVerifState = VerifState { vars = M.empty }
 
-runVerif :: Verif a -> B.Boolector (a, VerifState)
-runVerif (Verif act) = runStateT act emptyVerifState
+-- | Run verification computation
+runVerif :: Maybe Integer -- ^ Optional timeout
+         -> Verif a       -- ^ Verification computation
+         -> IO (a, VerifState)
+runVerif mTimeout (Verif act) = do
+  bs <- B.newBoolectorState mTimeout
+  B.evalBoolector bs $ runStateT act emptyVerifState
 
-evalVerif :: Verif a -> B.Boolector a
-evalVerif (Verif act) = evalStateT act emptyVerifState
+evalVerif :: Maybe Integer -> Verif a -> IO a
+evalVerif mt act = fst <$> runVerif mt act
 
-execVerif :: Verif a -> B.Boolector VerifState
-execVerif (Verif act) = execStateT act emptyVerifState
+execVerif :: Maybe Integer -> Verif a -> IO VerifState
+execVerif mt act = snd <$> runVerif mt act
 
 -- Standard sorts
 
