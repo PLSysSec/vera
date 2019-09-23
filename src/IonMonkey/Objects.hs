@@ -1,5 +1,5 @@
 module IonMonkey.Objects ( Range
-                         , RangeResult(..)
+                         , VerifResult(..)
                          , lower
                          , upper
                          , rangeName
@@ -10,9 +10,10 @@ module IonMonkey.Objects ( Range
                          , verifyUpperBound
                          , verifyLowerBound
                          ) where
-import qualified DSL.DSL as D
+import qualified Data.Map.Strict as M
+import qualified DSL.DSL         as D
 
--- IonMonkey's range object
+-- | IonMonkey's range object
 -- https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#119
 data Range = Range {
       rangeName :: String
@@ -52,57 +53,49 @@ operandWithRange name sort range = do
 
 -- Verification functions and datatypes
 
-data RangeResult = RangeVerified
-                 | RangeBroken { inputsLower  :: [Integer]
-                               , inputsUpper  :: [Integer]
-                               , counterLower :: Integer
-                               , counterUpper :: Integer
-                               }
+data VerifResult = Verified
+                 | Broken { counterexample :: M.Map String Integer}
                  deriving (Eq, Ord, Show)
 
-data BoundsResult = BoundsVerified
-                  | BoundsBroken { counterResult :: Integer
-                                 , counterBound  :: Integer
-                                 }
+getResult :: D.Status -> D.Verif VerifResult
+getResult status = case status of
+  D.Unsat -> return Verified
+  D.Sat -> do
+    allVars <- D.getVars
+    assigns <- mapM D.signedBvAssignment allVars
+    return $ Broken assigns
+  e -> error $ unwords $ ["Solver error when verifying", show e]
 
 -- | Verify that the upper bound of a range is greater than the lower
 -- Expects UNSAT
 -- TODO: make an informative datatype with a counterexample
-verifySaneRange :: (D.MonadBoolector m) => [Range] -> Range -> m RangeResult
-verifySaneRange inputRanges resultRange = do
+verifySaneRange :: Range -> D.Verif VerifResult
+verifySaneRange resultRange = do
   D.push 1
   D.slt (upper resultRange) (lower resultRange) >>= D.assert
   check <- D.sat
   D.pop 1
-  case check of
-    D.Unsat -> return RangeVerified
-    D.Sat -> do
-      inputsLowerAssign <- mapM (D.signedBvAssignment . lower) inputRanges
-      inputsUpperAssign <- mapM (D.signedBvAssignment . upper) inputRanges
-      lowerAssign <- D.signedBvAssignment (lower resultRange)
-      upperAssign <- D.signedBvAssignment (upper resultRange)
-      return $ RangeBroken inputsLowerAssign inputsUpperAssign lowerAssign upperAssign
-    e -> error $ unwords ["Solver error when verifying the range:", show e]
+  getResult check
 
 -- | Verify that a node is less than the upper bound
 -- Expects UNSAT
 -- TODO same as above
-verifyUpperBound :: (D.MonadBoolector m) => D.Node -> Range -> m D.Status
+verifyUpperBound :: D.Node -> Range -> D.Verif VerifResult
 verifyUpperBound node range = do
   D.push 1
   D.sgt node (upper range) >>= D.assert
   check <- D.sat
   D.pop 1
-  return check
+  getResult check
 
 -- | Verify that a node is greater than the lower bound
 -- Expects UNSAT
 -- TODO same as above
-verifyLowerBound :: (D.MonadBoolector m) => D.Node -> Range -> m D.Status
+verifyLowerBound :: D.Node -> Range -> D.Verif VerifResult
 verifyLowerBound node range = do
   D.push 1
   D.slt node (lower range) >>= D.assert
   check <- D.sat
   D.pop 1
-  return check
+  getResult check
 

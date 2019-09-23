@@ -39,6 +39,7 @@ module DSL.DSL ( i64
                , condsAssign
                , module DSL.BoolectorWrapper
                , Verif
+               , getVars
                ) where
 import           Control.Monad              (foldM)
 import           Control.Monad.State.Strict
@@ -57,6 +58,9 @@ newtype Verif m = Verif (StateT VerifState B.Boolector m)
 instance B.MonadBoolector Verif where
     getBoolectorState = Verif $ lift $ get
     putBoolectorState state = Verif $ lift $ put state
+
+getVars :: Verif (M.Map String B.Node)
+getVars = vars `liftM` get
 
 -- Standard sorts
 
