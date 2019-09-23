@@ -120,8 +120,6 @@ lsh shiftee val = do
 
   return result
 
-
-
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1016
 rsh :: Range -> D.Node -> D.Verif Range
 rsh shiftee val = do
@@ -168,8 +166,8 @@ lsh' _ _ = do
 
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1048
-rsh' :: (D.MonadBoolector m) => m Range
-rsh' = undefined
+rsh' :: Range -> Range -> D.Verif Range
+rsh' shiftee shifter = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1079
 ursh' :: (D.MonadBoolector m) => m Range
