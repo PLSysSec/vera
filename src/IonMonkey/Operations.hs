@@ -34,31 +34,30 @@ sub = undefined
 -- Qutoes copied from the source comments
 and :: Range -> Range -> D.Verif Range
 and left right = do
-  -- MLFB: The updated range after the 'and' operation
-  result <- newResultRange "result" D.i32
-  error ""
-  -- if both numbers can be negative, result can be negative in the whole range
-  -- zero <- D.i32c 0
-  -- i32min <- D.i32min
-  -- leftNeg <- D.slt (lower left) zero
-  -- rightNeg <- D.slt (lower right) zero
-  -- bothNeg <- D.and leftNeg rightNeg
-  -- maxUpper <- D.smax (upper lhs) (upper rhs)
-  -- D.condAssign bothNeg (lower result) i32min
-  -- D.condAssign bothNeg (upper result) maxUpper
 
-  -- -- Only one of both numbers can be negative.
-  -- -- - result can't be negative
-  -- -- - Upper bound is minimum of both upper range
-  -- -- EXCEPT when upper bound of non negative number is max value,
-  -- -- because negative value can return the whole max value.
-  -- -- -1 & 5 = 5
-  -- notBothNeg <- D.not bothNeg
-  -- upperTemp <- D.smin (upper lhs) (upper rhs)
-  -- D.condsAssign [notBothNeg, lhsNeg] upperTemp (upper rhs)
-  -- D.condsAssign [notBothNeg, rhsNeg] upperTemp (upper lhs)
-  -- D.condAssign notBothNeg (upper result) upperTemp
-  -- return result
+  result <- newResultRange "result" D.i32
+  zero <- D.i32c 0
+
+  -- Condition for choosing the return value
+  leftNeg <- D.slt (lower left) zero
+  rightNeg <- D.slt (lower right) zero
+  neg <- D.and leftNeg rightNeg
+
+  -- The upper and lower bounds in the true case
+  trueLower <- D.i32min
+  trueUpper <- D.smax (upper left) (upper right)
+
+  -- The upper and lower bounds in the false case
+  let falseLower = zero
+  falseUpper <- do
+    tmpUpper1 <- D.smin (upper left) (upper right)
+    tmpUpper2 <- D.cond leftNeg (upper right) tmpUpper1
+    D.cond rightNeg (upper left) tmpUpper2
+
+  -- Assign the new upper and lower based on the condition from before
+  D.cond neg trueLower falseLower >>= D.assign (lower result)
+  D.cond neg trueUpper falseUpper >>= D.assign (upper result)
+  return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#834
 -- IonMonkey function only applies to i32s
@@ -68,6 +67,7 @@ or _lhs _rhs = undefined
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#893
 xor :: (D.MonadBoolector m) => Range -> Range -> m Range
 xor left right = undefined
+
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#955
 not :: Range -> D.Verif Range
