@@ -173,8 +173,8 @@ rsh' shiftee shifter = do
 
   -- Cannonicalize shift range from 0-31
   cond <- do
-    extShiftLower <- D.sext (lower shifter) 64
-    extShiftUpper <- D.sext (upper shifter) 64
+    extShiftLower <- D.sext (lower shifter) 32
+    extShiftUpper <- D.sext (upper shifter) 32
     sub <- D.sub extShiftUpper extShiftLower
     thirtyOne <- D.i64c 31
     D.slt sub thirtyOne

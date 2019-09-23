@@ -3,18 +3,19 @@ import           BenchUtils
 import           Control.Monad.State.Strict (liftIO)
 import qualified DSL.DSL                    as D
 import           IonMonkey.Objects
-import           IonMonkey.Operations       (and, lsh, lsh', not, rsh, ursh)
+import           IonMonkey.Operations
 import           Prelude                    hiding (and, not)
 import           Test.Tasty.HUnit
 
 ionMonkeyTests :: BenchTest
 ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ andTest
                                                    , notTest
+                                                   , lshTest
                                                    , rshTest
                                                    , urshTest
                                                    , urshTest_UInt32Range
-                                                   , lshTest
                                                    , lsh'Test
+                                                   , rsh'Test
                                                    ]
 
 andTest :: BenchTest
@@ -59,6 +60,29 @@ notTest = benchTestCase "not" $ do
   Verified @=? check1
   Verified @=? check2
 
+lshTest :: BenchTest
+lshTest = benchTestCase "lsh" $ do
+  (c1, c2, c3) <- D.evalVerif Nothing $ do
+
+    shifteeRange <- newInputRange "shiftee range" D.i32
+    val <- D.i32v "val"
+    resultRange <- lsh shifteeRange val
+    c1 <- verifySaneRange resultRange
+
+    shiftee <- operandWithRange "shiftee" D.i32 shifteeRange
+    -- Need to mask https://www.ecma-international.org/ecma-262/5.1/#sec-11.7.1
+    maskedVal <- D.i32c 31 >>= D.and val
+    result <- D.safeSll shiftee maskedVal
+    c2 <- verifyUpperBound result resultRange
+    c3 <- verifyLowerBound result resultRange
+
+    return (c1, c2, c3)
+
+  Verified @=? c1
+
+  Verified @=? c2
+  Verified @=? c3
+
 rshTest :: BenchTest
 rshTest = benchTestCase "rsh" $ do
   (c1, c2, c3) <- D.evalVerif Nothing $ do
@@ -85,73 +109,45 @@ rshTest = benchTestCase "rsh" $ do
 urshTest  :: BenchTest
 urshTest = benchTestCase "ursh" $ D.evalVerif Nothing $ do
 
-    shifteeRange <- newInputRange "shiftee range" D.i32
-    val <- D.i32v "val"
-    resultRange <- ursh shifteeRange val
-    c1 <- verifySaneRange resultRange
+  shifteeRange <- newInputRange "shiftee range" D.i32
+  val <- D.i32v "val"
+  resultRange <- ursh shifteeRange val
+  c1 <- verifySaneRange resultRange
 
-    liftIO $ Verified @=? c1
+  liftIO $ Verified @=? c1
 
-    shiftee <- operandWithRange "shiftee" D.i32 shifteeRange
-    -- Need to mask https://www.ecma-international.org/ecma-262/5.1/#sec-11.7.3
-    maskedVal <- D.i32c 31 >>= D.and val
-    result <- D.safeSrl shiftee maskedVal
+  shiftee <- operandWithRange "shiftee" D.i32 shifteeRange
+  -- Need to mask https://www.ecma-international.org/ecma-262/5.1/#sec-11.7.3
+  maskedVal <- D.i32c 31 >>= D.and val
+  result <- D.safeSrl shiftee maskedVal
 
-    c2 <- verifyUpperBound result resultRange
-    liftIO $ Verified @=? c2
+  c2 <- verifyUpperBound result resultRange
+  liftIO $ Verified @=? c2
 
-    c3 <- verifyLowerBound result resultRange
-    liftIO $ Verified @=? c3
+  c3 <- verifyLowerBound result resultRange
+  liftIO $ Verified @=? c3
 
 
 urshTest_UInt32Range  :: BenchTest
 urshTest_UInt32Range = benchTestCase "ursh uint32" $ D.evalVerif Nothing $ do
 
-    shifteeRange <- newInputRange "shiftee range" D.i32
-    val <- D.i32v "val"
-    resultRange <- ursh shifteeRange val
-    c1 <- uVerifySaneRange resultRange
+  shifteeRange <- newInputRange "shiftee range" D.i32
+  val <- D.i32v "val"
+  resultRange <- ursh shifteeRange val
+  c1 <- uVerifySaneRange resultRange
 
-    liftIO $ Verified @=? c1
+  liftIO $ Verified @=? c1
 
-    shiftee <- operandWithRange "shiftee" D.i32 shifteeRange
-    -- Need to mask https://www.ecma-international.org/ecma-262/5.1/#sec-11.7.3
-    maskedVal <- D.i32c 31 >>= D.and val
-    result <- D.safeSrl shiftee maskedVal
+  shiftee <- operandWithRange "shiftee" D.i32 shifteeRange
+  -- Need to mask https://www.ecma-international.org/ecma-262/5.1/#sec-11.7.3
+  maskedVal <- D.i32c 31 >>= D.and val
+  result <- D.safeSrl shiftee maskedVal
 
-    c2 <- uVerifyUpperBound result resultRange
-    liftIO $ Verified @=? c2
+  c2 <- uVerifyUpperBound result resultRange
+  liftIO $ Verified @=? c2
 
-    c3 <- uVerifyLowerBound result resultRange
-    liftIO $ Verified @=? c3
-
-
--- orTest :: BenchTest
--- orTest = error "Nope"
-
-lshTest :: BenchTest
-lshTest = benchTestCase "lsh" $ do
-  (c1, c2, c3) <- D.evalVerif Nothing $ do
-
-    shifteeRange <- newInputRange "shiftee range" D.i32
-    val <- D.i32v "val"
-    resultRange <- lsh shifteeRange val
-    c1 <- verifySaneRange resultRange
-
-    shiftee <- operandWithRange "shiftee" D.i32 shifteeRange
-    -- Need to mask https://www.ecma-international.org/ecma-262/5.1/#sec-11.7.1
-    maskedVal <- D.i32c 31 >>= D.and val
-    result <- D.safeSll shiftee maskedVal
-    c2 <- verifyUpperBound result resultRange
-    c3 <- verifyLowerBound result resultRange
-
-    return (c1, c2, c3)
-
-  Verified @=? c1
-
-  Verified @=? c2
-  Verified @=? c3
-
+  c3 <- uVerifyLowerBound result resultRange
+  liftIO $ Verified @=? c3
 
 lsh'Test :: BenchTest
 lsh'Test = benchTestCase "lsh'" $ do
@@ -174,6 +170,26 @@ lsh'Test = benchTestCase "lsh'" $ do
   Verified @=? c2
   Verified @=? c3
 
+rsh'Test :: BenchTest
+rsh'Test = benchTestCase "rsh'" $ do
+  (c1, c2, c3) <- D.evalVerif Nothing $ do
+
+    leftRange <- newInputRange "shitee range" D.i32
+    rightRange <- newInputRange "shifter range" D.i32
+    resultRange <- rsh' leftRange rightRange
+    c1 <- verifySaneRange resultRange
+
+    left <- operandWithRange "value to shift" D.i32 leftRange
+    right <- operandWithRange "shit by" D.i32 rightRange
+    result <- D.safeSra left right
+    c2 <- verifyUpperBound result resultRange
+    c3 <- verifyLowerBound result resultRange
+
+    return (c1, c2, c3)
+
+  Verified @=? c1
+  Verified @=? c2
+  Verified @=? c3
 
 
 
@@ -196,86 +212,4 @@ lsh'Test = benchTestCase "lsh'" $ do
 
 
 
-
-
-
--- -- | IonMonkey's left shift operation
--- -- https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#999
--- lsh :: BenchTest
--- lsh = benchTestCase "lsh" $ do
---   bs <- D.newBoolectorState Nothing
---   result <- D.evalBoolector bs $ do
---     -- We are shifting by a constant, compute the shift amount
---     c <- D.i32v "c"
---     const <- D.i32c 31
---     shift <- D.and c const
-
---     -- Create the other input range and the output range
---     startRange <- newRange "start range" D.i32
---     endRange <- newRange "end range" D.i32
-
---     -- Do their if-checking:
---     -- lower << shift << 1 >> shift >> 1 == lower &&
---     -- upper << shift << 1 >> shift >> 1 == upper
---     -- range is lower << shift, upper << shift
---     -- Lower
---     t1 <- D.safeSll (lower startRange) shift
---     t2 <- D.i32c 1 >>= D.safeSll t1
---     t3 <- D.safeSrl t2 shift
---     t4 <- D.i32c 1 >>= D.safeSrl t3
---     check1 <- D.eq t4 (lower startRange)
---     -- Upper
---     t5 <- D.safeSll (upper startRange) shift
---     t6 <- D.i32c 1 >>= D.safeSll t5
---     t7 <- D.safeSll t6 shift
---     t8 <- D.i32c 1 >>= D.safeSll t7
---     check2 <- D.eq t8 (upper startRange)
-
---     -- Set new range bounds
---     defaultLower <- D.i32min
---     defaultUpper <- D.i32max
---     D.cond check1 t1 defaultLower >>= D.eq (lower endRange)
---     D.cond check2 t5 defaultUpper >>= D.eq (upper endRange)
-
---     -- Verify that the operation is always in bounds
---     operand <- operandWithRange "shifted variable" D.i32 startRange
---     shiftResult <- D.safeSll operand c
---     verifyInRange shiftResult endRange
---     D.sat
-
---   result @=? D.Sat
-
--- -- | IonMonkey's right shift operation
--- -- https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1016
--- rsh :: BenchTest
--- rsh = benchTestCase "rsh" $ do
---   bs <- D.newBoolectorState Nothing
---   result <- D.evalBoolector bs $ do
---     -- Compute the shift amount
---     c <- D.i32v "c"
---     const <- D.i32c 31
---     shift <- D.and c const
-
---     -- Setup the current bounds on the range
---     lower <- D.i32v "lower bound"
---     upper <- D.i32v "upper bound"
---     finalLower <- D.i32v "final lower bound"
---     finalUpper <- D.i32v "final upper bound"
---     D.slte lower upper >>= D.assert
---     D.slte lower upper >>= D.assert
-
---     -- Calculate the new range
---     D.safeSrl lower shift >>= D.eq finalLower
---     D.safeSrl upper shift >>= D.eq finalUpper
-
---     -- Verify that the operation is always in bounds
---     operand <- D.i32v "the shifted variable"
---     D.slte operand upper >>= D.assert
---     D.sgte operand lower >>= D.assert
---     shiftResult <- D.safeSrl operand c
---     D.slte shiftResult finalUpper >>= D.assert
---     D.sgte shiftResult finalLower >>= D.assert
---     D.sat
-
---   result @=? D.Sat
 
