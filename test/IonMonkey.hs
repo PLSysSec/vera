@@ -12,6 +12,7 @@ ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ andTest
                                                    , notTest
                                                    , rshTest
                                                    , urshTest
+                                                   , urshTest_UInt32Range
                                                    , lshTest
                                                    , lsh'Test
                                                    ]
@@ -80,8 +81,31 @@ rshTest = benchTestCase "rsh" $ do
   Verified @=? c2
   Verified @=? c3
 
-urshTest :: BenchTest
+-- | This may not be right; the exponent bit may be saving the range
+urshTest  :: BenchTest
 urshTest = benchTestCase "ursh" $ D.evalVerif Nothing $ do
+
+    shifteeRange <- newInputRange "shiftee range" D.i32
+    val <- D.i32v "val"
+    resultRange <- ursh shifteeRange val
+    c1 <- verifySaneRange resultRange
+
+    liftIO $ Verified @=? c1
+
+    shiftee <- operandWithRange "shiftee" D.i32 shifteeRange
+    -- Need to mask https://www.ecma-international.org/ecma-262/5.1/#sec-11.7.3
+    maskedVal <- D.i32c 31 >>= D.and val
+    result <- D.safeSrl shiftee maskedVal
+
+    c2 <- verifyUpperBound result resultRange
+    liftIO $ Verified @=? c2
+
+    c3 <- verifyLowerBound result resultRange
+    liftIO $ Verified @=? c3
+
+
+urshTest_UInt32Range  :: BenchTest
+urshTest_UInt32Range = benchTestCase "ursh uint32" $ D.evalVerif Nothing $ do
 
     shifteeRange <- newInputRange "shiftee range" D.i32
     val <- D.i32v "val"
