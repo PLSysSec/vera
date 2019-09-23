@@ -90,14 +90,16 @@ urshTest = benchTestCase "ursh" $ do
     c1 <- verifySaneRange resultRange
 
     shiftee <- operandWithRange "shiftee" D.i32 shifteeRange
-    result <- D.safeSra shiftee val
+    -- Need to mask https://www.ecma-international.org/ecma-262/5.1/#sec-11.7.3
+    maskedVal <- D.i32c 31 >>= D.and val
+    result <- D.safeSrl shiftee maskedVal
     c2 <- verifyUpperBound result resultRange
     c3 <- verifyLowerBound result resultRange
     return (c1, c2, c3)
 
   Verified @=? c1
-  -- Verified @=? c2
-  -- Verified @=? c3
+  Verified @=? c2
+  Verified @=? c3
 
 -- orTest :: BenchTest
 -- orTest = error "Nope"

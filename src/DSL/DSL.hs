@@ -32,6 +32,7 @@ module DSL.DSL ( i64
                , umin
                , umax
                , var'
+               , named
                , assign
                , conjunction
                , disjunction
@@ -195,6 +196,14 @@ i8v name = var' i8 name
 
 i1v :: String -> Verif B.Node
 i1v name = var' i1 name
+
+-- | Named intermediate expression
+named :: String -> Verif B.Node -> Verif B.Node
+named str act = do
+  res <- act
+  v <- var' (B.getSort res) str
+  assign v res
+  return v
 
 -- Functions
 
