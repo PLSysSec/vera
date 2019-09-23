@@ -68,7 +68,9 @@ rshTest = benchTestCase "rsh" $ do
     c1 <- verifySaneRange resultRange
 
     shiftee <- operandWithRange "shiftee" D.i32 shifteeRange
-    result <- D.safeSra shiftee val
+    -- Need to mask https://www.ecma-international.org/ecma-262/5.1/#sec-11.7.2
+    maskedVal <- D.i32c 31 >>= D.and val
+    result <- D.safeSra shiftee maskedVal
     c2 <- verifyUpperBound result resultRange
     c3 <- verifyLowerBound result resultRange
 
