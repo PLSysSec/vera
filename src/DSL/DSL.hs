@@ -38,8 +38,13 @@ module DSL.DSL ( i64
                , condAssign
                , condsAssign
                , module DSL.BoolectorWrapper
+               -- ** Verif monad
                , Verif
                , getVars
+               , VerifState(..)
+               , runVerif
+               , evalVerif
+               , execVerif
                ) where
 import           Control.Monad              (foldM)
 import           Control.Monad.State.Strict
@@ -52,7 +57,7 @@ import           Prelude                    hiding (max, min)
 -- to keep track of more things
 data VerifState = VerifState { vars :: M.Map String B.Node }
 
-newtype Verif m = Verif (StateT VerifState B.Boolector m)
+newtype Verif a = Verif (StateT VerifState B.Boolector a)
     deriving (Functor, Applicative, Monad, MonadState VerifState, MonadIO)
 
 instance B.MonadBoolector Verif where
@@ -62,21 +67,33 @@ instance B.MonadBoolector Verif where
 getVars :: Verif (M.Map String B.Node)
 getVars = vars `liftM` get
 
+emptyVerifState :: VerifState
+emptyVerifState = VerifState { vars = M.empty }
+
+runVerif :: Verif a -> B.Boolector (a, VerifState)
+runVerif (Verif act) = runStateT act emptyVerifState
+
+evalVerif :: Verif a -> B.Boolector a
+evalVerif (Verif act) = evalStateT act emptyVerifState
+
+execVerif :: Verif a -> B.Boolector VerifState
+execVerif (Verif act) = execStateT act emptyVerifState
+
 -- Standard sorts
 
-i64 :: Verif B.Sort ---(B.MonadBoolector m) => m B.Sort
+i64 :: Verif B.Sort
 i64 = B.bitvecSort 64
 
-i32 :: Verif B.Sort ---(B.MonadBoolector m) => m B.Sort
+i32 :: Verif B.Sort
 i32 = B.bitvecSort 32
 
-i16 :: Verif B.Sort --(B.MonadBoolector m) => m B.Sort
+i16 :: Verif B.Sort
 i16 = B.bitvecSort 16
 
-i8 :: Verif B.Sort --(B.MonadBoolector m) => m B.Sort
+i8 :: Verif B.Sort
 i8 = B.bitvecSort 8
 
-i1 :: Verif B.Sort --(B.MonadBoolector m) => m B.Sort
+i1 :: Verif B.Sort
 i1 = B.bitvecSort 1
 
 -- Integer consts
@@ -84,7 +101,7 @@ i1 = B.bitvecSort 1
 -- | 64-bit constant
 i64c :: Integer -> Verif B.Node
 i64c val | val <= 18446744073709551615 = i64 >>= B.unsignedInt val
-        | otherwise = error $ unwords $ [show val, "is past the range of i64s"]
+         | otherwise = error $ unwords $ [show val, "is past the range of i64s"]
 
 i64max :: Verif B.Node
 i64max = i64c 9223372036854775807
@@ -95,7 +112,7 @@ i64min = undefined
 -- | 32-bit constant
 i32c :: Integer -> Verif B.Node
 i32c val | val <= 4294967295 = i32 >>= B.unsignedInt val
-        | otherwise = error $ unwords $ [show val, "is past the range of i32s"]
+         | otherwise = error $ unwords $ [show val, "is past the range of i32s"]
 
 ui32max :: Verif B.Node
 ui32max = i32c 4294967295
@@ -109,7 +126,7 @@ i32min = i32c 2147483648
 -- | 16-bit constant
 i16c :: Integer -> Verif B.Node
 i16c val | val <= 65535 = i16 >>= B.unsignedInt val
-        | otherwise = error $ unwords $ [show val, "is past the range of i16s"]
+         | otherwise = error $ unwords $ [show val, "is past the range of i16s"]
 
 i16max :: Verif B.Node
 i16max = undefined
@@ -120,7 +137,7 @@ i16min = undefined
 -- | 8-bit constant
 i8c :: Integer -> Verif B.Node
 i8c val | val <= 255 = i8 >>= B.unsignedInt val
-       | otherwise = error $ unwords $ [show val, "is past the range of i8s"]
+        | otherwise = error $ unwords $ [show val, "is past the range of i8s"]
 
 i8max :: Verif B.Node
 i8max = undefined
@@ -131,7 +148,7 @@ i8min = undefined
 -- | 1-bit constant
 i1c :: Integer -> Verif B.Node
 i1c val | val <= 1 = i1 >>= B.unsignedInt val
-       | otherwise = error $ unwords $ [show val, "is past the range of i1s"]
+        | otherwise = error $ unwords $ [show val, "is past the range of i1s"]
 
 i1max :: Verif B.Node
 i1max = undefined
@@ -215,12 +232,3 @@ condsAssign [] _ _ = error "Cannot conditionally assign with empty condition"
 condsAssign cs x y = do
   conj <- conjunction cs
   condAssign conj x y
-
-
-
-
-
-
-
-
-
