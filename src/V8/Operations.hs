@@ -1,6 +1,7 @@
 module V8.Operations where
 import qualified DSL.DSL           as D
 import           IonMonkey.Objects
+import           V8.Helpers
 
 -- | https://cs.chromium.org/chromium/src/v8/src/compiler/operation-typer.cc?q=NumberAdd&sq=package:chromium&g=0&l=589
 numberAdd :: Range -> Range -> D.Verif Range
@@ -56,7 +57,27 @@ numberBitwiseAnd left right = do
 
 -- | https://cs.chromium.org/chromium/src/v8/src/compiler/operation-typer.cc?q=NumberAdd&sq=package:chromium&g=0&l=908
 numberBitwiseXor :: Range -> Range -> D.Verif Range
-numberBitwiseXor = undefined
+numberBitwiseXor left right = do
+  zero <- D.i32c 0
+
+  -- First conditional: return Unsigned31
+  leftNonNeg <- D.sgte (lower left) zero
+  rightNonNeg <- D.sgte (lower right) zero
+  neitherNeg <- D.and leftNonNeg rightNonNeg
+  leftNeg <- D.slt (upper left) zero
+  rightNeg <- D.slt (upper right) zero
+  bothNeg <- D.and leftNeg rightNeg
+  cond1 <- D.or neitherNeg bothNeg
+
+  -- Second conditional: return Negative32
+  onlyLeftNeg <- D.and leftNeg rightNonNeg
+  onlyRightNeg <- D.and leftNonNeg rightNeg
+  cond2 <- D.or onlyLeftNeg onlyRightNeg
+
+  -- Otherwise return Signed 32
+  result <- newResultRange "result" D.i32
+  error "not sure what we are doing about range types"
+
 
 -- | https://cs.chromium.org/chromium/src/v8/src/compiler/operation-typer.cc?q=NumberAdd&sq=package:chromium&g=0&l=933
 numberShiftLeft :: Range -> Range -> D.Verif Range
