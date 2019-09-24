@@ -67,6 +67,24 @@ or _lhs _rhs = undefined
 xor :: (D.MonadBoolector m) => Range -> Range -> m Range
 xor left right = undefined
 
+  -- invertAfter <- D.false
+
+
+
+  --  if (lhsUpper < 0) {
+  --                    lhsLower = ~lhsLower;
+  --                    lhsUpper = ~lhsUpper;
+  --                    Swap(lhsLower, lhsUpper);
+  --                    invertAfter = !invertAfter;
+  --                  }
+  --           if (rhsUpper < 0) {
+  --                      rhsLower = ~rhsLower;
+  --                      rhsUpper = ~rhsUpper;
+  --                      Swap(rhsLower, rhsUpper);
+  --                      invertAfter = !invertAfter;
+  --                    })
+
+
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#955
 not :: Range -> D.Verif Range
 not op = do
