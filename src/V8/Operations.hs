@@ -28,7 +28,31 @@ numberBitwiseOr = undefined
 
 -- | https://cs.chromium.org/chromium/src/v8/src/compiler/operation-typer.cc?q=NumberAdd&sq=package:chromium&g=0&l=877
 numberBitwiseAnd :: Range -> Range -> D.Verif Range
-numberBitwiseAnd = undefined
+numberBitwiseAnd left right = do
+  zero <- D.i32c 0
+
+  leftNotNeg <- D.sgte (lower left) zero
+  rightNotNeg <- D.sgte (lower right) zero
+  min <- D.i32min
+
+  max1 <- do
+    cond <- D.and leftNotNeg rightNotNeg
+    trueBr <- D.smin (upper left) (upper right)
+    falseBr <- D.smax (upper left) (upper right)
+    D.cond cond trueBr falseBr
+
+  max2 <- do
+    calc <- D.smin max1 (upper left)
+    D.cond leftNotNeg calc max1
+
+  max3 <- do
+    calc <- D.smin max1 (upper right)
+    D.cond rightNotNeg calc max1
+
+  result <- newResultRange "result" D.i32
+  D.assign (lower result) min
+  D.assign (upper result) max3
+  return result
 
 -- | https://cs.chromium.org/chromium/src/v8/src/compiler/operation-typer.cc?q=NumberAdd&sq=package:chromium&g=0&l=908
 numberBitwiseXor :: Range -> Range -> D.Verif Range
