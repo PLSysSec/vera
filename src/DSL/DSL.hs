@@ -36,8 +36,9 @@ module DSL.DSL ( i64
                , assign
                , conjunction
                , disjunction
-               , condAssign
-               , condsAssign
+               , jsSll32
+               , jsSrl32
+               , jsSra32
                , module DSL.BoolectorWrapper
                -- ** Verif monad
                , Verif
@@ -238,11 +239,16 @@ disjunction :: [B.Node] -> Verif B.Node
 disjunction [] = error "Cannot have a disjunction of zero nodes"
 disjunction xs = foldM B.or (head xs) (tail xs)
 
-condAssign :: B.Node -> B.Node -> B.Node -> Verif ()
-condAssign c x y = B.cond c x y >>= assign x
+-- | https://www.ecma-international.org/ecma-262/5.1/#sec-11.7.3
+jsShiftWrapper :: (B.Node -> B.Node -> Verif B.Node)
+               -> B.Node
+               -> B.Node
+               -> Verif B.Node
+jsShiftWrapper op left right = do
+  maskedRight <- i32c 31 >>= B.and right
+  op left maskedRight
 
-condsAssign :: [B.Node] -> B.Node -> B.Node -> Verif ()
-condsAssign [] _ _ = error "Cannot conditionally assign with empty condition"
-condsAssign cs x y = do
-  conj <- conjunction cs
-  condAssign conj x y
+jsSll32, jsSrl32, jsSra32 :: B.Node -> B.Node -> Verif B.Node
+jsSll32 = jsShiftWrapper B.safeSll
+jsSrl32 = jsShiftWrapper B.safeSrl
+jsSra32 = jsShiftWrapper B.safeSra
