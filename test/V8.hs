@@ -11,6 +11,7 @@ v8Tests :: BenchTest
 v8Tests = benchTestGroup "V8 tests" [ andTest
                                     , rshTest
                                     , lshTest
+                                    , urshTest
                                     ]
 
 andTest :: BenchTest
@@ -43,10 +44,8 @@ rshTest = benchTestCase "rsh" $ do
     c1 <- verifySaneRange resultRange
 
     left <- operandWithRange "value to shift" D.i32 leftRange
-    right <- operandWithRange "shit by" D.i32 rightRange
-    -- Need to mask https://www.ecma-international.org/ecma-262/5.1/#sec-11.7.3
-    maskedRight <- D.i32c 31 >>= D.and right
-    result <- D.safeSra left maskedRight
+    right <- operandWithRange "shift by" D.i32 rightRange
+    result <- D.jsSra32 left right
 
     c2 <- verifyUpperBound result resultRange
     c3 <- verifyLowerBound result resultRange
@@ -76,5 +75,27 @@ lshTest = benchTestCase "lsh" $ do
 
   Verified @=? c1
 
+  Verified @=? c2
+  Verified @=? c3
+
+urshTest :: BenchTest
+urshTest = benchTestCase "ursh'" $ do
+  (c1, c2, c3) <- D.evalVerif Nothing $ do
+
+    leftRange <- newInputRange "shitee range" D.i32
+    rightRange <- newInputRange "shifter range" D.i32
+    resultRange <- numberShiftRightLogical leftRange rightRange
+    c1 <- uVerifySaneRange resultRange
+
+    left <- operandWithRange "value to shift" D.i32 leftRange
+    right <- operandWithRange "shit by" D.i32 rightRange
+    result <- D.jsSrl32 left right
+
+    c2 <- uVerifyUpperBound result resultRange
+    c3 <- uVerifyLowerBound result resultRange
+
+    return (c1, c2, c3)
+
+  Verified @=? c1
   Verified @=? c2
   Verified @=? c3

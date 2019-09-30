@@ -133,7 +133,6 @@ numberShiftLeft left right = do
 
 -- | https://cs.chromium.org/chromium/src/v8/src/compiler/operation-typer.cc?q=NumberAdd&sq=package:chromium&g=0&l=968
 numberShiftRight :: Range -> Range -> D.Verif Range
-
 numberShiftRight left right = do
   thirtyOne <- D.i32c 31
   zero <- D.i32c 0
@@ -159,5 +158,40 @@ numberShiftRight left right = do
 
 -- | https://cs.chromium.org/chromium/src/v8/src/compiler/operation-typer.cc?q=NumberAdd&sq=package:chromium&g=0&l=993
 numberShiftRightLogical :: Range -> Range -> D.Verif Range
-numberShiftRightLogical = undefined
+numberShiftRightLogical left right = do
+  thirtyOne <- D.i32c 31
+  zero <- D.i32c 0
+  intmax <- D.i32max
+  uintmax <- D.ui32max
+
+  (upperRight, lowerRight) <- do
+    cond <- D.sgt (upper right) thirtyOne
+    upper <- D.cond cond thirtyOne (upper right)
+    lower <- D.cond cond zero (lower right)
+    return (upper, lower)
+
+  -- logical shift because everything is unsigned ints
+  min <- D.safeSrl (lower left) upperRight
+  max <- D.safeSrl (upper left) lowerRight
+
+  -- if (min == 0 && max == kMaxInt) return Type::Unsigned31();
+  -- if (min == 0 && max == kMaxUInt32) return Type::Unsigned32();
+  -- return Type::Range(min, max, zone());)
+
+  minIsZero <- D.eq min zero
+  maxIsIntmax <- D.eq max intmax
+  maxIsUintmax <- D.eq max uintmax
+
+  condOne <- D.and minIsZero maxIsIntmax
+  condTwo <- D.and minIsZero maxIsUintmax
+
+  -- Not sure the different between unsigned31 and unsigned32, so we're
+  -- going to just return the whole range in both cases for now
+  result <- newResultRange "result" D.i32
+  tmpLower <- D.cond condOne zero min
+  tmpUpper <- D.cond condOne uintmax max
+  D.cond condTwo zero tmpLower >>= D.assign (lower result)
+  D.cond condTwo uintmax tmpUpper >>= D.assign (upper result)
+  return result
+
 
