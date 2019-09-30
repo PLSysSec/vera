@@ -1,5 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-module DSL.DSL ( i64
+module DSL.DSL ( isSigned
+               , isUnsigned
+               , i64
                , i32
                , i16
                , i8
@@ -43,6 +45,7 @@ module DSL.DSL ( i64
                -- ** Verif monad
                , Verif
                , VNode(..)
+               , Type(..)
                , getVars
                , VerifState(..)
                , runVerif
@@ -54,7 +57,9 @@ import           Control.Monad.State.Strict
 import qualified Data.Map.Strict            as M
 import           DSL.BoolectorWrapper       hiding (false, true)
 import qualified DSL.BoolectorWrapper       as B
-import           Prelude                    hiding (max, min)
+import           Prelude                    hiding (max, min, not)
+import qualified Prelude                    as Prelude
+
 
 -- | Verification state. I'm assuming we'll eventually need
 -- to keep track of more things
@@ -94,8 +99,17 @@ execVerif mt act = snd <$> runVerif mt act
 data Type = Unsigned
           | Signed
 
+isSigned :: Type -> Bool
+isSigned Signed = True
+isSigned _      = False
+
+isUnsigned :: Type -> Bool
+isUnsigned = Prelude.not . isSigned
+
 -- | Verbose verification node
-data VNode = VNode B.Node Type
+data VNode = VNode { vnode :: B.Node
+                   , vtype :: Type
+                   }
 
 --
 

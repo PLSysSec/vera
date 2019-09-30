@@ -1,32 +1,61 @@
 module DSL.Typed where
-import           DSL.DSL
+import qualified DSL.DSL as D
 
 {-|
 
-Typed wrappers around C++ operations so that we don't have to case them out by hand
+Typed wrappers around C++ operations so that we don't have to case them out by hand.
+Relying on cppreference.com for spec for each operator
 
 -}
 
-cppGt :: VNode -> VNode -> Verif VNode
-cppGt = undefined
+cppCompareWrapper :: D.VNode
+                  -> D.VNode
+                  -> (D.Node -> D.Node -> D.Verif D.Node)
+                  -> (D.Node -> D.Node -> D.Verif D.Node)
+                  -> D.Verif D.VNode
+cppCompareWrapper left right uCompare sCompare
+ | D.isUnsigned (D.vtype left) || D.isUnsigned (D.vtype right) = do
+     compare <- uCompare (D.vnode left) (D.vnode right)
+     return $ D.VNode compare D.Unsigned
+ | otherwise = do
+     compare <- sCompare (D.vnode left) (D.vnode right)
+     return $ D.VNode compare D.Unsigned
 
-cppGte :: VNode -> VNode -> Verif VNode
-cppGte = undefined
+cppGt :: D.VNode -> D.VNode -> D.Verif D.VNode
+cppGt left right = cppCompareWrapper left right D.ugt D.sgt
 
-cppLt :: VNode -> VNode -> Verif VNode
-cppLt = undefined
+cppGte :: D.VNode -> D.VNode -> D.Verif D.VNode
+cppGte left right = cppCompareWrapper left right D.ugte D.sgte
 
-cppLte :: VNode -> VNode -> Verif VNode
-cppLte = undefined
+cppLt :: D.VNode -> D.VNode -> D.Verif D.VNode
+cppLt left right = cppCompareWrapper left right D.ult D.slt
 
-cppShiftLeft :: VNode -> VNode -> Verif VNode
+cppLte :: D.VNode -> D.VNode -> D.Verif D.VNode
+cppLte left right = cppCompareWrapper left right D.ulte D.slte
+
+cppShiftLeft :: D.VNode -> D.VNode -> D.Verif D.VNode
 cppShiftLeft left right = undefined
 
-cppShiftRight :: VNode -> VNode -> Verif VNode
+-- |
+-- https://en.cppreference.com/w/cpp/language/operator_arithmetic
+--
+-- For unsigned a and for signed and non-negative a, the value of a >> b is the integer
+-- part of a/2b
+--
+-- For negative a, the value of a >> b is implementation-defined
+-- (in most implementations, this performs arithmetic right shift,
+-- so that the result remains negative).
+--
+-- The value of a >> b is a/2b, rounded down (in other words, right shift on
+-- signed a is arithmetic right shift).
+--
+cppShiftRight :: D.VNode -> D.VNode -> D.Verif D.VNode
 cppShiftRight left right = undefined
+ -- | D.isUnsigned left && D.isUnsigned right = undefined
+ -- | otherwise = undefined
 
-cppAdd :: VNode -> VNode -> Verif VNode
+cppAdd :: D.VNode -> D.VNode -> D.Verif D.VNode
 cppAdd = undefined
 
-cppOr :: VNode -> VNode -> Verif VNode
+cppOr :: D.VNode -> D.VNode -> D.Verif D.VNode
 cppOr = undefined
