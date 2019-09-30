@@ -128,7 +128,7 @@ i32max :: Verif B.Node
 i32max = i32c 2147483647
 
 i32min :: Verif B.Node
-i32min = i32c 2147483648
+i32min = i32c (-2147483648)
 
 -- | 16-bit constant
 i16c :: Integer -> Verif B.Node

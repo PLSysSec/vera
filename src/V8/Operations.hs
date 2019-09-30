@@ -131,8 +131,10 @@ numberShiftLeft left right = do
   intmax <- D.i32max
   intmin <- D.i32min
 
+  -- These are represented as unsigneds!
   (upperRight, lowerRight) <- do
-    cond <- D.sgt (upper right) thirtyOne
+    -- Since right upper and lower are unsigned, this will be an unsigned compare
+    cond <- D.ugt (upper right) thirtyOne
     upper <- D.cond cond thirtyOne (upper right)
     lower <- D.cond cond zero (lower right)
     return (upper, lower)

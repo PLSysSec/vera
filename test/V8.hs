@@ -8,11 +8,11 @@ import           Test.Tasty.HUnit
 import           V8.Operations
 
 v8Tests :: BenchTest
-v8Tests = benchTestGroup "V8 tests" [ andTest
-                                    , orTest
-                                    , rshTest
-                                    , lshTest
-                                    , urshTest
+v8Tests = benchTestGroup "V8 tests" [ -- andTest
+                                    -- , orTest
+                                    -- , rshTest
+                                     lshTest
+                                    -- , urshTest
                                     ]
 
 andTest :: BenchTest
@@ -88,14 +88,15 @@ lshTest = benchTestCase "lsh" $ do
 
     shiftee <- operandWithRange "shiftee" D.i32 shifteeRange
     shifter <- operandWithRange "shifter" D.i32 shifterRange
+    result' <- D.i32v "result"
     result <- D.jsSll32 shiftee shifter
+    D.assign result' result
     c2 <- verifyUpperBound result resultRange
     c3 <- verifyLowerBound result resultRange
 
     return (c1, c2, c3)
 
   Verified @=? c1
-
   Verified @=? c2
   Verified @=? c3
 
