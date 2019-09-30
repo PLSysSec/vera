@@ -9,6 +9,7 @@ import           V8.Operations
 
 v8Tests :: BenchTest
 v8Tests = benchTestGroup "V8 tests" [ andTest
+                                    , orTest
                                     , rshTest
                                     , lshTest
                                     , urshTest
@@ -26,6 +27,26 @@ andTest = benchTestCase "and" $ do
     left <- operandWithRange "left" D.i32 leftRange
     right <- operandWithRange "right" D.i32 rightRange
     result <- D.and left right
+    c2 <- verifyLowerBound result resultRange
+    c3 <- verifyUpperBound result resultRange
+    return (c1, c2, c3)
+
+  Verified @=? c1
+  Verified @=? c2
+  Verified @=? c3
+
+orTest :: BenchTest
+orTest = benchTestCase "or" $ do
+  (c1, c2, c3) <- D.evalVerif Nothing $ do
+
+    leftRange <- newInputRange "left start range" D.i32
+    rightRange <- newInputRange "right start range" D.i32
+    resultRange <- numberBitwiseOr leftRange rightRange
+    c1 <- verifySaneRange resultRange
+
+    left <- operandWithRange "left" D.i32 leftRange
+    right <- operandWithRange "right" D.i32 rightRange
+    result <- D.or left right
     c2 <- verifyLowerBound result resultRange
     c3 <- verifyUpperBound result resultRange
     return (c1, c2, c3)
@@ -79,7 +100,7 @@ lshTest = benchTestCase "lsh" $ do
   Verified @=? c3
 
 urshTest :: BenchTest
-urshTest = benchTestCase "ursh'" $ do
+urshTest = benchTestCase "ursh" $ do
   (c1, c2, c3) <- D.evalVerif Nothing $ do
 
     leftRange <- newInputRange "shitee range" D.i32

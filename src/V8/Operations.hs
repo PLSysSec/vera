@@ -26,7 +26,50 @@ numberModulus = undefined
 
 -- | https://cs.chromium.org/chromium/src/v8/src/compiler/operation-typer.cc?q=NumberAdd&sq=package:chromium&g=0&l=840
 numberBitwiseOr :: Range -> Range -> D.Verif Range
-numberBitwiseOr = undefined
+numberBitwiseOr left right = do
+  zero <- D.i32c 0
+  intmax <- D.i32max
+  negativeOne <- D.i32c (-1)
+
+  min <- do
+    leftPositive <- D.sgte (lower left) zero
+    rightPositive <- D.sgte (lower right) zero
+    cond <- D.and leftPositive rightPositive
+    trueBr <- D.smax (lower left) (lower right)
+    falseBr <- D.smin (lower left) (lower right)
+    D.cond cond trueBr falseBr
+
+  let max = intmax
+
+  condOne <- do
+    rightMinZero <- D.eq zero (lower right)
+    rightMaxZero <- D.eq zero (upper right)
+    D.and rightMinZero rightMaxZero
+
+  min' <- D.cond condOne (lower left) min
+  max' <- D.cond condOne (upper left) max
+
+  condTwo <- do
+    leftMinZero <- D.eq zero (lower left)
+    leftMaxZero <- D.eq zero (upper left)
+    D.and leftMinZero leftMaxZero
+
+  min'' <- D.cond condTwo (lower right) min'
+  max'' <- D.cond condTwo (upper right) max'
+
+  condThree <- do
+    negativeLeft <- D.slt (upper left) zero
+    negativeRight <- D.slt (upper right) zero
+    D.or negativeLeft negativeRight
+
+  tmpMax <- D.smin max'' negativeOne
+  max''' <- D.cond condThree tmpMax max''
+
+  result <- newResultRange "result" D.i32
+  D.assign (lower result) min''
+  D.assign (upper result) max'''
+  return result
+
 
 -- | https://cs.chromium.org/chromium/src/v8/src/compiler/operation-typer.cc?q=NumberAdd&sq=package:chromium&g=0&l=877
 numberBitwiseAnd :: Range -> Range -> D.Verif Range
