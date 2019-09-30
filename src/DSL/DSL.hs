@@ -42,6 +42,7 @@ module DSL.DSL ( i64
                , module DSL.BoolectorWrapper
                -- ** Verif monad
                , Verif
+               , VNode(..)
                , getVars
                , VerifState(..)
                , runVerif
@@ -86,7 +87,17 @@ evalVerif mt act = fst <$> runVerif mt act
 execVerif :: Maybe Integer -> Verif a -> IO VerifState
 execVerif mt act = snd <$> runVerif mt act
 
--- Standard sorts
+-- Type wrapper around nodes
+
+-- | Type of the node. For now we just have signed and unsigned i32s,
+-- but eventually we will have more types (eg float)
+data Type = Unsigned
+          | Signed
+
+-- | Verbose verification node
+data VNode = VNode B.Node Type
+
+--
 
 i64 :: Verif B.Sort
 i64 = B.bitvecSort 64
