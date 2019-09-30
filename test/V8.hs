@@ -8,11 +8,11 @@ import           Test.Tasty.HUnit
 import           V8.Operations
 
 v8Tests :: BenchTest
-v8Tests = benchTestGroup "V8 tests" [ -- andTest
-                                    -- , orTest
-                                    -- , rshTest
-                                     lshTest
-                                    -- , urshTest
+v8Tests = benchTestGroup "V8 tests" [ andTest
+                                    , orTest
+                                    , rshTest
+                                    , lshTest
+                                    , urshTest
                                     ]
 
 andTest :: BenchTest
