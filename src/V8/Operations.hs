@@ -1,6 +1,7 @@
 module V8.Operations where
 import qualified DSL.DSL           as D
 import           IonMonkey.Objects
+import           Prelude           hiding (max, min)
 import           V8.Helpers
 
 -- | https://cs.chromium.org/chromium/src/v8/src/compiler/operation-typer.cc?q=NumberAdd&sq=package:chromium&g=0&l=589
@@ -81,10 +82,58 @@ numberBitwiseXor left right = do
 
 -- | https://cs.chromium.org/chromium/src/v8/src/compiler/operation-typer.cc?q=NumberAdd&sq=package:chromium&g=0&l=933
 numberShiftLeft :: Range -> Range -> D.Verif Range
-numberShiftLeft = undefined
+numberShiftLeft left right = do
+  thirtyOne <- D.i32c 31
+  zero <- D.i32c 0
+  intmax <- D.i32max
+  intmin <- D.i32min
+
+  (upperRight, lowerRight) <- do
+    cond <- D.sgt (upper right) thirtyOne
+    upper <- D.cond cond thirtyOne (upper right)
+    lower <- D.cond cond zero (lower right)
+    return (upper, lower)
+
+  min <- do
+    minLeft <- D.safeSll (lower left) lowerRight
+    minRight <- D.safeSll (lower left) upperRight
+    D.smin minLeft minRight
+
+  max <- do
+    maxLeft <- D.safeSll (upper left) lowerRight
+    maxRight <- D.safeSll (upper left) upperRight
+    D.smax maxLeft maxRight
+
+  -- condition one: full range
+  --  if (max_lhs > (kMaxInt >> max_rhs) || min_lhs < (kMinInt >> max_rhs))
+  condOne <- do
+    firstShift <- D.safeSra intmax upperRight
+    leftPart <- D.sgt (upper left) firstShift
+    secondShift <- D.safeSra intmin upperRight
+    rightPart <- D.sgt (lower left) secondShift
+    D.or leftPart rightPart
+
+  -- condition two (seems redundant?): full range
+  -- if (max == kMaxInt && min == kMinInt)
+  largestRange <- do
+    isIntMax <- D.eq max intmax
+    isIntMin <- D.eq min intmin
+    D.and isIntMax isIntMin
+
+  -- condition three: one of those two conditions did not hold, and the result
+  -- will just be min and max
+
+  -- Make the result range
+  result <- newResultRange "result" D.i32
+  tmpLower <- D.cond condOne intmin min
+  tmpUpper <- D.cond condOne intmax max
+  D.cond largestRange intmin tmpLower >>= D.assign (lower result)
+  D.cond largestRange intmax tmpUpper >>= D.assign (upper result)
+  return result
 
 -- | https://cs.chromium.org/chromium/src/v8/src/compiler/operation-typer.cc?q=NumberAdd&sq=package:chromium&g=0&l=968
 numberShiftRight :: Range -> Range -> D.Verif Range
+
 numberShiftRight left right = do
   thirtyOne <- D.i32c 31
   zero <- D.i32c 0

@@ -10,6 +10,7 @@ import           V8.Operations
 v8Tests :: BenchTest
 v8Tests = benchTestGroup "V8 tests" [ andTest
                                     , rshTest
+                                    , lshTest
                                     ]
 
 andTest :: BenchTest
@@ -53,5 +54,27 @@ rshTest = benchTestCase "rsh" $ do
     return (c1, c2, c3)
 
   Verified @=? c1
+  Verified @=? c2
+  Verified @=? c3
+
+lshTest :: BenchTest
+lshTest = benchTestCase "lsh" $ do
+  (c1, c2, c3) <- D.evalVerif Nothing $ do
+
+    shifteeRange <- newInputRange "shiftee range" D.i32
+    shifterRange <- newInputRange "shifter range" D.i32
+    resultRange <- numberShiftLeft shifteeRange shifterRange
+    c1 <- verifySaneRange resultRange
+
+    shiftee <- operandWithRange "shiftee" D.i32 shifteeRange
+    shifter <- operandWithRange "shifter" D.i32 shifterRange
+    result <- D.jsSll32 shiftee shifter
+    c2 <- verifyUpperBound result resultRange
+    c3 <- verifyLowerBound result resultRange
+
+    return (c1, c2, c3)
+
+  Verified @=? c1
+
   Verified @=? c2
   Verified @=? c3
