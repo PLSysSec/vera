@@ -71,9 +71,7 @@ lshTest = benchTestCase "lsh" $ do
     c1 <- verifySaneRange resultRange
 
     shiftee <- operandWithRange "shiftee" D.i32 shifteeRange
-    -- Need to mask https://www.ecma-international.org/ecma-262/5.1/#sec-11.7.1
-    maskedVal <- D.i32c 31 >>= D.and val
-    result <- D.safeSll shiftee maskedVal
+    result <- D.jsSll32 shiftee val
     c2 <- verifyUpperBound result resultRange
     c3 <- verifyLowerBound result resultRange
 
@@ -94,9 +92,7 @@ rshTest = benchTestCase "rsh" $ do
     c1 <- verifySaneRange resultRange
 
     shiftee <- operandWithRange "shiftee" D.i32 shifteeRange
-    -- Need to mask https://www.ecma-international.org/ecma-262/5.1/#sec-11.7.2
-    maskedVal <- D.i32c 31 >>= D.and val
-    result <- D.safeSra shiftee maskedVal
+    result <- D.jsSra32 shiftee val
     c2 <- verifyUpperBound result resultRange
     c3 <- verifyLowerBound result resultRange
 
@@ -118,9 +114,7 @@ urshTest = benchTestCase "ursh" $ D.evalVerif Nothing $ do
   liftIO $ Verified @=? c1
 
   shiftee <- operandWithRange "shiftee" D.i32 shifteeRange
-  -- Need to mask https://www.ecma-international.org/ecma-262/5.1/#sec-11.7.3
-  maskedVal <- D.i32c 31 >>= D.and val
-  result <- D.safeSrl shiftee maskedVal
+  result <- D.jsSrl32 shiftee val
 
   c2 <- verifyUpperBound result resultRange
   liftIO $ Verified @=? c2
@@ -140,9 +134,7 @@ urshTest_UInt32Range = benchTestCase "ursh uint32" $ D.evalVerif Nothing $ do
   liftIO $ Verified @=? c1
 
   shiftee <- operandWithRange "shiftee" D.i32 shifteeRange
-  -- Need to mask https://www.ecma-international.org/ecma-262/5.1/#sec-11.7.3
-  maskedVal <- D.i32c 31 >>= D.and val
-  result <- D.safeSrl shiftee maskedVal
+  result <- D.jsSrl32 shiftee val
 
   c2 <- uVerifyUpperBound result resultRange
   liftIO $ Verified @=? c2
@@ -161,7 +153,7 @@ lsh'Test = benchTestCase "lsh'" $ do
 
     lhsOp <- operandWithRange "value to shift" D.i32 lhs
     rhsOp <- operandWithRange "shit by" D.i32 rhs
-    result <- D.safeSll lhsOp rhsOp
+    result <- D.jsSll32 lhsOp rhsOp
     c2 <- verifyUpperBound result resultRange
     c3 <- verifyLowerBound result resultRange
 
@@ -182,9 +174,7 @@ rsh'Test = benchTestCase "rsh'" $ do
 
     left <- operandWithRange "value to shift" D.i32 leftRange
     right <- operandWithRange "shit by" D.i32 rightRange
-    -- Need to mask https://www.ecma-international.org/ecma-262/5.1/#sec-11.7.3
-    maskedRight <- D.i32c 31 >>= D.and right
-    result <- D.safeSra left maskedRight
+    result <- D.jsSra32 left right
 
     c2 <- verifyUpperBound result resultRange
     c3 <- verifyLowerBound result resultRange
@@ -206,9 +196,7 @@ ursh'Test = benchTestCase "ursh'" $ do
 
     left <- operandWithRange "value to shift" D.i32 leftRange
     right <- operandWithRange "shit by" D.i32 rightRange
-    -- Need to mask https://www.ecma-international.org/ecma-262/5.1/#sec-11.7.3
-    maskedRight <- D.i32c 31 >>= D.and right
-    result <- D.safeSra left maskedRight
+    result <- D.jsSra32 left right
 
     c2 <- uVerifyUpperBound result resultRange
     c3 <- uVerifyLowerBound result resultRange
