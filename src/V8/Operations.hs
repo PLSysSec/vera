@@ -153,7 +153,7 @@ numberShiftLeft left right = do
     firstShift <- D.safeSra intmax upperRight
     leftPart <- D.sgt (upper left) firstShift
     secondShift <- D.safeSra intmin upperRight
-    rightPart <- D.sgt (lower left) secondShift
+    rightPart <- D.slt (lower left) secondShift
     D.or leftPart rightPart
 
   -- condition two (seems redundant?): full range
