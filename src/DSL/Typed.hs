@@ -1,6 +1,8 @@
-module DSL.Typed ( int32
+module DSL.Typed ( vassert
+                 , int32
                  , uint32
                  , num
+                 , VNode
                  , intMax
                  , intMin
                  , uintMax
@@ -81,6 +83,11 @@ newDefinedNode :: D.Node -> Type -> D.Verif VNode
 newDefinedNode node ty = do
   undefBit <- D.i1c 0
   return $ VNode undefBit node ty
+
+--
+
+vassert :: VNode -> D.Verif ()
+vassert = D.assert . vnode
 
 --
 -- Variables and constants

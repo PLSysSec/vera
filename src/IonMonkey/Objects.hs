@@ -15,6 +15,7 @@ module IonMonkey.Objects ( Range
                          ) where
 import qualified Data.Map.Strict as M
 import qualified DSL.DSL         as D
+import           DSL.Typed       as T
 
 -- | IonMonkey's range object
 -- https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#119
@@ -23,6 +24,21 @@ data Range = Range {
     , lower     :: D.Node
     , upper     :: D.Node
     }
+
+data VRange = VRange {
+      vrangeName :: String
+    , vlower     :: T.VNode
+    , vupper     :: T.VNode
+    }
+
+signedRange :: String -> D.Verif VRange
+signedRange operandName = do
+  let lowerName = operandName ++ "_lower"
+      upperName = operandName ++ "_upper"
+  lowerNode <- T.int32 lowerName
+  upperNode <- T.int32 upperName
+  T.cppLte lowerNode upperNode >>= T.vassert
+  return $ VRange operandName lowerNode upperNode
 
 -- | We assume that an input range will have the invariant
 -- that lower <= upper, since we assume inputs are working correctly
