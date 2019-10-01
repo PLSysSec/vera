@@ -1,5 +1,6 @@
 module DSL.Typed where
 import qualified DSL.DSL as D
+import           Prelude hiding (compare)
 
 {-|
 
@@ -26,34 +27,38 @@ Therefore, this file is gonna do three things:
 --
 
 -- | Verbose verification node
-data VNode = VNode { undef :: D.Node
-                   , vnode :: D.Node
-                   , vtype :: Type
+data VNode = VNode { vundef :: D.Node
+                   , vnode  :: D.Node
+                   , vtype  :: Type
                    }
 
 -- | Type of the node. For now we just have signed and unsigned i32s,
--- but eventually we will have more types (eg float)
+-- but eventually we will have more integer types
 data Type = Unsigned
           | Signed
           | Double
           | Bool
 
+-- | Is the type a signed 32?
 isSigned :: Type -> Bool
 isSigned Signed = True
 isSigned _      = False
 
+-- | Is the type unsigned 32?
 isUnsigned :: Type -> Bool
-isUnsigned = Prelude.not . isSigned
+isUnsigned = not . isSigned
 
+-- | Make a new node whose undef flag may be set, based on the parents of the node
 newMaybeDefinedNode :: VNode
                     -> VNode
                     -> D.Node
                     -> Type
                     -> D.Verif VNode
 newMaybeDefinedNode parent1 parent2 node ty = do
-  childUndef <- D.or (undef parent1) (undef parent2)
+  childUndef <- D.or (vundef parent1) (vundef parent2)
   return $ VNode childUndef node ty
 
+-- | Make a new node whose undef flag is not set
 newDefinedNode :: D.Node -> Type -> D.Verif VNode
 newDefinedNode node ty = do
   undefBit <- D.i1c 0
@@ -124,14 +129,19 @@ cppShiftLeft left right
       result <- D.safeSll (vnode left) (vnode right)
       newMaybeDefinedNode left right result Unsigned
   | otherwise = do
+
       -- Do the operation in 32- and 64-bits to check for overflow
       left64 <- D.uext (vnode left) 32
       right64 <- D.uext (vnode right) 32
       result64 <- D.safeSll left64 right64 >>= \r -> D.slice r 32 0
       result32 <- D.safeSll (vnode left) (vnode right)
-      undef <- D.eq result64 result32 >>= D.not
-      result <- D.safeSll (vnode left) (vnode right)
-      return $ VNode undef result Signed
+
+      -- Is it undef?
+      opUndef <- D.eq result64 result32 >>= D.not
+      parentsUndef <- D.or (vundef left) (vundef right)
+      undef <- D.or opUndef parentsUndef
+
+      return $ VNode undef result32 Signed
 
 -- | C++ right shift operator. We are consulating CPP instead of Clang reference
 -- because we need to know what the CPP compiler does *before* generating IR.
