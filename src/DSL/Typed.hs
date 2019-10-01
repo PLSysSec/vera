@@ -1,4 +1,13 @@
-module DSL.Typed where
+module DSL.Typed ( cppEq
+                 , cppAnd
+                 , cppOr
+                 , cppGt
+                 , cppGte
+                 , cppLt
+                 , cppLte
+                 , cppShiftLeft
+                 , cppShiftRight
+                 ) where
 import qualified DSL.DSL as D
 import           Prelude hiding (compare)
 
@@ -68,11 +77,29 @@ newDefinedNode node ty = do
 -- Operations
 --
 
-define :: Type
-       -> (VNode -> VNode -> VNode)
-       -> VNode
-define = undefined
+noopWrapper :: VNode
+            -> VNode
+            -> (D.Node -> D.Node -> D.Verif D.Node)
+            -> D.Verif VNode
+noopWrapper left right op = do
+  result <- op (vnode left) (vnode right)
+  let ty = if isUnsigned (vtype left) && isUnsigned (vtype right) then Unsigned else Signed
+  newMaybeDefinedNode left right result ty
 
+cppEq :: VNode
+      -> VNode
+      -> D.Verif VNode
+cppEq left right = noopWrapper left right D.eq
+
+cppOr :: VNode
+      -> VNode
+      -> D.Verif VNode
+cppOr left right = noopWrapper left right D.or
+
+cppAnd :: VNode
+       -> VNode
+       -> D.Verif VNode
+cppAnd left right = noopWrapper left right D.and
 
 cppCompareWrapper :: VNode
                   -> VNode
