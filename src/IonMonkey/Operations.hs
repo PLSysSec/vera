@@ -63,6 +63,20 @@ and left right = do
 or :: (D.MonadBoolector m) => Range -> Range -> m Range
 or _lhs _rhs = undefined
 
+  -- result <- newResultRange "result" D.i32
+  -- zero <- D.i32c 0
+  -- neg1 <- D.i32c -1
+  --
+  -- -- lhs lower == lhs upper
+  -- lhsEq <- D.eq (lower _lhs) (upper _lhs)
+  -- lhsLowerEq0 <- D.eq (lower _lhs) zero
+  -- lhsLowerEqNeg1 <- D.eq (lower _lhs) neg1
+  --
+  -- -- rhs lower == rhs upper
+  -- rhsEq <- D.eq (lower _rhs) (upper _rhs)
+  -- rhsLowerEq0 <- D.eq (lower _rhs) zero
+  -- rhsLowerEqNeg1 <- D.eq (lower _rhs) neg1
+
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#893
 xor :: (D.MonadBoolector m) => Range -> Range -> m Range
 xor left right = undefined
