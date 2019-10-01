@@ -14,6 +14,11 @@ We also want to propagate undefined behavior. Boolector operations have no
 notion of undef behavior, so we have to keep track of whether or not it has
 happened according to the C++ standard.
 
+Therefore, this file is gonna do three things:
+- Type inference on nodes
+- C++ operations polymorphically over all possible types
+- Undefined behavior propagation
+
 -}
 
 --
