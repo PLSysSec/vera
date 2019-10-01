@@ -193,7 +193,7 @@ rsh' shiftee shifter = do
     extShiftUpper <- D.sext (upper shifter) 32
     sub <- D.sub extShiftUpper extShiftLower
     thirtyOne <- D.i64c 31
-    D.slt sub thirtyOne
+    D.sgte sub thirtyOne
 
   trueShiftLower <- D.i32c 0
   trueShiftUpper <- D.i32c 31
@@ -201,8 +201,8 @@ rsh' shiftee shifter = do
   tmpLower <- D.and thirtyOne32 (lower shifter)
   tmpUpper <- D.and thirtyOne32 (upper shifter)
   tmpCond <- D.sgt tmpLower tmpUpper
-  falseShiftLower <- D.cond tmpCond tmpLower zero
-  falseShiftUpper <- D.cond tmpCond tmpUpper thirtyOne32
+  falseShiftLower <- D.cond tmpCond zero        tmpLower
+  falseShiftUpper <- D.cond tmpCond thirtyOne32 tmpUpper
 
   shiftLower <- D.cond cond trueShiftLower falseShiftLower
   shiftUpper <- D.cond cond trueShiftUpper falseShiftUpper
