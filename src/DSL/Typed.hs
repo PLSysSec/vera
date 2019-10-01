@@ -1,4 +1,5 @@
 module DSL.Typed ( vassert
+                 , vassign
                  , int32
                  , uint32
                  , num
@@ -88,6 +89,9 @@ newDefinedNode node ty = do
 
 vassert :: VNode -> D.Verif ()
 vassert = D.assert . vnode
+
+vassign :: VNode -> VNode -> D.Verif ()
+vassign n1 n2 = D.eq (vnode n1) (vnode n2) >>= D.assert
 
 --
 -- Variables and constants

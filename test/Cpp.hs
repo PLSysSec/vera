@@ -18,12 +18,34 @@ cppMinTest = benchTestCase "min test" $ do
 
   (r) <- D.evalVerif Nothing $ do
 
+    -- Check that cppMin is aware of the sign for signed numbers
     left <- T.int32 "left"
+    one <- T.num 1
+    T.vassign left one
+
     right <- T.int32 "right"
-    result <- T.cppMin left right
+    minusOne <- T.num (-1)
+    T.vassign right minusOne
+
+    result <- T.int32 "result"
+    min <- T.cppMin left right
+    T.vassign result min
+
+    -- Check that cppMin does the right thing with unsigned numbers
+    uleft <- T.uint32 "uleft"
+    uright <- T.uint32 "uright"
+    T.vassign uleft one
+    T.vassign uright minusOne
+
+    uresult <- T.uint32 "uresult"
+    umin <- T.cppMin uleft uright
+    T.vassign uresult umin
+
     D.runSolver
 
-  vtest "cppMin" r $ M.fromList [ ("left", 0)
-                                , ("right", 0)
+  vtest "cppMin" r $ M.fromList [ ("left", 1)
+                                , ("right", -1)
+                                , ("result", -1)
+                                , ("uresult", 1)
                                 ]
 
