@@ -10,7 +10,9 @@ int x;
 uint y;
 if (x < y) <--- "Do I use a signed or unsigned SMT comparison?"
 
-
+We also want to propagate undefined behavior. Boolector operations have no
+notion of undef behavior, so we have to keep track of whether or not it has
+happened according to the C++ standard.
 
 -}
 
@@ -28,10 +30,10 @@ cppCompareWrapper :: D.VNode
 cppCompareWrapper left right uCompare sCompare
  | D.isUnsigned (D.vtype left) || D.isUnsigned (D.vtype right) = do
      compare <- uCompare (D.vnode left) (D.vnode right)
-     return $ D.VNode compare D.Bool
+     D.newMaybeDefinedNode left right compare D.Bool
  | otherwise = do
      compare <- sCompare (D.vnode left) (D.vnode right)
-     return $ D.VNode compare D.Bool
+     D.newMaybeDefinedNode left right compare D.Bool
 
 cppGt :: D.VNode -> D.VNode -> D.Verif D.VNode
 cppGt left right = cppCompareWrapper left right D.ugt D.sgt
@@ -73,8 +75,9 @@ cppShiftLeft :: D.VNode -> D.VNode -> D.Verif D.VNode
 cppShiftLeft left right
   | D.isUnsigned (D.vtype left) = do
       result <- D.safeSll (D.vnode left) (D.vnode right)
-      return $ D.VNode result D.Unsigned
+      D.newMaybeDefinedNode left right result D.Bool
   | otherwise = undefined
+
 
 -- | C++ right shift operator. We are consulating CPP instead of Clang reference
 -- because we need to know what the CPP compiler does *before* generating IR.

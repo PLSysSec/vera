@@ -1,6 +1,8 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module DSL.DSL ( isSigned
                , isUnsigned
+               , newDefinedNode
+               , newMaybeDefinedNode
                , i64
                , i32
                , i16
@@ -108,8 +110,23 @@ isSigned _      = False
 isUnsigned :: Type -> Bool
 isUnsigned = Prelude.not . isSigned
 
+newDefinedNode :: B.Node -> Type -> Verif VNode
+newDefinedNode node ty = do
+  undefBit <- i1c 0
+  return $ VNode undefBit node ty
+
+newMaybeDefinedNode :: VNode
+                    -> VNode
+                    -> B.Node
+                    -> Type
+                    -> Verif VNode
+newMaybeDefinedNode parent1 parent2 node ty = do
+  childUndef <- B.or (undef parent1) (undef parent2)
+  return $ VNode childUndef node ty
+
 -- | Verbose verification node
-data VNode = VNode { vnode :: B.Node
+data VNode = VNode { undef :: B.Node
+                   , vnode :: B.Node
                    , vtype :: Type
                    }
 
