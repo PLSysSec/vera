@@ -43,15 +43,17 @@ module DSL.DSL ( i64
                -- ** Verif monad
                , Verif
                , VerifState(..)
+               , SMTResult(..)
                , getVars
                , runVerif
                , evalVerif
                , execVerif
+               , runSolver
                ) where
 import           Control.Monad              (foldM)
 import           Control.Monad.State.Strict
 import qualified Data.Map.Strict            as M
-import           DSL.BoolectorWrapper       hiding (false, true)
+import           DSL.BoolectorWrapper       hiding (false, sat, true)
 import qualified DSL.BoolectorWrapper       as B
 import           Prelude                    hiding (max, min, not)
 import qualified Prelude                    as Prelude
@@ -64,7 +66,9 @@ Low-level DSL for manipulating SMT variables.
 
 -- | Verification state. I'm assuming we'll eventually need
 -- to keep track of more things
-data VerifState = VerifState { vars :: M.Map String B.Node }
+data VerifState = VerifState { vars         :: M.Map String B.Node
+                             , solverResult :: SMTResult
+                             }
 
 newtype Verif a = Verif (StateT VerifState B.Boolector a)
     deriving (Functor, Applicative, Monad, MonadState VerifState, MonadIO)
@@ -73,11 +77,18 @@ instance B.MonadBoolector Verif where
     getBoolectorState = Verif $ lift $ get
     putBoolectorState state = Verif $ lift $ put state
 
+data SMTResult = SolverSat (M.Map String Integer)
+               | SolverUnsat
+               | SolverFailed
+               deriving (Eq, Ord, Show)
+
 getVars :: Verif (M.Map String B.Node)
 getVars = vars `liftM` get
 
 emptyVerifState :: VerifState
-emptyVerifState = VerifState { vars = M.empty }
+emptyVerifState = VerifState { vars = M.empty
+                             , solverResult = SolverFailed
+                             }
 
 -- | Run verification computation
 runVerif :: Maybe Integer -- ^ Optional timeout
@@ -92,6 +103,20 @@ evalVerif mt act = fst <$> runVerif mt act
 
 execVerif :: Maybe Integer -> Verif a -> IO VerifState
 execVerif mt act = snd <$> runVerif mt act
+
+runSolver :: Verif SMTResult
+runSolver = do
+  check <- B.sat
+  result <- case check of
+    B.Sat -> do
+      allVars <- getVars
+      map <- mapM B.signedBvAssignment allVars
+      return $ SolverSat map
+    B.Unsat -> return SolverUnsat
+    _ -> return SolverFailed
+  s0 <- get
+  put $ s0 { solverResult = result }
+  return result
 
 --
 -- Ints and stuff

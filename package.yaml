@@ -60,3 +60,4 @@ tests:
     - criterion
     - bytestring
     - mtl >= 2.2.2
+    - containers >= 0.6    

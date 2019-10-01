@@ -76,14 +76,11 @@ data VerifResult = Verified
                  | Broken { counterexample :: M.Map String Integer}
                  deriving (Eq, Ord, Show)
 
-getResult :: D.Status -> D.Verif VerifResult
+getResult :: D.SMTResult -> D.Verif VerifResult
 getResult status = case status of
-  D.Unsat -> return Verified
-  D.Sat -> do
-    allVars <- D.getVars
-    assigns <- mapM D.signedBvAssignment allVars
-    return $ Broken assigns
-  e -> error $ unwords $ ["Solver error when verifying", show e]
+  D.SolverUnsat  -> return Verified
+  D.SolverSat xs -> return $ Broken xs
+  _              -> error "Solver error when verifying"
 
 -- | Verify that the upper bound of a range is greater than the lower
 -- Expects UNSAT
@@ -99,7 +96,7 @@ verifySaneRange_ :: (D.Node -> D.Node -> D.Verif D.Node) -> Range -> D.Verif Ver
 verifySaneRange_ cmp resultRange = do
   D.push 1
   cmp (upper resultRange) (lower resultRange) >>= D.assert
-  check <- D.sat
+  check <- D.runSolver
   D.pop 1
   getResult check
 
@@ -125,7 +122,7 @@ verifyBound :: (D.Node -> D.Node -> D.Verif D.Node) -> (Range -> D.Node) -> D.No
 verifyBound cmp lowOrUp node range = do
   D.push 1
   cmp node (lowOrUp range) >>= D.assert
-  check <- D.sat
+  check <- D.runSolver
   D.pop 1
   getResult check
 
