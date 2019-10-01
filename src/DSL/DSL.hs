@@ -1,9 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-module DSL.DSL ( isSigned
-               , isUnsigned
-               , newDefinedNode
-               , newMaybeDefinedNode
-               , i64
+module DSL.DSL ( i64
                , i32
                , i16
                , i8
@@ -46,10 +42,8 @@ module DSL.DSL ( isSigned
                , module DSL.BoolectorWrapper
                -- ** Verif monad
                , Verif
-               , VNode(..)
-               , Type(..)
-               , getVars
                , VerifState(..)
+               , getVars
                , runVerif
                , evalVerif
                , execVerif
@@ -94,42 +88,8 @@ evalVerif mt act = fst <$> runVerif mt act
 execVerif :: Maybe Integer -> Verif a -> IO VerifState
 execVerif mt act = snd <$> runVerif mt act
 
--- Type wrapper around nodes
-
--- | Type of the node. For now we just have signed and unsigned i32s,
--- but eventually we will have more types (eg float)
-data Type = Unsigned
-          | Signed
-          | Double
-          | Bool
-
-isSigned :: Type -> Bool
-isSigned Signed = True
-isSigned _      = False
-
-isUnsigned :: Type -> Bool
-isUnsigned = Prelude.not . isSigned
-
-newDefinedNode :: B.Node -> Type -> Verif VNode
-newDefinedNode node ty = do
-  undefBit <- i1c 0
-  return $ VNode undefBit node ty
-
-newMaybeDefinedNode :: VNode
-                    -> VNode
-                    -> B.Node
-                    -> Type
-                    -> Verif VNode
-newMaybeDefinedNode parent1 parent2 node ty = do
-  childUndef <- B.or (undef parent1) (undef parent2)
-  return $ VNode childUndef node ty
-
--- | Verbose verification node
-data VNode = VNode { undef :: B.Node
-                   , vnode :: B.Node
-                   , vtype :: Type
-                   }
-
+--
+-- Ints and stuff
 --
 
 i64 :: Verif B.Sort

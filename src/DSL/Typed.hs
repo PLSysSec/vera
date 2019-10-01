@@ -16,35 +16,77 @@ happened according to the C++ standard.
 
 -}
 
-define :: D.Type
-       -> (D.VNode -> D.VNode -> D.VNode)
-       -> D.VNode
+--
+-- Verbose, typed nodes
+--
+
+-- | Verbose verification node
+data VNode = VNode { undef :: D.Node
+                   , vnode :: D.Node
+                   , vtype :: Type
+                   }
+
+-- | Type of the node. For now we just have signed and unsigned i32s,
+-- but eventually we will have more types (eg float)
+data Type = Unsigned
+          | Signed
+          | Double
+          | Bool
+
+isSigned :: Type -> Bool
+isSigned Signed = True
+isSigned _      = False
+
+isUnsigned :: Type -> Bool
+isUnsigned = Prelude.not . isSigned
+
+newMaybeDefinedNode :: VNode
+                    -> VNode
+                    -> D.Node
+                    -> Type
+                    -> D.Verif VNode
+newMaybeDefinedNode parent1 parent2 node ty = do
+  childUndef <- D.or (undef parent1) (undef parent2)
+  return $ VNode childUndef node ty
+
+newDefinedNode :: D.Node -> Type -> D.Verif VNode
+newDefinedNode node ty = do
+  undefBit <- D.i1c 0
+  return $ VNode undefBit node ty
+
+--
+-- Operations
+--
+
+define :: Type
+       -> (VNode -> VNode -> VNode)
+       -> VNode
 define = undefined
 
 
-cppCompareWrapper :: D.VNode
-                  -> D.VNode
+cppCompareWrapper :: VNode
+                  -> VNode
                   -> (D.Node -> D.Node -> D.Verif D.Node)
                   -> (D.Node -> D.Node -> D.Verif D.Node)
-                  -> D.Verif D.VNode
+                  -> D.Verif VNode
 cppCompareWrapper left right uCompare sCompare
- | D.isUnsigned (D.vtype left) || D.isUnsigned (D.vtype right) = do
-     compare <- uCompare (D.vnode left) (D.vnode right)
-     D.newMaybeDefinedNode left right compare D.Bool
+ | isUnsigned (vtype left) || isUnsigned (vtype right) = do
+     compare <- uCompare (vnode left) (vnode right)
+     newMaybeDefinedNode left right compare Bool
  | otherwise = do
-     compare <- sCompare (D.vnode left) (D.vnode right)
-     D.newMaybeDefinedNode left right compare D.Bool
+     compare <- sCompare (vnode left) (vnode right)
+     newMaybeDefinedNode left right compare Bool
 
-cppGt :: D.VNode -> D.VNode -> D.Verif D.VNode
+cppGt :: VNode -> VNode -> D.Verif VNode
 cppGt left right = cppCompareWrapper left right D.ugt D.sgt
 
-cppGte :: D.VNode -> D.VNode -> D.Verif D.VNode
+cppGte :: VNode -> VNode -> D.Verif VNode
 cppGte left right = cppCompareWrapper left right D.ugte D.sgte
 
-cppLt :: D.VNode -> D.VNode -> D.Verif D.VNode
+cppLt :: VNode -> VNode -> D.Verif VNode
 cppLt left right = cppCompareWrapper left right D.ult D.slt
 
-cppLte :: D.VNode -> D.VNode -> D.Verif D.VNode
+cppLte :: VNode -> VNode -> D.Verif VNode
 cppLte left right = cppCompareWrapper left right D.ulte D.slte
 
 -- | C++ left shift operator. We are consulting CPP instead of Clang reference
@@ -71,20 +113,20 @@ cppLte left right = cppCompareWrapper left right D.ulte D.slte
 --
 -- int = int << anything
 -- uint = uint << anything
-cppShiftLeft :: D.VNode -> D.VNode -> D.Verif D.VNode
+cppShiftLeft :: VNode -> VNode -> D.Verif VNode
 cppShiftLeft left right
-  | D.isUnsigned (D.vtype left) = do
-      result <- D.safeSll (D.vnode left) (D.vnode right)
-      D.newMaybeDefinedNode left right result D.Unsigned
+  | isUnsigned (vtype left) = do
+      result <- D.safeSll (vnode left) (vnode right)
+      newMaybeDefinedNode left right result Unsigned
   | otherwise = do
       -- Do the operation in 32- and 64-bits to check for overflow
-      left64 <- D.uext (D.vnode left) 32
-      right64 <- D.uext (D.vnode right) 32
+      left64 <- D.uext (vnode left) 32
+      right64 <- D.uext (vnode right) 32
       result64 <- D.safeSll left64 right64 >>= \r -> D.slice r 32 0
-      result32 <- D.safeSll (D.vnode left) (D.vnode right)
+      result32 <- D.safeSll (vnode left) (vnode right)
       undef <- D.eq result64 result32 >>= D.not
-      result <- D.safeSll (D.vnode left) (D.vnode right)
-      return $ D.VNode undef result D.Signed
+      result <- D.safeSll (vnode left) (vnode right)
+      return $ VNode undef result Signed
 
 -- | C++ right shift operator. We are consulating CPP instead of Clang reference
 -- because we need to know what the CPP compiler does *before* generating IR.
@@ -106,9 +148,9 @@ cppShiftLeft left right
 --
 -- int = int >> anything
 -- uint = uint >> anything
-cppShiftRight :: D.VNode -> D.VNode -> D.Verif D.VNode
+cppShiftRight :: VNode -> VNode -> D.Verif VNode
 cppShiftRight left right
-  | D.isUnsigned (D.vtype left) = undefined
+  | isUnsigned (vtype left) = undefined
   | otherwise = undefined
 
 
