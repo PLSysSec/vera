@@ -3,10 +3,22 @@ import qualified DSL.DSL as D
 
 {-|
 
-Typed wrappers around C++ operations so that we don't have to case them out by hand.
-Relying on cppreference.com for spec for each operator
+Typed wrappers around C++ operations.
+Why? To avoid having to figure this kind of thing out every time:
+
+int x;
+uint y;
+if (x < y) <--- "Do I use a signed or unsigned SMT comparison?"
+
+
 
 -}
+
+define :: D.Type
+       -> (D.VNode -> D.VNode -> D.VNode)
+       -> D.VNode
+define = undefined
+
 
 cppCompareWrapper :: D.VNode
                   -> D.VNode
@@ -16,10 +28,10 @@ cppCompareWrapper :: D.VNode
 cppCompareWrapper left right uCompare sCompare
  | D.isUnsigned (D.vtype left) || D.isUnsigned (D.vtype right) = do
      compare <- uCompare (D.vnode left) (D.vnode right)
-     return $ D.VNode compare D.Unsigned
+     return $ D.VNode compare D.Bool
  | otherwise = do
      compare <- sCompare (D.vnode left) (D.vnode right)
-     return $ D.VNode compare D.Unsigned
+     return $ D.VNode compare D.Bool
 
 cppGt :: D.VNode -> D.VNode -> D.Verif D.VNode
 cppGt left right = cppCompareWrapper left right D.ugt D.sgt
@@ -33,10 +45,41 @@ cppLt left right = cppCompareWrapper left right D.ult D.slt
 cppLte :: D.VNode -> D.VNode -> D.Verif D.VNode
 cppLte left right = cppCompareWrapper left right D.ulte D.slte
 
+-- | C++ left shift operator. We are consulting CPP instead of Clang reference
+-- because we need to know what the CPP compiler will actually generate.
+--
+-- https://en.cppreference.com/w/cpp/language/operator_arithmetic#Bitwise_shift_operators
+--
+-- For unsigned a, the value of a << b is the value of a * 2b, reduced modulo 2N
+-- where N is the number of bits in the return type (that is, bitwise left shift
+-- is performed and the bits that get shifted out of the destination type are discarded).
+--
+-- C++ 14:
+-- For signed and non-negative a, the value of a << b is a * 2b
+-- if it is representable in the return type, otherwise the behavior is undefined.
+--
+-- Since C++ 14:
+-- For signed and non-negative a, if a * 2b is representable in the unsigned version of
+-- the return type, then that value, converted to signed, is the value of a << b
+-- (this makes it legal to create INT_MIN as 1<<31); otherwise the behavior is undefined.
+--
+-- For negative a, the behavior of a << b is undefined.
+--
+-- Via Clang interpreter typeid function:
+--
+-- int = int << anything
+-- uint = uint << anything
 cppShiftLeft :: D.VNode -> D.VNode -> D.Verif D.VNode
-cppShiftLeft left right = undefined
+cppShiftLeft left right
+  | D.isUnsigned (D.vtype left) = do
+      result <- D.safeSll (D.vnode left) (D.vnode right)
+      return $ D.VNode result D.Unsigned
+  | otherwise = undefined
 
--- |
+-- | C++ right shift operator. We are consulating CPP instead of Clang reference
+-- because we need to know what the CPP compiler does *before* generating IR.
+-- For example, will the compiler generate ashr or lshr?
+--
 -- https://en.cppreference.com/w/cpp/language/operator_arithmetic
 --
 -- For unsigned a and for signed and non-negative a, the value of a >> b is the integer
@@ -49,13 +92,13 @@ cppShiftLeft left right = undefined
 -- The value of a >> b is a/2b, rounded down (in other words, right shift on
 -- signed a is arithmetic right shift).
 --
+-- Via Clang interpreter typeid function:
+--
+-- int = int >> anything
+-- uint = uint >> anything
 cppShiftRight :: D.VNode -> D.VNode -> D.Verif D.VNode
-cppShiftRight left right = undefined
- -- | D.isUnsigned left && D.isUnsigned right = undefined
- -- | otherwise = undefined
+cppShiftRight left right
+  | D.isUnsigned (D.vtype left) = undefined
+  | otherwise = undefined
 
-cppAdd :: D.VNode -> D.VNode -> D.Verif D.VNode
-cppAdd = undefined
 
-cppOr :: D.VNode -> D.VNode -> D.Verif D.VNode
-cppOr = undefined

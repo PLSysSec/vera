@@ -98,6 +98,8 @@ execVerif mt act = snd <$> runVerif mt act
 -- but eventually we will have more types (eg float)
 data Type = Unsigned
           | Signed
+          | Double
+          | Bool
 
 isSigned :: Type -> Bool
 isSigned Signed = True
