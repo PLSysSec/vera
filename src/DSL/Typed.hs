@@ -1,6 +1,15 @@
-module DSL.Typed ( cppEq
+module DSL.Typed ( int32
+                 , uint32
+                 , num
+                 , intMax
+                 , intMin
+                 , uintMax
+                 , uintMin
+                 , cppEq
                  , cppAnd
                  , cppOr
+                 , cppMin
+                 , cppMax
                  , cppGt
                  , cppGte
                  , cppLt
@@ -74,6 +83,41 @@ newDefinedNode node ty = do
   return $ VNode undefBit node ty
 
 --
+-- Variables and constants
+--
+
+int32 :: String -> D.Verif VNode
+int32 name = do
+  var <- D.i32v name
+  newDefinedNode var Signed
+
+uint32 :: String -> D.Verif VNode
+uint32 name = do
+  var <- D.i32v name
+  newDefinedNode var Unsigned
+
+num :: Integer -> D.Verif VNode
+num val = do
+  node <- D.i32c val
+  newDefinedNode node Signed
+
+intMax :: D.Verif VNode
+intMax = num 2147483647
+
+intMin :: D.Verif VNode
+intMin = num (-2147483648)
+
+uintMax :: D.Verif VNode
+uintMax = do
+  node <- D.i32c 4294967295
+  newDefinedNode node Unsigned
+
+uintMin :: D.Verif VNode
+uintMin = do
+  node <- D.i32c 0
+  newDefinedNode node Unsigned
+
+--
 -- Operations
 --
 
@@ -100,6 +144,22 @@ cppAnd :: VNode
        -> VNode
        -> D.Verif VNode
 cppAnd left right = noopWrapper left right D.and
+
+cppMin :: VNode
+       -> VNode
+       -> D.Verif VNode
+cppMin right left
+  | isUnsigned (vtype right) && isUnsigned (vtype left) = noopWrapper left right D.umin
+  | isSigned (vtype right) && isSigned (vtype left) = noopWrapper left right D.smin
+  | otherwise = error "Compiler error: Can't use std:min on a signed and unsigned"
+
+cppMax :: VNode
+       -> VNode
+       -> D.Verif VNode
+cppMax right left
+  | isUnsigned (vtype right) && isUnsigned (vtype left) = noopWrapper left right D.umax
+  | isSigned (vtype right) && isSigned (vtype left) = noopWrapper left right D.smax
+  | otherwise = error "Compiler error: Can't use std:max on a signed and unsigned"
 
 cppCompareWrapper :: VNode
                   -> VNode

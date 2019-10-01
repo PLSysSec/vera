@@ -56,6 +56,11 @@ import qualified DSL.BoolectorWrapper       as B
 import           Prelude                    hiding (max, min, not)
 import qualified Prelude                    as Prelude
 
+{-|
+
+Low-level DSL for manipulating SMT variables.
+
+-}
 
 -- | Verification state. I'm assuming we'll eventually need
 -- to keep track of more things
