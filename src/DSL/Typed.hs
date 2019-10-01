@@ -75,9 +75,16 @@ cppShiftLeft :: D.VNode -> D.VNode -> D.Verif D.VNode
 cppShiftLeft left right
   | D.isUnsigned (D.vtype left) = do
       result <- D.safeSll (D.vnode left) (D.vnode right)
-      D.newMaybeDefinedNode left right result D.Bool
-  | otherwise = undefined
-
+      D.newMaybeDefinedNode left right result D.Unsigned
+  | otherwise = do
+      -- Do the operation in 32- and 64-bits to check for overflow
+      left64 <- D.uext (D.vnode left) 32
+      right64 <- D.uext (D.vnode right) 32
+      result64 <- D.safeSll left64 right64 >>= \r -> D.slice r 32 0
+      result32 <- D.safeSll (D.vnode left) (D.vnode right)
+      undef <- D.eq result64 result32 >>= D.not
+      result <- D.safeSll (D.vnode left) (D.vnode right)
+      return $ D.VNode undef result D.Signed
 
 -- | C++ right shift operator. We are consulating CPP instead of Clang reference
 -- because we need to know what the CPP compiler does *before* generating IR.
