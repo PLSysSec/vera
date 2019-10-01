@@ -116,6 +116,7 @@ cppLte left right = cppCompareWrapper left right D.ulte D.slte
 -- For signed and non-negative a, if a * 2b is representable in the unsigned version of
 -- the return type, then that value, converted to signed, is the value of a << b
 -- (this makes it legal to create INT_MIN as 1<<31); otherwise the behavior is undefined.
+-- TODO: ARE WE DOING THIS RIGHT?
 --
 -- For negative a, the behavior of a << b is undefined.
 --
@@ -165,7 +166,18 @@ cppShiftLeft left right
 -- uint = uint >> anything
 cppShiftRight :: VNode -> VNode -> D.Verif VNode
 cppShiftRight left right
-  | isUnsigned (vtype left) = undefined
-  | otherwise = undefined
+  | isUnsigned (vtype left) = do
+      result <- D.safeSra (vnode left) (vnode right)
+      newMaybeDefinedNode left right result Unsigned
+  | otherwise = do
 
+      -- if left is negative, the behavior is impl-defined
+      zero <- D.i32c 0
+      opUndef <- D.slt (vnode left) zero
+      parentsUndef <- D.or (vundef left) (vundef right)
+      undef <- D.or opUndef parentsUndef
+
+      -- actually do the op
+      result <- D.safeSra (vnode left) (vnode right)
+      return $ VNode undef result Signed
 
