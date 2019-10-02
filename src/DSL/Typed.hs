@@ -30,6 +30,7 @@ module DSL.Typed ( vassert
                  , cppLte
                  , cppShiftLeft
                  , cppShiftRight
+                 , cppCond
                  , D.runSolver
                  , D.evalVerif
                  ) where
@@ -424,3 +425,17 @@ cppShiftRight left right
       opUndef <- D.slt (vnode right) zero
       parentsUndef <- D.or (vundef left) (vundef right)
       D.or opUndef parentsUndef
+
+-- | Conditional
+cppCond :: VNode
+        -> VNode
+        -> VNode
+        -> D.Verif VNode
+cppCond cond true false = do
+  unless (vtype true == vtype false) $ error "Must have both branches of cond be same type"
+  result <- D.cond (vnode cond) (vnode true) (vnode false)
+  undef <- D.or (vundef cond) (vundef true) >>= D.or (vundef false)
+  return $ VNode undef result $ vtype true
+
+
+

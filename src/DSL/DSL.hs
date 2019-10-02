@@ -53,6 +53,7 @@ module DSL.DSL ( i64
 import           Control.Monad              (foldM)
 import           Control.Monad.State.Strict
 import qualified Data.Map.Strict            as M
+import qualified Data.Set                   as S
 import           DSL.BoolectorWrapper       hiding (false, sat, true)
 import qualified DSL.BoolectorWrapper       as B
 import           Prelude                    hiding (max, min, not)
