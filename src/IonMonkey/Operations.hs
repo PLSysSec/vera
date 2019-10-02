@@ -17,6 +17,7 @@ module IonMonkey.Operations ( add
                             ) where
 import           Control.Monad.State.Strict (liftIO)
 import qualified DSL.DSL                    as D
+import qualified DSL.Typed                  as T
 import           IonMonkey.Helpers
 import           IonMonkey.Objects
 import           Prelude                    hiding (abs, and, max, min, not, or)
@@ -151,16 +152,16 @@ lsh shiftee val = error "Not ported"
   -- return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1016
-rsh :: Range -> D.Node -> D.Verif Range
-rsh shiftee val = error "Not ported"
-  -- -- Setup the shift
-  -- thirtyOne <- D.i32c 31
-  -- shift <- D.and val thirtyOne
-  -- -- Make a new range whose low bound is shiftee_l >> shift, shiftee_h >> shift
-  -- result <- newResultRange "result" D.i32
-  -- D.safeSra (lower shiftee) shift >>= D.assign (lower result)
-  -- D.safeSra (upper shiftee) shift >>= D.assign (upper result)
-  -- return result
+rsh :: Range -> T.VNode -> D.Verif Range
+rsh shiftee val = do
+  -- Setup the shift
+  thirtyOne <- T.num 31
+  shift <- T.cppAnd val thirtyOne
+  -- Make a new range whose low bound is shiftee_l >> shift, shiftee_h >> shift
+  result <- signedResultRange "result"
+  T.cppShiftRight (lower shiftee) shift >>= T.vassign (lower result)
+  T.cppShiftRight (upper shiftee) shift >>= T.vassign (upper result)
+  return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1023
 ursh :: Range -> D.Node -> D.Verif Range

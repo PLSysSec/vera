@@ -13,6 +13,10 @@ module DSL.Typed ( vassert
                  , intMin
                  , uintMax
                  , uintMin
+                   -- * Js operations
+                 , jsShl
+                 , jsShr
+                   -- * Cpp operations
                  , cppEq
                  , cppAnd
                  , cppOr
@@ -171,7 +175,60 @@ uintMin :: D.Verif VNode
 uintMin = unum 0
 
 --
--- Operations
+-- JavaScript operations
+--
+
+toInt32 :: VNode -> VNode
+toInt32 (VNode u v _) = VNode u v Signed
+
+toUint32 :: VNode -> VNode
+toUint32 (VNode u v _) = VNode u v Unsigned
+
+-- | https://es5.github.io/#x11.7.1
+--
+-- Let lnum be ToInt32(lval).
+--
+-- Let rnum be ToUint32(rval).
+--
+-- Let shiftCount be the result of masking out all but the least significant 5 bits of rnum,
+-- that is, compute rnum & 0x1F.
+--
+--  Return the result of left shifting lnum by shiftCount bits. The result is a signed
+-- 32-bit integer.
+jsShl :: VNode
+      -> VNode
+      -> D.Verif VNode
+jsShl left right = do
+  thirtyOne <- D.i32c 31
+  shiftCount <- D.and (vnode right) thirtyOne
+  result <- D.safeSll (vnode left) shiftCount
+  undef <- D.i1c 0
+  return $ VNode undef result Signed
+
+-- | https://es5.github.io/#x11.7.2
+--
+--  Let lnum be ToInt32(lval).
+--
+-- Let rnum be ToUint32(rval).
+--
+--  Let shiftCount be the result of masking out all but the least significant 5 bits of rnum,
+-- that is, compute rnum & 0x1F.
+--
+-- Return the result of performing a sign-extending right shift of lnum by shiftCount bits.
+-- The most significant bit is propagated. The result is a signed 32-bit integer.
+--
+jsShr :: VNode
+      -> VNode
+      -> D.Verif VNode
+jsShr left right = do
+  thirtyOne <- D.i32c 31
+  shiftCount <- D.and (vnode right) thirtyOne
+  result <- D.safeSra (vnode left) shiftCount
+  undef <- D.i1c 0
+  return $ VNode undef result Signed
+
+--
+-- C++ Operations
 --
 
 noopWrapper :: VNode
