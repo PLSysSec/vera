@@ -229,18 +229,22 @@ cppShiftLeft left right
       newMaybeDefinedNode left right result Unsigned
   | otherwise = do
 
-      -- Do the operation in 32- and 64-bits to check for overflow
+      -- Do the operation in 64-bits and see if any of the left bits are set.
+      -- If so, the operation has undefined behavior because some bit was
+      -- shifted off the end of the 32-bit variable
       left64 <- D.uext (vnode left) 32
       right64 <- D.uext (vnode right) 32
-      result64 <- D.safeSll left64 right64 >>= \r -> D.slice r 32 0
-      result32 <- D.safeSll (vnode left) (vnode right)
+      result64 <- D.safeSll left64 right64
+      top32 <- D.slice result64 32 31
+      zero <- D.i32c 0
 
       -- Is it undef?
-      opUndef <- D.eq result64 result32 >>= D.not
+      opUndef <- D.eq top32 zero >>= D.not
       parentsUndef <- D.or (vundef left) (vundef right)
       undef <- D.or opUndef parentsUndef
 
-      return $ VNode undef result32 Signed
+      result <- D.safeSll (vnode left) (vnode right)
+      return $ VNode undef result Signed
 
 -- | C++ right shift operator. We are consulating CPP instead of Clang reference
 -- because we need to know what the CPP compiler does *before* generating IR.
