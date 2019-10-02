@@ -14,6 +14,7 @@ cppTests :: BenchTest
 cppTests = benchTestGroup "C++ tests" [ cppMinTest
                                       , cppGtTest
                                       , cppShlTest
+                                      , cppShrTest
                                       ]
 
 trueBit :: Integer
@@ -28,33 +29,22 @@ cppMinTest = benchTestCase "min test" $ do
   (r) <- D.evalVerif Nothing $ do
 
     -- Check that cppMin is aware of the sign for signed numbers
-    left <- T.int32 "left"
     one <- T.num 1
-    T.vassign left one
-
-    right <- T.int32 "right"
     minusOne <- T.num (-1)
-    T.vassign right minusOne
-
     result <- T.int32 "result"
-    min <- T.cppMin left right
+    min <- T.cppMin one minusOne
     T.vassign result min
 
     -- Check that cppMin does the right thing with unsigned numbers
-    uleft <- T.uint32 "uleft"
-    uright <- T.uint32 "uright"
-    T.vassign uleft one
-    T.vassign uright minusOne
-
+    uMinusOne <- T.unum (-1)
+    uOne <- T.unum 1
+    umin <- T.cppMin uMinusOne uOne
     uresult <- T.uint32 "uresult"
-    umin <- T.cppMin uleft uright
     T.vassign uresult umin
 
     D.runSolver
 
-  vtest "cppMin" r $ M.fromList [ ("left", 1)
-                                , ("right", -1)
-                                , ("result", -1)
+  vtest "cppMin" r $ M.fromList [ ("result", -1)
                                 , ("uresult", 1)
                                 ]
 
@@ -64,38 +54,30 @@ cppGtTest = benchTestCase "gt test" $ do
   (r) <- D.evalVerif Nothing $ do
 
     -- Make sure it uses a signed comparison for two signed numbers
-    left <- T.int32 "left"
     one <- T.num 1
-    T.vassign left one
-
-    right <- T.int32 "right"
     minusOne <- T.num (-1)
-    T.vassign right minusOne
-
     result1 <- T.bool "result1"
     result2 <- T.bool "result2"
-    gt <- T.cppGt left right
-    gte <- T.cppGte left right
+    gt <- T.cppGt one minusOne
+    gte <- T.cppGte one minusOne
     T.vassign result1 gt
     T.vassign result2 gte
 
     -- Make sure that it uses an unsigned comparison for an unsigned and signed,
     -- unsigned and unsigned
-    uright <- T.uint32 "uright"
-    uleft <- T.uint32 "uleft"
-    minusOne <- T.num (-1)
-    one <- T.num 1
-    T.vassign uright minusOne
-    T.vassign uleft one
+    uMinusOne <- T.unum (-1)
+    uOne <- T.unum 1
 
     result3 <- T.bool "result3"
     result4 <- T.bool "result4"
     result5 <- T.bool "result5"
     result6 <- T.bool "result6"
-    bgt <- T.cppGt left uright
-    bgte <- T.cppGte left uright
-    ugt <- T.cppGt uleft uright
-    ugte <- T.cppGte uleft uright
+
+    bgt <- T.cppGt uOne uMinusOne
+    bgte <- T.cppGte uOne uMinusOne
+    ugt <- T.cppGt uOne minusOne
+    ugte <- T.cppGte uOne minusOne
+
     T.vassign result3 bgt
     T.vassign result4 bgte
     T.vassign result5 ugt
@@ -155,6 +137,16 @@ cppShlTest = benchTestCase "shl test" $ do
     result6 <- T.int32 "result6"
     T.vassign result6 shift6
 
+    -- Shift of an unsigned by a negative should be undef
+    shift7 <- T.cppShiftLeft uone minusOne
+    result7 <- T.uint32 "result7"
+    T.vassign result7 shift7
+
+    -- A normal shift of the result of an unsigned undef op should still be undef
+    shift8 <- T.cppShiftLeft shift7 uone
+    result8 <- T.uint32 "result8"
+    T.vassign result8 shift8
+
     D.runSolver
 
   vtest "shl test" r $ M.fromList [ ("result1_undef", trueBit)
@@ -163,4 +155,36 @@ cppShlTest = benchTestCase "shl test" $ do
                                   , ("result4_undef", trueBit)
                                   , ("result5_undef", falseBit)
                                   , ("result6_undef", trueBit)
+                                  , ("result7_undef", trueBit)
+                                  , ("result8_undef", trueBit)
+                                  ]
+
+cppShrTest :: BenchTest
+cppShrTest = benchTestCase "shr test" $ do
+
+  r <- D.evalVerif Nothing $ do
+
+    -- Shift of a negative should be undefined, since it is technically impl-defined
+    -- May want to consult clang and see
+    minusOne <- T.num (-1)
+    two <- T.num 2
+    shift1 <- T.cppShiftLeft minusOne two
+
+    result1 <- T.int32 "result1"
+    T.vassign result1 shift1
+
+    -- For an unsigned it should be fine though
+    uMinusOne <- T.unum (-1)
+    uTwo <- T.unum 2
+    shift2 <- T.cppShiftLeft uMinusOne uTwo
+    result2 <- T.uint32 "result2"
+    T.vassign result2 shift2
+
+    -- Shifting by a negative should be undefined
+
+
+    D.runSolver
+
+  vtest "shr test" r $ M.fromList [ ("result1_undef", trueBit)
+                                  , ("result2_undef", falseBit)
                                   ]

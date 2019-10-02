@@ -22,7 +22,7 @@ module DSL.Typed ( vassert
                  , cppShiftLeft
                  , cppShiftRight
                  ) where
-import           Control.Monad.State.Strict (liftIO)
+import           Control.Monad.State.Strict (liftIO, unless)
 import qualified DSL.DSL                    as D
 import           Prelude                    hiding (compare)
 
@@ -62,6 +62,7 @@ data Type = Unsigned
           | Signed
           | Double
           | Bool
+          deriving (Eq, Ord, Show)
 
 -- | Is the type a signed 32?
 isSigned :: Type -> Bool
@@ -95,6 +96,7 @@ vassert = D.assert . vnode
 
 vassign :: VNode -> VNode -> D.Verif ()
 vassign n1 n2 = do
+  unless (vtype n1 == vtype n2) $ error "Tried to assign different typed nodes"
   D.eq (vnode n1) (vnode n2) >>= D.assert
   D.eq (vundef n1) (vundef n2) >>= D.assert
 
@@ -236,11 +238,25 @@ cppLte left right = cppCompareWrapper left right D.ulte D.slte
 --
 -- int = int << anything
 -- uint = uint << anything
+--
+-- Clang turns 1 << -1 into undef
+--
 cppShiftLeft :: VNode -> VNode -> D.Verif VNode
 cppShiftLeft left right
   | isUnsigned (vtype left) = do
+
+      parentsUndef <- D.or (vundef left) (vundef right)
+      -- If the right is signed and negative, undefined behavior
+      undef <- if isSigned (vtype right)
+               then do
+                 zero <- D.i32c 0
+                 opUndef <- D.slt (vnode right) zero
+                 D.or parentsUndef opUndef
+               else return parentsUndef
+
       result <- D.safeSll (vnode left) (vnode right)
-      newMaybeDefinedNode left right result Unsigned
+      return $ VNode undef result Unsigned
+
   | otherwise = do
 
       -- Do the operation in 64-bits and see if any of the left bits are set.
@@ -286,12 +302,27 @@ cppShiftLeft left right
 --
 -- int = int >> anything
 -- uint = uint >> anything
+--
+-- We are going to assume that Clang implements GCC's implementation-defined
+-- behavior, since it appears that Clang does not actually document their impl-defined
+-- behavior anywhere. GCC says:
+--
+-- Signed ‘>>’ acts on negative numbers by sign extension.
+-- (https://gcc.gnu.org/onlinedocs/gcc/Integers-implementation.html#Integers-implementation)
+--
+-- Shifting by a negative is undefined behavior:
+-- 5 >> -8 compiles at Clang -O3 to undef
+--
 cppShiftRight :: VNode -> VNode -> D.Verif VNode
 cppShiftRight left right
+
+
+
   | isUnsigned (vtype left) = do
-      result <- D.safeSra (vnode left) (vnode right)
+      result <- D.safeSrl (vnode left) (vnode right)
       newMaybeDefinedNode left right result Unsigned
   | otherwise = do
+
 
       -- if left is negative, the behavior is impl-defined
       zero <- D.i32c 0
