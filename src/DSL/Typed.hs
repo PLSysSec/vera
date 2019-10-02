@@ -1,11 +1,14 @@
 module DSL.Typed ( vassert
                  , vassign
+                 , newInputVar
+                 , newResultVar
                  , bool
                  , int32
                  , uint32
                  , num
                  , unum
                  , VNode
+                 , Type(..)
                  , intMax
                  , intMin
                  , uintMax
@@ -74,6 +77,27 @@ isSigned _      = False
 -- | Is the type unsigned 32?
 isUnsigned :: Type -> Bool
 isUnsigned = not . isSigned
+
+newInputVar :: Type
+            -> String
+            -> D.Verif VNode
+newInputVar ty name = do
+  var <- case ty of
+           Bool     -> D.i1v name
+           Signed   -> D.i32v name
+           Unsigned -> D.i32v name
+           _        -> error "Not yet supported"
+  undef <- D.i1c 0
+  return $ VNode undef var ty
+
+newResultVar :: Type
+             -> String
+             -> D.Verif VNode
+newResultVar Bool     = bool
+newResultVar Signed   = int32
+newResultVar Unsigned = uint32
+newResultVar _        = error "No more"
+
 
 -- | Make a new node whose undef flag may be set, based on the parents of the node
 newMaybeDefinedNode :: VNode

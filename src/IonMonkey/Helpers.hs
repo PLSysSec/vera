@@ -6,15 +6,15 @@ import           IonMonkey.Objects
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#551
 isFiniteNonNegative :: Range -> D.Verif D.Node
-isFiniteNonNegative range = do
-  zero <- D.i32c 0
-  D.sgte (lower range) zero
+isFiniteNonNegative range = undefined
+  -- zero <- D.i32c 0
+  -- D.sgte (lower range) zero
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#548
 isFiniteNegative :: Range -> D.Verif D.Node
-isFiniteNegative range = do
-  zero <- D.i32c 0
-  D.slt (upper range) zero
+isFiniteNegative range = undefined
+  -- zero <- D.i32c 0
+  -- D.slt (upper range) zero
 
 countLeadingZeroes32 :: D.Node -> D.Verif D.Node
 countLeadingZeroes32 node = do

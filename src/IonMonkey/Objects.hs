@@ -3,15 +3,14 @@ module IonMonkey.Objects ( Range
                          , lower
                          , upper
                          , rangeName
-                         , newInputRange
-                         , newResultRange
+                         , signedInputRange
+                         , unsignedInputRange
+                         , signedResultRange
+                         , unsignedResultRange
                          , operandWithRange
                          , verifySaneRange
                          , verifyUpperBound
                          , verifyLowerBound
-                         , uVerifySaneRange
-                         , uVerifyUpperBound
-                         , uVerifyLowerBound
                          ) where
 import qualified Data.Map.Strict as M
 import qualified DSL.DSL         as D
@@ -21,54 +20,56 @@ import           DSL.Typed       as T
 -- https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#119
 data Range = Range {
       rangeName :: String
-    , lower     :: D.Node
-    , upper     :: D.Node
+    , lower     :: T.VNode
+    , upper     :: T.VNode
     }
 
-data VRange = VRange {
-      vrangeName :: String
-    , vlower     :: T.VNode
-    , vupper     :: T.VNode
-    }
-
-signedRange :: String -> D.Verif VRange
-signedRange operandName = do
+signedInputRange :: String -> D.Verif Range
+signedInputRange operandName = do
   let lowerName = operandName ++ "_lower"
       upperName = operandName ++ "_upper"
-  lowerNode <- T.int32 lowerName
-  upperNode <- T.int32 upperName
+  lowerNode <- T.newInputVar T.Signed lowerName
+  upperNode <- T.newInputVar T.Signed upperName
   T.cppLte lowerNode upperNode >>= T.vassert
-  return $ VRange operandName lowerNode upperNode
-
--- | We assume that an input range will have the invariant
--- that lower <= upper, since we assume inputs are working correctly
-newInputRange :: String -> D.Verif D.Sort -> D.Verif Range
-newInputRange operandName sort = do
-  let lowerName = operandName ++ "_lower"
-      upperName = operandName ++ "_upper"
-  lowerNode <- D.var' sort lowerName
-  upperNode <- D.var' sort upperName
-  D.slte lowerNode upperNode >>= D.assert
   return $ Range operandName lowerNode upperNode
 
--- | We do *not* assume that output ranges are working correctly.
--- That is an invariant that we will check
-newResultRange :: String -> D.Verif D.Sort -> D.Verif Range
-newResultRange operandName sort = do
+unsignedInputRange :: String -> D.Verif Range
+unsignedInputRange operandName = do
   let lowerName = operandName ++ "_lower"
       upperName = operandName ++ "_upper"
-  lowerNode <- D.var' sort lowerName
-  upperNode <- D.var' sort upperName
+  lowerNode <- T.newInputVar T.Unsigned lowerName
+  upperNode <- T.newInputVar T.Unsigned upperName
+  T.cppLte lowerNode upperNode >>= T.vassert
   return $ Range operandName lowerNode upperNode
+
+signedResultRange :: String -> D.Verif Range
+signedResultRange operandName = do
+  let lowerName = operandName ++ "_lower"
+      upperName = operandName ++ "_upper"
+  lowerNode <- T.newResultVar T.Signed lowerName
+  upperNode <- T.newResultVar T.Signed upperName
+  return $ Range operandName lowerNode upperNode
+
+unsignedResultRange :: String -> D.Verif Range
+unsignedResultRange operandName = do
+  let lowerName = operandName ++ "_lower"
+      upperName = operandName ++ "_upper"
+  lowerNode <- T.newResultVar T.Unsigned lowerName
+  upperNode <- T.newResultVar T.Unsigned upperName
+  return $ Range operandName lowerNode upperNode
+
 
 -- | Make a new operand with name 'name' of sort 'sort' that is in the range
 --'range'---ie is greater than the range's lower and less than the range's upper
-operandWithRange :: String -> D.Verif D.Sort -> Range -> D.Verif D.Node
-operandWithRange name sort range = do
-  operand <- D.var' sort name
-  D.slte operand (upper range) >>= D.assert
-  D.sgte operand (lower range) >>= D.assert
-  return operand
+operandWithRange :: String -> Type -> Range -> D.Verif T.VNode
+operandWithRange name ty range = do
+  op <- case ty of
+          T.Signed   -> T.int32 name
+          T.Unsigned -> T.uint32 name
+          _          -> error "we will fix this"
+  T.cppLte op (upper range) >>= T.vassert
+  T.cppGte op (lower range) >>= T.vassert
+  return op
 
 -- Verification functions and datatypes
 
@@ -84,44 +85,30 @@ getResult status = case status of
 
 -- | Verify that the upper bound of a range is greater than the lower
 -- Expects UNSAT
--- TODO: make an informative datatype with a counterexample
 verifySaneRange :: Range -> D.Verif VerifResult
-verifySaneRange = verifySaneRange_ D.slt
-
--- | Same as verifySaneRange but unsigned comparison
-uVerifySaneRange :: Range -> D.Verif VerifResult
-uVerifySaneRange = verifySaneRange_ D.ult
-
-verifySaneRange_ :: (D.Node -> D.Node -> D.Verif D.Node) -> Range -> D.Verif VerifResult
-verifySaneRange_ cmp resultRange = do
+verifySaneRange resultRange = do
   D.push 1
-  cmp (upper resultRange) (lower resultRange) >>= D.assert
+  T.cppLt (upper resultRange) (lower resultRange) >>= T.vassert
   check <- D.runSolver
   D.pop 1
   getResult check
 
 -- | Verify that a node is less than the upper bound
 -- Expects UNSAT
--- TODO same as above
-verifyUpperBound :: D.Node -> Range -> D.Verif VerifResult
-verifyUpperBound = verifyBound D.sgt upper
+verifyUpperBound :: T.VNode -> Range -> D.Verif VerifResult
+verifyUpperBound node range = do
+  D.push 1
+  T.cppGt node (upper range) >>= T.vassert
+  check <- D.runSolver
+  D.pop 1
+  getResult check
 
 -- | Verify that a node is greater than the lower bound
 -- Expects UNSAT
--- TODO same as above
-verifyLowerBound :: D.Node -> Range -> D.Verif VerifResult
-verifyLowerBound = verifyBound D.slt lower
-
-uVerifyUpperBound :: D.Node -> Range -> D.Verif VerifResult
-uVerifyUpperBound = verifyBound D.ugt upper
-
-uVerifyLowerBound :: D.Node -> Range -> D.Verif VerifResult
-uVerifyLowerBound = verifyBound D.ult lower
-
-verifyBound :: (D.Node -> D.Node -> D.Verif D.Node) -> (Range -> D.Node) -> D.Node -> Range -> D.Verif VerifResult
-verifyBound cmp lowOrUp node range = do
+verifyLowerBound :: T.VNode -> Range -> D.Verif VerifResult
+verifyLowerBound node range = do
   D.push 1
-  cmp node (lowOrUp range) >>= D.assert
+  T.cppLt node (lower range) >>= T.vassert
   check <- D.runSolver
   D.pop 1
   getResult check
