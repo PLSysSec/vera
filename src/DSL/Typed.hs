@@ -15,8 +15,9 @@ module DSL.Typed ( VNode
                  , newMaybeDefinedNode
                  , newDefinedNode
                  ) where
-import qualified DSL.DSL as D
-import           Prelude hiding (compare)
+import           Control.Monad.State.Strict (liftIO)
+import qualified DSL.DSL                    as D
+import           Prelude                    hiding (compare)
 
 {-|
 
@@ -98,6 +99,10 @@ newBoolVar name = do
 
 vassign :: VNode -> VNode -> D.Verif ()
 vassign node1 node2 = do
+  w1 <- D.getWidth (vnode node1)
+  w2 <- D.getWidth (vnode node2)
+  liftIO $ print w1
+  liftIO $ print w2
   D.eq (vnode node1) (vnode node2) >>= D.assert
   D.eq (vundef node1) (vundef node2) >>= D.assert
 

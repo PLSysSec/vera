@@ -13,6 +13,7 @@ import           Utils
 cppTests :: BenchTest
 cppTests = benchTestGroup "C++ tests" [ cppMinTest
                                       , cppGtTest
+                                      , cppLshTest
                                       ]
 
 trueBit :: Integer
@@ -24,7 +25,7 @@ falseBit = 0
 cppMinTest :: BenchTest
 cppMinTest = benchTestCase "min test" $ do
 
-  (r) <- D.evalVerif Nothing $ do
+  r <- D.evalVerif Nothing $ do
 
     -- Check that cppMin is aware of the sign for signed numbers
     left <- T.newSignedVar "left"
@@ -108,4 +109,20 @@ cppGtTest = benchTestCase "gt test" $ do
                                 , ("result4", falseBit)
                                 , ("result5", falseBit)
                                 , ("result6", falseBit)
+                                ]
+
+cppLshTest :: BenchTest
+cppLshTest = benchTestCase "lsh test" $ do
+
+  r <- D.evalVerif Nothing $ do
+
+    -- Check that left shifting a negative is undefined
+    minusOne <- T.newSignedNumber (-1)
+    two <- T.newUnsignedNumber 2
+    result1 <- T.newSignedVar "result1"
+    T.cppShiftLeft minusOne two >>= T.vassign result1
+
+    D.runSolver
+
+  vtest "cppMin" r $ M.fromList [ ("result1_undef", trueBit)
                                 ]
