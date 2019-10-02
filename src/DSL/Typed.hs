@@ -4,6 +4,7 @@ module DSL.Typed ( vassert
                  , int32
                  , uint32
                  , num
+                 , unum
                  , VNode
                  , intMax
                  , intMin
@@ -21,8 +22,9 @@ module DSL.Typed ( vassert
                  , cppShiftLeft
                  , cppShiftRight
                  ) where
-import qualified DSL.DSL as D
-import           Prelude hiding (compare)
+import           Control.Monad.State.Strict (liftIO)
+import qualified DSL.DSL                    as D
+import           Prelude                    hiding (compare)
 
 {-|
 
@@ -92,7 +94,9 @@ vassert :: VNode -> D.Verif ()
 vassert = D.assert . vnode
 
 vassign :: VNode -> VNode -> D.Verif ()
-vassign n1 n2 = D.eq (vnode n1) (vnode n2) >>= D.assert
+vassign n1 n2 = do
+  D.eq (vnode n1) (vnode n2) >>= D.assert
+  D.eq (vundef n1) (vundef n2) >>= D.assert
 
 --
 -- Variables and constants
@@ -101,17 +105,25 @@ vassign n1 n2 = D.eq (vnode n1) (vnode n2) >>= D.assert
 bool :: String -> D.Verif VNode
 bool name = do
   var <- D.i1v name
-  newDefinedNode var Bool
+  undef <- D.i1v $ name ++ "_undef"
+  return $ VNode undef var Bool
 
 int32 :: String -> D.Verif VNode
 int32 name = do
   var <- D.i32v name
-  newDefinedNode var Signed
+  undef <- D.i1v $ name ++ "_undef"
+  return $ VNode undef var Signed
 
 uint32 :: String -> D.Verif VNode
 uint32 name = do
   var <- D.i32v name
-  newDefinedNode var Unsigned
+  undef <- D.i1v $ name ++ "_undef"
+  return $ VNode undef var Unsigned
+
+unum :: Integer -> D.Verif VNode
+unum val = do
+  node <- D.i32c val
+  newDefinedNode node Unsigned
 
 num :: Integer -> D.Verif VNode
 num val = do
@@ -125,14 +137,10 @@ intMin :: D.Verif VNode
 intMin = num (-2147483648)
 
 uintMax :: D.Verif VNode
-uintMax = do
-  node <- D.i32c 4294967295
-  newDefinedNode node Unsigned
+uintMax = unum 4294967295
 
 uintMin :: D.Verif VNode
-uintMin = do
-  node <- D.i32c 0
-  newDefinedNode node Unsigned
+uintMin = unum 0
 
 --
 -- Operations
@@ -241,11 +249,17 @@ cppShiftLeft left right
       left64 <- D.uext (vnode left) 32
       right64 <- D.uext (vnode right) 32
       result64 <- D.safeSll left64 right64
-      top32 <- D.slice result64 32 31
+      top32 <- D.slice result64 63 32
       zero <- D.i32c 0
 
+      -- If the right is greater than 32, it is definitely undef
+      -- This will also catch trying to shift by a negative
+      thirtyTwo <- D.i32c 32
+
       -- Is it undef?
-      opUndef <- D.eq top32 zero >>= D.not
+      opUndef1 <- D.eq top32 zero >>= D.not
+      opUndef2 <- D.ugt (vnode right) thirtyTwo
+      opUndef <- D.or opUndef1 opUndef2
       parentsUndef <- D.or (vundef left) (vundef right)
       undef <- D.or opUndef parentsUndef
 

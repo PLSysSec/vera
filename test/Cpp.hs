@@ -13,6 +13,7 @@ import           Utils
 cppTests :: BenchTest
 cppTests = benchTestGroup "C++ tests" [ cppMinTest
                                       , cppGtTest
+                                      , cppShlTest
                                       ]
 
 trueBit :: Integer
@@ -109,3 +110,57 @@ cppGtTest = benchTestCase "gt test" $ do
                                 , ("result5", falseBit)
                                 , ("result6", falseBit)
                                 ]
+
+cppShlTest :: BenchTest
+cppShlTest = benchTestCase "shl test" $ do
+
+  (r) <- D.evalVerif Nothing $ do
+
+    -- Shift of a negative should be undefined
+    minusOne <- T.num (-1)
+    two <- T.num 2
+    shift1 <- T.cppShiftLeft minusOne two
+
+    result1 <- T.int32 "result1"
+    T.vassign result1 shift1
+
+    -- Shift of any bit off the left end of the var should be undefined
+    one <- T.num 1
+    thirtyThree <- T.num 33
+    shift2 <- T.cppShiftLeft one thirtyThree
+
+    result2 <- T.int32 "result2"
+    T.vassign result2 shift2
+
+    -- Shift of any bit wayyyyy of the left end of the var should be undefined
+    fourHundred <- T.num 400
+    shift3 <- T.cppShiftLeft one fourHundred
+
+    result3 <- T.int32 "result3"
+    T.vassign result3 shift3
+
+    -- Shift by a negative should be undefined
+    shift4 <- T.cppShiftLeft one minusOne
+    result4 <- T.int32 "result4"
+    T.vassign result4 shift4
+
+    -- Shift of bits out of an unsigned should not be undef
+    uone <- T.unum 1
+    shift5 <- T.cppShiftLeft uone fourHundred
+    result5 <- T.uint32 "result5"
+    T.vassign result5 shift5
+
+    -- A normal shift of the result of an undef operation should still be undef
+    shift6 <- T.cppShiftLeft shift3 one
+    result6 <- T.int32 "result6"
+    T.vassign result6 shift6
+
+    D.runSolver
+
+  vtest "shl test" r $ M.fromList [ ("result1_undef", trueBit)
+                                  , ("result2_undef", trueBit)
+                                  , ("result3_undef", trueBit)
+                                  , ("result4_undef", trueBit)
+                                  , ("result5_undef", falseBit)
+                                  , ("result6_undef", trueBit)
+                                  ]
