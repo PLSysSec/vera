@@ -4,8 +4,8 @@ import           Control.Monad (forM_, unless)
 import qualified Data.Map      as M
 import qualified DSL.DSL       as D
 
-vtest :: String -> D.SMTResult -> M.Map String Integer -> IO ()
-vtest name result expectedVars = case result of
+vtest :: D.SMTResult -> M.Map String Integer -> IO ()
+vtest result expectedVars = case result of
   D.SolverUnsat -> error "Expected SAT but got UNSAT"
   D.SolverFailed -> error "Expected SAT but the solver failed"
   D.SolverSat actualVars -> do

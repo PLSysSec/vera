@@ -12,7 +12,7 @@ import           Utils
 
 cppTests :: BenchTest
 cppTests = benchTestGroup "C++ tests" [ cppMinTest
-                                      , cppGtTest
+                                      , cppCmpTest
                                       , cppShlTest
                                       , cppShrTest
                                       ]
@@ -44,12 +44,12 @@ cppMinTest = benchTestCase "min test" $ do
 
     D.runSolver
 
-  vtest "cppMin" r $ M.fromList [ ("result", -1)
-                                , ("uresult", 1)
-                                ]
+  vtest r $ M.fromList [ ("result", -1)
+                       , ("uresult", 1)
+                       ]
 
-cppGtTest :: BenchTest
-cppGtTest = benchTestCase "gt test" $ do
+cppCmpTest :: BenchTest
+cppCmpTest = benchTestCase "cmp test" $ do
 
   (r) <- D.evalVerif Nothing $ do
 
@@ -58,40 +58,66 @@ cppGtTest = benchTestCase "gt test" $ do
     minusOne <- T.num (-1)
     result1 <- T.bool "result1"
     result2 <- T.bool "result2"
+    result3 <- T.bool "result3"
+    result4 <- T.bool "result4"
     gt <- T.cppGt one minusOne
     gte <- T.cppGte one minusOne
+    lt <- T.cppLt one minusOne
+    lte <- T.cppLte one minusOne
     T.vassign result1 gt
     T.vassign result2 gte
+    T.vassign result3 lt
+    T.vassign result4 lte
 
     -- Make sure that it uses an unsigned comparison for an unsigned and signed,
     -- unsigned and unsigned
     uMinusOne <- T.unum (-1)
     uOne <- T.unum 1
 
-    result3 <- T.bool "result3"
-    result4 <- T.bool "result4"
     result5 <- T.bool "result5"
     result6 <- T.bool "result6"
+    result7 <- T.bool "result7"
+    result8 <- T.bool "result8"
+    result9 <- T.bool "result9"
+    result10 <- T.bool "result10"
+    result11 <- T.bool "result11"
+    result12 <- T.bool "result12"
 
-    bgt <- T.cppGt uOne uMinusOne
-    bgte <- T.cppGte uOne uMinusOne
-    ugt <- T.cppGt uOne minusOne
-    ugte <- T.cppGte uOne minusOne
+    bgt <- T.cppGt one uMinusOne
+    bgte <- T.cppGte one uMinusOne
+    blt <- T.cppLt one uMinusOne
+    blte <- T.cppLte one uMinusOne
 
-    T.vassign result3 bgt
-    T.vassign result4 bgte
-    T.vassign result5 ugt
-    T.vassign result6 ugte
+    T.vassign result5 bgt
+    T.vassign result6 bgte
+    T.vassign result7 blt
+    T.vassign result8 blte
+
+    ugt <- T.cppGt uOne uMinusOne
+    ugte <- T.cppGte uOne uMinusOne
+    ult <- T.cppLt uOne uMinusOne
+    ulte <- T.cppLte uOne uMinusOne
+
+    T.vassign result9 ugt
+    T.vassign result10 ugte
+    T.vassign result11 ult
+    T.vassign result12 ulte
 
     D.runSolver
 
-  vtest "cppMin" r $ M.fromList [ ("result1", trueBit)
-                                , ("result2", trueBit)
-                                , ("result3", falseBit)
-                                , ("result4", falseBit)
-                                , ("result5", falseBit)
-                                , ("result6", falseBit)
-                                ]
+  vtest r $ M.fromList [ ("result1", trueBit)
+                       , ("result2", trueBit)
+                       , ("result3", falseBit)
+                       , ("result4", falseBit)
+                       , ("result5", falseBit)
+                       , ("result6", falseBit)
+                       , ("result7", trueBit)
+                       , ("result8", trueBit)
+                       , ("result9", falseBit)
+                       , ("result10", falseBit)
+                       , ("result11", trueBit)
+                       , ("result12", trueBit)
+                       ]
 
 cppShlTest :: BenchTest
 cppShlTest = benchTestCase "shl test" $ do
@@ -149,15 +175,15 @@ cppShlTest = benchTestCase "shl test" $ do
 
     D.runSolver
 
-  vtest "shl test" r $ M.fromList [ ("result1_undef", trueBit)
-                                  , ("result2_undef", trueBit)
-                                  , ("result3_undef", trueBit)
-                                  , ("result4_undef", trueBit)
-                                  , ("result5_undef", falseBit)
-                                  , ("result6_undef", trueBit)
-                                  , ("result7_undef", trueBit)
-                                  , ("result8_undef", trueBit)
-                                  ]
+  vtest r $ M.fromList [ ("result1_undef", trueBit)
+                       , ("result2_undef", trueBit)
+                       , ("result3_undef", trueBit)
+                       , ("result4_undef", trueBit)
+                       , ("result5_undef", falseBit)
+                       , ("result6_undef", trueBit)
+                       , ("result7_undef", trueBit)
+                       , ("result8_undef", trueBit)
+                       ]
 
 cppShrTest :: BenchTest
 cppShrTest = benchTestCase "shr test" $ do
@@ -196,9 +222,9 @@ cppShrTest = benchTestCase "shr test" $ do
 
     D.runSolver
 
-  vtest "shr test" r $ M.fromList [ ("result1_undef", trueBit)
-                                  , ("result2_undef", trueBit)
-                                  , ("result3", 1)
-                                  , ("result4", -1)
-                                  , ("result5_undef", trueBit)
-                                  ]
+  vtest r $ M.fromList [ ("result1_undef", trueBit)
+                       , ("result2_undef", trueBit)
+                       , ("result3", 1)
+                       , ("result4", -1)
+                       , ("result5_undef", trueBit)
+                       ]
