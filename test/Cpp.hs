@@ -2,8 +2,8 @@ module Cpp (cppTests) where
 import           BenchUtils
 import           Control.Monad.State.Strict (liftIO)
 import qualified Data.Map                   as M
-import qualified DSL.Cpp                    as T
 import qualified DSL.DSL                    as D
+import qualified DSL.Typed                  as T
 import           IonMonkey.Objects
 import           IonMonkey.Operations
 import           Prelude                    hiding (and, not)
@@ -13,7 +13,6 @@ import           Utils
 cppTests :: BenchTest
 cppTests = benchTestGroup "C++ tests" [ cppMinTest
                                       , cppGtTest
-                                      , cppLshTest
                                       ]
 
 trueBit :: Integer
@@ -25,28 +24,28 @@ falseBit = 0
 cppMinTest :: BenchTest
 cppMinTest = benchTestCase "min test" $ do
 
-  r <- D.evalVerif Nothing $ do
+  (r) <- D.evalVerif Nothing $ do
 
     -- Check that cppMin is aware of the sign for signed numbers
-    left <- T.newSignedVar "left"
-    one <- T.newSignedNumber 1
+    left <- T.int32 "left"
+    one <- T.num 1
     T.vassign left one
 
-    right <- T.newSignedVar "right"
-    minusOne <- T.newSignedNumber (-1)
+    right <- T.int32 "right"
+    minusOne <- T.num (-1)
     T.vassign right minusOne
 
-    result <- T.newSignedVar "result"
+    result <- T.int32 "result"
     min <- T.cppMin left right
     T.vassign result min
 
     -- Check that cppMin does the right thing with unsigned numbers
-    uleft <- T.newUnsignedVar "uleft"
-    uright <- T.newUnsignedVar "uright"
+    uleft <- T.uint32 "uleft"
+    uright <- T.uint32 "uright"
     T.vassign uleft one
     T.vassign uright minusOne
 
-    uresult <- T.newUnsignedVar "uresult"
+    uresult <- T.uint32 "uresult"
     umin <- T.cppMin uleft uright
     T.vassign uresult umin
 
@@ -64,16 +63,16 @@ cppGtTest = benchTestCase "gt test" $ do
   (r) <- D.evalVerif Nothing $ do
 
     -- Make sure it uses a signed comparison for two signed numbers
-    left <- T.newSignedVar "left"
-    one <- T.newSignedNumber 1
+    left <- T.int32 "left"
+    one <- T.num 1
     T.vassign left one
 
-    right <- T.newSignedVar "right"
-    minusOne <- T.newSignedNumber (-1)
+    right <- T.int32 "right"
+    minusOne <- T.num (-1)
     T.vassign right minusOne
 
-    result1 <- T.newBoolVar "result1"
-    result2 <- T.newBoolVar "result2"
+    result1 <- T.bool "result1"
+    result2 <- T.bool "result2"
     gt <- T.cppGt left right
     gte <- T.cppGte left right
     T.vassign result1 gt
@@ -81,17 +80,17 @@ cppGtTest = benchTestCase "gt test" $ do
 
     -- Make sure that it uses an unsigned comparison for an unsigned and signed,
     -- unsigned and unsigned
-    uright <- T.newUnsignedVar "uright"
-    uleft <- T.newUnsignedVar "uleft"
-    minusOne <- T.newUnsignedNumber (-1)
-    one <- T.newUnsignedNumber 1
+    uright <- T.uint32 "uright"
+    uleft <- T.uint32 "uleft"
+    minusOne <- T.num (-1)
+    one <- T.num 1
     T.vassign uright minusOne
     T.vassign uleft one
 
-    result3 <- T.newBoolVar "result3"
-    result4 <- T.newBoolVar "result4"
-    result5 <- T.newBoolVar "result5"
-    result6 <- T.newBoolVar "result6"
+    result3 <- T.bool "result3"
+    result4 <- T.bool "result4"
+    result5 <- T.bool "result5"
+    result6 <- T.bool "result6"
     bgt <- T.cppGt left uright
     bgte <- T.cppGte left uright
     ugt <- T.cppGt uleft uright
@@ -109,20 +108,4 @@ cppGtTest = benchTestCase "gt test" $ do
                                 , ("result4", falseBit)
                                 , ("result5", falseBit)
                                 , ("result6", falseBit)
-                                ]
-
-cppLshTest :: BenchTest
-cppLshTest = benchTestCase "lsh test" $ do
-
-  r <- D.evalVerif Nothing $ do
-
-    -- Check that left shifting a negative is undefined
-    minusOne <- T.newSignedNumber (-1)
-    two <- T.newUnsignedNumber 2
-    result1 <- T.newSignedVar "result1"
-    T.cppShiftLeft minusOne two >>= T.vassign result1
-
-    D.runSolver
-
-  vtest "cppMin" r $ M.fromList [ ("result1_undef", trueBit)
                                 ]

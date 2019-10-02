@@ -32,13 +32,13 @@ data VRange = VRange {
     }
 
 signedRange :: String -> D.Verif VRange
-signedRange operandName = undefined
-  -- let lowerName = operandName ++ "_lower"
-  --     upperName = operandName ++ "_upper"
-  -- lowerNode <- T.int32 lowerName
-  -- upperNode <- T.int32 upperName
-  -- T.cppLte lowerNode upperNode >>= T.vassert
-  -- return $ VRange operandName lowerNode upperNode
+signedRange operandName = do
+  let lowerName = operandName ++ "_lower"
+      upperName = operandName ++ "_upper"
+  lowerNode <- T.int32 lowerName
+  upperNode <- T.int32 upperName
+  T.cppLte lowerNode upperNode >>= T.vassert
+  return $ VRange operandName lowerNode upperNode
 
 -- | We assume that an input range will have the invariant
 -- that lower <= upper, since we assume inputs are working correctly
