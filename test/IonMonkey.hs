@@ -63,25 +63,27 @@ notTest = benchTestCase "not" $ error "not"
   -- Verified @=? check2
 
 lshTest :: BenchTest
-lshTest = benchTestCase "lsh" $ error "lsh"
-  -- (c1, c2, c3) <- D.evalVerif Nothing $ do
+lshTest = benchTestCase "lsh" $ do
+  (c1, c2, c3, c4) <- D.evalVerif Nothing $ do
 
-  --   shifteeRange <- newInputRange "shiftee range" D.i32
-  --   val <- D.i32v "val"
-  --   resultRange <- lsh shifteeRange val
-  --   c1 <- verifySaneRange resultRange
+    shifteeRange <- signedInputRange "shiftee range"
+    val <- T.newInputVar T.Signed "val"
+    resultRange <- lsh shifteeRange val
+    c1 <- verifySaneRange resultRange
+    c2 <- verifyDefinedResult resultRange
 
-  --   shiftee <- operandWithRange "shiftee" D.i32 shifteeRange
-  --   result <- D.jsSll32 shiftee val
-  --   c2 <- verifyUpperBound result resultRange
-  --   c3 <- verifyLowerBound result resultRange
+    shiftee <- operandWithRange "shiftee" T.Signed shifteeRange
+    result <- T.jsShl shiftee val
+    c3 <- verifyUpperBound result resultRange
+    c4 <- verifyLowerBound result resultRange
 
-  --   return (c1, c2, c3)
+    return (c1, c2, c3, c4)
 
-  -- Verified @=? c1
+  Verified @=? c1
+  Verified @=? c2
+  Verified @=? c3
+  Verified @=? c4
 
-  -- Verified @=? c2
-  -- Verified @=? c3
 
 rshTest :: BenchTest
 rshTest = benchTestCase "rsh" $ do

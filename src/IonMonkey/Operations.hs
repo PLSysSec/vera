@@ -113,43 +113,43 @@ mul :: (D.MonadBoolector m) => m Range
 mul = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#999
-lsh :: Range -> D.Node -> D.Verif Range
-lsh shiftee val = error "Not ported"
+lsh :: Range -> T.VNode -> D.Verif Range
+lsh shiftee val = do
   -- Setup the shift
-  -- thirtyOne <- D.i32c 31
-  -- one <- D.i32c 1
-  -- shift <- D.and val thirtyOne
+  thirtyOne <- T.num 31
+  one <- T.num 1
+  shift <- T.cppAnd val thirtyOne
 
-  -- -- Desired range
-  -- shiftedLower <- D.safeSll (lower shiftee) shift
-  -- shiftedUpper <- D.safeSll (upper shiftee) shift
+  -- Desired range
+  shiftedLower <- T.cppShiftLeft (lower shiftee) shift
+  shiftedUpper <- T.cppShiftLeft (upper shiftee) shift
 
-  -- -- Compute the branch conditions
-  -- doesntLoseBits <- do
-  --   lowerDoesntLoseBits <- do
-  --     tmp1 <- D.safeSll shiftedLower one
-  --     tmp2 <- D.safeSrl tmp1 shift
-  --     tmp3 <- D.safeSrl tmp2 one
-  --     D.eq tmp3 (lower shiftee)
+  -- Compute the branch conditions
+  doesntLoseBits <- do
+    lowerDoesntLoseBits <- do
+      tmp1 <- T.cppShiftLeft shiftedLower one
+      tmp2 <- T.cppShiftRight tmp1 shift
+      tmp3 <- T.cppShiftRight tmp2 one
+      T.cppEq tmp3 (lower shiftee)
 
-  --   upperDoesntLoseBits <- do
-  --     tmp1 <- D.safeSll shiftedUpper one
-  --     tmp2 <- D.safeSrl tmp1 shift
-  --     tmp3 <- D.safeSrl tmp2 one
-  --     D.eq tmp3 (upper shiftee)
+    upperDoesntLoseBits <- do
+      tmp1 <- T.cppShiftLeft shiftedUpper one
+      tmp2 <- T.cppShiftRight tmp1 shift
+      tmp3 <- T.cppShiftRight tmp2 one
+      T.cppEq tmp3 (upper shiftee)
 
-  --   D.and lowerDoesntLoseBits upperDoesntLoseBits
+    T.cppAnd lowerDoesntLoseBits upperDoesntLoseBits
 
-  -- result <- newResultRange "result" D.i32
+  result <- signedResultRange "result"
 
-  -- -- fallback range
-  -- i32min <- D.i32min
-  -- i32max <- D.i32max
+  -- fallback range
+  i32min <- T.intMax
+  i32max <- T.intMin
 
-  -- D.cond doesntLoseBits shiftedLower i32min >>= D.assign (lower result)
-  -- D.cond doesntLoseBits shiftedUpper i32max >>= D.assign (upper result)
+  T.cppCond doesntLoseBits shiftedLower i32min >>= T.vassign (lower result)
+  T.cppCond doesntLoseBits shiftedUpper i32max >>= T.vassign (upper result)
 
-  -- return result
+  return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1016
 rsh :: Range -> T.VNode -> D.Verif Range
