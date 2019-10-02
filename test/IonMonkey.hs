@@ -85,23 +85,25 @@ lshTest = benchTestCase "lsh" $ error "lsh"
 
 rshTest :: BenchTest
 rshTest = benchTestCase "rsh" $ do
-  (c1, c2, c3) <- D.evalVerif Nothing $ do
+  (c1, c2, c3, c4) <- D.evalVerif Nothing $ do
 
     shifteeRange <- signedInputRange "shiftee range"
     val <- T.newInputVar T.Signed "val"
     resultRange <- rsh shifteeRange val
     c1 <- verifySaneRange resultRange
+    c2 <- verifyDefinedResult resultRange
 
     shiftee <- operandWithRange "shiftee" T.Signed shifteeRange
     result <- T.jsShr shiftee val
-    c2 <- verifyUpperBound result resultRange
-    c3 <- verifyLowerBound result resultRange
+    c3 <- verifyUpperBound result resultRange
+    c4 <- verifyLowerBound result resultRange
 
-    return (c1, c2, c3)
+    return (c1, c2, c3, c4)
 
   Verified @=? c1
   Verified @=? c2
   Verified @=? c3
+  Verified @=? c4
 
 -- | This may not be right; the exponent bit may be saving the range
 urshTest  :: BenchTest

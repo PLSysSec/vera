@@ -1,5 +1,7 @@
 module DSL.Typed ( vassert
                  , vassign
+                 , assertUndef
+                 , assertDef
                  , newInputVar
                  , newResultVar
                  , bool
@@ -129,6 +131,16 @@ vassign n1 n2 = do
   unless (vtype n1 == vtype n2) $ error "Tried to assign different typed nodes"
   D.eq (vnode n1) (vnode n2) >>= D.assert
   D.eq (vundef n1) (vundef n2) >>= D.assert
+
+assertUndef :: VNode -> D.Verif ()
+assertUndef node = do
+  one <- D.i1c 1
+  D.eq (vundef node) one >>= D.assert
+
+assertDef :: VNode -> D.Verif ()
+assertDef node = do
+  zero <- D.i1c 0
+  D.eq (vundef node) zero >>= D.assert
 
 --
 -- Variables and constants

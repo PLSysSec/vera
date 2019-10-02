@@ -11,6 +11,7 @@ module IonMonkey.Objects ( Range
                          , verifySaneRange
                          , verifyUpperBound
                          , verifyLowerBound
+                         , verifyDefinedResult
                          ) where
 import qualified Data.Map.Strict as M
 import qualified DSL.DSL         as D
@@ -113,3 +114,11 @@ verifyLowerBound node range = do
   D.pop 1
   getResult check
 
+verifyDefinedResult :: Range -> D.Verif VerifResult
+verifyDefinedResult range = do
+  D.push 1
+  T.assertUndef (lower range)
+  T.assertUndef (upper range)
+  check <- D.runSolver
+  D.pop 1
+  getResult check
