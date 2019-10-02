@@ -1,4 +1,20 @@
-module DSL.Typed ( VNode ) where
+module DSL.Typed ( VNode
+                 , vnode
+                 , vundef
+                 , Type(..)
+                 , isSigned
+                 , isUnsigned
+                 , newTempNode
+                 , newSignedNumber
+                 , newUnsignedNumber
+                 , newSignedVar
+                 , newUnsignedVar
+                 , newBoolVar
+                 , vassign
+                 , vassert
+                 , newMaybeDefinedNode
+                 , newDefinedNode
+                 ) where
 import qualified DSL.DSL as D
 import           Prelude hiding (compare)
 
@@ -47,6 +63,9 @@ isSigned _                  = False
 isUnsigned :: VNode -> Bool
 isUnsigned = not . isSigned
 
+newTempNode :: D.Node -> D.Node -> Type -> VNode
+newTempNode = VNode
+
 newSignedNumber :: Integer -> D.Verif VNode
 newSignedNumber amt = do
   undef <- D.i1c 0
@@ -69,6 +88,12 @@ newUnsignedVar :: String -> D.Verif VNode
 newUnsignedVar name = do
   undef <- D.i1v $ name ++ "_undef"
   var <- D.i32v name
+  return $ VNode undef var Unsigned
+
+newBoolVar :: String -> D.Verif VNode
+newBoolVar name = do
+  undef <- D.i1v $ name ++ "_undef"
+  var <- D.i1v name
   return $ VNode undef var Unsigned
 
 vassign :: VNode -> VNode -> D.Verif ()
