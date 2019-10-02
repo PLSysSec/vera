@@ -208,16 +208,16 @@ cppLte left right = cppCompareWrapper left right D.ulte D.slte
 --
 -- https://en.cppreference.com/w/cpp/language/operator_arithmetic#Bitwise_shift_operators
 --
--- For unsigned a, the value of a << b is the value of a * 2b, reduced modulo 2N
+-- For unsigned a, the value of a << b is the value of a * 2^b, reduced modulo 2^N
 -- where N is the number of bits in the return type (that is, bitwise left shift
 -- is performed and the bits that get shifted out of the destination type are discarded).
 --
 -- C++ 14:
--- For signed and non-negative a, the value of a << b is a * 2b
+-- For signed and non-negative a, the value of a << b is a * 2^b
 -- if it is representable in the return type, otherwise the behavior is undefined.
 --
 -- Since C++ 14:
--- For signed and non-negative a, if a * 2b is representable in the unsigned version of
+-- For signed and non-negative a, if a * 2^b is representable in the unsigned version of
 -- the return type, then that value, converted to signed, is the value of a << b
 -- (this makes it legal to create INT_MIN as 1<<31); otherwise the behavior is undefined.
 -- TODO: ARE WE DOING THIS RIGHT?
