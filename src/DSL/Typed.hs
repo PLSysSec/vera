@@ -315,22 +315,17 @@ cppShiftLeft left right
 --
 cppShiftRight :: VNode -> VNode -> D.Verif VNode
 cppShiftRight left right
-
-
-
   | isUnsigned (vtype left) = do
+      undef <- makeUndef
       result <- D.safeSrl (vnode left) (vnode right)
-      newMaybeDefinedNode left right result Unsigned
+      return $ VNode undef result Unsigned
   | otherwise = do
-
-
-      -- if left is negative, the behavior is impl-defined
-      zero <- D.i32c 0
-      opUndef <- D.slt (vnode left) zero
-      parentsUndef <- D.or (vundef left) (vundef right)
-      undef <- D.or opUndef parentsUndef
-
-      -- actually do the op
+      undef <- makeUndef
       result <- D.safeSra (vnode left) (vnode right)
       return $ VNode undef result Signed
-
+  where
+    makeUndef = do
+      zero <- D.i32c 0
+      opUndef <- D.slt (vnode right) zero
+      parentsUndef <- D.or (vundef left) (vundef right)
+      D.or opUndef parentsUndef

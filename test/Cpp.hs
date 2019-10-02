@@ -164,27 +164,41 @@ cppShrTest = benchTestCase "shr test" $ do
 
   r <- D.evalVerif Nothing $ do
 
-    -- Shift of a negative should be undefined, since it is technically impl-defined
-    -- May want to consult clang and see
+    -- Shifting an unsigned by a negative should be undef
     minusOne <- T.num (-1)
-    two <- T.num 2
-    shift1 <- T.cppShiftLeft minusOne two
-
-    result1 <- T.int32 "result1"
+    uOne <- T.unum 1
+    shift1 <- T.cppShiftRight uOne minusOne
+    result1 <- T.uint32 "result1"
     T.vassign result1 shift1
 
-    -- For an unsigned it should be fine though
-    uMinusOne <- T.unum (-1)
-    uTwo <- T.unum 2
-    shift2 <- T.cppShiftLeft uMinusOne uTwo
-    result2 <- T.uint32 "result2"
+    -- Shifting a signed by a negative should be undef
+    one <- T.num 1
+    shift2 <- T.cppShiftRight one minusOne
+    result2 <- T.int32 "result2"
     T.vassign result2 shift2
 
-    -- Shifting by a negative should be undefined
+    -- Shifting an unsigned should result in a logical shift
+    uMinusOne <- T.unum (-1)
+    thirtyOne <- T.unum 31
+    shift3 <- T.cppShiftRight uMinusOne thirtyOne
+    result3 <- T.uint32 "result3"
+    T.vassign shift3 result3
 
+    -- Shifting a signed should result in an arithmetic shift
+    shift4 <- T.cppShiftRight minusOne thirtyOne
+    result4 <- T.int32 "result4"
+    T.vassign shift4 result4
+
+    -- Shifting an undef thing should result in an undef thing
+    shift5 <- T.cppShiftRight shift2 one
+    result5 <- T.int32 "result5"
+    T.vassign shift5 result5
 
     D.runSolver
 
   vtest "shr test" r $ M.fromList [ ("result1_undef", trueBit)
-                                  , ("result2_undef", falseBit)
+                                  , ("result2_undef", trueBit)
+                                  , ("result3", 1)
+                                  , ("result4", -1)
+                                  , ("result5_undef", trueBit)
                                   ]
