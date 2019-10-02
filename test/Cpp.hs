@@ -2,7 +2,7 @@ module Cpp (cppTests) where
 import           BenchUtils
 import           Control.Monad.State.Strict (liftIO)
 import qualified Data.Map                   as M
-import qualified DSL.DSL                    as D
+--import qualified DSL.DSL                    as D
 import qualified DSL.Typed                  as T
 import           IonMonkey.Objects
 import           IonMonkey.Operations
@@ -26,7 +26,7 @@ falseBit = 0
 cppMinTest :: BenchTest
 cppMinTest = benchTestCase "min test" $ do
 
-  (r) <- D.evalVerif Nothing $ do
+  r <- T.evalVerif Nothing $ do
 
     -- Check that cppMin is aware of the sign for signed numbers
     one <- T.num 1
@@ -42,7 +42,7 @@ cppMinTest = benchTestCase "min test" $ do
     uresult <- T.uint32 "uresult"
     T.vassign uresult umin
 
-    D.runSolver
+    T.runSolver
 
   vtest r $ M.fromList [ ("result", -1)
                        , ("uresult", 1)
@@ -51,7 +51,7 @@ cppMinTest = benchTestCase "min test" $ do
 cppCmpTest :: BenchTest
 cppCmpTest = benchTestCase "cmp test" $ do
 
-  (r) <- D.evalVerif Nothing $ do
+  r <- T.evalVerif Nothing $ do
 
     -- Make sure it uses a signed comparison for two signed numbers
     one <- T.num 1
@@ -103,7 +103,7 @@ cppCmpTest = benchTestCase "cmp test" $ do
     T.vassign result11 ult
     T.vassign result12 ulte
 
-    D.runSolver
+    T.runSolver
 
   vtest r $ M.fromList [ ("result1", trueBit)
                        , ("result2", trueBit)
@@ -122,7 +122,7 @@ cppCmpTest = benchTestCase "cmp test" $ do
 cppShlTest :: BenchTest
 cppShlTest = benchTestCase "shl test" $ do
 
-  (r) <- D.evalVerif Nothing $ do
+  r <- T.evalVerif Nothing $ do
 
     -- Shift of a negative should be undefined
     minusOne <- T.num (-1)
@@ -173,7 +173,7 @@ cppShlTest = benchTestCase "shl test" $ do
     result8 <- T.uint32 "result8"
     T.vassign result8 shift8
 
-    D.runSolver
+    T.runSolver
 
   vtest r $ M.fromList [ ("result1_undef", trueBit)
                        , ("result2_undef", trueBit)
@@ -188,7 +188,7 @@ cppShlTest = benchTestCase "shl test" $ do
 cppShrTest :: BenchTest
 cppShrTest = benchTestCase "shr test" $ do
 
-  r <- D.evalVerif Nothing $ do
+  r <- T.evalVerif Nothing $ do
 
     -- Shifting an unsigned by a negative should be undef
     minusOne <- T.num (-1)
@@ -220,7 +220,7 @@ cppShrTest = benchTestCase "shr test" $ do
     result5 <- T.int32 "result5"
     T.vassign shift5 result5
 
-    D.runSolver
+    T.runSolver
 
   vtest r $ M.fromList [ ("result1_undef", trueBit)
                        , ("result2_undef", trueBit)

@@ -21,6 +21,8 @@ module DSL.Typed ( vassert
                  , cppLte
                  , cppShiftLeft
                  , cppShiftRight
+                 , D.runSolver
+                 , D.evalVerif
                  ) where
 import           Control.Monad.State.Strict (liftIO, unless)
 import qualified DSL.DSL                    as D
