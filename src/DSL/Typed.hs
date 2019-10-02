@@ -1,5 +1,6 @@
 module DSL.Typed ( vassert
                  , vassign
+                 , bool
                  , int32
                  , uint32
                  , num
@@ -96,6 +97,11 @@ vassign n1 n2 = D.eq (vnode n1) (vnode n2) >>= D.assert
 --
 -- Variables and constants
 --
+
+bool :: String -> D.Verif VNode
+bool name = do
+  var <- D.i1v name
+  newDefinedNode var Bool
 
 int32 :: String -> D.Verif VNode
 int32 name = do

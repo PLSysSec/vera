@@ -11,7 +11,15 @@ import           Test.Tasty.HUnit
 import           Utils
 
 cppTests :: BenchTest
-cppTests = benchTestGroup "C++ tests" [ cppMinTest ]
+cppTests = benchTestGroup "C++ tests" [ cppMinTest
+                                      , cppGtTest
+                                      ]
+
+trueBit :: Integer
+trueBit = -1
+
+falseBit :: Integer
+falseBit = 0
 
 cppMinTest :: BenchTest
 cppMinTest = benchTestCase "min test" $ do
@@ -49,3 +57,55 @@ cppMinTest = benchTestCase "min test" $ do
                                 , ("uresult", 1)
                                 ]
 
+cppGtTest :: BenchTest
+cppGtTest = benchTestCase "gt test" $ do
+
+  (r) <- D.evalVerif Nothing $ do
+
+    -- Make sure it uses a signed comparison for two signed numbers
+    left <- T.int32 "left"
+    one <- T.num 1
+    T.vassign left one
+
+    right <- T.int32 "right"
+    minusOne <- T.num (-1)
+    T.vassign right minusOne
+
+    result1 <- T.bool "result1"
+    result2 <- T.bool "result2"
+    gt <- T.cppGt left right
+    gte <- T.cppGte left right
+    T.vassign result1 gt
+    T.vassign result2 gte
+
+    -- Make sure that it uses an unsigned comparison for an unsigned and signed,
+    -- unsigned and unsigned
+    uright <- T.uint32 "uright"
+    uleft <- T.uint32 "uleft"
+    minusOne <- T.num (-1)
+    one <- T.num 1
+    T.vassign uright minusOne
+    T.vassign uleft one
+
+    result3 <- T.bool "result3"
+    result4 <- T.bool "result4"
+    result5 <- T.bool "result5"
+    result6 <- T.bool "result6"
+    bgt <- T.cppGt left uright
+    bgte <- T.cppGte left uright
+    ugt <- T.cppGt uleft uright
+    ugte <- T.cppGte uleft uright
+    T.vassign result3 bgt
+    T.vassign result4 bgte
+    T.vassign result5 ugt
+    T.vassign result6 ugte
+
+    D.runSolver
+
+  vtest "cppMin" r $ M.fromList [ ("result1", trueBit)
+                                , ("result2", trueBit)
+                                , ("result3", falseBit)
+                                , ("result4", falseBit)
+                                , ("result5", falseBit)
+                                , ("result6", falseBit)
+                                ]
