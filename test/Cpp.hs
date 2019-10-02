@@ -2,7 +2,6 @@ module Cpp (cppTests) where
 import           BenchUtils
 import           Control.Monad.State.Strict (liftIO)
 import qualified Data.Map                   as M
---import qualified DSL.DSL                    as D
 import qualified DSL.Typed                  as T
 import           IonMonkey.Objects
 import           IonMonkey.Operations
