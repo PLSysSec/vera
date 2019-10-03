@@ -152,25 +152,27 @@ urshTest_UInt32Range = benchTestCase "ursh uint32" $ D.evalVerif Nothing $ error
   -- liftIO $ Verified @=? c3
 
 lsh'Test :: BenchTest
-lsh'Test = benchTestCase "lsh'" $ error "lsh'"
-  -- (c1, c2, c3) <- D.evalVerif Nothing $ do
+lsh'Test = benchTestCase "lsh'" $ do
+  (c1, c2, c3, c4) <- D.evalVerif Nothing $ do
 
-  --   lhs <- newInputRange "range ov value to shift" D.i32
-  --   rhs <- newInputRange "shift by" D.i32
-  --   resultRange <- lsh' lhs rhs
-  --   c1 <- verifySaneRange resultRange
+    lhs <- signedInputRange "range ov value to shift"
+    rhs <- signedInputRange "shift by"
+    resultRange <- lsh' lhs rhs
+    c1 <- verifySaneRange resultRange
+    c2 <- verifyDefinedResult resultRange
 
-  --   lhsOp <- operandWithRange "value to shift" D.i32 lhs
-  --   rhsOp <- operandWithRange "shit by" D.i32 rhs
-  --   result <- D.jsSll32 lhsOp rhsOp
-  --   c2 <- verifyUpperBound result resultRange
-  --   c3 <- verifyLowerBound result resultRange
+    lhsOp <- operandWithRange "value to shift" T.Signed lhs
+    rhsOp <- operandWithRange "shit by" T.Signed rhs
+    result <- T.jsShl lhsOp rhsOp
+    c3 <- verifyUpperBound result resultRange
+    c4 <- verifyLowerBound result resultRange
 
-  --   return (c1, c2, c3)
+    return (c1, c2, c3, c4)
 
-  -- Verified @=? c1
-  -- Verified @=? c2
-  -- Verified @=? c3
+  Verified @=? c1
+  Verified @=? c2
+  Verified @=? c3
+  Verified @=? c4
 
 rsh'Test :: BenchTest
 rsh'Test = benchTestCase "rsh'" $ error "rsh'"

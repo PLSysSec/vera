@@ -188,12 +188,12 @@ ursh lhs c = error "Not ported"
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1042
 lsh' :: Range -> Range -> D.Verif Range
-lsh' _ _ = error "Not ported"
-  -- -- Trivially correct
-  -- result <- newResultRange "result" D.i32
-  -- D.i32min >>= D.assign (lower result)
-  -- D.i32max >>= D.assign (upper result)
-  -- return result
+lsh' _ _ = do
+  -- Trivially correct
+  result <- signedResultRange "result"
+  T.intMin >>= T.vassign (lower result)
+  T.intMax >>= T.vassign (upper result)
+  return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1048
 rsh' :: Range -> Range -> D.Verif Range
