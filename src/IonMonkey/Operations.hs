@@ -197,10 +197,10 @@ lsh' _ _ = do
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1048
 rsh' :: Range -> Range -> D.Verif Range
-rsh' shiftee shifter = error "Not ported"
+rsh' shiftee shifter = error "Not yet ported"
 
-  -- thirtyOne32 <- D.i32c 31
-  -- zero <- D.i32c 0
+  -- thirtyOne <- T.num 31
+  -- zero <- T.num 0
 
   -- -- Cannonicalize shift range from 0-31
   -- cond <- do
@@ -242,15 +242,15 @@ rsh' shiftee shifter = error "Not ported"
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1079
 ursh' :: Range -> Range -> D.Verif Range
-ursh' left _ = error "Not ported"
-  -- isNonNeg <- isFiniteNonNegative left
-  -- zero <- D.i32c 0
-  -- uint32max <- D.ui32max
+ursh' left _ = do
+  isNonNeg <- isFiniteNonNegative left
+  zero <- T.unum 0
+  uint32max <- T.uintMax
 
-  -- result <- newResultRange "result" D.i32
-  -- D.assign (lower result) zero
-  -- D.cond isNonNeg (upper left) uint32max >>= D.assign (upper result)
-  -- return result
+  result <- unsignedResultRange "result"
+  T.vassign (lower result) zero
+  T.cppCond isNonNeg (upper left) uint32max >>= T.vassign (upper result)
+  return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1089
 abs :: (D.MonadBoolector m) => m Range

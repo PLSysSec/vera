@@ -2,19 +2,20 @@ module IonMonkey.Helpers ( isFiniteNonNegative
                          , isFiniteNegative
                          ) where
 import qualified DSL.DSL           as D
+import qualified DSL.Typed         as T
 import           IonMonkey.Objects
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#551
-isFiniteNonNegative :: Range -> D.Verif D.Node
-isFiniteNonNegative range = undefined
-  -- zero <- D.i32c 0
-  -- D.sgte (lower range) zero
+isFiniteNonNegative :: Range -> D.Verif T.VNode
+isFiniteNonNegative range = do
+  zero <- T.num 0
+  T.cppGte (lower range) zero
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#548
-isFiniteNegative :: Range -> D.Verif D.Node
-isFiniteNegative range = undefined
-  -- zero <- D.i32c 0
-  -- D.slt (upper range) zero
+isFiniteNegative :: Range -> D.Verif T.VNode
+isFiniteNegative range = do
+  zero <- T.num 0
+  T.cppLt (upper range) zero
 
 countLeadingZeroes32 :: D.Node -> D.Verif D.Node
 countLeadingZeroes32 node = do
