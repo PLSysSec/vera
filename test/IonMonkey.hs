@@ -14,7 +14,6 @@ ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ andTest
                                                    , lshTest
                                                    , rshTest
                                                    , urshTest
-                                                   , urshTest_UInt32Range
                                                    , lsh'Test
                                                    , rsh'Test
                                                    , ursh'Test
@@ -114,26 +113,6 @@ rshTest = benchTestCase "rsh" $ do
 -- | This may not be right; the exponent bit may be saving the range
 urshTest  :: BenchTest
 urshTest = benchTestCase "ursh" $ D.evalVerif Nothing $ error "ursh"
-
-  -- shifteeRange <- newInputRange "shiftee range" D.i32
-  -- val <- D.i32v "val"
-  -- resultRange <- ursh shifteeRange val
-  -- c1 <- verifySaneRange resultRange
-
-  -- liftIO $ Verified @=? c1
-
-  -- shiftee <- operandWithRange "shiftee" D.i32 shifteeRange
-  -- result <- D.jsSrl32 shiftee val
-
-  -- c2 <- verifyUpperBound result resultRange
-  -- liftIO $ Verified @=? c2
-
-  -- c3 <- verifyLowerBound result resultRange
-  -- liftIO $ Verified @=? c3
-
-
-urshTest_UInt32Range  :: BenchTest
-urshTest_UInt32Range = benchTestCase "ursh uint32" $ D.evalVerif Nothing $ error "q"
 
   -- shifteeRange <- newInputRange "shiftee range" D.i32
   -- val <- D.i32v "val"
