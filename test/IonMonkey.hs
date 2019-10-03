@@ -21,24 +21,26 @@ ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ andTest
                                                    ]
 
 andTest :: BenchTest
-andTest = benchTestCase "and" $ error "and"
-  -- (c1, c2, c3) <- D.evalVerif Nothing $ do
+andTest = benchTestCase "and" $ do
+  (c1, c2, c3, c4) <- D.evalVerif Nothing $ do
 
-  --   leftRange <- newInputRange "left start range" D.i32
-  --   rightRange <- newInputRange "right start range" D.i32
-  --   resultRange <- and leftRange rightRange
-  --   c1 <- verifySaneRange resultRange
+    leftRange <- signedInputRange "left start range"
+    rightRange <- signedInputRange "right start range"
+    resultRange <- and leftRange rightRange
+    c1 <- verifySaneRange resultRange
+    c2 <- verifyDefinedResult resultRange
 
-  --   left <- operandWithRange "left" D.i32 leftRange
-  --   right <- operandWithRange "right" D.i32 rightRange
-  --   result <- D.and left right
-  --   c2 <- verifyLowerBound result resultRange
-  --   c3 <- verifyUpperBound result resultRange
-  --   return (c1, c2, c3)
+    left <- operandWithRange "left" T.Signed leftRange
+    right <- operandWithRange "right" T.Signed rightRange
+    result <- T.jsAnd left right
+    c3 <- verifyLowerBound result resultRange
+    c4 <- verifyUpperBound result resultRange
+    return (c1, c2, c3, c4)
 
-  -- Verified @=? c1
-  -- Verified @=? c2
-  -- Verified @=? c3
+  Verified @=? c1
+  Verified @=? c2
+  Verified @=? c3
+  Verified @=? c4
 
 notTest :: BenchTest
 notTest = benchTestCase "not" $ error "not"

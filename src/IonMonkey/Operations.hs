@@ -33,31 +33,31 @@ sub = undefined
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#805
 -- IonMonkey function only applies to i32s
 and :: Range -> Range -> D.Verif Range
-and left right = error "Not ported"
+and left right = do
 
-  -- result <- newResultRange "result" D.i32
-  -- zero <- D.i32c 0
+  result <- signedResultRange "result"
+  zero <- T.num 0
 
-  -- -- Condition for choosing the return value
-  -- leftNeg <- D.slt (lower left) zero
-  -- rightNeg <- D.slt (lower right) zero
-  -- neg <- D.and leftNeg rightNeg
+  -- Condition for choosing the return value
+  leftNeg <- T.cppLt (lower left) zero
+  rightNeg <- T.cppLt (lower right) zero
+  neg <- T.cppAnd leftNeg rightNeg
 
-  -- -- The upper and lower bounds in the true case
-  -- trueLower <- D.i32min
-  -- trueUpper <- D.smax (upper left) (upper right)
+  -- The upper and lower bounds in the true case
+  trueLower <- T.intMax
+  trueUpper <- T.cppMax (upper left) (upper right)
 
-  -- -- The upper and lower bounds in the false case
-  -- let falseLower = zero
-  -- falseUpper <- do
-  --   tmpUpper1 <- D.smin (upper left) (upper right)
-  --   tmpUpper2 <- D.cond leftNeg (upper right) tmpUpper1
-  --   D.cond rightNeg (upper left) tmpUpper2
+  -- The upper and lower bounds in the false case
+  let falseLower = zero
+  falseUpper <- do
+    tmpUpper1 <- T.cppMin (upper left) (upper right)
+    tmpUpper2 <- T.cppCond leftNeg (upper right) tmpUpper1
+    T.cppCond rightNeg (upper left) tmpUpper2
 
-  -- -- Assign the new upper and lower based on the condition from before
-  -- D.cond neg trueLower falseLower >>= D.assign (lower result)
-  -- D.cond neg trueUpper falseUpper >>= D.assign (upper result)
-  -- return result
+  -- Assign the new upper and lower based on the condition from before
+  T.cppCond neg trueLower falseLower >>= T.vassign (lower result)
+  T.cppCond neg trueUpper falseUpper >>= T.vassign (upper result)
+  return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#834
 -- IonMonkey function only applies to i32s

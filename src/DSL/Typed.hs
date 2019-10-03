@@ -16,8 +16,10 @@ module DSL.Typed ( vassert
                  , uintMax
                  , uintMin
                    -- * Js operations
+                 , jsAnd
                  , jsShl
                  , jsShr
+                 , jsUshr
                    -- * Cpp operations
                  , cppEq
                  , cppAnd
@@ -197,6 +199,12 @@ toInt32 (VNode u v _) = VNode u v Signed
 toUint32 :: VNode -> VNode
 toUint32 (VNode u v _) = VNode u v Unsigned
 
+jsAnd :: VNode -> VNode -> D.Verif VNode
+jsAnd node1 node2 = do
+  unless (vtype node1 == vtype node2) $ error "Types should match"
+  result <- D.and (vnode node1) (vnode node2)
+  newDefinedNode result $ vtype node1
+
 -- | https://es5.github.io/#x11.7.1
 --
 -- Let lnum be ToInt32(lval).
@@ -224,7 +232,7 @@ jsShl left right = do
 --
 -- Let rnum be ToUint32(rval).
 --
---  Let shiftCount be the result of masking out all but the least significant 5 bits of rnum,
+-- Let shiftCount be the result of masking out all but the least significant 5 bits of rnum,
 -- that is, compute rnum & 0x1F.
 --
 -- Return the result of performing a sign-extending right shift of lnum by shiftCount bits.
@@ -234,6 +242,28 @@ jsShr :: VNode
       -> VNode
       -> D.Verif VNode
 jsShr left right = do
+  thirtyOne <- D.i32c 31
+  shiftCount <- D.and (vnode right) thirtyOne
+  result <- D.safeSra (vnode left) shiftCount
+  undef <- D.i1c 0
+  return $ VNode undef result Signed
+
+-- | https://es5.github.io/#x11.7.3
+--
+--  Let lnum be ToUint32(lval).
+--
+--  Let rnum be ToUint32(rval).
+--
+--  Let shiftCount be the result of masking out all but the least significant 5 bits of rnum,
+-- that is, compute rnum & 0x1F.
+--
+--  Return the result of performing a zero-filling right shift of lnum by shiftCount bits.
+-- Vacated bits are filled with zero. The result is an unsigned 32-bit integer.
+--
+jsUshr :: VNode
+       -> VNode
+       -> D.Verif VNode
+jsUshr left right = do
   thirtyOne <- D.i32c 31
   shiftCount <- D.and (vnode right) thirtyOne
   result <- D.safeSra (vnode left) shiftCount
