@@ -176,8 +176,8 @@ ursh lhs c = do
   isNonNeg      <- isFiniteNonNegative lhs
   isNegOrNonNeg <- T.cppOr isNeg isNonNeg
 
-  trueLower  <- T.cppShiftRight (lower lhs) shift
-  trueUpper  <- T.cppShiftRight (upper lhs) shift
+  trueLower  <- T.cppShiftRight (lower lhs) shift >>= return . T.cppUintCast
+  trueUpper  <- T.cppShiftRight (upper lhs) shift >>= return . T.cppUintCast
   falseLower <- T.unum 0
   falseUpper <- T.uintMax >>= \max -> T.cppShiftRight max shift
 

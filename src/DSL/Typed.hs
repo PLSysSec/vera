@@ -35,6 +35,8 @@ module DSL.Typed ( vassert
                  , cppShiftLeft
                  , cppShiftRight
                  , cppCond
+                 , cppUintCast
+                 , cppIntCast
                  , D.runSolver
                  , D.evalVerif
                  ) where
@@ -480,5 +482,11 @@ cppCond cond true false = do
   undef <- D.or (vundef cond) (vundef true) >>= D.or (vundef false)
   return $ VNode undef result $ vtype true
 
+cppUintCast :: VNode
+            -> VNode
+cppUintCast (VNode u v _) = VNode u v Unsigned
 
+cppIntCast :: VNode
+           -> VNode
+cppIntCast (VNode u v _) = VNode u v Signed
 
