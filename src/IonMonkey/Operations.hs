@@ -164,27 +164,27 @@ rsh shiftee val = do
   return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1023
-ursh :: Range -> D.Node -> D.Verif Range
-ursh lhs c = error "Not ported"
-  -- -- Setup the shift
-  -- thirtyOne <- D.i32c 31
-  -- shift <- D.and c thirtyOne
+ursh :: Range -> T.VNode -> D.Verif Range
+ursh lhs c = do
+  --  int32_t shift = c & 0x1f;
+  thirtyOne <- T.num 31
+  shift <- T.cppAnd c thirtyOne
 
-  -- -- "If the value is always non-negative or always negative, we can simply
-  -- -- compute the correct range by shifting."
-  -- isNeg         <- isFiniteNegative lhs
-  -- isNonNeg      <- isFiniteNonNegative lhs
-  -- isNegOrNonNeg <- D.or isNeg isNonNeg
+  -- "If the value is always non-negative or always negative, we can simply
+  -- compute the correct range by shifting."
+  isNeg         <- isFiniteNegative lhs
+  isNonNeg      <- isFiniteNonNegative lhs
+  isNegOrNonNeg <- T.cppOr isNeg isNonNeg
 
-  -- trueLower  <- D.safeSrl (lower lhs) shift
-  -- trueUpper  <- D.safeSrl (upper lhs) shift
-  -- falseLower <- D.i32c 0
-  -- falseUpper <- D.ui32max >>= \max -> D.safeSrl max shift
+  trueLower  <- T.cppShiftRight (lower lhs) shift
+  trueUpper  <- T.cppShiftRight (upper lhs) shift
+  falseLower <- T.unum 0
+  falseUpper <- T.uintMax >>= \max -> T.cppShiftRight max shift
 
-  -- result <- newResultRange "result" D.i32
-  -- D.cond isNegOrNonNeg trueLower falseLower >>= D.assign (lower result)
-  -- D.cond isNegOrNonNeg trueUpper falseUpper >>= D.assign (upper result)
-  -- return result
+  result <- unsignedResultRange "result"
+  T.cppCond isNegOrNonNeg trueLower falseLower >>= T.vassign (lower result)
+  T.cppCond isNegOrNonNeg trueUpper falseUpper >>= T.vassign (upper result)
+  return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1042
 lsh' :: Range -> Range -> D.Verif Range

@@ -112,23 +112,24 @@ rshTest = benchTestCase "rsh" $ do
 
 -- | This may not be right; the exponent bit may be saving the range
 urshTest  :: BenchTest
-urshTest = benchTestCase "ursh" $ D.evalVerif Nothing $ error "ursh"
+urshTest = benchTestCase "ursh" $ D.evalVerif Nothing $ do
 
-  -- shifteeRange <- newInputRange "shiftee range" D.i32
-  -- val <- D.i32v "val"
-  -- resultRange <- ursh shifteeRange val
-  -- c1 <- verifySaneRange resultRange
+  shifteeRange <- signedInputRange "shiftee range"
+  val <- T.newInputVar T.Signed "val"
+  resultRange <- ursh shifteeRange val
+  c1 <- verifySaneRange resultRange
+  c2 <- verifyDefinedResult resultRange
+  liftIO $ Verified @=? c1
+  liftIO $ Verified @=? c2
 
-  -- liftIO $ Verified @=? c1
+  shiftee <- operandWithRange "shiftee" T.Signed shifteeRange
+  result <- T.jsUshr shiftee val
 
-  -- shiftee <- operandWithRange "shiftee" D.i32 shifteeRange
-  -- result <- D.jsSrl32 shiftee val
+  c3 <- verifyUpperBound result resultRange
+  liftIO $ Verified @=? c3
 
-  -- c2 <- verifyUpperBound result resultRange
-  -- liftIO $ Verified @=? c2
-
-  -- c3 <- verifyLowerBound result resultRange
-  -- liftIO $ Verified @=? c3
+  c4 <- verifyLowerBound result resultRange
+  liftIO $ Verified @=? c4
 
 lsh'Test :: BenchTest
 lsh'Test = benchTestCase "lsh'" $ do
