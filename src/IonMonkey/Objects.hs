@@ -75,14 +75,11 @@ operandWithRange name ty range = do
 -- Verification functions and datatypes
 
 data VerifResult = Verified
-                 | Broken { counterexample :: M.Map String Integer}
+                 | OverlappingRange { counterexample :: M.Map String Integer }
+                 | BadLowerBound { counterexample :: M.Map String Integer }
+                 | BadUpperBound { counterexample :: M.Map String Integer }
+                 | UndefRange { counterexample :: M.Map String Integer }
                  deriving (Eq, Ord, Show)
-
-getResult :: D.SMTResult -> D.Verif VerifResult
-getResult status = case status of
-  D.SolverUnsat  -> return Verified
-  D.SolverSat xs -> return $ Broken xs
-  _              -> error "Solver error when verifying"
 
 -- | Verify that the upper bound of a range is greater than the lower
 -- Expects UNSAT
@@ -92,7 +89,10 @@ verifySaneRange resultRange = do
   T.cppLt (upper resultRange) (lower resultRange) >>= T.vassert
   check <- D.runSolver
   D.pop 1
-  getResult check
+  case check of
+    D.SolverUnsat  -> return Verified
+    D.SolverSat xs -> return $ OverlappingRange xs
+    _              -> error "Error while verifying"
 
 -- | Verify that a node is less than the upper bound
 -- Expects UNSAT
@@ -102,7 +102,10 @@ verifyUpperBound node range = do
   T.cppGt node (upper range) >>= T.vassert
   check <- D.runSolver
   D.pop 1
-  getResult check
+  case check of
+    D.SolverUnsat  -> return Verified
+    D.SolverSat xs -> return $ BadUpperBound xs
+    _              -> error "Error while verifying"
 
 -- | Verify that a node is greater than the lower bound
 -- Expects UNSAT
@@ -112,7 +115,10 @@ verifyLowerBound node range = do
   T.cppLt node (lower range) >>= T.vassert
   check <- D.runSolver
   D.pop 1
-  getResult check
+  case check of
+    D.SolverUnsat  -> return Verified
+    D.SolverSat xs -> return $ BadLowerBound xs
+    _              -> error "Error while verifying"
 
 verifyDefinedResult :: Range -> D.Verif VerifResult
 verifyDefinedResult range = do
@@ -121,4 +127,7 @@ verifyDefinedResult range = do
   T.assertUndef (upper range)
   check <- D.runSolver
   D.pop 1
-  getResult check
+  case check of
+    D.SolverUnsat  -> return Verified
+    D.SolverSat xs -> return $ UndefRange xs
+    _              -> error "Error while verifying"
