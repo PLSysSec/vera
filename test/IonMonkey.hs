@@ -43,26 +43,28 @@ andTest = benchTestCase "and" $ do
   Verified @=? c4
 
 notTest :: BenchTest
-notTest = benchTestCase "not" $ error "not"
-  -- (internalCheck, check1, check2) <- D.evalVerif Nothing $ do
+notTest = benchTestCase "not" $ do
+  (c1, c2, c3, c4) <- D.evalVerif Nothing $ do
 
-  --   -- Setup the result range and make sure lower < upper
-  --   opRange <- newInputRange "operand start range" D.i32
-  --   resultRange <- not opRange
-  --   internalCheck <- verifySaneRange resultRange
+    -- Setup the result range and make sure lower < upper
+    opRange <- signedInputRange "operand range"
+    resultRange <- not opRange
+    c1 <- verifySaneRange resultRange
+    c2 <- verifyDefinedResult resultRange
 
-  --   -- Make sure that the result range actually corresponds to the range of the operator
-  --   op <- operandWithRange "op" D.i32 opRange
-  --   result <- D.not op
-  --   c1 <- verifyUpperBound result resultRange
-  --   c2 <- verifyLowerBound result resultRange
+    -- Make sure that the result range actually corresponds to the range of the operator
+    op <- operandWithRange "op" T.Signed opRange
+    result <- T.jsNot op
+    c3 <- verifyUpperBound result resultRange
+    c4 <- verifyLowerBound result resultRange
 
-  --   return (internalCheck, c1, c2)
+    return (c1, c2, c3, c4)
 
 
-  -- Verified @=? internalCheck
-  -- Verified @=? check1
-  -- Verified @=? check2
+  Verified @=? c1
+  Verified @=? c2
+  Verified @=? c3
+  Verified @=? c4
 
 lshTest :: BenchTest
 lshTest = benchTestCase "lsh" $ do

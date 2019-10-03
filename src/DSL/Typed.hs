@@ -17,10 +17,12 @@ module DSL.Typed ( vassert
                  , uintMin
                    -- * Js operations
                  , jsAnd
+                 , jsNot
                  , jsShl
                  , jsShr
                  , jsUshr
                    -- * Cpp operations
+                 , cppNot
                  , cppEq
                  , cppAnd
                  , cppOr
@@ -205,6 +207,11 @@ jsAnd node1 node2 = do
   result <- D.and (vnode node1) (vnode node2)
   newDefinedNode result $ vtype node1
 
+jsNot :: VNode -> D.Verif VNode
+jsNot node = do
+  result <- D.not (vnode node)
+  newDefinedNode result $ vtype node
+
 -- | https://es5.github.io/#x11.7.1
 --
 -- Let lnum be ToInt32(lval).
@@ -282,6 +289,12 @@ noopWrapper left right op = do
   result <- op (vnode left) (vnode right)
   let ty = if isUnsigned (vtype left) && isUnsigned (vtype right) then Unsigned else Signed
   newMaybeDefinedNode left right result ty
+
+cppNot :: VNode
+       -> D.Verif VNode
+cppNot node = do
+  result <- D.not (vnode node)
+  return $ VNode (vundef node) result (vtype node)
 
 cppEq :: VNode
       -> VNode

@@ -102,11 +102,11 @@ xor left right = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#955
 not :: Range -> D.Verif Range
-not op = error "Not ported"
-  -- result <- newResultRange "result" D.i32
-  -- D.not (upper op) >>= D.assign (lower result)
-  -- D.not (lower op) >>= D.assign (upper result)
-  -- return result
+not op = do
+  result <- signedResultRange "result"
+  T.cppNot (upper op) >>= T.vassign (lower result)
+  T.cppNot (lower op) >>= T.vassign (upper result)
+  return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#960
 mul :: (D.MonadBoolector m) => m Range
