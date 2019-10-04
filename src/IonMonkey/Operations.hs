@@ -44,7 +44,7 @@ and left right = do
   neg <- T.cppAnd leftNeg rightNeg
 
   -- The upper and lower bounds in the true case
-  trueLower <- T.intMax
+  trueLower <- T.intMin
   trueUpper <- T.cppMax (upper left) (upper right)
 
   -- The upper and lower bounds in the false case

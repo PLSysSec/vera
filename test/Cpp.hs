@@ -11,6 +11,7 @@ import           Utils
 
 cppTests :: BenchTest
 cppTests = benchTestGroup "C++ tests" [ cppMinTest
+                                      , cppMaxTest
                                       , cppCmpTest
                                       , cppShlTest
                                       , cppShrTest
@@ -45,6 +46,31 @@ cppMinTest = benchTestCase "min test" $ do
 
   vtest r $ M.fromList [ ("result", -1)
                        , ("uresult", 1)
+                       ]
+
+cppMaxTest :: BenchTest
+cppMaxTest = benchTestCase "max test" $ do
+
+  r <- T.evalVerif Nothing $ do
+
+    -- Check that cppMax is aware of the sign for signed numbers
+    one <- T.num 1
+    minusOne <- T.num (-1)
+    result <- T.int32 "result"
+    min <- T.cppMax one minusOne
+    T.vassign result min
+
+    -- Check that cppMin does the right thing with unsigned numbers
+    uMinusOne <- T.unum (-1)
+    uOne <- T.unum 1
+    umin <- T.cppMax uMinusOne uOne
+    uresult <- T.uint32 "uresult"
+    T.vassign uresult umin
+
+    T.runSolver
+
+  vtest r $ M.fromList [ ("result", 1)
+                       , ("uresult", -1)
                        ]
 
 cppCmpTest :: BenchTest
