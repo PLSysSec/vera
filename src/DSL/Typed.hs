@@ -15,6 +15,7 @@ module DSL.Typed ( vassert
                  , unum64
                  , VNode
                  , Type(..)
+                 , vtype
                  , intMax
                  , intMin
                  , uintMax

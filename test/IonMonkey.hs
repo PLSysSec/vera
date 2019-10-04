@@ -112,8 +112,13 @@ rshTest = benchTestCase "rsh" $ do
 -- | This may not be right; the exponent bit may be saving the range
 urshTest  :: BenchTest
 urshTest = benchTestCase "ursh" $ T.evalVerif Nothing $ do
+
+  -- "ursh's left operand is uint32, not int32, but for range
+  -- analysis we currently approximate it as int32."
   shifteeRange <- signedInputRange "shiftee range"
+  -- int32_t c
   val <- T.newInputVar T.Signed "val"
+
   resultRange <- ursh shifteeRange val
   c1 <- verifySaneRange resultRange
   c2 <- verifyDefinedResult resultRange
@@ -121,7 +126,9 @@ urshTest = benchTestCase "ursh" $ T.evalVerif Nothing $ do
   liftIO $ Verified @=? c2
 
   shiftee <- operandWithRange "shiftee" T.Signed shifteeRange
-  result <- T.jsUshr shiftee val
+  -- I am not sure if we want this or not?
+  castVal <- T.cppCast val T.Unsigned
+  result <- T.jsUshr shiftee castVal
 
   c3 <- verifyUpperBound result resultRange
   liftIO $ Verified @=? c3
