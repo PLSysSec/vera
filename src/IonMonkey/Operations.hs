@@ -176,8 +176,8 @@ ursh lhs c = do
   isNonNeg      <- isFiniteNonNegative lhs
   isNegOrNonNeg <- T.cppOr isNeg isNonNeg
 
-  trueLower  <- T.cppShiftRight (lower lhs) shift >>= return . T.cppUintCast
-  trueUpper  <- T.cppShiftRight (upper lhs) shift >>= return . T.cppUintCast
+  trueLower  <- T.cppShiftRight (lower lhs) shift >>= \n -> T.cppCast n T.Unsigned
+  trueUpper  <- T.cppShiftRight (upper lhs) shift >>= \n -> T.cppCast n T.Unsigned
   falseLower <- T.unum 0
   falseUpper <- T.uintMax >>= \m -> T.cppShiftRight m shift
 
@@ -204,8 +204,8 @@ rsh' shiftee shifter = do
 
   -- Cannonicalize shift range from 0-31
   cond <- do
-    extShiftLower <- T.cppToSigned64 (lower shifter)
-    extShiftUpper <- T.cppToSigned64 (upper shifter)
+    extShiftLower <- T.cppCast (lower shifter) T.Signed64
+    extShiftUpper <- T.cppCast (upper shifter) T.Signed64
     sub <- T.cppSub extShiftUpper extShiftLower
     thirtyOne <- T.num64 31
     T.cppGte sub thirtyOne

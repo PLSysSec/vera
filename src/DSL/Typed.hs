@@ -19,13 +19,13 @@ module DSL.Typed ( vassert
                  , intMin
                  , uintMax
                  , uintMin
-                   -- * Js operations
+                   -- * Js operations: what we are using to verify
                  , jsAnd
                  , jsNot
                  , jsShl
                  , jsShr
                  , jsUshr
-                   -- * Cpp operations
+                   -- * Cpp operations: building blocks for what we are verifying
                  , cppNot
                  , cppEq
                  , cppAnd
@@ -41,10 +41,7 @@ module DSL.Typed ( vassert
                  , cppShiftLeft
                  , cppShiftRight
                  , cppCond
-                 , cppUintCast
-                 , cppIntCast
-                 , cppToSigned64
-                 , cppToUnsigned64
+                 , cppCast
                  , D.runSolver
                  , D.evalVerif
                  ) where
@@ -94,15 +91,25 @@ data Type = Unsigned
           | Bool
           deriving (Eq, Ord, Show)
 
--- | Is the type a signed 32?
+-- | Is the type signed?
 isSigned :: Type -> Bool
 isSigned Signed   = True
 isSigned Signed64 = True
 isSigned _        = False
 
--- | Is the type unsigned 32?
+-- | Is the unsigned?
 isUnsigned :: Type -> Bool
 isUnsigned = not . isSigned
+
+is32Bits :: Type -> Bool
+is32Bits Signed   = True
+is32Bits Unsigned = True
+is32Bits _        = False
+
+is64Bits :: Type -> Bool
+is64Bits Signed64   = True
+is64Bits Unsigned64 = True
+is64Bits _          = False
 
 newInputVar :: Type
             -> String
@@ -529,23 +536,30 @@ cppCond cond true false = do
   undef <- D.or (vundef cond) (vundef true) >>= D.or (vundef false)
   return $ VNode undef result $ vtype true
 
-cppUintCast :: VNode
-            -> VNode
-cppUintCast (VNode u v _) = VNode u v Unsigned
+cppCast :: VNode
+        -> Type
+        -> D.Verif VNode
+cppCast node toTy
+  | is32Bits fromTy = case toTy of
+                        Unsigned   -> return $ VNode (vundef node) (vnode node) Unsigned
+                        Signed     -> return $ VNode (vundef node) (vnode node) Signed
+                        Unsigned64 -> do
+                          result <- D.uext (vnode node) 32
+                          return $ VNode (vundef node) result Unsigned64
+                        Signed64   -> do
+                          result <- D.sext (vnode node) 32
+                          return $ VNode (vundef node) result Signed64
+                        _          -> error "Illegal cast types"
+  | is64Bits fromTy = case toTy of
+                        Unsigned   -> do
+                          result <- D.slice (vnode node) 31 0
+                          return $ VNode (vundef node) result Unsigned
+                        Signed     -> do
+                          result <- D.slice (vnode node) 31 0
+                          return $ VNode (vundef node) result Signed
+                        Unsigned64 -> return $ VNode (vundef node) (vnode node) Unsigned64
+                        Signed64   -> return $ VNode (vundef node) (vnode node) Signed64
+                        _          -> error "Illegal cast types"
+  | otherwise = error "Illegal cast types"
+ where fromTy = vtype node
 
-cppIntCast :: VNode
-           -> VNode
-cppIntCast (VNode u v _) = VNode u v Signed
-
--- | Check that these are right, make casting better
-cppToSigned64 :: VNode
-              -> D.Verif VNode
-cppToSigned64 node = do
-  result <- D.sext (vnode node) 32
-  return $ VNode (vundef node) result Signed64
-
-cppToUnsigned64 :: VNode
-                -> D.Verif VNode
-cppToUnsigned64 node = do
-  result <- D.uext (vnode node) 32
-  return $ VNode (vundef node) result Unsigned64
