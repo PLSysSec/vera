@@ -36,7 +36,44 @@ isFiniteNegative range = do
   zero <- T.num 0
   T.cppLt (upper range) zero
 
-countLeadingZeroes32 :: D.Node -> D.Verif D.Node
+countOnes :: T.VNode -> D.Verif T.VNode
+countOnes num = do
+  numBits <- T.num 32
+  one <- T.num 1
+  two <- T.num 2
+  four <- T.num 4
+  eight <- T.num 8
+  sixteen <- T.num 16
+  fives <- T.num 1431655765
+  threes <- T.num 858993459
+  fs <- T.num 252645135
+  sixtythree <- T.num 63
+
+  -- count
+  -- x -= x >> 1 & 0x55555555;
+  right <- T.cppAnd one fives
+  total <- T.cppShiftRight num right
+  tmp1 <- T.cppSub num total
+  -- x = (x >> 2 & 0x33333333) + (x & 0x33333333);
+  firstAnd <- T.cppAnd two threes
+  left <- T.cppShiftRight tmp1 firstAnd
+  right <- T.cppAnd tmp1 threes
+  tmp2 <- T.cppAnd left right
+  -- x = (x >> 4) + x & 0x0f0f0f0f;
+  left <- T.cppShiftRight tmp2 four
+  right <- T.cppAnd tmp2 fs
+  tmp3 <- T.cppAnd left right
+  -- x += x >> 8;
+  shift <- T.cppShiftRight tmp3 eight
+  tmp4 <- T.cppAdd tmp3 shift
+  -- x += x >> 16;
+  shift2 <- T.cppShiftRight tmp4 sixteen
+  tmp5 <- T.cppAdd tmp4 shift2
+  -- return numIntBits - (x & 0x0000003f); //subtract # of 1s from 32)
+  mask <- T.cppAnd tmp5 sixtythree
+  T.cppSub numBits mask
+
+countLeadingZeroes32 :: T.VNode -> D.Verif T.VNode
 countLeadingZeroes32 node = do
     -- https://stackoverflow.com/questions/10439242/count-leading-zeroes-in-an-int32
     -- const int numIntBits = sizeof(int) * 8; //compile time constant
@@ -46,52 +83,22 @@ countLeadingZeroes32 node = do
     -- x |= x >> 4;
     -- x |= x >> 8;
     -- x |= x >> 16;
-    -- //count the ones
-    -- x -= x >> 1 & 0x55555555;
-    -- x = (x >> 2 & 0x33333333) + (x & 0x33333333);
-    -- x = (x >> 4) + x & 0x0f0f0f0f;
-    -- x += x >> 8;
-    -- x += x >> 16;
-    -- return numIntBits - (x & 0x0000003f); //subtract # of 1s from 32
-  numBits <- D.i32c 32
-  one <- D.i32c 1
-  two <- D.i32c 2
-  four <- D.i32c 4
-  eight <- D.i32c 8
-  sixteen <- D.i32c 16
-  fives <- D.i32c 1431655765
-  threes <- D.i32c 858993459
-  fs <- D.i32c 252645135
-  sixtythree <- D.i32c 63
+  numBits <- T.num 32
+  one <- T.num 1
+  two <- T.num 2
+  four <- T.num 4
+  eight <- T.num 8
+  sixteen <- T.num 16
+
   -- smear (ew)
   tmp1 <- T.cppShiftRight node one >>= T.cppOr node
   tmp2 <- T.cppShiftRight tmp1 two >>= T.cppOr tmp1
   tmp3 <- T.cppShiftRight tmp2 four >>= T.cppOr tmp2
   tmp4 <- T.cppShiftRight tmp3 eight >>= T.cppOr tmp3
   tmp5 <- T.cppShiftRight tmp4 sixteen >>= T.cppOr tmp4
-  -- count
-  -- x -= x >> 1 & 0x55555555;
-  right <- T.cppAnd one fives
-  total <- T.cppShiftRight tmp5 right
-  tmp6 <- T.cppSub tmp5 total
-  -- x = (x >> 2 & 0x33333333) + (x & 0x33333333);
-  firstAnd <- T.cppAnd two threes
-  left <- T.cppShiftRight tmp6 firstAnd
-  right <- T.cppAnd tmp6 threes
-  tmp7 <- T.cppAnd left right
-  -- x = (x >> 4) + x & 0x0f0f0f0f;
-  left <- T.cppShiftRight tmp7 four
-  right <- T.cppAnd tmp7 fs
-  tmp8 <- T.cppAnd left right
-  -- x += x >> 8;
-  shift <- T.cppShiftRight tmp8 eight
-  tmp9 <- T.cppAdd tmp8 shift
-  -- x += x >> 16;
-  shift2 <- T.cppShiftRight tmp9 sixteen
-  tmp10 <- T.cppAdd tmp9 shift2
-  -- return numIntBits - (x & 0x0000003f); //subtract # of 1s from 32)
-  mask <- T.cppAnd tmp10 sixtythree
-  T.cppSub numBits mask
 
-countTrailingZeroes32 :: D.Node -> D.Verif D.Node
+  -- //count the ones
+  countOnes tmp5
+
+countTrailingZeroes32 :: T.VNode -> D.Verif T.VNode
 countTrailingZeroes32 node = undefined
