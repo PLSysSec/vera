@@ -2,6 +2,12 @@ module IonMonkey.Objects ( Range
                          , VerifResult(..)
                          , lower
                          , upper
+                         , hasInt32LowerBound
+                         , hasInt32UpperBound
+                         , canBeInfiniteOrNan
+                         , canBeNegativeZero
+                         , canHaveFractionalPart
+                         , maxExponent
                          , rangeName
                          , signedInputRange
                          , unsignedInputRange
@@ -21,16 +27,39 @@ import           DSL.Typed       as T
 -- | IonMonkey's range object
 -- https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#119
 data Range = Range {
-      rangeName             :: String
-    , lower                 :: T.VNode
-    , upper                 :: T.VNode
-    , hasInt32LowerBound    :: Maybe T.VNode
-    , hasInt32UpperBound    :: Maybe T.VNode
-    , canBeInfiniteOrNan    :: Maybe T.VNode
-    , canBeNegativeZero     :: Maybe T.VNode
-    , canHaveFractionalPart :: Maybe T.VNode
-    , maxExponent           :: Maybe T.VNode
+      rangeName              :: String
+    , lower                  :: T.VNode
+    , upper                  :: T.VNode
+    , hasInt32LowerBound_    :: Maybe T.VNode
+    , hasInt32UpperBound_    :: Maybe T.VNode
+    , canBeInfiniteOrNan_    :: Maybe T.VNode
+    , canBeNegativeZero_     :: Maybe T.VNode
+    , canHaveFractionalPart_ :: Maybe T.VNode
+    , maxExponent_           :: Maybe T.VNode
     }
+
+hasInt32LowerBound :: Range -> T.VNode
+hasInt32LowerBound r = getField r hasInt32LowerBound_
+
+hasInt32UpperBound :: Range -> T.VNode
+hasInt32UpperBound r = getField r hasInt32UpperBound_
+
+canBeInfiniteOrNan :: Range -> T.VNode
+canBeInfiniteOrNan r = getField r canBeInfiniteOrNan_
+
+canBeNegativeZero :: Range -> T.VNode
+canBeNegativeZero r = getField r canBeNegativeZero_
+
+canHaveFractionalPart :: Range -> T.VNode
+canHaveFractionalPart r = getField r canHaveFractionalPart_
+
+maxExponent :: Range -> T.VNode
+maxExponent r = getField r maxExponent_
+
+getField :: Range -> (Range -> Maybe T.VNode) -> T.VNode
+getField r getter = case getter r of
+                      Nothing -> error "Tried to access non-existent flag in range"
+                      Just f  -> f
 
 thirtyTwoBitRange :: String -> T.VNode -> T.VNode -> Range
 thirtyTwoBitRange s l u = Range s l u Nothing Nothing Nothing Nothing Nothing Nothing
@@ -68,6 +97,22 @@ unsignedResultRange operandName = do
   lowerNode <- T.newResultVar T.Unsigned lowerName
   upperNode <- T.newResultVar T.Unsigned upperName
   return $ thirtyTwoBitRange operandName lowerNode upperNode
+
+numResultRange :: String -> D.Verif Range
+numResultRange operandName = do
+  -- Names
+  let lowerName = operandName ++ "_lower"
+      upperName = operandName ++ "_upper"
+  lowerNode <- T.newResultVar T.Unsigned lowerName
+  upperNode <- T.newResultVar T.Unsigned upperName
+  -- Flags
+  let fractionFlagName = operandName ++ "_fractional"
+      negZeroFlagName  = operandName ++ "_negativeZero"
+      expName          = operandName ++ "_exp"
+  fract <- T.newResultVar T.Bool fractionFlagName >>= return . Just
+  negz <- T.newResultVar T.Bool negZeroFlagName >>= return . Just
+  exp <- T.newResultVar T.Unsigned16 expName >>= return . Just
+  return $ Range operandName lowerNode upperNode Nothing Nothing Nothing negz fract exp
 
 -- | Make a new operand with name 'name' of sort 'sort' that is in the range
 --'range'---ie is greater than the range's lower and less than the range's upper
