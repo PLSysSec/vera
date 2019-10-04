@@ -24,6 +24,7 @@ module DSL.Typed ( vassert
                  , uintMin
                    -- * Js operations: what we are using to verify
                  , jsAnd
+                 , jsOr
                  , jsNot
                  , jsShl
                  , jsShr
@@ -263,6 +264,13 @@ jsAnd node1 node2 = do
   unless (vtype node1 == vtype node2) $ error "Types should match"
   result <- D.and (vnode node1) (vnode node2)
   newDefinedNode result $ vtype node1
+
+jsOr :: VNode -> VNode -> D.Verif VNode
+jsOr node1 node2 = do
+  unless (vtype node1 == vtype node2) $ error "Types should match"
+  result <- D.or (vnode node1) (vnode node2)
+  newDefinedNode result $ vtype node1
+
 
 jsNot :: VNode -> D.Verif VNode
 jsNot node = do

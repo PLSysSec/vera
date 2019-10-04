@@ -104,6 +104,7 @@ and left right = do
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#834
 -- IonMonkey function only applies to i32s
+or :: Range -> Range -> T.Verif Range
 or _lhs _rhs = do
   result <- signedResultRange "result"
   zero <- T.num 0
@@ -128,9 +129,6 @@ or _lhs _rhs = do
   rhsEqAndrhsLowerEqNeg1 <- T.cppAnd rhsEq rhsLowerEqNeg1
 
   -- lines 841-856
-
-
-  -- second part
 
   lhsLowerGte0   <- T.cppGte (lower _lhs) zero        -- lhs lower >= 0
   rhsLowerGte0   <- T.cppGte (lower _rhs) zero        -- rhs lower >= 0
@@ -370,8 +368,3 @@ min = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1123
 max = undefined
-
-
-
-
-

@@ -4,7 +4,7 @@ import           Control.Monad.State.Strict (liftIO)
 import qualified DSL.Typed                  as T
 import           IonMonkey.Objects
 import           IonMonkey.Operations
-import           Prelude                    hiding (and, not)
+import           Prelude                    hiding (and, not, or)
 import           Test.Tasty.HUnit
 
 ionMonkeyTests :: BenchTest
@@ -16,6 +16,7 @@ ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ andTest
                                                    , lsh'Test
                                                    , rsh'Test
                                                    , ursh'Test
+                                                   , orTest
                                                    ]
 
 andTest :: BenchTest
@@ -226,25 +227,26 @@ ursh'Test = benchTestCase "ursh'" $ do
   Verified @=? c3
   Verified @=? c4
 
+orTest :: BenchTest
+orTest = benchTestCase "or" $ do
+  (c0, c1, c2, c3, c4) <- T.evalVerif Nothing $ do
 
+    leftRange <- signedInputRange "left start range"
+    rightRange <- signedInputRange "right start range"
+    resultRange <- or leftRange rightRange
+    c0 <- verifyConsistent
+    c1 <- verifySaneRange resultRange
+    c2 <- verifyDefinedResult resultRange
 
+    left <- operandWithRange "left" T.Signed leftRange
+    right <- operandWithRange "right" T.Signed rightRange
+    result <- T.jsOr left right
+    c3 <- verifyLowerBound result resultRange
+    c4 <- verifyUpperBound result resultRange
+    return (c0, c1, c2, c3, c4)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  Verified @=? c0
+  Verified @=? c1
+  Verified @=? c2
+  Verified @=? c3
+  Verified @=? c4
