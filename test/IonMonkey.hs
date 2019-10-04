@@ -155,26 +155,28 @@ lsh'Test = benchTestCase "lsh'" $ do
   Verified @=? c4
 
 rsh'Test :: BenchTest
-rsh'Test = benchTestCase "rsh'" $ error "rsh'"
-  -- (c1, c2, c3) <- D.evalVerif Nothing $ do
+rsh'Test = benchTestCase "rsh'" $ do
+  (c1, c2, c3, c4) <- D.evalVerif Nothing $ do
 
-  --   leftRange <- newInputRange "shitee range" D.i32
-  --   rightRange <- newInputRange "shifter range" D.i32
-  --   resultRange <- rsh' leftRange rightRange
-  --   c1 <- verifySaneRange resultRange
+    leftRange <- signedInputRange "shitee range"
+    rightRange <- signedInputRange "shifter range"
+    resultRange <- rsh' leftRange rightRange
+    c1 <- verifySaneRange resultRange
+    c2 <- verifyDefinedResult resultRange
 
-  --   left <- operandWithRange "value to shift" D.i32 leftRange
-  --   right <- operandWithRange "shit by" D.i32 rightRange
-  --   result <- D.jsSra32 left right
+    left <- operandWithRange "value to shift" T.Signed leftRange
+    right <- operandWithRange "shit by" T.Signed rightRange
+    result <- T.jsShr left right
 
-  --   c2 <- verifyUpperBound result resultRange
-  --   c3 <- verifyLowerBound result resultRange
+    c3 <- verifyUpperBound result resultRange
+    c4 <- verifyLowerBound result resultRange
 
-  --   return (c1, c2, c3)
+    return (c1, c2, c3, c4)
 
-  -- Verified @=? c1
-  -- Verified @=? c2
-  -- Verified @=? c3
+  Verified @=? c1
+  Verified @=? c2
+  Verified @=? c3
+  Verified @=? c4
 
 ursh'Test :: BenchTest
 ursh'Test = benchTestCase "ursh'" $ do

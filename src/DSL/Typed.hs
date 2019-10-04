@@ -7,8 +7,12 @@ module DSL.Typed ( vassert
                  , bool
                  , int32
                  , uint32
+                 , int64
+                 , uint64
                  , num
                  , unum
+                 , num64
+                 , unum64
                  , VNode
                  , Type(..)
                  , intMax
@@ -25,6 +29,8 @@ module DSL.Typed ( vassert
                  , cppNot
                  , cppEq
                  , cppAnd
+                 , cppAdd
+                 , cppSub
                  , cppOr
                  , cppMin
                  , cppMax
@@ -37,6 +43,8 @@ module DSL.Typed ( vassert
                  , cppCond
                  , cppUintCast
                  , cppIntCast
+                 , cppToSigned64
+                 , cppToUnsigned64
                  , D.runSolver
                  , D.evalVerif
                  ) where
@@ -78,14 +86,19 @@ data VNode = VNode { vundef :: D.Node
 -- but eventually we will have more integer types
 data Type = Unsigned
           | Signed
+          | Unsigned64
+          | Signed64
+          | Unsigned16
+          | Signed16
           | Double
           | Bool
           deriving (Eq, Ord, Show)
 
 -- | Is the type a signed 32?
 isSigned :: Type -> Bool
-isSigned Signed = True
-isSigned _      = False
+isSigned Signed   = True
+isSigned Signed64 = True
+isSigned _        = False
 
 -- | Is the type unsigned 32?
 isUnsigned :: Type -> Bool
@@ -96,20 +109,24 @@ newInputVar :: Type
             -> D.Verif VNode
 newInputVar ty name = do
   var <- case ty of
-           Bool     -> D.i1v name
-           Signed   -> D.i32v name
-           Unsigned -> D.i32v name
-           _        -> error "Not yet supported"
+           Bool       -> D.i1v name
+           Signed     -> D.i32v name
+           Unsigned   -> D.i32v name
+           Signed64   -> D.i64v name
+           Unsigned64 -> D.i64v name
+           _          -> error "Not yet supported"
   undef <- D.i1c 0
   return $ VNode undef var ty
 
 newResultVar :: Type
              -> String
              -> D.Verif VNode
-newResultVar Bool     = bool
-newResultVar Signed   = int32
-newResultVar Unsigned = uint32
-newResultVar _        = error "No more"
+newResultVar Bool       = bool
+newResultVar Signed     = int32
+newResultVar Unsigned   = uint32
+newResultVar Signed64   = int64
+newResultVar Unsigned64 = uint64
+newResultVar _          = error "No more"
 
 
 -- | Make a new node whose undef flag may be set, based on the parents of the node
@@ -171,6 +188,18 @@ uint32 name = do
   undef <- D.i1v $ name ++ "_undef"
   return $ VNode undef var Unsigned
 
+int64 :: String -> D.Verif VNode
+int64 name = do
+  var <- D.i64v name
+  undef <- D.i1v $ name ++ "_undef"
+  return $ VNode undef var Signed64
+
+uint64 :: String -> D.Verif VNode
+uint64 name = do
+  var <- D.i64v name
+  undef <- D.i1v $ name ++ "_undef"
+  return $ VNode undef var Unsigned64
+
 unum :: Integer -> D.Verif VNode
 unum val = do
   node <- D.i32c val
@@ -184,12 +213,12 @@ num val = do
 unum64 :: Integer -> D.Verif VNode
 unum64 val = do
   node <- D.i64c val
-  newDefinedNode node Unsigned
+  newDefinedNode node Unsigned64
 
 num64 :: Integer -> D.Verif VNode
 num64 val = do
   node <- D.i64c val
-  newDefinedNode node Signed
+  newDefinedNode node Signed64
 
 --
 --
@@ -320,6 +349,16 @@ cppAnd :: VNode
        -> VNode
        -> D.Verif VNode
 cppAnd left right = noopWrapper left right D.and
+
+cppSub :: VNode
+       -> VNode
+       -> D.Verif VNode
+cppSub left right = noopWrapper left right D.sub
+
+cppAdd :: VNode
+       -> VNode
+       -> D.Verif VNode
+cppAdd left right = noopWrapper left right D.add
 
 cppMin :: VNode
        -> VNode
@@ -498,3 +537,15 @@ cppIntCast :: VNode
            -> VNode
 cppIntCast (VNode u v _) = VNode u v Signed
 
+-- | Check that these are right, make casting better
+cppToSigned64 :: VNode
+              -> D.Verif VNode
+cppToSigned64 node = do
+  result <- D.sext (vnode node) 32
+  return $ VNode (vundef node) result Signed64
+
+cppToUnsigned64 :: VNode
+                -> D.Verif VNode
+cppToUnsigned64 node = do
+  result <- D.uext (vnode node) 32
+  return $ VNode (vundef node) result Unsigned64

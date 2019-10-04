@@ -197,48 +197,48 @@ lsh' _ _ = do
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1048
 rsh' :: Range -> Range -> D.Verif Range
-rsh' shiftee shifter = error "Not yet ported"
+rsh' shiftee shifter = do
 
-  -- thirtyOne <- T.num 31
-  -- zero <- T.num 0
+  thirtyOne <- T.num 31
+  zero <- T.num 0
 
-  -- -- Cannonicalize shift range from 0-31
-  -- cond <- do
-  --   extShiftLower <- D.sext (lower shifter) 32
-  --   extShiftUpper <- D.sext (upper shifter) 32
-  --   sub <- D.sub extShiftUpper extShiftLower
-  --   thirtyOne <- D.i64c 31
-  --   D.sgte sub thirtyOne
+  -- Cannonicalize shift range from 0-31
+  cond <- do
+    extShiftLower <- T.cppToSigned64 (lower shifter)
+    extShiftUpper <- T.cppToSigned64 (upper shifter)
+    sub <- T.cppSub extShiftUpper extShiftLower
+    thirtyOne <- T.num64 31
+    T.cppGte sub thirtyOne
 
-  -- trueShiftLower <- D.i32c 0
-  -- trueShiftUpper <- D.i32c 31
+  trueShiftLower <- T.num 0
+  trueShiftUpper <- T.num 31
 
-  -- tmpLower <- D.and thirtyOne32 (lower shifter)
-  -- tmpUpper <- D.and thirtyOne32 (upper shifter)
-  -- tmpCond <- D.sgt tmpLower tmpUpper
-  -- falseShiftLower <- D.cond tmpCond zero        tmpLower
-  -- falseShiftUpper <- D.cond tmpCond thirtyOne32 tmpUpper
+  tmpLower <- T.cppAnd thirtyOne (lower shifter)
+  tmpUpper <- T.cppAnd thirtyOne (upper shifter)
+  tmpCond <- T.cppGt tmpLower tmpUpper
+  falseShiftLower <- T.cppCond tmpCond zero      tmpLower
+  falseShiftUpper <- T.cppCond tmpCond thirtyOne tmpUpper
 
-  -- shiftLower <- D.cond cond trueShiftLower falseShiftLower
-  -- shiftUpper <- D.cond cond trueShiftUpper falseShiftUpper
+  shiftLower <- T.cppCond cond trueShiftLower falseShiftLower
+  shiftUpper <- T.cppCond cond trueShiftUpper falseShiftUpper
 
-  -- -- Do the actual shifting
-  -- min <- do
-  --   shifteeNeg <- D.slt (lower shiftee) zero
-  --   trueMin <- D.safeSra (lower shiftee) shiftLower
-  --   falseMin <- D.safeSra (lower shiftee) shiftUpper
-  --   D.cond shifteeNeg trueMin falseMin
+  -- Do the actual shifting
+  min <- do
+    shifteeNeg <- T.cppLt (lower shiftee) zero
+    trueMin <- T.cppShiftRight (lower shiftee) shiftLower
+    falseMin <- T.cppShiftRight (lower shiftee) shiftUpper
+    T.cppCond shifteeNeg trueMin falseMin
 
-  -- max <- do
-  --   shifteeNeg <- D.sgte (upper shiftee) zero
-  --   trueMax <- D.safeSra (upper shiftee) shiftLower
-  --   falseMax <- D.safeSra (upper shiftee) shiftUpper
-  --   D.cond shifteeNeg trueMax falseMax
+  max <- do
+    shifteeNeg <- T.cppGte (upper shiftee) zero
+    trueMax <- T.cppShiftRight (upper shiftee) shiftLower
+    falseMax <- T.cppShiftRight (upper shiftee) shiftUpper
+    T.cppCond shifteeNeg trueMax falseMax
 
-  -- result <- newResultRange "result" D.i32
-  -- D.assign (lower result) min
-  -- D.assign (upper result) max
-  -- return result
+  result <- signedResultRange "result"
+  T.vassign (lower result) min
+  T.vassign (upper result) max
+  return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1079
 ursh' :: Range -> Range -> D.Verif Range
