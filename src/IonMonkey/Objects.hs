@@ -20,10 +20,19 @@ import           DSL.Typed       as T
 -- | IonMonkey's range object
 -- https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#119
 data Range = Range {
-      rangeName :: String
-    , lower     :: T.VNode
-    , upper     :: T.VNode
+      rangeName             :: String
+    , lower                 :: T.VNode
+    , upper                 :: T.VNode
+    , hasInt32LowerBound    :: Maybe T.VNode
+    , hasInt32UpperBound    :: Maybe T.VNode
+    , canBeInfiniteOrNan    :: Maybe T.VNode
+    , canBeNegativeZero     :: Maybe T.VNode
+    , canHaveFractionalPart :: Maybe T.VNode
+    , maxExponent           :: Maybe T.VNode
     }
+
+thirtyTwoBitRange :: String -> T.VNode -> T.VNode -> Range
+thirtyTwoBitRange s l u = Range s l u Nothing Nothing Nothing Nothing Nothing Nothing
 
 signedInputRange :: String -> D.Verif Range
 signedInputRange operandName = do
@@ -32,7 +41,7 @@ signedInputRange operandName = do
   lowerNode <- T.newInputVar T.Signed lowerName
   upperNode <- T.newInputVar T.Signed upperName
   T.cppLte lowerNode upperNode >>= T.vassert
-  return $ Range operandName lowerNode upperNode
+  return $ thirtyTwoBitRange operandName lowerNode upperNode
 
 unsignedInputRange :: String -> D.Verif Range
 unsignedInputRange operandName = do
@@ -41,7 +50,7 @@ unsignedInputRange operandName = do
   lowerNode <- T.newInputVar T.Unsigned lowerName
   upperNode <- T.newInputVar T.Unsigned upperName
   T.cppLte lowerNode upperNode >>= T.vassert
-  return $ Range operandName lowerNode upperNode
+  return $ thirtyTwoBitRange operandName lowerNode upperNode
 
 signedResultRange :: String -> D.Verif Range
 signedResultRange operandName = do
@@ -49,7 +58,7 @@ signedResultRange operandName = do
       upperName = operandName ++ "_upper"
   lowerNode <- T.newResultVar T.Signed lowerName
   upperNode <- T.newResultVar T.Signed upperName
-  return $ Range operandName lowerNode upperNode
+  return $ thirtyTwoBitRange operandName lowerNode upperNode
 
 unsignedResultRange :: String -> D.Verif Range
 unsignedResultRange operandName = do
@@ -57,8 +66,7 @@ unsignedResultRange operandName = do
       upperName = operandName ++ "_upper"
   lowerNode <- T.newResultVar T.Unsigned lowerName
   upperNode <- T.newResultVar T.Unsigned upperName
-  return $ Range operandName lowerNode upperNode
-
+  return $ thirtyTwoBitRange operandName lowerNode upperNode
 
 -- | Make a new operand with name 'name' of sort 'sort' that is in the range
 --'range'---ie is greater than the range's lower and less than the range's upper

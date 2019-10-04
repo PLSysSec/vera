@@ -40,7 +40,7 @@ module DSL.Typed ( vassert
                  , D.runSolver
                  , D.evalVerif
                  ) where
-import           Control.Monad.State.Strict (liftIO, unless)
+import           Control.Monad.State.Strict (unless)
 import qualified DSL.DSL                    as D
 import           Prelude                    hiding (compare)
 
@@ -181,6 +181,20 @@ num val = do
   node <- D.i32c val
   newDefinedNode node Signed
 
+unum64 :: Integer -> D.Verif VNode
+unum64 val = do
+  node <- D.i64c val
+  newDefinedNode node Unsigned
+
+num64 :: Integer -> D.Verif VNode
+num64 val = do
+  node <- D.i64c val
+  newDefinedNode node Signed
+
+--
+--
+--
+
 intMax :: D.Verif VNode
 intMax = num 2147483647
 
@@ -196,12 +210,6 @@ uintMin = unum 0
 --
 -- JavaScript operations
 --
-
-toInt32 :: VNode -> VNode
-toInt32 (VNode u v _) = VNode u v Signed
-
-toUint32 :: VNode -> VNode
-toUint32 (VNode u v _) = VNode u v Unsigned
 
 jsAnd :: VNode -> VNode -> D.Verif VNode
 jsAnd node1 node2 = do

@@ -15,12 +15,12 @@ module IonMonkey.Operations ( add
                             , min
                             , max
                             ) where
-import           Control.Monad.State.Strict (liftIO)
-import qualified DSL.DSL                    as D
-import qualified DSL.Typed                  as T
+--import           Control.Monad.State.Strict (liftIO)
+import qualified DSL.DSL           as D
+import qualified DSL.Typed         as T
 import           IonMonkey.Helpers
 import           IonMonkey.Objects
-import           Prelude                    hiding (abs, and, max, min, not, or)
+import           Prelude           hiding (abs, and, max, min, not, or)
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#744
 add :: (D.MonadBoolector m) => m Range
@@ -179,7 +179,7 @@ ursh lhs c = do
   trueLower  <- T.cppShiftRight (lower lhs) shift >>= return . T.cppUintCast
   trueUpper  <- T.cppShiftRight (upper lhs) shift >>= return . T.cppUintCast
   falseLower <- T.unum 0
-  falseUpper <- T.uintMax >>= \max -> T.cppShiftRight max shift
+  falseUpper <- T.uintMax >>= \m -> T.cppShiftRight m shift
 
   result <- unsignedResultRange "result"
   T.cppCond isNegOrNonNeg trueLower falseLower >>= T.vassign (lower result)

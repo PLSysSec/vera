@@ -53,11 +53,9 @@ module DSL.DSL ( i64
 import           Control.Monad              (foldM)
 import           Control.Monad.State.Strict
 import qualified Data.Map.Strict            as M
-import qualified Data.Set                   as S
 import           DSL.BoolectorWrapper       hiding (false, sat, true)
 import qualified DSL.BoolectorWrapper       as B
-import           Prelude                    hiding (max, min, not)
-import qualified Prelude                    as Prelude
+import           Prelude                    hiding (map, max, min, not)
 
 {-|
 
@@ -76,7 +74,7 @@ newtype Verif a = Verif (StateT VerifState B.Boolector a)
 
 instance B.MonadBoolector Verif where
     getBoolectorState = Verif $ lift $ get
-    putBoolectorState state = Verif $ lift $ put state
+    putBoolectorState s = Verif $ lift $ put s
 
 data SMTResult = SolverSat (M.Map String Integer)
                | SolverUnsat
