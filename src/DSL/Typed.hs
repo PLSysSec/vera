@@ -1,3 +1,5 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
 module DSL.Typed ( vassert
                  , vassign
                  , assertUndef
@@ -540,16 +542,37 @@ cppShiftRight left right
       parentsUndef <- D.or (vundef left) (vundef right)
       D.or opUndef parentsUndef
 
+class CppCond n0 n1 n2 where
+  cppCond :: n0 -> n1 -> n2 -> D.Verif VNode
+
+instance CppCond (D.Verif VNode) VNode VNode where
+  cppCond m0 n1 n2 = m0 >>= \n0 -> cppCond n0 n1 n2
+
+instance CppCond (D.Verif VNode) (D.Verif VNode) VNode where
+  cppCond m0 m1 n2 = m0 >>= \n0 -> m1 >>= \n1 -> cppCond n0 n1 n2
+
+instance CppCond (D.Verif VNode) VNode (D.Verif VNode) where
+  cppCond m0 n1 m2 = m0 >>= \n0 -> m2 >>= \n2 -> cppCond n0 n1 n2
+
+instance CppCond (D.Verif VNode) (D.Verif VNode) (D.Verif VNode) where
+  cppCond m0 m1 m2 = m0 >>= \n0 -> m1 >>= \n1 -> m2 >>= \n2 -> cppCond n0 n1 n2
+
+instance CppCond VNode (D.Verif VNode) VNode where
+  cppCond n0 m1 n2 = m1 >>= \n1 -> cppCond n0 n1 n2
+
+instance CppCond VNode (D.Verif VNode) (D.Verif VNode) where
+  cppCond n0 m1 m2 = m1 >>= \n1 -> m2 >>= \n2 -> cppCond n0 n1 n2
+
+instance CppCond VNode VNode (D.Verif VNode) where
+  cppCond n0 n1 m2 = m2 >>= \n2 -> cppCond n0 n1 n2
+
 -- | Conditional
-cppCond :: VNode
-        -> VNode
-        -> VNode
-        -> D.Verif VNode
-cppCond cond true false = do
-  unless (vtype true == vtype false) $ error "Must have both branches of cond be same type"
-  result <- D.cond (vnode cond) (vnode true) (vnode false)
-  undef <- D.or (vundef cond) (vundef true) >>= D.or (vundef false)
-  return $ VNode undef result $ vtype true
+instance CppCond VNode VNode VNode where
+  cppCond cond true false = do
+    unless (vtype true == vtype false) $ error "Must have both branches of cond be same type"
+    result <- D.cond (vnode cond) (vnode true) (vnode false)
+    undef <- D.or (vundef cond) (vundef true) >>= D.or (vundef false)
+    return $ VNode undef result $ vtype true
 
 cppCast :: VNode
         -> Type

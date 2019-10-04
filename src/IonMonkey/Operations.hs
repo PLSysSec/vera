@@ -104,14 +104,14 @@ and left right = do
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#834
 -- IonMonkey function only applies to i32s
-or _lhs _rhs = undefined
-{-
-  result <- newResultRange "result" D.i32
+or _lhs _rhs = do
+  result <- signedResultRange "result"
   zero <- T.num 0
-  neg1 <- T.num -1
-  UINT32_MAX <- T.uintMax
-  INT32_MAX <- T.intMax
-  INT32_MIN <- T.intMin
+  neg1 <- T.num (-1)
+  uint32Max <- T.uintMax
+  int32Max <- T.intMax
+  int32Min <- T.intMin
+
 
   lhsEq          <- T.cppEq (lower _lhs) (upper _lhs) -- lhs lower == lhs upper
   lhsLowerEq0    <- T.cppEq (lower _lhs) zero         -- lhs lower == 0
@@ -136,7 +136,7 @@ or _lhs _rhs = undefined
   rhsLowerGte0   <- T.cppGte (lower _rhs) zero        -- rhs lower >= 0
   rhsAndrhsLowerGte0 <- T.cppAnd lhsLowerGte0 rhsLowerGte0
 
-  lower0 <- T.cppMax (lower _lhs) (lower rhs)
+  lower0 <- T.cppMax (lower _lhs) (lower _rhs)
   upper0 <- do t0 <- countLeadingZeroes32 (upper _lhs) 
                t1 <- countLeadingZeroes32 (upper _rhs)
                T.cppMin t0 t1
@@ -144,17 +144,17 @@ or _lhs _rhs = undefined
   lhsUpperLt0  <- T.cppLt (upper _lhs) zero        -- lhs upper < 0
   rhsUpperLt0  <- T.cppLt (upper _rhs) zero        -- rhs upper < 0
 
-  lower1 <- do t0 <- T.cppNeg (lower lhs)
+  lower1 <- do t0 <- T.cppNeg (lower _lhs)
                leadingOnes <- countLeadingZeroes32 t0 -- naming is confusing [sic]
-               t1 <- T.cppUshr UINT32_MAX leadingOnes
+               t1 <- T.cppShiftRight uint32Max leadingOnes
                t2 <- T.cppNeg t1
-               T.cppMax INT32_MIN t2
+               T.cppMax int32Min t2
 
-  lower2 <- do t0 <- T.cppNeg (lower rhs)
+  lower2 <- do t0 <- T.cppNeg (lower _rhs)
                leadingOnes <- countLeadingZeroes32 t0 -- naming is confusing [sic]
-               t1 <- T.cppUshr UINT32_MAX leadingOnes
+               t1 <- T.cppShiftRight uint32Max leadingOnes
                t2 <- T.cppNeg t1
-               t3 <- T.cppCond lhsUpperLt0 lower1 INT32_MIN 
+               t3 <- T.cppCond lhsUpperLt0 lower1 int32Min 
                T.cppMax t3 t2
 
   lhsLowerGte0AndrhsGte0    <- T.cppAnd lhsLowerGte0 rhsLowerGte0
@@ -163,29 +163,28 @@ or _lhs _rhs = undefined
                                      T.cppAnd lhsUpperLt0 t0
 
   -- lines 868-889
-  lowerEnd <- cppCond (T.cppAnd lhsLowerGte0 rhsLowerGte0)
+  lowerEnd <- T.cppCond (T.cppAnd lhsLowerGte0 rhsLowerGte0)
               lower0
-              (cppCond rhsUpperLt0 lower2 (cppCond lhsUpperLt0 lower1 INT32_MIN))
-  upperEnd <- cppCond (T.cppAnd lhsLowerGte0 rhsLowerGte0)
+              (T.cppCond rhsUpperLt0 lower2 (T.cppCond lhsUpperLt0 lower1 int32Min))
+  upperEnd <- T.cppCond (T.cppAnd lhsLowerGte0 rhsLowerGte0)
               upper0
-              (cppCond rhsUpperLt0 neg1 (cppCond lhsUpperLt0 neg1 INT32_MAX))
+              (T.cppCond rhsUpperLt0 neg1 (T.cppCond lhsUpperLt0 neg1 int32Max))
 
   --
 
-  resultLower <- cppCond lhsEqAndlhsLowerEq0 (lower _rhs)
-                   (cppCond lhsEqAndlhsLowerEqNeg1 (lower _lhs)
-                     (cppCond rhsEqAndrhsLowerEq0 (lower _lhs)
-                        (cppCond rhsEqAndrhsLowerEqNeg1 (lower _rhs) lowerEnd)))
+  resultLower <- T.cppCond lhsEqAndlhsLowerEq0 (lower _rhs)
+                   (T.cppCond lhsEqAndlhsLowerEqNeg1 (lower _lhs)
+                     (T.cppCond rhsEqAndrhsLowerEq0 (lower _lhs)
+                        (T.cppCond rhsEqAndrhsLowerEqNeg1 (lower _rhs) lowerEnd)))
 
-  resultUpper <- cppCond lhsEqAndlhsLowerEq0 (upper _rhs)
-                   (cppCond lhsEqAndlhsLowerEqNeg1 (upper _lhs)
-                     (cppCond rhsEqAndrhsLowerEq0 (upper _lhs)
-                        (cppCond rhsEqAndrhsLowerEqNeg1 (upper _rhs) upperEnd)))
-                          
+  resultUpper <- T.cppCond lhsEqAndlhsLowerEq0 (upper _rhs)
+                   (T.cppCond lhsEqAndlhsLowerEqNeg1 (upper _lhs)
+                     (T.cppCond rhsEqAndrhsLowerEq0 (upper _lhs)
+                        (T.cppCond rhsEqAndrhsLowerEqNeg1 (upper _rhs) upperEnd)))
+
   T.vassign (lower result) resultLower
   T.vassign (upper result) resultUpper
   return result
--}
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#893
 xor left right = undefined
