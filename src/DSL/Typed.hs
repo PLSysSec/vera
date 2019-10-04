@@ -27,6 +27,7 @@ module DSL.Typed ( vassert
                  , jsShr
                  , jsUshr
                    -- * Cpp operations: building blocks for what we are verifying
+                 , cppNeg
                  , cppNot
                  , cppEq
                  , cppAnd
@@ -343,6 +344,12 @@ noopWrapper left right op = do
   result <- op (vnode left) (vnode right)
   let ty = if isUnsigned (vtype left) && isUnsigned (vtype right) then Unsigned else Signed
   newMaybeDefinedNode left right result ty
+
+cppNeg :: VNode
+       -> D.Verif VNode
+cppNeg node = do
+  result <- D.neg (vnode node)
+  return $ VNode (vundef node) result (vtype node)
 
 cppNot :: VNode
        -> D.Verif VNode
