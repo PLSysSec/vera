@@ -1,7 +1,6 @@
 module IonMonkey where
 import           BenchUtils
 import           Control.Monad.State.Strict (liftIO)
-import qualified DSL.DSL                    as D
 import qualified DSL.Typed                  as T
 import           IonMonkey.Objects
 import           IonMonkey.Operations
@@ -21,7 +20,7 @@ ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ andTest
 
 andTest :: BenchTest
 andTest = benchTestCase "and" $ do
-  (c1, c2, c3, c4) <- D.evalVerif Nothing $ do
+  (c1, c2, c3, c4) <- T.evalVerif Nothing $ do
 
     leftRange <- signedInputRange "left start range"
     rightRange <- signedInputRange "right start range"
@@ -43,7 +42,7 @@ andTest = benchTestCase "and" $ do
 
 notTest :: BenchTest
 notTest = benchTestCase "not" $ do
-  (c1, c2, c3, c4) <- D.evalVerif Nothing $ do
+  (c1, c2, c3, c4) <- T.evalVerif Nothing $ do
 
     -- Setup the result range and make sure lower < upper
     opRange <- signedInputRange "operand range"
@@ -67,7 +66,7 @@ notTest = benchTestCase "not" $ do
 
 lshTest :: BenchTest
 lshTest = benchTestCase "lsh" $ do
-  (c1, c2, c3, c4) <- D.evalVerif Nothing $ do
+  (c1, c2, c3, c4) <- T.evalVerif Nothing $ do
 
     shifteeRange <- signedInputRange "shiftee range"
     val <- T.newInputVar T.Signed "val"
@@ -90,7 +89,7 @@ lshTest = benchTestCase "lsh" $ do
 
 rshTest :: BenchTest
 rshTest = benchTestCase "rsh" $ do
-  (c1, c2, c3, c4) <- D.evalVerif Nothing $ do
+  (c1, c2, c3, c4) <- T.evalVerif Nothing $ do
 
     shifteeRange <- signedInputRange "shiftee range"
     val <- T.newInputVar T.Signed "val"
@@ -112,8 +111,7 @@ rshTest = benchTestCase "rsh" $ do
 
 -- | This may not be right; the exponent bit may be saving the range
 urshTest  :: BenchTest
-urshTest = benchTestCase "ursh" $ D.evalVerif Nothing $ do
-
+urshTest = benchTestCase "ursh" $ T.evalVerif Nothing $ do
   shifteeRange <- signedInputRange "shiftee range"
   val <- T.newInputVar T.Signed "val"
   resultRange <- ursh shifteeRange val
@@ -133,7 +131,7 @@ urshTest = benchTestCase "ursh" $ D.evalVerif Nothing $ do
 
 lsh'Test :: BenchTest
 lsh'Test = benchTestCase "lsh'" $ do
-  (c1, c2, c3, c4) <- D.evalVerif Nothing $ do
+  (c1, c2, c3, c4) <- T.evalVerif Nothing $ do
 
     lhs <- signedInputRange "range ov value to shift"
     rhs <- signedInputRange "shift by"
@@ -156,7 +154,7 @@ lsh'Test = benchTestCase "lsh'" $ do
 
 rsh'Test :: BenchTest
 rsh'Test = benchTestCase "rsh'" $ do
-  (c1, c2, c3, c4) <- D.evalVerif Nothing $ do
+  (c1, c2, c3, c4) <- T.evalVerif Nothing $ do
 
     leftRange <- signedInputRange "shitee range"
     rightRange <- signedInputRange "shifter range"
@@ -180,10 +178,14 @@ rsh'Test = benchTestCase "rsh'" $ do
 
 ursh'Test :: BenchTest
 ursh'Test = benchTestCase "ursh'" $ do
-  (c1, c2, c3, c4) <- D.evalVerif Nothing $ do
+  (c1, c2, c3, c4) <- T.evalVerif Nothing $ do
 
-    leftRange <- unsignedInputRange "shitee range"
-    rightRange <- unsignedInputRange "shifter range"
+    -- "ursh's left operand is uint32, not int32, but for range analysis we
+    -- currently approximate it as int32."
+    -- MOZ_ASSERT(lhs->isInt32());
+    -- MOZ_ASSERT(lhs->isInt32());
+    leftRange <- signedInputRange "shitee range"
+    rightRange <- signedInputRange "shifter range"
     resultRange <- ursh' leftRange rightRange
     c1 <- verifySaneRange resultRange
     c2 <- verifyDefinedResult resultRange

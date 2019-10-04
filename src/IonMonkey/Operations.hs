@@ -15,24 +15,20 @@ module IonMonkey.Operations ( add
                             , min
                             , max
                             ) where
---import           Control.Monad.State.Strict (liftIO)
-import qualified DSL.DSL           as D
 import qualified DSL.Typed         as T
 import           IonMonkey.Helpers
 import           IonMonkey.Objects
 import           Prelude           hiding (abs, and, max, min, not, or)
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#744
-add :: (D.MonadBoolector m) => m Range
 add = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#775
-sub :: (D.MonadBoolector m) => m Range
 sub = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#805
 -- IonMonkey function only applies to i32s
-and :: Range -> Range -> D.Verif Range
+and :: Range -> Range -> T.Verif Range
 and left right = do
 
   result <- signedResultRange "result"
@@ -61,7 +57,6 @@ and left right = do
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#834
 -- IonMonkey function only applies to i32s
-or :: (D.MonadBoolector m) => Range -> Range -> m Range
 or _lhs _rhs = undefined
 
   -- result <- newResultRange "result" D.i32
@@ -79,7 +74,6 @@ or _lhs _rhs = undefined
   -- rhsLowerEqNeg1 <- D.eq (lower _rhs) neg1
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#893
-xor :: (D.MonadBoolector m) => Range -> Range -> m Range
 xor left right = undefined
 
   -- invertAfter <- D.false
@@ -101,7 +95,7 @@ xor left right = undefined
 
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#955
-not :: Range -> D.Verif Range
+not :: Range -> T.Verif Range
 not op = do
   result <- signedResultRange "result"
   T.cppNot (upper op) >>= T.vassign (lower result)
@@ -109,11 +103,10 @@ not op = do
   return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#960
-mul :: (D.MonadBoolector m) => m Range
 mul = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#999
-lsh :: Range -> T.VNode -> D.Verif Range
+lsh :: Range -> T.VNode -> T.Verif Range
 lsh shiftee val = do
   -- Setup the shift
   thirtyOne <- T.num 31
@@ -152,7 +145,7 @@ lsh shiftee val = do
   return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1016
-rsh :: Range -> T.VNode -> D.Verif Range
+rsh :: Range -> T.VNode -> T.Verif Range
 rsh shiftee val = do
   -- Setup the shift
   thirtyOne <- T.num 31
@@ -164,7 +157,7 @@ rsh shiftee val = do
   return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1023
-ursh :: Range -> T.VNode -> D.Verif Range
+ursh :: Range -> T.VNode -> T.Verif Range
 ursh lhs c = do
   --  int32_t shift = c & 0x1f;
   thirtyOne <- T.num 31
@@ -187,7 +180,7 @@ ursh lhs c = do
   return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1042
-lsh' :: Range -> Range -> D.Verif Range
+lsh' :: Range -> Range -> T.Verif Range
 lsh' _ _ = do
   -- Trivially correct
   result <- signedResultRange "result"
@@ -196,7 +189,7 @@ lsh' _ _ = do
   return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1048
-rsh' :: Range -> Range -> D.Verif Range
+rsh' :: Range -> Range -> T.Verif Range
 rsh' shiftee shifter = do
 
   thirtyOne <- T.num 31
@@ -241,27 +234,28 @@ rsh' shiftee shifter = do
   return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1079
-ursh' :: Range -> Range -> D.Verif Range
+ursh' :: Range -> Range -> T.Verif Range
 ursh' left _ = do
+  -- Setup the shift
   isNonNeg <- isFiniteNonNegative left
   zero <- T.unum 0
   uint32max <- T.uintMax
 
   result <- unsignedResultRange "result"
+  -- 0, lhs->isFiniteNonNegative() ? lhs->upper() : UINT32_MAX
   T.vassign (lower result) zero
-  T.cppCond isNonNeg (upper left) uint32max >>= T.vassign (upper result)
+
+  castUpper <- T.cppCast (upper left) T.Unsigned
+  T.cppCond isNonNeg castUpper uint32max >>= T.vassign (upper result)
   return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1089
-abs :: (D.MonadBoolector m) => m Range
 abs = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1104
-min :: (D.MonadBoolector m) => m Range
 min = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1123
-max :: (D.MonadBoolector m) => m Range
 max = undefined
 
 

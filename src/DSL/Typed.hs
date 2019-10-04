@@ -44,6 +44,7 @@ module DSL.Typed ( vassert
                  , cppCast
                  , D.runSolver
                  , D.evalVerif
+                 , D.Verif
                  ) where
 import           Control.Monad.State.Strict (unless)
 import qualified DSL.DSL                    as D
