@@ -97,6 +97,7 @@ data Type = Unsigned
 isSigned :: Type -> Bool
 isSigned Signed   = True
 isSigned Signed64 = True
+isSigned Signed16 = True
 isSigned _        = False
 
 -- | Is the unsigned?
@@ -112,6 +113,11 @@ is64Bits :: Type -> Bool
 is64Bits Signed64   = True
 is64Bits Unsigned64 = True
 is64Bits _          = False
+
+is16Bits :: Type -> Bool
+is16Bits Signed16   = True
+is16Bits Unsigned16 = True
+is16Bits _          = False
 
 newInputVar :: Type
             -> String

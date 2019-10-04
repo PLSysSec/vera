@@ -15,15 +15,62 @@ module IonMonkey.Operations ( add
                             , min
                             , max
                             ) where
+import           Data.Maybe        (fromJust)
 import qualified DSL.Typed         as T
 import           IonMonkey.Helpers
 import           IonMonkey.Objects
 import           Prelude           hiding (abs, and, max, min, not, or)
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#744
-add = undefined
+add :: Range -> Range -> T.Verif Range
+add left right = do
+
+  extLeftLower <- T.cppCast (lower left) T.Signed64
+  extRightLower <- T.cppCast (lower right) T.Signed64
+  tmp_l <- T.cppAdd extLeftLower extRightLower
+
+  -- We have to do this the same annoying way they do in case it introduces any
+  -- weirdness. How annoying
+  notLeftLower <- T.cppNot (hasInt32LowerBound left)
+  notRightLower <- T.cppNot (hasInt32LowerBound right)
+  hasNoLower <- T.cppOr notLeftLower notRightLower
+  noLower <- noInt32LowerBound
+  l <- T.cppCond hasNoLower noLower tmp_l
+
+  extLeftUpper <- T.cppCast (upper left) T.Signed64
+  extRightUpper <- T.cppCast (upper right) T.Signed64
+  tmp_h <- T.cppAdd extLeftLower extRightLower
+
+  notLeftUpper <- T.cppNot (hasInt32UpperBound left)
+  notRightUpper <- T.cppNot (hasInt32UpperBound right)
+  hasNoUpper <- T.cppOr notLeftUpper notRightUpper
+  noUpper <- noInt32UpperBound
+  h <- T.cppCond hasNoUpper noUpper tmp_h
+
+  e <- do
+    -- uint16_t e = Max(lhs->max_exponent_, rhs->max_exponent_);
+    e1 <- T.cppMax (maxExponent left) (maxExponent right)
+
+    -- if (e <= Range::MaxFiniteExponent) ++e;
+    one <- T.num 1
+    e2 <- T.cppAdd e1 one
+    maxExp <- maxFiniteExponent
+    underMax <- T.cppLte e1 maxExp
+    e3 <- T.cppCond underMax e2 e1
+
+    -- if (lhs->canBeInfiniteOrNaN() && rhs->canBeInfiniteOrNaN())
+    -- e = includesInfiniteAndNan
+    let leftInfNan  = canBeInfiniteOrNan left
+        rightInfNan = canBeInfiniteOrNan right
+    infNanCond <- T.cppOr leftInfNan rightInfNan
+    --T.cppCond infNanCond e2 e3
+    error ""
+
+  error ""
+
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#775
+sub :: Range -> Range -> T.Verif Range
 sub = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#805
@@ -65,53 +112,53 @@ or _lhs _rhs = undefined
 --   UINT32_MAX <- T.uintMax
 --   INT32_MAX <- T.intMax
 --   INT32_MIN <- T.intMin
--- 
+--
 --   lhsEq          <- T.cppEq (lower _lhs) (upper _lhs) -- lhs lower == lhs upper
 --   lhsLowerEq0    <- T.cppEq (lower _lhs) zero         -- lhs lower == 0
 --   lhsLowerEqNeg1 <- T.cppEq (lower _lhs) neg1         -- lhs lower == -1
--- 
+--
 --   lhsEqAndlhsLowerEq0 <- T.cppAnd lhsEq lhsLowerEq0
 --   lhsEqAndlhsLowerEqNeg1 <- T.cppAnd lhsEq lhsLowerEqNeg1
--- 
+--
 --   rhsEq          <- T.cppEq (lower _rhs) (upper _rhs) -- rhs lower == rhs upper
 --   rhsLowerEq0    <- T.cppEq (lower _rhs) zero         -- rhs lower == 0
 --   rhsLowerEqNeg1 <- T.cppEq (lower _rhs) neg1         -- rhs lower == -1
--- 
+--
 --   -- lines 841-856
--- 
--- 
+--
+--
 --   -- second part (
--- 
+--
 --   lhsLowerGte0   <- T.cppGte (lower _lhs) zero        -- lhs lower >= 0
 --   rhsLowerGte0   <- T.cppGte (lower _rhs) zero        -- rhs lower >= 0
 --   rhsAndRhsLowerGte0 <- T.cppAnd lhsLowerGte0 rhsLowerGte0
--- 
+--
 --   lower0 <- T.cppMax (lower _lhs) (lower rhs)
---   upper0 <- do t0 <- countLeadingZeroes32 (upper _lhs) 
+--   upper0 <- do t0 <- countLeadingZeroes32 (upper _lhs)
 --                t1 <- countLeadingZeroes32 (upper _rhs)
 --                T.cppMin t0 t1
--- 
+--
 --   lhsUpperLt0  <- T.cppLt (upper _lhs) zero        -- lhs upper < 0
 --   rhsUpperLt0  <- T.cppLt (upper _rhs) zero        -- rhs upper < 0
--- 
+--
 --   lower1 <- do t0 <- T.cppNeg (lower lhs)
 --                leadingOnes <- countLeadingZeroes32 t0 -- naming is confusing [sic]
 --                t1 <- T.cppUshr UINT32_MAX leadingOnes
 --                t2 <- T.cppNeg t1
 --                T.cppMax INT32_MIN t2
--- 
+--
 --   lower2 <- do t0 <- T.cppNeg (lower rhs)
 --                leadingOnes <- countLeadingZeroes32 t0 -- naming is confusing [sic]
 --                t1 <- T.cppUshr UINT32_MAX leadingOnes
 --                t2 <- T.cppNeg t1
---                t3 <- T.cppCond lhsUpperLt0 lower1 INT32_MIN 
+--                t3 <- T.cppCond lhsUpperLt0 lower1 INT32_MIN
 --                T.cppMax t3 t2
--- 
+--
 --   lhsLowerGte0AndRhsGte0    <- T.cppAnd lhsLowerGte0 rhsLowerGte0
 --   lhsUpperLt0AndRhsUpperLt0 <- T.cppAnd lhsUpperLt0 rhsUpperLt0
 --   lhsUpperLt0AndNotRhsUpperLt0 <- do t0 <- T.cppNot rhsUpperLt0
 --                                      T.cppAnd lhsUpperLt0 t0
--- 
+--
 --   -- lines 868-889
 --   lowerEnd <- cppCond (T.cppAnd lhsLowerGte0 rhsLowerGte0)
 --               lower0

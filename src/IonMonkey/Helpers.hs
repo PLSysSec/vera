@@ -1,5 +1,8 @@
-module IonMonkey.Helpers ( isFiniteNonNegative
+module IonMonkey.Helpers ( noInt32LowerBound
+                         , noInt32UpperBound
+                         , isFiniteNonNegative
                          , isFiniteNegative
+                         , maxFiniteExponent
                          , countLeadingZeroes32
                          , countTrailingZeroes32
                          ) where
@@ -7,22 +10,20 @@ import qualified DSL.DSL           as D
 import qualified DSL.Typed         as T
 import           IonMonkey.Objects
 
--- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#483
-hasInt32LowerBound :: Range -> D.Verif T.VNode
-hasInt32LowerBound range = hasInt32LowerBound range
-
--- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#484
-hasInt32UpperBound :: Range -> D.Verif T.VNode
-hasInt32UpperBound range = hasInt32UpperBound range
-
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#154
 -- static const int64_t NoInt32LowerBound = int64_t(JSVAL_INT_MIN) - 1;
 noInt32LowerBound :: D.Verif T.VNode
 noInt32LowerBound = error "not done yet, need int64"
 
+noInt32UpperBound :: D.Verif T.VNode
+noInt32UpperBound = error "not done yet, need int64"
+
 -- | #define JSVAL_INT_MIN ((int32_t)0x80000000)
 jsValIntMin :: D.Verif T.VNode
 jsValIntMin = T.num 0x80000000
+
+maxFiniteExponent :: D.Verif T.VNode
+maxFiniteExponent = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#551
 isFiniteNonNegative :: Range -> D.Verif T.VNode
