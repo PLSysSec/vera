@@ -64,38 +64,34 @@ countLeadingZeroes32 node = do
   fs <- D.i32c 252645135
   sixtythree <- D.i32c 63
   -- smear (ew)
-  tmp1 <- D.safeSra node one >>= D.or node
-  tmp2 <- D.safeSra tmp1 two >>= D.or tmp1
-  tmp3 <- D.safeSra tmp2 four >>= D.or tmp2
-  tmp4 <- D.safeSra tmp3 eight >>= D.or tmp3
-  tmp5 <- D.safeSra tmp4 sixteen >>= D.or tmp4
+  tmp1 <- T.cppShiftRight node one >>= T.cppOr node
+  tmp2 <- T.cppShiftRight tmp1 two >>= T.cppOr tmp1
+  tmp3 <- T.cppShiftRight tmp2 four >>= T.cppOr tmp2
+  tmp4 <- T.cppShiftRight tmp3 eight >>= T.cppOr tmp3
+  tmp5 <- T.cppShiftRight tmp4 sixteen >>= T.cppOr tmp4
   -- count
   -- x -= x >> 1 & 0x55555555;
-  right <- D.and one fives
-  total <- D.safeSra tmp5 right
-  tmp6 <- D.sub tmp5 total
+  right <- T.cppAnd one fives
+  total <- T.cppShiftRight tmp5 right
+  tmp6 <- T.cppSub tmp5 total
   -- x = (x >> 2 & 0x33333333) + (x & 0x33333333);
-  firstAnd <- D.and two threes
-  left <- D.safeSra tmp6 firstAnd
-  right <- D.and tmp6 threes
-  tmp7 <- D.add left right
+  firstAnd <- T.cppAnd two threes
+  left <- T.cppShiftRight tmp6 firstAnd
+  right <- T.cppAnd tmp6 threes
+  tmp7 <- T.cppAnd left right
   -- x = (x >> 4) + x & 0x0f0f0f0f;
-  left <- D.safeSra tmp7 four
-  right <- D.and tmp7 fs
-  tmp8 <- D.add left right
+  left <- T.cppShiftRight tmp7 four
+  right <- T.cppAnd tmp7 fs
+  tmp8 <- T.cppAnd left right
   -- x += x >> 8;
-  shift <- D.safeSra tmp8 eight
-  tmp9 <- D.add tmp8 shift
+  shift <- T.cppShiftRight tmp8 eight
+  tmp9 <- T.cppAdd tmp8 shift
   -- x += x >> 16;
-  shift2 <- D.safeSra tmp9 sixteen
-  tmp10 <- D.add tmp9 shift2
+  shift2 <- T.cppShiftRight tmp9 sixteen
+  tmp10 <- T.cppAdd tmp9 shift2
   -- return numIntBits - (x & 0x0000003f); //subtract # of 1s from 32)
-  mask <- D.and tmp10 sixtythree
-  D.sub numBits mask
+  mask <- T.cppAnd tmp10 sixtythree
+  T.cppSub numBits mask
 
 countTrailingZeroes32 :: D.Node -> D.Verif D.Node
 countTrailingZeroes32 node = undefined
-
-
-
-
