@@ -145,15 +145,17 @@ or _lhs _rhs = do
   lower1 <- do t0 <- T.cppNeg (lower _lhs)
                leadingOnes <- countLeadingZeroes32 t0 -- naming is confusing [sic]
                t1 <- T.cppShiftRight uint32Max leadingOnes
-               t2 <- T.cppNeg t1
-               T.cppMax int32Min t2
+               t2 <- T.cppCast t1 T.Signed
+               t3 <- T.cppNeg t2
+               T.cppMax int32Min t3
 
   lower2 <- do t0 <- T.cppNeg (lower _rhs)
                leadingOnes <- countLeadingZeroes32 t0 -- naming is confusing [sic]
                t1 <- T.cppShiftRight uint32Max leadingOnes
-               t2 <- T.cppNeg t1
-               t3 <- T.cppCond lhsUpperLt0 lower1 int32Min 
-               T.cppMax t3 t2
+               t2 <- T.cppCast t1 T.Signed
+               t3 <- T.cppNeg t2
+               t4 <- T.cppCond lhsUpperLt0 lower1 int32Min 
+               T.cppMax t4 t3
 
   lhsLowerGte0AndrhsGte0    <- T.cppAnd lhsLowerGte0 rhsLowerGte0
   lhsUpperLt0AndrhsUpperLt0 <- T.cppAnd lhsUpperLt0 rhsUpperLt0
