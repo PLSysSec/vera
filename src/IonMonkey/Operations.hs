@@ -59,19 +59,67 @@ and left right = do
 -- IonMonkey function only applies to i32s
 or _lhs _rhs = undefined
 
-  -- result <- newResultRange "result" D.i32
-  -- zero <- D.i32c 0
-  -- neg1 <- D.i32c -1
-  --
-  -- -- lhs lower == lhs upper
-  -- lhsEq <- D.eq (lower _lhs) (upper _lhs)
-  -- lhsLowerEq0 <- D.eq (lower _lhs) zero
-  -- lhsLowerEqNeg1 <- D.eq (lower _lhs) neg1
-  --
-  -- -- rhs lower == rhs upper
-  -- rhsEq <- D.eq (lower _rhs) (upper _rhs)
-  -- rhsLowerEq0 <- D.eq (lower _rhs) zero
-  -- rhsLowerEqNeg1 <- D.eq (lower _rhs) neg1
+--   result <- newResultRange "result" D.i32
+--   zero <- T.num 0
+--   neg1 <- T.num -1
+--   UINT32_MAX <- T.uintMax
+--   INT32_MAX <- T.intMax
+--   INT32_MIN <- T.intMin
+-- 
+--   lhsEq          <- T.cppEq (lower _lhs) (upper _lhs) -- lhs lower == lhs upper
+--   lhsLowerEq0    <- T.cppEq (lower _lhs) zero         -- lhs lower == 0
+--   lhsLowerEqNeg1 <- T.cppEq (lower _lhs) neg1         -- lhs lower == -1
+-- 
+--   lhsEqAndlhsLowerEq0 <- T.cppAnd lhsEq lhsLowerEq0
+--   lhsEqAndlhsLowerEqNeg1 <- T.cppAnd lhsEq lhsLowerEqNeg1
+-- 
+--   rhsEq          <- T.cppEq (lower _rhs) (upper _rhs) -- rhs lower == rhs upper
+--   rhsLowerEq0    <- T.cppEq (lower _rhs) zero         -- rhs lower == 0
+--   rhsLowerEqNeg1 <- T.cppEq (lower _rhs) neg1         -- rhs lower == -1
+-- 
+--   -- lines 841-856
+-- 
+-- 
+--   -- second part (
+-- 
+--   lhsLowerGte0   <- T.cppGte (lower _lhs) zero        -- lhs lower >= 0
+--   rhsLowerGte0   <- T.cppGte (lower _rhs) zero        -- rhs lower >= 0
+--   rhsAndRhsLowerGte0 <- T.cppAnd lhsLowerGte0 rhsLowerGte0
+-- 
+--   lower0 <- T.cppMax (lower _lhs) (lower rhs)
+--   upper0 <- do t0 <- countLeadingZeroes32 (upper _lhs) 
+--                t1 <- countLeadingZeroes32 (upper _rhs)
+--                T.cppMin t0 t1
+-- 
+--   lhsUpperLt0  <- T.cppLt (upper _lhs) zero        -- lhs upper < 0
+--   rhsUpperLt0  <- T.cppLt (upper _rhs) zero        -- rhs upper < 0
+-- 
+--   lower1 <- do t0 <- T.cppNeg (lower lhs)
+--                leadingOnes <- countLeadingZeroes32 t0 -- naming is confusing [sic]
+--                t1 <- T.cppUshr UINT32_MAX leadingOnes
+--                t2 <- T.cppNeg t1
+--                T.cppMax INT32_MIN t2
+-- 
+--   lower2 <- do t0 <- T.cppNeg (lower rhs)
+--                leadingOnes <- countLeadingZeroes32 t0 -- naming is confusing [sic]
+--                t1 <- T.cppUshr UINT32_MAX leadingOnes
+--                t2 <- T.cppNeg t1
+--                t3 <- T.cppCond lhsUpperLt0 lower1 INT32_MIN 
+--                T.cppMax t3 t2
+-- 
+--   lhsLowerGte0AndRhsGte0    <- T.cppAnd lhsLowerGte0 rhsLowerGte0
+--   lhsUpperLt0AndRhsUpperLt0 <- T.cppAnd lhsUpperLt0 rhsUpperLt0
+--   lhsUpperLt0AndNotRhsUpperLt0 <- do t0 <- T.cppNot rhsUpperLt0
+--                                      T.cppAnd lhsUpperLt0 t0
+-- 
+--   -- lines 868-889
+--   lowerEnd <- cppCond (T.cppAnd lhsLowerGte0 rhsLowerGte0)
+--               lower0
+--               (cppCond rhsUpperLt0 lower2 (cppCond lhsUpperLt0 lower1 INT32_MIN))
+--   upperEnd <- cppCond (T.cppAnd lhsLowerGte0 rhsLowerGte0)
+--               upper0
+--               (cppCond rhsUpperLt0 neg1 (cppCond lhsUpperLt0 neg1 INT32_MAX))
+
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#893
 xor left right = undefined
@@ -136,8 +184,8 @@ lsh shiftee val = do
   result <- signedResultRange "result"
 
   -- fallback range
-  i32min <- T.intMax
-  i32max <- T.intMin
+  i32min <- T.intMin
+  i32max <- T.intMax
 
   T.cppCond doesntLoseBits shiftedLower i32min >>= T.vassign (lower result)
   T.cppCond doesntLoseBits shiftedUpper i32max >>= T.vassign (upper result)
