@@ -8,6 +8,7 @@ module IonMonkey.Objects ( Range
                          , signedResultRange
                          , unsignedResultRange
                          , operandWithRange
+                         , verifyConsistent
                          , verifySaneRange
                          , verifyUpperBound
                          , verifyLowerBound
@@ -83,11 +84,20 @@ operandWithRange name ty range = do
 -- Verification functions and datatypes
 
 data VerifResult = Verified
+                 | UnsatImpl
                  | OverlappingRange { counterexample :: M.Map String Integer }
                  | BadLowerBound { counterexample :: M.Map String Integer }
                  | BadUpperBound { counterexample :: M.Map String Integer }
                  | UndefRange { counterexample :: M.Map String Integer }
                  deriving (Eq, Ord, Show)
+
+verifyConsistent :: D.Verif VerifResult
+verifyConsistent = do
+  check <- D.runSolver
+  return $ case check of
+    D.SolverUnsat -> UnsatImpl
+    D.SolverSat{} -> Verified
+    _             -> error "Error while verifying"
 
 -- | Verify that the upper bound of a range is greater than the lower
 -- Expects UNSAT
@@ -97,9 +107,9 @@ verifySaneRange resultRange = do
   T.cppLt (upper resultRange) (lower resultRange) >>= T.vassert
   check <- D.runSolver
   D.pop 1
-  case check of
-    D.SolverUnsat  -> return Verified
-    D.SolverSat xs -> return $ OverlappingRange xs
+  return $ case check of
+    D.SolverUnsat  -> Verified
+    D.SolverSat xs -> OverlappingRange xs
     _              -> error "Error while verifying"
 
 -- | Verify that a node is less than the upper bound
@@ -110,9 +120,9 @@ verifyUpperBound node range = do
   T.cppGt node (upper range) >>= T.vassert
   check <- D.runSolver
   D.pop 1
-  case check of
-    D.SolverUnsat  -> return Verified
-    D.SolverSat xs -> return $ BadUpperBound xs
+  return $ case check of
+    D.SolverUnsat  -> Verified
+    D.SolverSat xs -> BadUpperBound xs
     _              -> error "Error while verifying"
 
 -- | Verify that a node is greater than the lower bound
@@ -123,9 +133,9 @@ verifyLowerBound node range = do
   T.cppLt node (lower range) >>= T.vassert
   check <- D.runSolver
   D.pop 1
-  case check of
-    D.SolverUnsat  -> return Verified
-    D.SolverSat xs -> return $ BadLowerBound xs
+  return $ case check of
+    D.SolverUnsat  -> Verified
+    D.SolverSat xs -> BadLowerBound xs
     _              -> error "Error while verifying"
 
 verifyDefinedResult :: Range -> D.Verif VerifResult
@@ -135,7 +145,7 @@ verifyDefinedResult range = do
   T.assertUndef (upper range)
   check <- D.runSolver
   D.pop 1
-  case check of
-    D.SolverUnsat  -> return Verified
-    D.SolverSat xs -> return $ UndefRange xs
+  return $ case check of
+    D.SolverUnsat  -> Verified
+    D.SolverSat xs -> UndefRange xs
     _              -> error "Error while verifying"

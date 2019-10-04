@@ -20,11 +20,12 @@ ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ andTest
 
 andTest :: BenchTest
 andTest = benchTestCase "and" $ do
-  (c1, c2, c3, c4) <- T.evalVerif Nothing $ do
+  (c0, c1, c2, c3, c4) <- T.evalVerif Nothing $ do
 
     leftRange <- signedInputRange "left start range"
     rightRange <- signedInputRange "right start range"
     resultRange <- and leftRange rightRange
+    c0 <- verifyConsistent
     c1 <- verifySaneRange resultRange
     c2 <- verifyDefinedResult resultRange
 
@@ -33,8 +34,9 @@ andTest = benchTestCase "and" $ do
     result <- T.jsAnd left right
     c3 <- verifyLowerBound result resultRange
     c4 <- verifyUpperBound result resultRange
-    return (c1, c2, c3, c4)
+    return (c0, c1, c2, c3, c4)
 
+  Verified @=? c0
   Verified @=? c1
   Verified @=? c2
   Verified @=? c3
@@ -42,11 +44,12 @@ andTest = benchTestCase "and" $ do
 
 notTest :: BenchTest
 notTest = benchTestCase "not" $ do
-  (c1, c2, c3, c4) <- T.evalVerif Nothing $ do
+  (c0, c1, c2, c3, c4) <- T.evalVerif Nothing $ do
 
     -- Setup the result range and make sure lower < upper
     opRange <- signedInputRange "operand range"
     resultRange <- not opRange
+    c0 <- verifyConsistent
     c1 <- verifySaneRange resultRange
     c2 <- verifyDefinedResult resultRange
 
@@ -56,9 +59,9 @@ notTest = benchTestCase "not" $ do
     c3 <- verifyUpperBound result resultRange
     c4 <- verifyLowerBound result resultRange
 
-    return (c1, c2, c3, c4)
+    return (c0, c1, c2, c3, c4)
 
-
+  Verified @=? c0
   Verified @=? c1
   Verified @=? c2
   Verified @=? c3
@@ -66,11 +69,12 @@ notTest = benchTestCase "not" $ do
 
 lshTest :: BenchTest
 lshTest = benchTestCase "lsh" $ do
-  (c1, c2, c3, c4) <- T.evalVerif Nothing $ do
+  (c0, c1, c2, c3, c4) <- T.evalVerif Nothing $ do
 
     shifteeRange <- signedInputRange "shiftee range"
     val <- T.newInputVar T.Signed "val"
     resultRange <- lsh shifteeRange val
+    c0 <- verifyConsistent
     c1 <- verifySaneRange resultRange
     c2 <- verifyDefinedResult resultRange
 
@@ -79,8 +83,9 @@ lshTest = benchTestCase "lsh" $ do
     c3 <- verifyUpperBound result resultRange
     c4 <- verifyLowerBound result resultRange
 
-    return (c1, c2, c3, c4)
+    return (c0, c1, c2, c3, c4)
 
+  Verified @=? c0
   Verified @=? c1
   Verified @=? c2
   Verified @=? c3
@@ -89,11 +94,12 @@ lshTest = benchTestCase "lsh" $ do
 
 rshTest :: BenchTest
 rshTest = benchTestCase "rsh" $ do
-  (c1, c2, c3, c4) <- T.evalVerif Nothing $ do
+  (c0, c1, c2, c3, c4) <- T.evalVerif Nothing $ do
 
     shifteeRange <- signedInputRange "shiftee range"
     val <- T.newInputVar T.Signed "val"
     resultRange <- rsh shifteeRange val
+    c0 <- verifyConsistent
     c1 <- verifySaneRange resultRange
     c2 <- verifyDefinedResult resultRange
 
@@ -102,8 +108,9 @@ rshTest = benchTestCase "rsh" $ do
     c3 <- verifyUpperBound result resultRange
     c4 <- verifyLowerBound result resultRange
 
-    return (c1, c2, c3, c4)
+    return (c0, c1, c2, c3, c4)
 
+  Verified @=? c0
   Verified @=? c1
   Verified @=? c2
   Verified @=? c3
@@ -120,8 +127,10 @@ urshTest = benchTestCase "ursh" $ T.evalVerif Nothing $ do
   val <- T.newInputVar T.Signed "val"
 
   resultRange <- ursh shifteeRange val
+  c0 <- verifyConsistent
   c1 <- verifySaneRange resultRange
   c2 <- verifyDefinedResult resultRange
+  liftIO $ Verified @=? c0
   liftIO $ Verified @=? c1
   liftIO $ Verified @=? c2
 
@@ -138,11 +147,12 @@ urshTest = benchTestCase "ursh" $ T.evalVerif Nothing $ do
 
 lsh'Test :: BenchTest
 lsh'Test = benchTestCase "lsh'" $ do
-  (c1, c2, c3, c4) <- T.evalVerif Nothing $ do
+  (c0, c1, c2, c3, c4) <- T.evalVerif Nothing $ do
 
     lhs <- signedInputRange "range ov value to shift"
     rhs <- signedInputRange "shift by"
     resultRange <- lsh' lhs rhs
+    c0 <- verifyConsistent
     c1 <- verifySaneRange resultRange
     c2 <- verifyDefinedResult resultRange
 
@@ -152,8 +162,9 @@ lsh'Test = benchTestCase "lsh'" $ do
     c3 <- verifyUpperBound result resultRange
     c4 <- verifyLowerBound result resultRange
 
-    return (c1, c2, c3, c4)
+    return (c0, c1, c2, c3, c4)
 
+  Verified @=? c0
   Verified @=? c1
   Verified @=? c2
   Verified @=? c3
@@ -161,11 +172,12 @@ lsh'Test = benchTestCase "lsh'" $ do
 
 rsh'Test :: BenchTest
 rsh'Test = benchTestCase "rsh'" $ do
-  (c1, c2, c3, c4) <- T.evalVerif Nothing $ do
+  (c0, c1, c2, c3, c4) <- T.evalVerif Nothing $ do
 
     leftRange <- signedInputRange "shitee range"
     rightRange <- signedInputRange "shifter range"
     resultRange <- rsh' leftRange rightRange
+    c0 <- verifyConsistent
     c1 <- verifySaneRange resultRange
     c2 <- verifyDefinedResult resultRange
 
@@ -176,8 +188,9 @@ rsh'Test = benchTestCase "rsh'" $ do
     c3 <- verifyUpperBound result resultRange
     c4 <- verifyLowerBound result resultRange
 
-    return (c1, c2, c3, c4)
+    return (c0, c1, c2, c3, c4)
 
+  Verified @=? c0
   Verified @=? c1
   Verified @=? c2
   Verified @=? c3
@@ -185,7 +198,7 @@ rsh'Test = benchTestCase "rsh'" $ do
 
 ursh'Test :: BenchTest
 ursh'Test = benchTestCase "ursh'" $ do
-  (c1, c2, c3, c4) <- T.evalVerif Nothing $ do
+  (c0, c1, c2, c3, c4) <- T.evalVerif Nothing $ do
 
     -- "ursh's left operand is uint32, not int32, but for range analysis we
     -- currently approximate it as int32."
@@ -194,6 +207,7 @@ ursh'Test = benchTestCase "ursh'" $ do
     leftRange <- signedInputRange "shitee range"
     rightRange <- signedInputRange "shifter range"
     resultRange <- ursh' leftRange rightRange
+    c0 <- verifyConsistent
     c1 <- verifySaneRange resultRange
     c2 <- verifyDefinedResult resultRange
 
@@ -204,8 +218,9 @@ ursh'Test = benchTestCase "ursh'" $ do
     c3 <- verifyUpperBound result resultRange
     c4 <- verifyLowerBound result resultRange
 
-    return (c1, c2, c3, c4)
+    return (c0, c1, c2, c3, c4)
 
+  Verified @=? c0
   Verified @=? c1
   Verified @=? c2
   Verified @=? c3
