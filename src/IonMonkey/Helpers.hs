@@ -1,4 +1,5 @@
-module IonMonkey.Helpers ( noInt32LowerBound
+module IonMonkey.Helpers ( setRange
+                         , noInt32LowerBound
                          , noInt32UpperBound
                          , isFiniteNonNegative
                          , isFiniteNegative
@@ -21,7 +22,17 @@ setRange :: T.VNode -- ^ Lower
          -> T.VNode -- ^ Exponent
          -> Range
          -> D.Verif ()
-setRange low up fract nzero exp = error ""
+setRange low up fract nzero exp r = do
+  T.vassign (maxExponent r) exp
+  T.vassign (canHaveFractionalPart r) fract
+  T.vassign (canBeNegativeZero r) nzero
+  setLowerInit low r
+  setUpperInit up r
+  optimize r
+
+optimize :: Range
+         -> D.Verif ()
+optimize _ = return ()
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#252
 setLowerInit :: T.VNode
@@ -39,7 +50,7 @@ setLowerInit lower_ range = do
   -- else
   --  lower_ = int32_t(x);
   --  hasInt32LowerBound_ = true;
-  defaultLower <- T.cppCast lower_ T.Unsigned
+  defaultLower <- T.cppCast lower_ T.Signed
   let defaultHasLower = t
   -- if (x > JSVAL_INT_MAX)
   --    lower_ = JSVAL_INT_MAX;
@@ -57,12 +68,39 @@ setLowerInit lower_ range = do
   T.vassign lower'' (lower range)
   T.vassign hasLower'' (hasInt32LowerBound range)
 
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#265
 setUpperInit :: T.VNode
              -> Range
              -> D.Verif ()
-setUpperInit upper range = do
-  when (T.vtype upper /= T.Signed64) $ error "Expected a signed 64-bit lower"
-
+setUpperInit upper_ range = do
+  when (T.vtype upper_ /= T.Signed64) $ error "Expected a signed 64-bit lower"
+  min <- jsValIntMin
+  max <- jsValIntMax
+  castIntMin <- T.cppCast min T.Signed64
+  castIntMax <- T.cppCast max T.Signed64
+  t <- T.true
+  f <- T.false
+  -- DEFAULT
+  -- else
+  --     upper_ = int32_t(x);
+  --     hasInt32UpperBound_ = true;
+  defaultUpper <- T.cppCast upper_ T.Signed
+  let defaultHasUpper = t
+  -- if (x > JSVAL_INT_MAX)
+  --     upper_ = JSVAL_INT_MAX;
+  --     hasInt32UpperBound_ = false;
+  oobUpper <- T.cppGt upper_ castIntMax
+  upper' <- T.cppCond oobUpper max defaultUpper
+  hasLower' <- T.cppCond oobUpper t defaultHasUpper
+  -- else if (x < JSVAL_INT_MIN)
+  --     upper_ = JSVAL_INT_MIN;
+  --     hasInt32UpperBound_ = true;
+  oobLower <- T.cppLt upper_ castIntMin
+  upper'' <- T.cppCond oobLower min upper'
+  hasLower'' <- T.cppCond oobLower f hasLower'
+  -- Set the flags and the bound
+  T.vassign upper'' (upper range)
+  T.vassign hasLower'' (hasInt32UpperBound range)
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#154
 -- static const int64_t NoInt32LowerBound = int64_t(JSVAL_INT_MIN) - 1;

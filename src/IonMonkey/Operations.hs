@@ -15,11 +15,12 @@ module IonMonkey.Operations ( add
                             , min
                             , max
                             ) where
-import           Data.Maybe        (fromJust)
-import qualified DSL.Typed         as T
+import           Control.Monad.State.Strict (liftIO)
+import           Data.Maybe                 (fromJust)
+import qualified DSL.Typed                  as T
 import           IonMonkey.Helpers
 import           IonMonkey.Objects
-import           Prelude           hiding (abs, and, max, min, not, or)
+import           Prelude                    hiding (abs, and, max, min, not, or)
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#744
 add :: Range -> Range -> T.Verif Range
@@ -52,7 +53,7 @@ add left right = do
     e1 <- T.cppMax (maxExponent left) (maxExponent right)
 
     -- if (e <= Range::MaxFiniteExponent) ++e;
-    one <- T.num 1
+    one <- T.unum16 1
     e2 <- T.cppAdd e1 one
     maxExp <- maxFiniteExponent
     underMax <- T.cppLte e1 maxExp
@@ -70,13 +71,8 @@ add left right = do
   negZeroFlag <- T.cppOr (canBeNegativeZero left) (canBeNegativeZero right)
 
   result <- resultRange T.Double "result"
-  T.vassign (lower result) l
-  T.vassign (upper result) h
-  T.vassign (canHaveFractionalPart result) fractFlag
-  T.vassign (canBeNegativeZero result) negZeroFlag
-  T.vassign (maxExponent result) e
+  setRange l h fractFlag negZeroFlag e result
   return result
-
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#775
 sub :: Range -> Range -> T.Verif Range
