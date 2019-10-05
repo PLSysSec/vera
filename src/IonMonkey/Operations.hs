@@ -141,16 +141,20 @@ or _lhs _rhs = do
 
   lhsLowerGte0   <- T.cppGte (lower _lhs) zero        -- lhs lower >= 0
   rhsLowerGte0   <- T.cppGte (lower _rhs) zero        -- rhs lower >= 0
-  rhsAndrhsLowerGte0 <- T.cppAnd lhsLowerGte0 rhsLowerGte0
+  lhsAndrhsLowerGte0 <- T.cppAnd lhsLowerGte0 rhsLowerGte0
 
+  -- 870,874
   lower0 <- T.cppMax (lower _lhs) (lower _rhs)
   upper0 <- do t0 <- countLeadingZeroes32 (upper _lhs)
                t1 <- countLeadingZeroes32 (upper _rhs)
-               T.cppMin t0 t1
+               t2 <- T.cppMin t0 t1
+               t3 <- T.cppShiftRight uint32Max t2
+               T.cppCast t3 T.Signed
 
   lhsUpperLt0  <- T.cppLt (upper _lhs) zero        -- lhs upper < 0
   rhsUpperLt0  <- T.cppLt (upper _rhs) zero        -- rhs upper < 0
 
+  -- 879
   lower1 <- do t0 <- T.cppNeg (lower _lhs)
                leadingOnes <- countLeadingZeroes32 t0 -- naming is confusing [sic]
                t1 <- T.cppShiftRight uint32Max leadingOnes
@@ -158,6 +162,7 @@ or _lhs _rhs = do
                t3 <- T.cppNeg t2
                T.cppMax int32Min t3
 
+  -- 884
   lower2 <- do t0 <- T.cppNeg (lower _rhs)
                leadingOnes <- countLeadingZeroes32 t0 -- naming is confusing [sic]
                t1 <- T.cppShiftRight uint32Max leadingOnes
@@ -166,16 +171,12 @@ or _lhs _rhs = do
                t4 <- T.cppCond lhsUpperLt0 lower1 int32Min
                T.cppMax t4 t3
 
-  lhsLowerGte0AndrhsGte0    <- T.cppAnd lhsLowerGte0 rhsLowerGte0
-  lhsUpperLt0AndrhsUpperLt0 <- T.cppAnd lhsUpperLt0 rhsUpperLt0
-  lhsUpperLt0AndNotrhsUpperLt0 <- do t0 <- T.cppNot rhsUpperLt0
-                                     T.cppAnd lhsUpperLt0 t0
-
   -- lines 868-889
-  lowerEnd <- T.cppCond (T.cppAnd lhsLowerGte0 rhsLowerGte0)
+  lowerEnd <- T.cppCond lhsAndrhsLowerGte0
               lower0
+              -- we do rhs first cause lhs is a fall through if
               (T.cppCond rhsUpperLt0 lower2 (T.cppCond lhsUpperLt0 lower1 int32Min))
-  upperEnd <- T.cppCond (T.cppAnd lhsLowerGte0 rhsLowerGte0)
+  upperEnd <- T.cppCond lhsAndrhsLowerGte0
               upper0
               (T.cppCond rhsUpperLt0 neg1 (T.cppCond lhsUpperLt0 neg1 int32Max))
 
