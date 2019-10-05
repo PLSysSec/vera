@@ -6,6 +6,11 @@ module DSL.Typed ( vassert
                  , assertDef
                  , newInputVar
                  , newResultVar
+                 , is32Bits
+                 , is64Bits
+                 , is16Bits
+                 , true
+                 , false
                  , bool
                  , int32
                  , uint32
@@ -224,6 +229,12 @@ makeNum :: Integer -> (Integer -> D.Verif D.Node) -> Type -> D.Verif VNode
 makeNum val numMaker ty = do
   node <- numMaker val
   newDefinedNode node ty
+
+false :: D.Verif VNode
+false = makeNum 0 D.i1c Bool
+
+true :: D.Verif VNode
+true = makeNum 1 D.i1c Bool
 
 unum :: Integer -> D.Verif VNode
 unum val = makeNum val D.i32c Unsigned

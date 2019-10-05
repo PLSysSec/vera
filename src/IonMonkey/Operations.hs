@@ -69,7 +69,7 @@ add left right = do
   fractFlag <- T.cppOr (canHaveFractionalPart left) (canHaveFractionalPart right)
   negZeroFlag <- T.cppOr (canBeNegativeZero left) (canBeNegativeZero right)
 
-  result <- numResultRange "result"
+  result <- resultRange T.Double "result"
   T.vassign (lower result) l
   T.vassign (upper result) h
   T.vassign (canHaveFractionalPart result) fractFlag
@@ -87,7 +87,7 @@ sub = undefined
 and :: Range -> Range -> T.Verif Range
 and left right = do
 
-  result <- signedResultRange "result"
+  result <- resultRange T.Signed "result"
   zero <- T.num 0
 
   -- Condition for choosing the return value
@@ -115,7 +115,7 @@ and left right = do
 -- IonMonkey function only applies to i32s
 or :: Range -> Range -> T.Verif Range
 or _lhs _rhs = do
-  result <- signedResultRange "result"
+  result <- resultRange T.Signed "result"
   zero <- T.num 0
   neg1 <- T.num (-1)
   uint32Max <- T.uintMax
@@ -219,7 +219,7 @@ xor left right = undefined
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#955
 not :: Range -> T.Verif Range
 not op = do
-  result <- signedResultRange "result"
+  result <- resultRange T.Signed "result"
   T.cppNot (upper op) >>= T.vassign (lower result)
   T.cppNot (lower op) >>= T.vassign (upper result)
   return result
@@ -255,7 +255,7 @@ lsh shiftee val = do
 
     T.cppAnd lowerDoesntLoseBits upperDoesntLoseBits
 
-  result <- signedResultRange "result"
+  result <- resultRange T.Signed "result"
 
   -- fallback range
   i32min <- T.intMin
@@ -273,7 +273,7 @@ rsh shiftee val = do
   thirtyOne <- T.num 31
   shift <- T.cppAnd val thirtyOne
   -- Make a new range whose low bound is shiftee_l >> shift, shiftee_h >> shift
-  result <- signedResultRange "result"
+  result <- resultRange T.Signed "result"
   T.cppShiftRight (lower shiftee) shift >>= T.vassign (lower result)
   T.cppShiftRight (upper shiftee) shift >>= T.vassign (upper result)
   return result
@@ -296,7 +296,7 @@ ursh lhs c = do
   falseLower <- T.unum 0
   falseUpper <- T.uintMax >>= \m -> T.cppShiftRight m shift
 
-  result <- unsignedResultRange "result"
+  result <- resultRange T.Unsigned "result"
   T.cppCond isNegOrNonNeg trueLower falseLower >>= T.vassign (lower result)
   T.cppCond isNegOrNonNeg trueUpper falseUpper >>= T.vassign (upper result)
   return result
@@ -305,7 +305,7 @@ ursh lhs c = do
 lsh' :: Range -> Range -> T.Verif Range
 lsh' _ _ = do
   -- Trivially correct
-  result <- signedResultRange "result"
+  result <- resultRange T.Signed "result"
   T.intMin >>= T.vassign (lower result)
   T.intMax >>= T.vassign (upper result)
   return result
@@ -350,7 +350,7 @@ rsh' shiftee shifter = do
     falseMax <- T.cppShiftRight (upper shiftee) shiftUpper
     T.cppCond shifteeNeg trueMax falseMax
 
-  result <- signedResultRange "result"
+  result <- resultRange T.Signed "result"
   T.vassign (lower result) min
   T.vassign (upper result) max
   return result
@@ -363,7 +363,7 @@ ursh' left _ = do
   zero <- T.unum 0
   uint32max <- T.uintMax
 
-  result <- unsignedResultRange "result"
+  result <- resultRange T.Unsigned "result"
   -- 0, lhs->isFiniteNonNegative() ? lhs->upper() : UINT32_MAX
   T.vassign (lower result) zero
 

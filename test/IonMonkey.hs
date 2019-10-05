@@ -23,8 +23,8 @@ andTest :: BenchTest
 andTest = benchTestCase "and" $ do
   (c0, c1, c2, c3, c4) <- T.evalVerif Nothing $ do
 
-    leftRange <- signedInputRange "left start range"
-    rightRange <- signedInputRange "right start range"
+    leftRange <- inputRange T.Signed "left start range"
+    rightRange <- inputRange T.Signed "right start range"
     resultRange <- and leftRange rightRange
     c0 <- verifyConsistent
     c1 <- verifySaneRange resultRange
@@ -48,7 +48,7 @@ notTest = benchTestCase "not" $ do
   (c0, c1, c2, c3, c4) <- T.evalVerif Nothing $ do
 
     -- Setup the result range and make sure lower < upper
-    opRange <- signedInputRange "operand range"
+    opRange <- inputRange T.Signed "operand range"
     resultRange <- not opRange
     c0 <- verifyConsistent
     c1 <- verifySaneRange resultRange
@@ -72,7 +72,7 @@ lshTest :: BenchTest
 lshTest = benchTestCase "lsh" $ do
   (c0, c1, c2, c3, c4) <- T.evalVerif Nothing $ do
 
-    shifteeRange <- signedInputRange "shiftee range"
+    shifteeRange <- inputRange T.Signed "shiftee range"
     val <- T.newInputVar T.Signed "val"
     resultRange <- lsh shifteeRange val
     c0 <- verifyConsistent
@@ -97,7 +97,7 @@ rshTest :: BenchTest
 rshTest = benchTestCase "rsh" $ do
   (c0, c1, c2, c3, c4) <- T.evalVerif Nothing $ do
 
-    shifteeRange <- signedInputRange "shiftee range"
+    shifteeRange <- inputRange T.Signed "shiftee range"
     val <- T.newInputVar T.Signed "val"
     resultRange <- rsh shifteeRange val
     c0 <- verifyConsistent
@@ -123,7 +123,7 @@ urshTest = benchTestCase "ursh" $ T.evalVerif Nothing $ do
 
   -- "ursh's left operand is uint32, not int32, but for range
   -- analysis we currently approximate it as int32."
-  shifteeRange <- signedInputRange "shiftee range"
+  shifteeRange <- inputRange T.Signed "shiftee range"
   -- int32_t c
   val <- T.newInputVar T.Signed "val"
 
@@ -150,8 +150,8 @@ lsh'Test :: BenchTest
 lsh'Test = benchTestCase "lsh'" $ do
   (c0, c1, c2, c3, c4) <- T.evalVerif Nothing $ do
 
-    lhs <- signedInputRange "range ov value to shift"
-    rhs <- signedInputRange "shift by"
+    lhs <- inputRange T.Signed "range of value to shift"
+    rhs <- inputRange T.Signed "shift by"
     resultRange <- lsh' lhs rhs
     c0 <- verifyConsistent
     c1 <- verifySaneRange resultRange
@@ -175,8 +175,8 @@ rsh'Test :: BenchTest
 rsh'Test = benchTestCase "rsh'" $ do
   (c0, c1, c2, c3, c4) <- T.evalVerif Nothing $ do
 
-    leftRange <- signedInputRange "shitee range"
-    rightRange <- signedInputRange "shifter range"
+    leftRange <- inputRange T.Signed "shitee range"
+    rightRange <- inputRange T.Signed "shifter range"
     resultRange <- rsh' leftRange rightRange
     c0 <- verifyConsistent
     c1 <- verifySaneRange resultRange
@@ -205,8 +205,8 @@ ursh'Test = benchTestCase "ursh'" $ do
     -- currently approximate it as int32."
     -- MOZ_ASSERT(lhs->isInt32());
     -- MOZ_ASSERT(lhs->isInt32());
-    leftRange <- signedInputRange "shitee range"
-    rightRange <- signedInputRange "shifter range"
+    leftRange <- inputRange T.Signed "shitee range"
+    rightRange <- inputRange T.Signed "shifter range"
     resultRange <- ursh' leftRange rightRange
     c0 <- verifyConsistent
     c1 <- verifySaneRange resultRange
@@ -231,8 +231,8 @@ orTest :: BenchTest
 orTest = benchTestCase "or" $ do
   (c0, c1, c2, c3, c4) <- T.evalVerif Nothing $ do
 
-    leftRange <- signedInputRange "left start range"
-    rightRange <- signedInputRange "right start range"
+    leftRange <- inputRange T.Signed "left start range"
+    rightRange <- inputRange T.Signed "right start range"
     resultRange <- or leftRange rightRange
     c0 <- verifyConsistent
     c1 <- verifySaneRange resultRange

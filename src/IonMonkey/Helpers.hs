@@ -41,9 +41,9 @@ jsValIntMax = T.num 0x7fffffff
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#136
 --  static const uint16_t MaxFiniteExponent = mozilla::FloatingPoint<double>::kExponentBias;
---
+-- TODO: WHAT IS THIS????? MLFB
 maxFiniteExponent :: D.Verif T.VNode
-maxFiniteExponent = undefined
+maxFiniteExponent = T.unum16 4
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#145
 -- static const uint16_t IncludesInfinityAndNaN = UINT16_MAX;
