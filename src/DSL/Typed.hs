@@ -142,6 +142,8 @@ newInputVar ty name = do
            Unsigned   -> D.i32v name
            Signed64   -> D.i64v name
            Unsigned64 -> D.i64v name
+           Signed16   -> D.i16v name
+           Unsigned16 -> D.i16v name
            _          -> error "Not yet supported"
   undef <- D.i1c 0
   return $ VNode undef var ty
@@ -154,6 +156,8 @@ newResultVar Signed     = int32
 newResultVar Unsigned   = uint32
 newResultVar Signed64   = int64
 newResultVar Unsigned64 = uint64
+newResultVar Signed16   = int16
+newResultVar Unsigned16 = uint16
 newResultVar _          = error "No more"
 
 
