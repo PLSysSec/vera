@@ -41,7 +41,9 @@ packages:
 #
 extra-deps:
   - github: PLSysSec/haskell-boolector
-    commit: bcfdf83ab57503637a6857fed933de6b39a742a4 
+    commit: bcfdf83ab57503637a6857fed933de6b39a742a4
+  - github: PLSysSec/haskell-z3
+    commit: a9ae8f6356690a55198ef54a72c274087e54edf9
 
 # Override default flag values for local packages and extra-deps
 # flags: {}
