@@ -7,9 +7,62 @@ module IonMonkey.Helpers ( noInt32LowerBound
                          , countLeadingZeroes32
                          , countTrailingZeroes32
                          ) where
+import           Control.Monad     (when)
 import qualified DSL.DSL           as D
 import qualified DSL.Typed         as T
 import           IonMonkey.Objects
+
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#370
+-- https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#621
+setRange :: T.VNode -- ^ Lower
+         -> T.VNode -- ^ Upper
+         -> T.VNode -- ^ Fractional
+         -> T.VNode -- ^ Negative zero
+         -> T.VNode -- ^ Exponent
+         -> Range
+         -> D.Verif ()
+setRange low up fract nzero exp = error ""
+
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#252
+setLowerInit :: T.VNode
+             -> Range
+             -> D.Verif ()
+setLowerInit lower_ range = do
+  when (T.vtype lower_ /= T.Signed64) $ error "Expected a signed 64-bit lower"
+  min <- jsValIntMin
+  max <- jsValIntMax
+  castIntMin <- T.cppCast min T.Signed64
+  castIntMax <- T.cppCast max T.Signed64
+  t <- T.true
+  f <- T.false
+  -- The default values:
+  -- else
+  --  lower_ = int32_t(x);
+  --  hasInt32LowerBound_ = true;
+  defaultLower <- T.cppCast lower_ T.Unsigned
+  let defaultHasLower = t
+  -- if (x > JSVAL_INT_MAX)
+  --    lower_ = JSVAL_INT_MAX;
+  --    hasInt32LowerBound_ = true;)
+  oobUpper <- T.cppGt lower_ castIntMax
+  lower' <- T.cppCond oobUpper max defaultLower
+  hasLower' <- T.cppCond oobUpper t defaultHasLower
+  -- else if (x < JSVAL_INT_MIN)
+  --     lower_ = JSVAL_INT_MIN
+  --     hasInt32LowerBound_ = false
+  oobLower <- T.cppLt lower_ castIntMin
+  lower'' <- T.cppCond oobLower min lower'
+  hasLower'' <- T.cppCond oobLower f hasLower'
+  -- Set the flag and the bound
+  T.vassign lower'' (lower range)
+  T.vassign hasLower'' (hasInt32LowerBound range)
+
+setUpperInit :: T.VNode
+             -> Range
+             -> D.Verif ()
+setUpperInit upper range = do
+  when (T.vtype upper /= T.Signed64) $ error "Expected a signed 64-bit lower"
+
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#154
 -- static const int64_t NoInt32LowerBound = int64_t(JSVAL_INT_MIN) - 1;
