@@ -14,20 +14,42 @@ import           IonMonkey.Objects
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#154
 -- static const int64_t NoInt32LowerBound = int64_t(JSVAL_INT_MIN) - 1;
 noInt32LowerBound :: D.Verif T.VNode
-noInt32LowerBound = error "not done yet, need int64"
+noInt32LowerBound = do
+  jsMin <- jsValIntMin
+  jsMinExt <- T.cppCast jsMin T.Signed64
+  one <- T.num64 1
+  T.cppSub jsMinExt one
 
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#153
+-- static const int64_t NoInt32UpperBound = int64_t(JSVAL_INT_MAX) + 1;
 noInt32UpperBound :: D.Verif T.VNode
-noInt32UpperBound = error "not done yet, need int64"
+noInt32UpperBound = do
+  jsMax <- jsValIntMax
+  jsMaxExt <- T.cppCast jsMax T.Signed64
+  one <- T.num64 1
+  T.cppAdd jsMaxExt one
 
--- | #define JSVAL_INT_MIN ((int32_t)0x80000000)
+-- | https://searchfox.org/mozilla-central/source/js/public/Value.h#35
+-- #define JSVAL_INT_MIN ((int32_t)0x80000000)
 jsValIntMin :: D.Verif T.VNode
 jsValIntMin = T.num 0x80000000
 
+-- | https://searchfox.org/mozilla-central/source/js/public/Value.h#36
+-- #define JSVAL_INT_MAX ((int32_t)0x7fffffff)
+jsValIntMax :: D.Verif T.VNode
+jsValIntMax = T.num 0x7fffffff
+
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#136
+--  static const uint16_t MaxFiniteExponent = mozilla::FloatingPoint<double>::kExponentBias;
+--
 maxFiniteExponent :: D.Verif T.VNode
 maxFiniteExponent = undefined
 
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#145
+-- static const uint16_t IncludesInfinityAndNaN = UINT16_MAX;
+-- #   define UINT16_MAX      ((uint16_t)(65535U))
 includesInfinityAndNan :: D.Verif T.VNode
-includesInfinityAndNan = undefined
+includesInfinityAndNan = T.unum16 65535
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#551
 isFiniteNonNegative :: Range -> D.Verif T.VNode

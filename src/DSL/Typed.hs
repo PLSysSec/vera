@@ -1,5 +1,5 @@
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FlexibleInstances #-}
 module DSL.Typed ( vassert
                  , vassign
                  , assertUndef
@@ -11,10 +11,14 @@ module DSL.Typed ( vassert
                  , uint32
                  , int64
                  , uint64
+                 , int16
+                 , uint16
                  , num
                  , unum
                  , num64
                  , unum64
+                 , num16
+                 , unum16
                  , VNode
                  , Type(..)
                  , vtype
@@ -189,55 +193,55 @@ assertDef node = do
 -- Variables and constants
 --
 
-bool :: String -> D.Verif VNode
-bool name = do
-  var <- D.i1v name
+makeVar :: String -> (String -> D.Verif D.Node) -> Type -> D.Verif VNode
+makeVar name varMaker ty = do
+  var <- varMaker name
   undef <- D.i1v $ name ++ "_undef"
-  return $ VNode undef var Bool
+  return $ VNode undef var ty
+
+bool :: String -> D.Verif VNode
+bool name = makeVar name D.i1v Bool
 
 int32 :: String -> D.Verif VNode
-int32 name = do
-  var <- D.i32v name
-  undef <- D.i1v $ name ++ "_undef"
-  return $ VNode undef var Signed
+int32 name = makeVar name D.i32v Signed
 
 uint32 :: String -> D.Verif VNode
-uint32 name = do
-  var <- D.i32v name
-  undef <- D.i1v $ name ++ "_undef"
-  return $ VNode undef var Unsigned
+uint32 name = makeVar name D.i32v Unsigned
 
 int64 :: String -> D.Verif VNode
-int64 name = do
-  var <- D.i64v name
-  undef <- D.i1v $ name ++ "_undef"
-  return $ VNode undef var Signed64
+int64 name = makeVar name D.i64v Signed64
 
 uint64 :: String -> D.Verif VNode
-uint64 name = do
-  var <- D.i64v name
-  undef <- D.i1v $ name ++ "_undef"
-  return $ VNode undef var Unsigned64
+uint64 name = makeVar name D.i64v Unsigned64
+
+int16 :: String -> D.Verif VNode
+int16 name = makeVar name D.i16v Signed16
+
+uint16 :: String -> D.Verif VNode
+uint16 name = makeVar name D.i16v Unsigned16
+
+makeNum :: Integer -> (Integer -> D.Verif D.Node) -> Type -> D.Verif VNode
+makeNum val numMaker ty = do
+  node <- numMaker val
+  newDefinedNode node ty
 
 unum :: Integer -> D.Verif VNode
-unum val = do
-  node <- D.i32c val
-  newDefinedNode node Unsigned
+unum val = makeNum val D.i32c Unsigned
 
 num :: Integer -> D.Verif VNode
-num val = do
-  node <- D.i32c val
-  newDefinedNode node Signed
+num val = makeNum val D.i32c Signed
 
 unum64 :: Integer -> D.Verif VNode
-unum64 val = do
-  node <- D.i64c val
-  newDefinedNode node Unsigned64
+unum64 val = makeNum val D.i64c Unsigned64
 
 num64 :: Integer -> D.Verif VNode
-num64 val = do
-  node <- D.i64c val
-  newDefinedNode node Signed64
+num64 val = makeNum val D.i64c Signed64
+
+unum16 :: Integer -> D.Verif VNode
+unum16 val = makeNum val D.i16c Unsigned16
+
+num16 :: Integer -> D.Verif VNode
+num16 val = makeNum val D.i16c Signed16
 
 --
 --
