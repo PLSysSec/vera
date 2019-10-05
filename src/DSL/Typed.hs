@@ -119,6 +119,17 @@ isSigned _        = False
 isUnsigned :: Type -> Bool
 isUnsigned = not . isSigned
 
+numBits :: VNode -> Int
+numBits = numBits' . vtype
+
+numBits' :: Type -> Int
+numBits' Bool = 1
+numBits' ty
+    | is32Bits ty = 32
+    | is64Bits ty = 64
+    | is16Bits ty = 16
+    | otherwise   = error "Not supported type"
+
 is32Bits :: Type -> Bool
 is32Bits Signed   = True
 is32Bits Unsigned = True
@@ -379,8 +390,17 @@ noopWrapper :: VNode
             -> (D.Node -> D.Node -> D.Verif D.Node)
             -> D.Verif VNode
 noopWrapper left right op = do
+  unless (numBits left == numBits right) $ error "Mismatched bits to operation"
   result <- op (vnode left) (vnode right)
-  let ty = if isUnsigned (vtype left) && isUnsigned (vtype right) then Unsigned else Signed
+  let (s, u) = case numBits left of
+                 1  -> (Bool, Bool)
+                 16 -> (Signed16, Unsigned16)
+                 32 -> (Signed, Unsigned)
+                 64 -> (Signed64, Unsigned64)
+                 e  -> error $ unwords [ "Unsupported type for operation"
+                                       , show e
+                                       ]
+  let ty = if isUnsigned (vtype left) && isUnsigned (vtype right) then u else s
   newMaybeDefinedNode left right result ty
 
 cppNeg :: VNode
@@ -503,7 +523,7 @@ cppShiftLeft left right
                else return parentsUndef
 
       result <- D.safeSll (vnode left) (vnode right)
-      return $ VNode undef result Unsigned
+      return $ VNode undef result $ vtype left
 
   | otherwise = do
 
@@ -528,7 +548,7 @@ cppShiftLeft left right
       undef <- D.or opUndef parentsUndef
 
       result <- D.safeSll (vnode left) (vnode right)
-      return $ VNode undef result Signed
+      return $ VNode undef result $ vtype left
 
 -- | C++ right shift operator. We are consulating CPP instead of Clang reference
 -- because we need to know what the CPP compiler does *before* generating IR.

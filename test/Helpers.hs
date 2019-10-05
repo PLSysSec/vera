@@ -17,8 +17,8 @@ setRangeTest = benchTestCase "set range" $ do
   r <- T.evalVerif Nothing $ do
 
     r1 <- resultRange T.Signed "r1"
-    l1 <- T.num64 18446744073709551615
-    u1 <- T.num64 18446744073709551615
+    l1 <- T.num64 (-9223372036854775808)
+    u1 <- T.num64 (-9223372036854775808)
     f <- T.false
     n <- T.false
     e <- T.unum16 6
@@ -28,6 +28,11 @@ setRangeTest = benchTestCase "set range" $ do
     l2 <- T.num64 9223372036854775807
     u2 <- T.num64 9223372036854775807
     setRange l2 u2 f n e r2
+
+    r3 <- resultRange T.Signed "r3"
+    l3 <- T.num64 1
+    u3 <- T.num64 5
+    setRange l3 u3 f n e r3
 
     T.runSolver
 
@@ -39,6 +44,10 @@ setRangeTest = benchTestCase "set range" $ do
                        , ("r2_upper", 2147483647)
                        , ("r2_hasLowerBound", -1)
                        , ("r2_hasUpperBound", 0)
+                       , ("r3_lower", 1)
+                       , ("r3_upper", 5)
+                       , ("r3_hasLowerBound", -1)
+                       , ("r3_hasUpperBound", -1)
                        ]
 
 

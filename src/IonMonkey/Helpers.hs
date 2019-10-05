@@ -43,8 +43,8 @@ setLowerInit lower_ range = do
   when (T.vtype lower_ /= T.Signed64) $ error "Expected a signed 64-bit lower"
   min <- jsValIntMin
   max <- jsValIntMax
-  castIntMin <- jsValIntMin64
-  castIntMax <- jsValIntMax64
+  castIntMin <- T.cppCast min T.Signed64 --jsValIntMin64
+  castIntMax <- T.cppCast max T.Signed64 --jsValIntMax64
   t <- T.true
   f <- T.false
   -- The default values:
@@ -77,8 +77,8 @@ setUpperInit upper_ range = do
   when (T.vtype upper_ /= T.Signed64) $ error "Expected a signed 64-bit lower"
   min <- jsValIntMin
   max <- jsValIntMax
-  castIntMin <- jsValIntMin64
-  castIntMax <- jsValIntMax64
+  castIntMin <- T.cppCast min T.Signed64 --jsValIntMin64
+  castIntMax <- T.cppCast max T.Signed64 --jsValIntMax64
   t <- T.true
   f <- T.false
   -- DEFAULT
@@ -127,7 +127,7 @@ jsValIntMin :: D.Verif T.VNode
 jsValIntMin = T.num 0x80000000
 
 jsValIntMin64 :: D.Verif T.VNode
-jsValIntMin64 = T.num64 0x80000000
+jsValIntMin64 = T.num64 (-2147483648)
 
 -- | https://searchfox.org/mozilla-central/source/js/public/Value.h#36
 -- #define JSVAL_INT_MAX ((int32_t)0x7fffffff)
@@ -135,7 +135,7 @@ jsValIntMax :: D.Verif T.VNode
 jsValIntMax = T.num 0x7fffffff
 
 jsValIntMax64 :: D.Verif T.VNode
-jsValIntMax64 = T.num64 0x7fffffff
+jsValIntMax64 = T.num64 2147483647
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#136
 --  static const uint16_t MaxFiniteExponent = mozilla::FloatingPoint<double>::kExponentBias;
