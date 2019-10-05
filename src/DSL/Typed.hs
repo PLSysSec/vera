@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE CPP #-}
 module DSL.Typed ( vassert
                  , vassign
                  , assertUndef
@@ -84,6 +85,61 @@ Therefore, this file is gonna do three things:
 - Undefined behavior propagation
 
 -}
+
+--
+-- Helper macros
+--
+
+#define DEFINEUNIOPCLASS(ClassName, opName) \
+class ClassName n0 where { \
+  opName :: n0 -> D.Verif VNode \
+};\
+instance ClassName (D.Verif VNode) where { \
+  opName m0 = m0 >>= \n0 -> opName n0 \
+};
+
+#define DEFINEBINOPCLASS(ClassName, opName) \
+class ClassName n0 n1 where { \
+  opName :: n0 -> n1 -> D.Verif VNode \
+};\
+instance ClassName (D.Verif VNode) VNode where { \
+  opName m0 n1 = m0 >>= \n0 -> opName n0 n1 \
+};\
+instance ClassName (D.Verif VNode) (D.Verif VNode) where { \
+  opName m0 m1 = m0 >>= \n0 -> m1 >>= \n1 -> opName n0 n1 \
+};\
+instance ClassName VNode (D.Verif VNode) where { \
+  opName n0 m1 = m1 >>= \n1 -> opName n0 n1 \
+};
+
+
+#define DEFINETEROPCLASS(ClassName, opName) \
+class ClassName n0 n1 n2 where { \
+  opName :: n0 -> n1 -> n2 -> D.Verif VNode \
+};\
+instance ClassName (D.Verif VNode) VNode VNode where { \
+  opName m0 n1 n2 = m0 >>= \n0 -> opName n0 n1 n2 \
+};\
+instance ClassName (D.Verif VNode) (D.Verif VNode) VNode where { \
+  opName m0 m1 n2 = m0 >>= \n0 -> m1 >>= \n1 -> opName n0 n1 n2 \
+};\
+instance ClassName (D.Verif VNode) VNode (D.Verif VNode) where { \
+  opName m0 n1 m2 = m0 >>= \n0 -> m2 >>= \n2 -> opName n0 n1 n2 \
+};\
+instance ClassName (D.Verif VNode) (D.Verif VNode) (D.Verif VNode) where { \
+  opName m0 m1 m2 = m0 >>= \n0 -> m1 >>= \n1 -> m2 >>= \n2 -> opName n0 n1 n2 \
+};\
+instance ClassName VNode (D.Verif VNode) VNode where { \
+  opName n0 m1 n2 = m1 >>= \n1 -> opName n0 n1 n2 \
+};\
+instance ClassName VNode (D.Verif VNode) (D.Verif VNode) where { \
+  opName n0 m1 m2 = m1 >>= \n1 -> m2 >>= \n2 -> opName n0 n1 n2 \
+};\
+instance ClassName VNode VNode (D.Verif VNode) where {\
+  opName n0 n1 m2 = m2 >>= \n2 -> opName n0 n1 n2 \
+};
+
+
 
 --
 -- Verbose, typed nodes
@@ -403,58 +459,51 @@ noopWrapper left right op = do
   let ty = if isUnsigned (vtype left) && isUnsigned (vtype right) then u else s
   newMaybeDefinedNode left right result ty
 
-cppNeg :: VNode
-       -> D.Verif VNode
-cppNeg node = do
-  result <- D.neg (vnode node)
-  return $ VNode (vundef node) result (vtype node)
+DEFINEUNIOPCLASS(CppNeg, cppNeg)
+instance CppNeg VNode where
+  cppNeg node = do
+    result <- D.neg (vnode node)
+    return $ VNode (vundef node) result (vtype node)
 
-cppNot :: VNode
-       -> D.Verif VNode
-cppNot node = do
-  result <- D.not (vnode node)
-  return $ VNode (vundef node) result (vtype node)
+DEFINEUNIOPCLASS(CppNot, cppNot)
+instance CppNot VNode where
+  cppNot node = do
+    result <- D.not (vnode node)
+    return $ VNode (vundef node) result (vtype node)
 
-cppEq :: VNode
-      -> VNode
-      -> D.Verif VNode
-cppEq left right = noopWrapper left right D.eq
+DEFINEBINOPCLASS(CppEq, cppEq)
+instance CppEq VNode VNode where
+  cppEq left right = noopWrapper left right D.eq
 
-cppOr :: VNode
-      -> VNode
-      -> D.Verif VNode
-cppOr left right = noopWrapper left right D.or
+DEFINEBINOPCLASS(CppOr, cppOr)
+instance CppOr VNode VNode where
+  cppOr left right = noopWrapper left right D.or
 
-cppAnd :: VNode
-       -> VNode
-       -> D.Verif VNode
-cppAnd left right = noopWrapper left right D.and
+DEFINEBINOPCLASS(CppAnd, cppAnd)
+instance CppAnd VNode VNode where
+  cppAnd left right = noopWrapper left right D.and
 
-cppSub :: VNode
-       -> VNode
-       -> D.Verif VNode
-cppSub left right = noopWrapper left right D.sub
+DEFINEBINOPCLASS(CppSub, cppSub)
+instance CppSub VNode VNode where
+  cppSub left right = noopWrapper left right D.sub
 
-cppAdd :: VNode
-       -> VNode
-       -> D.Verif VNode
-cppAdd left right = noopWrapper left right D.add
+DEFINEBINOPCLASS(CppAdd, cppAdd)
+instance CppAdd VNode VNode where
+  cppAdd left right = noopWrapper left right D.add
 
-cppMin :: VNode
-       -> VNode
-       -> D.Verif VNode
-cppMin right left
-  | isUnsigned (vtype right) && isUnsigned (vtype left) = noopWrapper left right D.umin
-  | isSigned (vtype right) && isSigned (vtype left) = noopWrapper left right D.smin
-  | otherwise = error "Compiler error: Can't use std:min on a signed and unsigned"
+DEFINEBINOPCLASS(CppMin, cppMin)
+instance CppMin VNode VNode where
+  cppMin right left
+    | isUnsigned (vtype right) && isUnsigned (vtype left) = noopWrapper left right D.umin
+    | isSigned (vtype right) && isSigned (vtype left) = noopWrapper left right D.smin
+    | otherwise = error "Compiler error: Can't use std:min on a signed and unsigned"
 
-cppMax :: VNode
-       -> VNode
-       -> D.Verif VNode
-cppMax right left
-  | isUnsigned (vtype right) && isUnsigned (vtype left) = noopWrapper left right D.umax
-  | isSigned (vtype right) && isSigned (vtype left) = noopWrapper left right D.smax
-  | otherwise = error "Compiler error: Can't use std:max on a signed and unsigned"
+DEFINEBINOPCLASS(CppMax, cppMax)
+instance CppMax VNode VNode where
+  cppMax right left
+    | isUnsigned (vtype right) && isUnsigned (vtype left) = noopWrapper left right D.umax
+    | isSigned (vtype right) && isSigned (vtype left) = noopWrapper left right D.smax
+    | otherwise = error "Compiler error: Can't use std:max on a signed and unsigned"
 
 cppCompareWrapper :: VNode
                   -> VNode
@@ -469,17 +518,21 @@ cppCompareWrapper left right uCompare sCompare
      compare <- sCompare (vnode left) (vnode right)
      newMaybeDefinedNode left right compare Bool
 
-cppGt :: VNode -> VNode -> D.Verif VNode
-cppGt left right = cppCompareWrapper left right D.ugt D.sgt
+DEFINEBINOPCLASS(CppGt, cppGt)
+instance CppGt VNode VNode where
+  cppGt left right = cppCompareWrapper left right D.ugt D.sgt
 
-cppGte :: VNode -> VNode -> D.Verif VNode
-cppGte left right = cppCompareWrapper left right D.ugte D.sgte
+DEFINEBINOPCLASS(CppGte, cppGte)
+instance CppGte VNode VNode where
+  cppGte left right = cppCompareWrapper left right D.ugte D.sgte
 
-cppLt :: VNode -> VNode -> D.Verif VNode
-cppLt left right = cppCompareWrapper left right D.ult D.slt
+DEFINEBINOPCLASS(CppLt, cppLt)
+instance CppLt VNode VNode where
+  cppLt left right = cppCompareWrapper left right D.ult D.slt
 
-cppLte :: VNode -> VNode -> D.Verif VNode
-cppLte left right = cppCompareWrapper left right D.ulte D.slte
+DEFINEBINOPCLASS(CppLte, cppLte)
+instance CppLte VNode VNode where
+  cppLte left right = cppCompareWrapper left right D.ulte D.slte
 
 -- | C++ left shift operator. We are consulting CPP instead of Clang reference
 -- because we need to know what the CPP compiler will actually generate.
@@ -509,46 +562,47 @@ cppLte left right = cppCompareWrapper left right D.ulte D.slte
 --
 -- Clang turns 1 << -1 into undef
 --
-cppShiftLeft :: VNode -> VNode -> D.Verif VNode
-cppShiftLeft left right
-  | isUnsigned (vtype left) = do
+DEFINEBINOPCLASS(CppShiftLeft, cppShiftLeft)
+instance CppShiftLeft VNode VNode where
+  cppShiftLeft left right
+    | isUnsigned (vtype left) = do
 
-      parentsUndef <- D.or (vundef left) (vundef right)
-      -- If the right is signed and negative, undefined behavior
-      undef <- if isSigned (vtype right)
-               then do
-                 zero <- D.i32c 0
-                 opUndef <- D.slt (vnode right) zero
-                 D.or parentsUndef opUndef
-               else return parentsUndef
+        parentsUndef <- D.or (vundef left) (vundef right)
+        -- If the right is signed and negative, undefined behavior
+        undef <- if isSigned (vtype right)
+                then do
+                  zero <- D.i32c 0
+                  opUndef <- D.slt (vnode right) zero
+                  D.or parentsUndef opUndef
+                else return parentsUndef
 
-      result <- D.safeSll (vnode left) (vnode right)
-      return $ VNode undef result $ vtype left
+        result <- D.safeSll (vnode left) (vnode right)
+        return $ VNode undef result $ vtype left
 
-  | otherwise = do
+    | otherwise = do
 
-      -- Do the operation in 64-bits and see if any of the left bits are set.
-      -- If so, the operation has undefined behavior because some bit was
-      -- shifted off the end of the 32-bit variable
-      left64 <- D.uext (vnode left) 32
-      right64 <- D.uext (vnode right) 32
-      result64 <- D.safeSll left64 right64
-      top32 <- D.slice result64 63 32
-      zero <- D.i32c 0
+        -- Do the operation in 64-bits and see if any of the left bits are set.
+        -- If so, the operation has undefined behavior because some bit was
+        -- shifted off the end of the 32-bit variable
+        left64 <- D.uext (vnode left) 32
+        right64 <- D.uext (vnode right) 32
+        result64 <- D.safeSll left64 right64
+        top32 <- D.slice result64 63 32
+        zero <- D.i32c 0
 
-      -- If the right is greater than 32, it is definitely undef
-      -- This will also catch trying to shift by a negative
-      thirtyTwo <- D.i32c 32
+        -- If the right is greater than 32, it is definitely undef
+        -- This will also catch trying to shift by a negative
+        thirtyTwo <- D.i32c 32
 
-      -- Is it undef?
-      opUndef1 <- D.eq top32 zero >>= D.not
-      opUndef2 <- D.ugt (vnode right) thirtyTwo
-      opUndef <- D.or opUndef1 opUndef2
-      parentsUndef <- D.or (vundef left) (vundef right)
-      undef <- D.or opUndef parentsUndef
+        -- Is it undef?
+        opUndef1 <- D.eq top32 zero >>= D.not
+        opUndef2 <- D.ugt (vnode right) thirtyTwo
+        opUndef <- D.or opUndef1 opUndef2
+        parentsUndef <- D.or (vundef left) (vundef right)
+        undef <- D.or opUndef parentsUndef
 
-      result <- D.safeSll (vnode left) (vnode right)
-      return $ VNode undef result $ vtype left
+        result <- D.safeSll (vnode left) (vnode right)
+        return $ VNode undef result $ vtype left
 
 -- | C++ right shift operator. We are consulating CPP instead of Clang reference
 -- because we need to know what the CPP compiler does *before* generating IR.
@@ -581,79 +635,59 @@ cppShiftLeft left right
 -- Shifting by a negative is undefined behavior:
 -- 5 >> -8 compiles at Clang -O3 to undef
 --
-cppShiftRight :: VNode -> VNode -> D.Verif VNode
-cppShiftRight left right
-  | isUnsigned (vtype left) = do
-      undef <- makeUndef
-      result <- D.safeSrl (vnode left) (vnode right)
-      return $ VNode undef result Unsigned
-  | otherwise = do
-      undef <- makeUndef
-      result <- D.safeSra (vnode left) (vnode right)
-      return $ VNode undef result Signed
-  where
-    makeUndef = do
-      zero <- D.i32c 0
-      opUndef <- D.slt (vnode right) zero
-      parentsUndef <- D.or (vundef left) (vundef right)
-      D.or opUndef parentsUndef
+DEFINEBINOPCLASS(CppShiftRight, cppShiftRight)
+instance CppShiftRight VNode VNode where
+  cppShiftRight left right
+    | isUnsigned (vtype left) = do
+        undef <- makeUndef
+        result <- D.safeSrl (vnode left) (vnode right)
+        return $ VNode undef result Unsigned
+    | otherwise = do
+        undef <- makeUndef
+        result <- D.safeSra (vnode left) (vnode right)
+        return $ VNode undef result Signed
+    where
+      makeUndef = do
+        zero <- D.i32c 0
+        opUndef <- D.slt (vnode right) zero
+        parentsUndef <- D.or (vundef left) (vundef right)
+        D.or opUndef parentsUndef
 
-class CppCond n0 n1 n2 where
-  cppCond :: n0 -> n1 -> n2 -> D.Verif VNode
-
-instance CppCond (D.Verif VNode) VNode VNode where
-  cppCond m0 n1 n2 = m0 >>= \n0 -> cppCond n0 n1 n2
-
-instance CppCond (D.Verif VNode) (D.Verif VNode) VNode where
-  cppCond m0 m1 n2 = m0 >>= \n0 -> m1 >>= \n1 -> cppCond n0 n1 n2
-
-instance CppCond (D.Verif VNode) VNode (D.Verif VNode) where
-  cppCond m0 n1 m2 = m0 >>= \n0 -> m2 >>= \n2 -> cppCond n0 n1 n2
-
-instance CppCond (D.Verif VNode) (D.Verif VNode) (D.Verif VNode) where
-  cppCond m0 m1 m2 = m0 >>= \n0 -> m1 >>= \n1 -> m2 >>= \n2 -> cppCond n0 n1 n2
-
-instance CppCond VNode (D.Verif VNode) VNode where
-  cppCond n0 m1 n2 = m1 >>= \n1 -> cppCond n0 n1 n2
-
-instance CppCond VNode (D.Verif VNode) (D.Verif VNode) where
-  cppCond n0 m1 m2 = m1 >>= \n1 -> m2 >>= \n2 -> cppCond n0 n1 n2
-
-instance CppCond VNode VNode (D.Verif VNode) where
-  cppCond n0 n1 m2 = m2 >>= \n2 -> cppCond n0 n1 n2
-
--- | Conditional
-instance CppCond VNode VNode VNode where
+DEFINETEROPCLASS(CppCon, cppCond)
+instance CppCon VNode VNode VNode where
   cppCond cond true false = do
     unless (vtype true == vtype false) $ error "Must have both branches of cond be same type"
     result <- D.cond (vnode cond) (vnode true) (vnode false)
     undef <- D.or (vundef cond) (vundef true) >>= D.or (vundef false)
     return $ VNode undef result $ vtype true
 
-cppCast :: VNode
-        -> Type
-        -> D.Verif VNode
-cppCast node toTy
-  | is32Bits fromTy = case toTy of
-                        Unsigned   -> return $ VNode (vundef node) (vnode node) Unsigned
-                        Signed     -> return $ VNode (vundef node) (vnode node) Signed
-                        Unsigned64 -> do
-                          result <- D.uext (vnode node) 32
-                          return $ VNode (vundef node) result Unsigned64
-                        Signed64   -> do
-                          result <- D.sext (vnode node) 32
-                          return $ VNode (vundef node) result Signed64
-                        _          -> error "Illegal cast types"
-  | is64Bits fromTy = case toTy of
-                        Unsigned   -> do
-                          result <- D.slice (vnode node) 31 0
-                          return $ VNode (vundef node) result Unsigned
-                        Signed     -> do
-                          result <- D.slice (vnode node) 31 0
-                          return $ VNode (vundef node) result Signed
-                        Unsigned64 -> return $ VNode (vundef node) (vnode node) Unsigned64
-                        Signed64   -> return $ VNode (vundef node) (vnode node) Signed64
-                        _          -> error "Illegal cast types"
-  | otherwise = error "Illegal cast types"
- where fromTy = vtype node
+class CppCast n0 where
+  cppCast :: n0 -> Type -> D.Verif VNode
 
+instance CppCast (D.Verif VNode) where
+  cppCast m0 ty = m0 >>= \n0 -> cppCast n0 ty
+
+instance CppCast VNode where
+  cppCast node toTy
+    | is32Bits fromTy = case toTy of
+                          Unsigned   -> return $ VNode (vundef node) (vnode node) Unsigned
+                          Signed     -> return $ VNode (vundef node) (vnode node) Signed
+                          Unsigned64 -> do
+                            result <- D.uext (vnode node) 32
+                            return $ VNode (vundef node) result Unsigned64
+                          Signed64   -> do
+                            result <- D.sext (vnode node) 32
+                            return $ VNode (vundef node) result Signed64
+                          _          -> error "Illegal cast types"
+    | is64Bits fromTy = case toTy of
+                          Unsigned   -> do
+                            result <- D.slice (vnode node) 31 0
+                            return $ VNode (vundef node) result Unsigned
+                          Signed     -> do
+                            result <- D.slice (vnode node) 31 0
+                            return $ VNode (vundef node) result Signed
+                          Unsigned64 -> return $ VNode (vundef node) (vnode node) Unsigned64
+                          Signed64   -> return $ VNode (vundef node) (vnode node) Signed64
+                          _          -> error "Illegal cast types"
+    | otherwise = error "Illegal cast types"
+    where fromTy = vtype node
