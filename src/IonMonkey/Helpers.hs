@@ -8,9 +8,10 @@ module IonMonkey.Helpers ( setRange
                          , countLeadingZeroes32
                          , countTrailingZeroes32
                          ) where
-import           Control.Monad     (when)
-import qualified DSL.DSL           as D
-import qualified DSL.Typed         as T
+import           Control.Monad              (when)
+import           Control.Monad.State.Strict
+import qualified DSL.DSL                    as D
+import qualified DSL.Typed                  as T
 import           IonMonkey.Objects
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#370
@@ -42,8 +43,8 @@ setLowerInit lower_ range = do
   when (T.vtype lower_ /= T.Signed64) $ error "Expected a signed 64-bit lower"
   min <- jsValIntMin
   max <- jsValIntMax
-  castIntMin <- T.cppCast min T.Signed64
-  castIntMax <- T.cppCast max T.Signed64
+  castIntMin <- jsValIntMin64
+  castIntMax <- jsValIntMax64
   t <- T.true
   f <- T.false
   -- The default values:
@@ -76,8 +77,8 @@ setUpperInit upper_ range = do
   when (T.vtype upper_ /= T.Signed64) $ error "Expected a signed 64-bit lower"
   min <- jsValIntMin
   max <- jsValIntMax
-  castIntMin <- T.cppCast min T.Signed64
-  castIntMax <- T.cppCast max T.Signed64
+  castIntMin <- jsValIntMin64
+  castIntMax <- jsValIntMax64
   t <- T.true
   f <- T.false
   -- DEFAULT
@@ -91,13 +92,13 @@ setUpperInit upper_ range = do
   --     hasInt32UpperBound_ = false;
   oobUpper <- T.cppGt upper_ castIntMax
   upper' <- T.cppCond oobUpper max defaultUpper
-  hasLower' <- T.cppCond oobUpper t defaultHasUpper
+  hasLower' <- T.cppCond oobUpper f defaultHasUpper
   -- else if (x < JSVAL_INT_MIN)
   --     upper_ = JSVAL_INT_MIN;
   --     hasInt32UpperBound_ = true;
   oobLower <- T.cppLt upper_ castIntMin
   upper'' <- T.cppCond oobLower min upper'
-  hasLower'' <- T.cppCond oobLower f hasLower'
+  hasLower'' <- T.cppCond oobLower t hasLower'
   -- Set the flags and the bound
   T.vassign upper'' (upper range)
   T.vassign hasLower'' (hasInt32UpperBound range)
@@ -125,10 +126,16 @@ noInt32UpperBound = do
 jsValIntMin :: D.Verif T.VNode
 jsValIntMin = T.num 0x80000000
 
+jsValIntMin64 :: D.Verif T.VNode
+jsValIntMin64 = T.num64 0x80000000
+
 -- | https://searchfox.org/mozilla-central/source/js/public/Value.h#36
 -- #define JSVAL_INT_MAX ((int32_t)0x7fffffff)
 jsValIntMax :: D.Verif T.VNode
 jsValIntMax = T.num 0x7fffffff
+
+jsValIntMax64 :: D.Verif T.VNode
+jsValIntMax64 = T.num64 0x7fffffff
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#136
 --  static const uint16_t MaxFiniteExponent = mozilla::FloatingPoint<double>::kExponentBias;

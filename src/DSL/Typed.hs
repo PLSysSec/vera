@@ -61,7 +61,7 @@ module DSL.Typed ( vassert
                  , D.evalVerif
                  , D.Verif
                  ) where
-import           Control.Monad.State.Strict (unless)
+import           Control.Monad.State.Strict (liftIO, unless)
 import qualified DSL.DSL                    as D
 import           Prelude                    hiding (compare)
 
@@ -94,6 +94,7 @@ data VNode = VNode { vundef :: D.Node
                    , vnode  :: D.Node
                    , vtype  :: Type
                    }
+           deriving (Eq, Ord, Show)
 
 -- | Type of the node. For now we just have signed and unsigned i32s,
 -- but eventually we will have more integer types
