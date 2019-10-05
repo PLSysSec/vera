@@ -63,10 +63,19 @@ add left right = do
     let leftInfNan  = canBeInfiniteOrNan left
         rightInfNan = canBeInfiniteOrNan right
     infNanCond <- T.cppOr leftInfNan rightInfNan
-    --T.cppCond infNanCond e2 e3
-    error ""
+    includesInfFlag <- includesInfinityAndNan
+    T.cppCond infNanCond includesInfFlag e3
 
-  error ""
+  fractFlag <- T.cppOr (canHaveFractionalPart left) (canHaveFractionalPart right)
+  negZeroFlag <- T.cppOr (canBeNegativeZero left) (canBeNegativeZero right)
+
+  result <- numResultRange "result"
+  T.vassign (lower result) l
+  T.vassign (upper result) h
+  T.vassign (canHaveFractionalPart result) fractFlag
+  T.vassign (canBeNegativeZero result) negZeroFlag
+  T.vassign (maxExponent result) e
+  return result
 
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#775
@@ -135,7 +144,7 @@ or _lhs _rhs = do
   rhsAndrhsLowerGte0 <- T.cppAnd lhsLowerGte0 rhsLowerGte0
 
   lower0 <- T.cppMax (lower _lhs) (lower _rhs)
-  upper0 <- do t0 <- countLeadingZeroes32 (upper _lhs) 
+  upper0 <- do t0 <- countLeadingZeroes32 (upper _lhs)
                t1 <- countLeadingZeroes32 (upper _rhs)
                T.cppMin t0 t1
 
@@ -154,7 +163,7 @@ or _lhs _rhs = do
                t1 <- T.cppShiftRight uint32Max leadingOnes
                t2 <- T.cppCast t1 T.Signed
                t3 <- T.cppNeg t2
-               t4 <- T.cppCond lhsUpperLt0 lower1 int32Min 
+               t4 <- T.cppCond lhsUpperLt0 lower1 int32Min
                T.cppMax t4 t3
 
   lhsLowerGte0AndrhsGte0    <- T.cppAnd lhsLowerGte0 rhsLowerGte0

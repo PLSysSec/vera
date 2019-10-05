@@ -3,6 +3,7 @@ module IonMonkey.Helpers ( noInt32LowerBound
                          , isFiniteNonNegative
                          , isFiniteNegative
                          , maxFiniteExponent
+                         , includesInfinityAndNan
                          , countLeadingZeroes32
                          , countTrailingZeroes32
                          ) where
@@ -24,6 +25,9 @@ jsValIntMin = T.num 0x80000000
 
 maxFiniteExponent :: D.Verif T.VNode
 maxFiniteExponent = undefined
+
+includesInfinityAndNan :: D.Verif T.VNode
+includesInfinityAndNan = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#551
 isFiniteNonNegative :: Range -> D.Verif T.VNode

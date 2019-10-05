@@ -13,6 +13,7 @@ module IonMonkey.Objects ( Range
                          , unsignedInputRange
                          , signedResultRange
                          , unsignedResultRange
+                         , numResultRange
                          , operandWithRange
                          , verifyConsistent
                          , verifySaneRange
