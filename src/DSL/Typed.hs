@@ -32,6 +32,7 @@ module DSL.Typed ( vassert
                  , uintMax
                  , uintMin
                    -- * Js operations: what we are using to verify
+                 , jsAdd
                  , jsAnd
                  , jsOr
                  , jsNot
@@ -277,6 +278,13 @@ uintMin = unum 0
 --
 -- JavaScript operations
 --
+
+jsAdd :: VNode -> VNode -> D.Verif VNode
+jsAdd node1 node2 = do
+  unless (vtype node1 == vtype node2) $ error "Types should match"
+  unless (is32Bits $ vtype node1) $ error "Don't support more now"
+  result <- D.add (vnode node1) (vnode node2)
+  newDefinedNode result $ vtype node1
 
 jsAnd :: VNode -> VNode -> D.Verif VNode
 jsAnd node1 node2 = do

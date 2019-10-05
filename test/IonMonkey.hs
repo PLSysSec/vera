@@ -8,7 +8,8 @@ import           Prelude                    hiding (and, not, or)
 import           Test.Tasty.HUnit
 
 ionMonkeyTests :: BenchTest
-ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ andTest
+ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ addTest
+                                                   , andTest
                                                    , notTest
                                                    , lshTest
                                                    , rshTest
@@ -18,6 +19,32 @@ ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ andTest
                                                    , ursh'Test
                                                    , orTest
                                                    ]
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#251
+addTest :: BenchTest
+addTest = benchTestCase "add" $ error "Boolector error, fix in a sec"
+  -- For now, verify it over int 32
+  -- (c0, c1, c2, c3, c4) <- T.evalVerif Nothing $ do
+
+  --   leftRange <- inputRange T.Signed "left start range"
+  --   rightRange <- inputRange T.Signed "right start range"
+  --   resultRange <- add leftRange rightRange
+  --   c0 <- verifyConsistent
+  --   c1 <- verifySaneRange resultRange
+  --   c2 <- verifyDefinedResult resultRange
+
+  --   left <- operandWithRange "left" T.Signed leftRange
+  --   right <- operandWithRange "right" T.Signed rightRange
+  --   result <- T.jsAdd left right
+  --   c3 <- verifyLowerBound result resultRange
+  --   c4 <- verifyUpperBound result resultRange
+  --   return (c0, c1, c2, c3, c4)
+
+  -- Verified @=? c0
+  -- Verified @=? c1
+  -- Verified @=? c2
+  -- Verified @=? c3
+  -- Verified @=? c4
+
 
 andTest :: BenchTest
 andTest = benchTestCase "and" $ do
