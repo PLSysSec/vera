@@ -34,20 +34,42 @@ setRangeTest = benchTestCase "set range" $ do
     u3 <- T.num64 5
     setRange l3 u3 f n e r3
 
+    r4 <- resultRange T.Signed "r4"
+    l4 <- T.num64 (-2147483648)
+    u4 <- T.num64 (2147483647)
+    setRange l4 u4 f n e r4
+
+    r5 <- resultRange T.Signed "r5"
+    l5 <- T.num64 (-9223372036854775)
+    u5 <- T.num64 (-9223372036854775)
+    setRange l5 u5 f n e r5
+
     T.runSolver
 
   vtest r $ M.fromList [ ("r1_lower", -2147483648)
                        , ("r1_upper", -2147483648)
                        , ("r1_hasLowerBound", 0)
                        , ("r1_hasUpperBound", -1)
+                         --
                        , ("r2_lower", 2147483647)
                        , ("r2_upper", 2147483647)
                        , ("r2_hasLowerBound", -1)
                        , ("r2_hasUpperBound", 0)
+                         --
                        , ("r3_lower", 1)
                        , ("r3_upper", 5)
                        , ("r3_hasLowerBound", -1)
                        , ("r3_hasUpperBound", -1)
+                         --
+                       , ("r4_lower", -2147483648)
+                       , ("r4_upper", 2147483647)
+                       , ("r4_hasLowerBound", -1)
+                       , ("r4_hasUpperBound", -1)
+                         --
+                       , ("r5_lower", -2147483648)
+                       , ("r5_upper", -2147483648)
+                       , ("r5_hasLowerBound", 0)
+                       , ("r5_hasUpperBound", -1)
                        ]
 
 
