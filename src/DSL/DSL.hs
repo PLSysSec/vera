@@ -91,29 +91,30 @@ emptyVerifState = VerifState { vars = M.empty
 runVerif :: Maybe Integer -- ^ Optional timeout
          -> Verif a       -- ^ Verification computation
          -> IO (a, VerifState)
-runVerif mTimeout (Verif act) = error ""
-  -- bs <- B.newBoolectorState mTimeout
-  -- B.evalBoolector bs $ runStateT act emptyVerifState
+runVerif mTimeout (Verif act) = 
+  Z.evalZ3 $ runStateT act emptyVerifState
 
 evalVerif :: Maybe Integer -> Verif a -> IO a
-evalVerif mt act = error "" -- fst <$> runVerif mt act
+evalVerif mt act = fst <$> runVerif mt act
 
 execVerif :: Maybe Integer -> Verif a -> IO VerifState
-execVerif mt act = error "" -- snd <$> runVerif mt act
+execVerif mt act = snd <$> runVerif mt act
 
 runSolver :: Verif SMTResult
-runSolver = error ""
-  -- check <- B.sat
-  -- result <- case check of
-  --   B.Sat -> do
-  --     allVars <- getVars
-  --     map <- mapM B.signedBvAssignment allVars
-  --     return $ SolverSat map
-  --   B.Unsat -> return SolverUnsat
-  --   _ -> return SolverFailed
-  -- s0 <- get
-  -- put $ s0 { solverResult = result }
-  -- return result
+runSolver = do
+  z3result <- Z.solverCheckAndGetModel
+  result <- case z3result of
+    (Z.Sat, Just model) -> do
+      allVars <- getVars
+      mmap <- Z.mapEval (Z.evalBv True) model allVars
+      return $ case mmap of
+        Just map -> SolverSat map
+        _ -> SolverFailed
+    (Z.Unsat, _) -> return SolverUnsat
+    _ -> return SolverFailed
+  s0 <- get
+  put $ s0 { solverResult = result }
+  return result
 
 --
 -- Ints and stuff
