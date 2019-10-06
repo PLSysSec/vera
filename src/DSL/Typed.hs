@@ -64,6 +64,7 @@ module DSL.Typed ( vassert
                  ) where
 import           Control.Monad.State.Strict (liftIO, unless)
 import qualified DSL.DSL                    as D
+import qualified DSL.Z3Wrapper              as D
 import           Prelude                    hiding (compare)
 
 {-|

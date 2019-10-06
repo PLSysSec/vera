@@ -1,6 +1,7 @@
 module DSL.Z3Wrapper where
 
 import           Z3.Monad as Z
+import           Control.Monad.State.Strict (unless)
 
 type Sort = Z.Sort
 type Node = Z.AST
@@ -91,3 +92,60 @@ uext a i = Z.mkZeroExt i a
 
 slice :: MonadZ3 z3 => AST -> Int -> Int -> z3 AST
 slice a i1 i2 = Z.mkExtract i1 i2 a
+
+rol :: MonadZ3 z3 => AST -> AST -> z3 AST
+rol = mkExtRotateLeft
+
+ror :: MonadZ3 z3 => AST -> AST -> z3 AST
+ror = mkExtRotateRight
+
+push :: MonadZ3 z3 => Int -> z3 ()
+push _ = solverPush
+
+pop :: MonadZ3 z3 => Int -> z3 ()
+pop = solverPop
+
+-- | Safe boolector shift operations
+--
+-- Boolector puts restrictions on the widths of the arguments to shift operations.
+-- As of Boolector 3, the widths of both operands must be the same.
+-- As of Boolectors < 3, the width of the first operand had to be a power of 2,
+-- and the width of the second operand had to be log 2 of the first.
+-- We DO NOT support the Boolector < 3 restriction
+safeSll, safeSrl, safeSra, safeRol, safeRor :: MonadZ3 m => AST -> AST -> m AST
+safeSll = shiftWrapper sll
+safeSrl = shiftWrapper srl
+safeSra = shiftWrapper sra
+safeRol = shiftWrapper rol
+safeRor = shiftWrapper ror
+
+-- | Wrapper for boolector shift operations
+shiftWrapper :: (MonadZ3 m)
+             => (AST -> AST -> m AST) -- ^ Shift op
+             -> AST -- ^ Thing to shift
+             -> AST -- ^ Thing to shift by
+             -> m AST -- ^ Result
+shiftWrapper shiftOp toShift shiftVal = do
+  toShiftSort <- Z.getSort toShift
+  castVal <- Z.getBvSortSize toShiftSort >>= castToWidth shiftVal
+  shiftOp toShift castVal
+
+-- | Cast a node to a new width
+-- If the new width is larger, use unsigned extension
+-- If the new width is smaller, slice
+castToWidth :: (MonadZ3 m)
+            => Node -- ^ Node to be cast
+            -> Int -- ^ New width
+            -> m Node -- ^ Result
+castToWidth varToCast newWidth = do
+  sort <- Z.getSort varToCast
+  sortKind <- Z.getSortKind sort
+  let isBv = {- sortKind == Z.Z3_BOOL_SORT || -} sortKind == Z.Z3_BV_SORT
+  unless isBv $ error $ "Should never cast non-bitvector sort (" ++ show sort ++ ")"
+  oldWidth' <- Z.getBvSortSize sort
+  let oldWidth = fromIntegral oldWidth'
+  case compare oldWidth newWidth of
+    LT -> uext varToCast (newWidth - oldWidth)
+    GT -> slice varToCast (newWidth - 1) 0
+    _  -> return varToCast
+

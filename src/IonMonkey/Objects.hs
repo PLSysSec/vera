@@ -24,6 +24,7 @@ module IonMonkey.Objects ( Range
 import           Control.Monad   (unless, when)
 import qualified Data.Map.Strict as M
 import qualified DSL.DSL         as D
+import qualified DSL.Z3Wrapper   as D
 import           DSL.Typed       as T
 
 -- | IonMonkey's range object
