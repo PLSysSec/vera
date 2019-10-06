@@ -1,6 +1,6 @@
 module DSL.Z3Wrapper where
 
-import           Control.Monad.State.Strict (unless)
+import           Control.Monad.State.Strict (liftIO, unless)
 import           Z3.Monad                   as Z
 
 type Sort = Z.Sort
@@ -90,8 +90,14 @@ ulte a b = Z.mkBvule a b >>= cmpWrapper
 slte :: MonadZ3 z3 => AST -> AST -> z3 AST
 slte a b = Z.mkBvsle a b >>= cmpWrapper
 
+iseq :: MonadZ3 z3 => AST -> AST -> z3 AST
+iseq a b = Z.mkEq a b >>= cmpWrapper
+
 cond :: MonadZ3 z3 => AST -> AST -> AST -> z3 AST
-cond = Z.mkIte
+cond c a b = do
+  bvTrue <- Z.mkBvNum 1 1
+  isTrue <- Z.mkEq c bvTrue
+  Z.mkIte isTrue a b
 
 sext :: MonadZ3 z3 => AST -> Int -> z3 AST
 sext a i = Z.mkZeroExt i a

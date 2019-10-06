@@ -4,6 +4,10 @@ import           Control.Monad (forM_, unless)
 import qualified Data.Map      as M
 import qualified DSL.DSL       as D
 
+satTest :: D.SMTResult -> IO ()
+satTest D.SolverSat{} = return ()
+satTest e = error $ unwords ["Expected a SAT result but got", show e]
+
 vtest :: D.SMTResult -> M.Map String Integer -> IO ()
 vtest result expectedVars = error "NEED TO FIX"
   -- D.SolverUnsat -> error "Expected SAT but got UNSAT"
