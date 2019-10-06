@@ -51,6 +51,15 @@ addTest = benchTestCase "add" $ do
          Ops.safeSrl one two >>= D.assign result8
          Ops.safeSra one two >>= D.assign result9
 
+         -- Min and max
+         result10 <- D.i32v "r10"
+         result11 <- D.i32v "r11"
+         result12 <- D.i32v "r12"
+         result13 <- D.i32v "r13"
+         D.smin one two >>= D.assign result10
+         D.smax one two >>= D.assign result11
+         D.umin one two >>= D.assign result12
+         D.umax one two >>= D.assign result13
          D.runSolver
 
   satTest r

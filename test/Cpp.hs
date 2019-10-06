@@ -78,6 +78,10 @@ cppCmpTest = benchTestCase "cmp test" $ do
 
   r <- T.evalVerif Nothing $ do
 
+    -- Make sure it doesn't segfault on equality comparison
+    five <- T.num 5
+    T.cppEq five five >>= T.vassert
+
     -- Make sure it uses a signed comparison for two signed numbers
     one <- T.num 1
     minusOne <- T.num (-1)

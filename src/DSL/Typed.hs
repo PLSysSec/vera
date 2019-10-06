@@ -474,7 +474,7 @@ instance CppNot VNode where
 
 DEFINEBINOPCLASS(CppEq, cppEq)
 instance CppEq VNode VNode where
-  cppEq left right = noopWrapper left right D.eq
+  cppEq left right = noopWrapper left right D.iseq
 
 DEFINEBINOPCLASS(CppOr, cppOr)
 instance CppOr VNode VNode where
@@ -566,6 +566,8 @@ instance CppLte VNode VNode where
 DEFINEBINOPCLASS(CppShiftLeft, cppShiftLeft)
 instance CppShiftLeft VNode VNode where
   cppShiftLeft left right
+    | not (is32Bits $ vtype left) || not (is32Bits $ vtype right) =
+        error "Only support 32 bit SHL"
     | isUnsigned (vtype left) = do
 
         parentsUndef <- D.or (vundef left) (vundef right)
@@ -596,7 +598,7 @@ instance CppShiftLeft VNode VNode where
         thirtyTwo <- D.i32c 32
 
         -- Is it undef?
-        opUndef1 <- D.eq top32 zero >>= D.not
+        opUndef1 <- D.iseq top32 zero >>= D.not
         opUndef2 <- D.ugt (vnode right) thirtyTwo
         opUndef <- D.or opUndef1 opUndef2
         parentsUndef <- D.or (vundef left) (vundef right)
@@ -639,6 +641,8 @@ instance CppShiftLeft VNode VNode where
 DEFINEBINOPCLASS(CppShiftRight, cppShiftRight)
 instance CppShiftRight VNode VNode where
   cppShiftRight left right
+    | not (is32Bits $ vtype left) || not (is32Bits $ vtype right) =
+        error "Only support 32 bit SHL"                
     | isUnsigned (vtype left) = do
         undef <- makeUndef
         result <- D.safeSrl (vnode left) (vnode right)

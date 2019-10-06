@@ -8,7 +8,18 @@ type Node = Z.AST
 
 
 assert :: MonadZ3 z3 => AST -> z3 ()
-assert = Z.assert
+assert a = do
+  sort <- Z.getSort a
+  kind <- Z.getSortKind sort
+  a' <- case kind of
+    Z.Z3_BOOL_SORT -> return a
+    Z.Z3_BV_SORT -> do
+      size <- Z.getBvSortSize sort
+      unless (size == 1) $ error "Cannot assert multibit BV"
+      bvTrue <- Z.mkBvNum 1 1
+      Z.mkEq a bvTrue
+    s              -> error $ unwords ["Can't assert sort", show s]
+  Z.assert a'
 
 eq :: MonadZ3 z3 => AST -> AST -> z3 AST
 eq = Z.mkEq
