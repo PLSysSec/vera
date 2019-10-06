@@ -14,34 +14,40 @@ eq :: MonadZ3 z3 => AST -> AST -> z3 AST
 eq = Z.mkEq
 
 add :: MonadZ3 z3 => AST -> AST -> z3 AST
-add x y = Z.mkAdd [x,y]
+add = Z.mkBvadd
 
 sub :: MonadZ3 z3 => AST -> AST -> z3 AST
-sub x y = Z.mkSub [x,y]
+sub = Z.mkBvsub
 
 mul :: MonadZ3 z3 => AST -> AST -> z3 AST
-mul x y = Z.mkMul [x,y]
+mul = Z.mkBvmul
 
-div :: MonadZ3 z3 => AST -> AST -> z3 AST
-div = Z.mkDiv
+sdiv :: MonadZ3 z3 => AST -> AST -> z3 AST
+sdiv = Z.mkBvsdiv
+
+udiv :: MonadZ3 z3 => AST -> AST -> z3 AST
+udiv = Z.mkBvudiv
 
 mod :: MonadZ3 z3 => AST -> AST -> z3 AST
-mod = Z.mkMod
+mod = Z.mkBvsmod
 
-rem :: MonadZ3 z3 => AST -> AST -> z3 AST
-rem = Z.mkRem
+srem :: MonadZ3 z3 => AST -> AST -> z3 AST
+srem = Z.mkBvsrem
+
+urem :: MonadZ3 z3 => AST -> AST -> z3 AST
+urem = Z.mkBvurem
 
 and :: MonadZ3 z3 => AST -> AST -> z3 AST
-and x y = Z.mkAnd [x,y]
+and = Z.mkBvand
 
 or :: MonadZ3 z3 => AST -> AST -> z3 AST
-or x y = Z.mkOr [x,y]
+or = Z.mkBvor
 
 xor :: MonadZ3 z3 => AST -> AST -> z3 AST
-xor = Z.mkXor
+xor = Z.mkBvxor
 
 not :: MonadZ3 z3 => AST -> z3 AST
-not = Z.mkNot
+not = Z.mkBvnot
 
 neg :: MonadZ3 z3 => AST -> z3 AST
 neg = Z.mkBvneg
@@ -93,11 +99,11 @@ uext a i = Z.mkZeroExt i a
 slice :: MonadZ3 z3 => AST -> Int -> Int -> z3 AST
 slice a i1 i2 = Z.mkExtract i1 i2 a
 
-rol :: MonadZ3 z3 => AST -> AST -> z3 AST
-rol = mkExtRotateLeft
+-- rol :: MonadZ3 z3 => AST -> AST -> z3 AST
+-- rol = mkExtRotateLeft
 
-ror :: MonadZ3 z3 => AST -> AST -> z3 AST
-ror = mkExtRotateRight
+-- ror :: MonadZ3 z3 => AST -> AST -> z3 AST
+-- ror = mkExtRotateRight
 
 push :: MonadZ3 z3 => Int -> z3 ()
 push _ = solverPush
@@ -112,12 +118,12 @@ pop = solverPop
 -- As of Boolectors < 3, the width of the first operand had to be a power of 2,
 -- and the width of the second operand had to be log 2 of the first.
 -- We DO NOT support the Boolector < 3 restriction
-safeSll, safeSrl, safeSra, safeRol, safeRor :: MonadZ3 m => AST -> AST -> m AST
+safeSll, safeSrl, safeSra {-, safeRol, safeRor -} :: MonadZ3 m => AST -> AST -> m AST
 safeSll = shiftWrapper sll
 safeSrl = shiftWrapper srl
 safeSra = shiftWrapper sra
-safeRol = shiftWrapper rol
-safeRor = shiftWrapper ror
+-- safeRol = shiftWrapper rol
+-- safeRor = shiftWrapper ror
 
 -- | Wrapper for boolector shift operations
 shiftWrapper :: (MonadZ3 m)

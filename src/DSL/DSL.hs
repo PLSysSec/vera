@@ -46,6 +46,7 @@ module DSL.DSL ( i64
                , evalVerif
                , execVerif
                , runSolver
+               , wtf
                ) where
 import           Control.Monad              (foldM)
 import           Control.Monad.Reader
@@ -54,6 +55,29 @@ import qualified Data.Map.Strict            as M
 import qualified DSL.Z3Wrapper              as Z3
 import           Prelude                    hiding (map, max, min, not)
 import qualified Z3.Monad                   as Z
+
+wtf = runVerif Nothing $ do
+    liftIO $ putStrLn "A"
+    one <- i64c 1
+    liftIO $ putStrLn "B"
+    two <- i64c 2
+    liftIO $ putStrLn "C"
+    tmp0 <- Z3.xor one two
+    tmp1 <- Z3.slt one two
+    tmp2 <- Z3.slt one tmp0
+    tmp3 <- Z3.slt two tmp0
+
+    -- OK
+    Z.mkOr [tmp2, tmp3]
+    -- NOT OK
+    -- Z.or tmp2 tmp3
+
+    liftIO $ putStrLn "D"
+    res <- runSolver
+    liftIO $ putStrLn "E"
+    liftIO $ putStrLn $ show res
+    
+                    
 
 {-|
 
