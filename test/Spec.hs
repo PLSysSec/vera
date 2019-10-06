@@ -1,5 +1,6 @@
 import           BenchUtils
 import           Cpp
+import           DSL
 import           Helpers
 import           IonMonkey
 import           Test.Tasty
@@ -11,6 +12,6 @@ allTests :: [BenchTest]
 allTests = [ --ionMonkeyTests
            -- , helpersTests
            -- , cppTests
-           cppTests
+             dslTests
            ]
 

@@ -24,8 +24,8 @@ module IonMonkey.Objects ( Range
 import           Control.Monad   (unless, when)
 import qualified Data.Map.Strict as M
 import qualified DSL.DSL         as D
-import qualified DSL.Z3Wrapper   as D
 import           DSL.Typed       as T
+import qualified DSL.Z3Wrapper   as D
 
 -- | IonMonkey's range object
 -- https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#119
@@ -127,10 +127,10 @@ operandWithRange name ty range = do
 
 data VerifResult = Verified
                  | UnsatImpl
-                 | OverlappingRange { counterexample :: M.Map String Integer }
-                 | BadLowerBound { counterexample :: M.Map String Integer }
-                 | BadUpperBound { counterexample :: M.Map String Integer }
-                 | UndefRange { counterexample :: M.Map String Integer }
+                 | OverlappingRange { counterexample :: String }
+                 | BadLowerBound { counterexample :: String }
+                 | BadUpperBound { counterexample :: String }
+                 | UndefRange { counterexample :: String }
                  deriving (Eq, Ord, Show)
 
 verifyConsistent :: D.Verif VerifResult

@@ -76,8 +76,8 @@ wtf = runVerif Nothing $ do
     res <- runSolver
     liftIO $ putStrLn "E"
     liftIO $ putStrLn $ show res
-    
-                    
+
+
 
 {-|
 
@@ -98,7 +98,7 @@ instance Z.MonadZ3 Verif where
     getSolver = Verif $ lift $ Z.getSolver
     getContext = Verif $ lift $ Z.getContext
 
-data SMTResult = SolverSat (M.Map String Integer)
+data SMTResult = SolverSat String
                | SolverUnsat
                | SolverFailed
                deriving (Eq, Ord, Show)
@@ -115,7 +115,7 @@ emptyVerifState = VerifState { vars = M.empty
 runVerif :: Maybe Integer -- ^ Optional timeout
          -> Verif a       -- ^ Verification computation
          -> IO (a, VerifState)
-runVerif mTimeout (Verif act) = 
+runVerif mTimeout (Verif act) =
   Z.evalZ3 $ runStateT act emptyVerifState
 
 evalVerif :: Maybe Integer -> Verif a -> IO a
@@ -129,11 +129,8 @@ runSolver = do
   z3result <- Z.solverCheckAndGetModel
   result <- case z3result of
     (Z.Sat, Just model) -> do
-      allVars <- getVars
-      mmap <- Z.mapEval (Z.evalBv True) model allVars
-      return $ case mmap of
-        Just map -> SolverSat map
-        _ -> SolverFailed
+      strModel <- Z.modelToString model
+      return $ SolverSat strModel
     (Z.Unsat, _) -> return SolverUnsat
     _ -> return SolverFailed
   s0 <- get
@@ -244,7 +241,10 @@ i64v :: String -> Verif Z3.Node
 i64v name = var' i64 name
 
 i32v :: String -> Verif Z3.Node
-i32v name = var' i32 name
+i32v name = var' i32 name -- do
+  -- bv32 <- Z.mkBvSort 32
+  -- sym <- Z.mkStringSymbol name
+  -- Z.mkVar sym bv32
 
 i16v :: String -> Verif Z3.Node
 i16v name = var' i16 name

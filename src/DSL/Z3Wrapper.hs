@@ -1,7 +1,7 @@
 module DSL.Z3Wrapper where
 
-import           Z3.Monad as Z
 import           Control.Monad.State.Strict (unless)
+import           Z3.Monad                   as Z
 
 type Sort = Z.Sort
 type Node = Z.AST
@@ -63,29 +63,32 @@ sra = Z.mkBvashr
 
 -- Comparisons
 
+cmpWrapper :: MonadZ3 z3 => AST -> z3 AST
+cmpWrapper a = Z.mkInt2bv 1 a
+
 ugt :: MonadZ3 z3 => AST -> AST -> z3 AST
-ugt = Z.mkBvugt
+ugt a b = Z.mkBvugt a b >>= cmpWrapper
 
 sgt :: MonadZ3 z3 => AST -> AST -> z3 AST
-sgt = Z.mkBvsgt
+sgt a b = Z.mkBvsgt a b >>= cmpWrapper
 
 ugte :: MonadZ3 z3 => AST -> AST -> z3 AST
-ugte = Z.mkBvuge
+ugte a b = Z.mkBvuge a b >>= cmpWrapper
 
 sgte :: MonadZ3 z3 => AST -> AST -> z3 AST
-sgte = Z.mkBvsge
+sgte a b = Z.mkBvsge a b >>= cmpWrapper
 
 ult :: MonadZ3 z3 => AST -> AST -> z3 AST
-ult = Z.mkBvult
+ult a b = Z.mkBvult a b >>= cmpWrapper
 
 slt :: MonadZ3 z3 => AST -> AST -> z3 AST
-slt = Z.mkBvslt
+slt a b = Z.mkBvslt a b >>= cmpWrapper
 
 ulte :: MonadZ3 z3 => AST -> AST -> z3 AST
-ulte = Z.mkBvule
+ulte a b = Z.mkBvule a b >>= cmpWrapper
 
 slte :: MonadZ3 z3 => AST -> AST -> z3 AST
-slte = Z.mkBvsle
+slte a b = Z.mkBvsle a b >>= cmpWrapper
 
 cond :: MonadZ3 z3 => AST -> AST -> AST -> z3 AST
 cond = Z.mkIte
