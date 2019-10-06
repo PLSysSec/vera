@@ -36,7 +36,7 @@ module DSL.DSL ( i64
                , assign
                , conjunction
                , disjunction
-               , module DSL.BoolectorWrapper
+               , module Z3
                -- ** Verif monad
                , Verif
                , VerifState(..)
@@ -51,8 +51,6 @@ import           Control.Monad              (foldM)
 import           Control.Monad.Reader
 import           Control.Monad.State.Strict
 import qualified Data.Map.Strict            as M
-import           DSL.BoolectorWrapper       hiding (false, sat, true)
-import qualified DSL.BoolectorWrapper       as B
 import qualified DSL.Z3Wrapper              as Z3
 import           Prelude                    hiding (map, max, min, not)
 import qualified Z3.Monad                   as Z
@@ -65,7 +63,7 @@ Low-level DSL for manipulating SMT variables.
 
 -- | Verification state. I'm assuming we'll eventually need
 -- to keep track of more things
-data VerifState = VerifState { vars         :: M.Map String B.Node
+data VerifState = VerifState { vars         :: M.Map String Z3.Node
                              , solverResult :: SMTResult
                              }
 
@@ -81,7 +79,7 @@ data SMTResult = SolverSat (M.Map String Integer)
                | SolverFailed
                deriving (Eq, Ord, Show)
 
-getVars :: Verif (M.Map String B.Node)
+getVars :: Verif (M.Map String Z3.Node)
 getVars = vars `liftM` get
 
 emptyVerifState :: VerifState
@@ -121,90 +119,90 @@ runSolver = error ""
 -- Ints and stuff
 --
 
-i64 :: Verif B.Sort
-i64 = B.bitvecSort 64
+i64 :: Verif Z3.Sort
+i64 = Z.mkBvSort 64
 
-i32 :: Verif B.Sort
-i32 = B.bitvecSort 32
+i32 :: Verif Z3.Sort
+i32 = Z.mkBvSort 32
 
-i16 :: Verif B.Sort
-i16 = B.bitvecSort 16
+i16 :: Verif Z3.Sort
+i16 = Z.mkBvSort 16
 
-i8 :: Verif B.Sort
-i8 = B.bitvecSort 8
+i8 :: Verif Z3.Sort
+i8 = Z.mkBvSort 8
 
-i1 :: Verif B.Sort
-i1 = B.bitvecSort 1
+i1 :: Verif Z3.Sort
+i1 = Z.mkBvSort 1
 
 -- Integer consts
 
 -- | 64-bit constant
-i64c :: Integer -> Verif B.Node
-i64c val | val <= 18446744073709551615 = i64 >>= B.unsignedInt val
+i64c :: Integer -> Verif Z3.Node
+i64c val | val <= 18446744073709551615 = Z.mkBitvector 64 val
          | otherwise = error $ unwords $ [show val, "is past the range of i64s"]
 
-i64max :: Verif B.Node
+i64max :: Verif Z3.Node
 i64max = i64c 9223372036854775807
 
-i64min :: Verif B.Node
+i64min :: Verif Z3.Node
 i64min = undefined
 
 -- | 32-bit constant
-i32c :: Integer -> Verif B.Node
-i32c val | val <= 4294967295 = i32 >>= B.unsignedInt val
+i32c :: Integer -> Verif Z3.Node
+i32c val | val <= 4294967295 = Z.mkBitvector 32 val
          | otherwise = error $ unwords $ [show val, "is past the range of i32s"]
 
-ui32max :: Verif B.Node
+ui32max :: Verif Z3.Node
 ui32max = i32c 4294967295
 
-i32max :: Verif B.Node
+i32max :: Verif Z3.Node
 i32max = i32c 2147483647
 
-i32min :: Verif B.Node
+i32min :: Verif Z3.Node
 i32min = i32c (-2147483648)
 
 -- | 16-bit constant
-i16c :: Integer -> Verif B.Node
-i16c val | val <= 65535 = i16 >>= B.unsignedInt val
+i16c :: Integer -> Verif Z3.Node
+i16c val | val <= 65535 = Z.mkBitvector 16 val
          | otherwise = error $ unwords $ [show val, "is past the range of i16s"]
 
-i16max :: Verif B.Node
+i16max :: Verif Z3.Node
 i16max = undefined
 
-i16min :: Verif B.Node
+i16min :: Verif Z3.Node
 i16min = undefined
 
 -- | 8-bit constant
-i8c :: Integer -> Verif B.Node
-i8c val | val <= 255 = i8 >>= B.unsignedInt val
+i8c :: Integer -> Verif Z3.Node
+i8c val | val <= 255 = Z.mkBitvector 8 val
         | otherwise = error $ unwords $ [show val, "is past the range of i8s"]
 
-i8max :: Verif B.Node
+i8max :: Verif Z3.Node
 i8max = undefined
 
-i8min :: Verif B.Node
+i8min :: Verif Z3.Node
 i8min = undefined
 
 -- | 1-bit constant
-i1c :: Integer -> Verif B.Node
-i1c val | val <= 1 = i1 >>= B.unsignedInt val
+i1c :: Integer -> Verif Z3.Node
+i1c val | val <= 1 = Z.mkBitvector 1 val
         | otherwise = error $ unwords $ [show val, "is past the range of i1s"]
 
-i1max :: Verif B.Node
+i1max :: Verif Z3.Node
 i1max = undefined
 
-i1min :: Verif B.Node
+i1min :: Verif Z3.Node
 i1min = undefined
 
-true :: Verif B.Node
+true :: Verif Z3.Node
 true = i1c 1
 
-false :: Verif B.Node
+false :: Verif Z3.Node
 false = i1c 0
 
 -- Integer variables
 
-var' :: Verif B.Sort -> String -> Verif B.Node
+var' :: Verif Z3.Sort -> String -> Verif Z3.Node
 var' sort name = do
   s0 <- get
   let allVars = vars s0
@@ -212,63 +210,64 @@ var' sort name = do
     Just _ -> error $ unwords ["Already created variable named", name]
     _ -> do
       sort' <- sort
-      result <- B.var sort' name
+      sym <- Z.mkStringSymbol name
+      result <- Z.mkVar sym sort'
       put $ s0 { vars = M.insert name result allVars }
       return result
 
-i64v :: String -> Verif B.Node
+i64v :: String -> Verif Z3.Node
 i64v name = var' i64 name
 
-i32v :: String -> Verif B.Node
+i32v :: String -> Verif Z3.Node
 i32v name = var' i32 name
 
-i16v :: String -> Verif B.Node
+i16v :: String -> Verif Z3.Node
 i16v name = var' i16 name
 
-i8v :: String -> Verif B.Node
+i8v :: String -> Verif Z3.Node
 i8v name = var' i8 name
 
-i1v :: String -> Verif B.Node
+i1v :: String -> Verif Z3.Node
 i1v name = var' i1 name
 
 -- | Named intermediate expression
-named :: String -> Verif B.Node -> Verif B.Node
+named :: String -> Verif Z3.Node -> Verif Z3.Node
 named str act = do
   res <- act
-  v <- var' (B.getSort res) str
+  v <- var' (Z.getSort res) str
   assign v res
   return v
 
 -- Functions
 
-smin :: B.Node -> B.Node -> Verif B.Node
+smin :: Z3.Node -> Z3.Node -> Verif Z3.Node
 smin x y = do
-  isLess <- B.slte x y
-  B.cond isLess x y
+  isLess <- Z3.slte x y
+  Z3.cond isLess x y
 
-smax :: B.Node -> B.Node -> Verif B.Node
+smax :: Z3.Node -> Z3.Node -> Verif Z3.Node
 smax x y = do
-  isMore <- B.sgte x y
-  B.cond isMore x y
+  isMore <- Z3.sgte x y
+  Z3.cond isMore x y
 
-umin :: B.Node -> B.Node -> Verif B.Node
+umin :: Z3.Node -> Z3.Node -> Verif Z3.Node
 umin x y = do
-  isLess <- B.ulte x y
-  B.cond isLess x y
+  isLess <- Z3.ulte x y
+  Z3.cond isLess x y
 
-umax :: B.Node -> B.Node -> Verif B.Node
+umax :: Z3.Node -> Z3.Node -> Verif Z3.Node
 umax x y = do
-  isMore <- B.ugte x y
-  B.cond isMore x y
+  isMore <- Z3.ugte x y
+  Z3.cond isMore x y
 
-assign :: B.Node -> B.Node -> Verif ()
-assign x y = B.eq x y >>= B.assert
+assign :: Z3.Node -> Z3.Node -> Verif ()
+assign x y = Z3.eq x y >>= Z3.assert
 
-conjunction :: [B.Node] -> Verif B.Node
+conjunction :: [Z3.Node] -> Verif Z3.Node
 conjunction [] = error "Cannot have a conjunction of zero nodes"
-conjunction xs = foldM B.and (head xs) (tail xs)
+conjunction xs = foldM Z3.and (head xs) (tail xs)
 
-disjunction :: [B.Node] -> Verif B.Node
+disjunction :: [Z3.Node] -> Verif Z3.Node
 disjunction [] = error "Cannot have a disjunction of zero nodes"
-disjunction xs = foldM B.or (head xs) (tail xs)
+disjunction xs = foldM Z3.or (head xs) (tail xs)
 

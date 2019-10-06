@@ -2,6 +2,16 @@ module DSL.Z3Wrapper where
 
 import           Z3.Monad as Z
 
+type Sort = Z.Sort
+type Node = Z.AST
+
+
+assert :: MonadZ3 z3 => AST -> z3 ()
+assert = Z.assert
+
+eq :: MonadZ3 z3 => AST -> AST -> z3 AST
+eq = Z.mkEq
+
 add :: MonadZ3 z3 => AST -> AST -> z3 AST
 add x y = Z.mkAdd [x,y]
 
@@ -52,11 +62,11 @@ ugt = Z.mkBvugt
 sgt :: MonadZ3 z3 => AST -> AST -> z3 AST
 sgt = Z.mkBvsgt
 
-uge :: MonadZ3 z3 => AST -> AST -> z3 AST
-uge = Z.mkBvuge
+ugte :: MonadZ3 z3 => AST -> AST -> z3 AST
+ugte = Z.mkBvuge
 
-sge :: MonadZ3 z3 => AST -> AST -> z3 AST
-sge = Z.mkBvsge
+sgte :: MonadZ3 z3 => AST -> AST -> z3 AST
+sgte = Z.mkBvsge
 
 ult :: MonadZ3 z3 => AST -> AST -> z3 AST
 ult = Z.mkBvult
