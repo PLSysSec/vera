@@ -36,9 +36,6 @@ module DSL.DSL ( i64
                , assign
                , conjunction
                , disjunction
-               , jsSll32
-               , jsSrl32
-               , jsSra32
                , module DSL.BoolectorWrapper
                -- ** Verif monad
                , Verif
@@ -51,11 +48,14 @@ module DSL.DSL ( i64
                , runSolver
                ) where
 import           Control.Monad              (foldM)
+import           Control.Monad.Reader
 import           Control.Monad.State.Strict
 import qualified Data.Map.Strict            as M
 import           DSL.BoolectorWrapper       hiding (false, sat, true)
 import qualified DSL.BoolectorWrapper       as B
+import qualified DSL.Z3Wrapper              as Z3
 import           Prelude                    hiding (map, max, min, not)
+import qualified Z3.Monad                   as Z
 
 {-|
 
@@ -69,12 +69,12 @@ data VerifState = VerifState { vars         :: M.Map String B.Node
                              , solverResult :: SMTResult
                              }
 
-newtype Verif a = Verif (StateT VerifState B.Boolector a)
+newtype Verif a = Verif (StateT VerifState Z.Z3 a)
     deriving (Functor, Applicative, Monad, MonadState VerifState, MonadIO)
 
-instance B.MonadBoolector Verif where
-    getBoolectorState = Verif $ lift $ get
-    putBoolectorState s = Verif $ lift $ put s
+instance Z.MonadZ3 Verif where
+    getSolver = Verif $ lift $ Z.getSolver
+    getContext = Verif $ lift $ Z.getContext
 
 data SMTResult = SolverSat (M.Map String Integer)
                | SolverUnsat
@@ -93,29 +93,29 @@ emptyVerifState = VerifState { vars = M.empty
 runVerif :: Maybe Integer -- ^ Optional timeout
          -> Verif a       -- ^ Verification computation
          -> IO (a, VerifState)
-runVerif mTimeout (Verif act) = do
-  bs <- B.newBoolectorState mTimeout
-  B.evalBoolector bs $ runStateT act emptyVerifState
+runVerif mTimeout (Verif act) = error ""
+  -- bs <- B.newBoolectorState mTimeout
+  -- B.evalBoolector bs $ runStateT act emptyVerifState
 
 evalVerif :: Maybe Integer -> Verif a -> IO a
-evalVerif mt act = fst <$> runVerif mt act
+evalVerif mt act = error "" -- fst <$> runVerif mt act
 
 execVerif :: Maybe Integer -> Verif a -> IO VerifState
-execVerif mt act = snd <$> runVerif mt act
+execVerif mt act = error "" -- snd <$> runVerif mt act
 
 runSolver :: Verif SMTResult
-runSolver = do
-  check <- B.sat
-  result <- case check of
-    B.Sat -> do
-      allVars <- getVars
-      map <- mapM B.signedBvAssignment allVars
-      return $ SolverSat map
-    B.Unsat -> return SolverUnsat
-    _ -> return SolverFailed
-  s0 <- get
-  put $ s0 { solverResult = result }
-  return result
+runSolver = error ""
+  -- check <- B.sat
+  -- result <- case check of
+  --   B.Sat -> do
+  --     allVars <- getVars
+  --     map <- mapM B.signedBvAssignment allVars
+  --     return $ SolverSat map
+  --   B.Unsat -> return SolverUnsat
+  --   _ -> return SolverFailed
+  -- s0 <- get
+  -- put $ s0 { solverResult = result }
+  -- return result
 
 --
 -- Ints and stuff
@@ -272,16 +272,3 @@ disjunction :: [B.Node] -> Verif B.Node
 disjunction [] = error "Cannot have a disjunction of zero nodes"
 disjunction xs = foldM B.or (head xs) (tail xs)
 
--- | https://www.ecma-international.org/ecma-262/5.1/#sec-11.7.3
-jsShiftWrapper :: (B.Node -> B.Node -> Verif B.Node)
-               -> B.Node
-               -> B.Node
-               -> Verif B.Node
-jsShiftWrapper op left right = do
-  maskedRight <- i32c 31 >>= B.and right
-  op left maskedRight
-
-jsSll32, jsSrl32, jsSra32 :: B.Node -> B.Node -> Verif B.Node
-jsSll32 = jsShiftWrapper B.safeSll
-jsSrl32 = jsShiftWrapper B.safeSrl
-jsSra32 = jsShiftWrapper B.safeSra
