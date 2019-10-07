@@ -40,6 +40,10 @@ module DSL.Typed ( vassert
                  , jsShl
                  , jsShr
                  , jsUshr
+                 , jsMul
+                 , jsAbs
+                 , jsMin
+                 , jsMax
                    -- * Cpp operations: building blocks for what we are verifying
                  , cppNeg
                  , cppNot
@@ -363,7 +367,6 @@ getOp representativeNode intOp fpOp =
     32   -> intOp
     1000 -> fpOp
     _    -> error "JS operations only support ints or fp ops"
-  
 
 jsAdd :: VNode -> VNode -> D.Verif VNode
 jsAdd node1 node2 = do
@@ -375,19 +378,21 @@ jsAdd node1 node2 = do
 jsAnd :: VNode -> VNode -> D.Verif VNode
 jsAnd node1 node2 = do
   unless (vtype node1 == vtype node2) $ error "Types should match"
+  unless (is32Bits $ vtype node1) $ error "JavaScript AND does not support floats"
   result <- D.and (vnode node1) (vnode node2)
   newDefinedNode result $ vtype node1
 
 jsOr :: VNode -> VNode -> D.Verif VNode
 jsOr node1 node2 = do
   unless (vtype node1 == vtype node2) $ error "Types should match"
+  unless (is32Bits $ vtype node1) $ error "JavaScript OR does not support floats"         
   result <- D.or (vnode node1) (vnode node2)
   newDefinedNode result $ vtype node1
-
 
 jsNot :: VNode -> D.Verif VNode
 jsNot node = do
   result <- D.not (vnode node)
+  unless (is32Bits $ vtype node) $ error "JavaScript NOT does not support floats"
   newDefinedNode result $ vtype node
 
 -- | https://es5.github.io/#x11.7.1
@@ -405,6 +410,8 @@ jsShl :: VNode
       -> VNode
       -> D.Verif VNode
 jsShl left right = do
+  unless (vtype left == vtype right) $ error "Types should match"  
+  unless (is32Bits $ vtype left) $ error "JavaScript SHL does not support floats"  
   thirtyOne <- D.i32c 31
   shiftCount <- D.and (vnode right) thirtyOne
   result <- D.safeSll (vnode left) shiftCount
@@ -427,6 +434,8 @@ jsShr :: VNode
       -> VNode
       -> D.Verif VNode
 jsShr left right = do
+  unless (vtype left == vtype right) $ error "Types should match"  
+  unless (is32Bits $ vtype left) $ error "JavaScript SHL does not support floats"    
   thirtyOne <- D.i32c 31
   shiftCount <- D.and (vnode right) thirtyOne
   result <- D.safeSra (vnode left) shiftCount
@@ -449,12 +458,44 @@ jsUshr :: VNode
        -> VNode
        -> D.Verif VNode
 jsUshr left right = do
+  unless (vtype left == vtype right) $ error "Types should match"  
+  unless (is32Bits $ vtype left) $ error "JavaScript SHL does not support floats"    
   thirtyOne <- D.i32c 31
   shiftCount <- D.and (vnode right) thirtyOne
   result <- D.safeSra (vnode left) shiftCount
   undef <- D.i1c 0
   return $ VNode undef result Signed
 
+jsMul :: VNode
+      -> VNode
+      -> D.Verif VNode
+jsMul node1 node2 = do
+  unless (vtype node1 == vtype node2) $ error "Types should match"
+  let op = getOp node1 D.mul D.fpMul
+  result <- op (vnode node1) (vnode node2)
+  newDefinedNode result $ vtype node1
+                 
+jsMin :: VNode
+      -> VNode
+      -> D.Verif VNode
+jsMin node1 node2 = error "LOOK UP SEMANTICS"
+  -- unless (vtype node1 == vtype node2) $ error "Types should match"
+  -- let op = getOp node1 D.min D.fpMin 
+  -- result <- op (vnode node1) (vnode node2)
+  -- newDefinedNode result $ vtype node1  
+
+jsMax :: VNode
+      -> VNode
+      -> D.Verif VNode                    
+jsMax node1 node2 = error "LOOK UP SEMANTICS"
+  -- unless (vtype node1 == vtype node2) $ error "Types should match"
+  -- let op = getOp node1 D.max D.fpMax
+  -- result <- op (vnode node1) (vnode node2)
+  -- newDefinedNode result $ vtype node1    
+
+jsAbs _left _right = error "JS abs not yet implemenetd"
+  
+         
 --
 -- C++ Operations
 --
