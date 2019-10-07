@@ -108,7 +108,7 @@ fpTest = benchTestCase "fp" $ do
     fp2 <- M.mkFpFromInt 4 doubSort
     z <- M.mkFpZero doubSort False
     nan <- M.mkFpNan doubSort
-    -- inf <- M.mkFpInf doubSort True
+    -- inf <- M.mkFpInf doubSort True NO IDEA
 
     rna <- M.mkFpRna
     rne <- M.mkFpRne
@@ -118,16 +118,16 @@ fpTest = benchTestCase "fp" $ do
 
     isInf <- M.mkFpIsInf z
     isNan <- M.mkFpIsNan nan
-    -- isNeg <- M.mkFpIsNeg nan
+    -- isNeg <- M.mkFpIsNeg nan NO IDEA
     isPos <- M.mkFpIsPos fp1
-    -- isZero <- M.mkFpIsZero z
+    isZero <- M.mkFpIsZero z
 
     abs <- M.mkFpAbs fp1
     adds <- M.mkFpAdd rna fp1 fp2
     subs <- M.mkFpSub rne fp1 fp2
     divs <- M.mkFpDiv rtn fp1 fp2
     muls <- M.mkFpMul rtz nan nan
-    -- rems <- M.mkFpRem rne fp1 fp2
+    -- rems <- M.mkFpRem rne fp1 fp2 NO IDEA
     negs <- M.mkFpNeg fp1
     eqs <- M.mkFpEq fp1 fp2
     geqs <- M.mkFpGeq fp1 fp2
