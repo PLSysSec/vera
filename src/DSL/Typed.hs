@@ -47,6 +47,7 @@ module DSL.Typed ( vassert
                  , cppAnd
                  , cppAdd
                  , cppSub
+                 , cppMul
                  , cppOr
                  , cppMin
                  , cppMax
@@ -62,7 +63,7 @@ module DSL.Typed ( vassert
                  , D.evalVerif
                  , D.Verif
                  ) where
-import           Control.Monad.State.Strict (liftIO, unless)
+import           Control.Monad.State.Strict (liftIO, unless, when)
 import qualified DSL.DSL                    as D
 import qualified DSL.Z3Wrapper              as D
 import           Prelude                    hiding (compare)
@@ -185,6 +186,7 @@ numBits = numBits' . vtype
 
 numBits' :: Type -> Int
 numBits' Bool = 1
+numBits' Double = 1000 -- Code for a double
 numBits' ty
     | is32Bits ty = 32
     | is64Bits ty = 64
@@ -352,11 +354,22 @@ uintMin = unum 0
 -- JavaScript operations
 --
 
+getOp :: VNode
+      -> (D.AST -> D.AST -> D.Verif D.AST)
+      -> (D.AST -> D.AST -> D.Verif D.AST)
+      -> (D.AST -> D.AST -> D.Verif D.AST)         
+getOp representativeNode intOp fpOp =
+  case numBits representativeNode of 
+    32   -> intOp
+    1000 -> fpOp
+    _    -> error "JS operations only support ints or fp ops"
+  
+
 jsAdd :: VNode -> VNode -> D.Verif VNode
 jsAdd node1 node2 = do
   unless (vtype node1 == vtype node2) $ error "Types should match"
-  unless (is32Bits $ vtype node1) $ error "Don't support more now"
-  result <- D.add (vnode node1) (vnode node2)
+  let op = getOp node1 D.add D.fpAdd
+  result <- op (vnode node1) (vnode node2)
   newDefinedNode result $ vtype node1
 
 jsAnd :: VNode -> VNode -> D.Verif VNode
@@ -454,51 +467,71 @@ noopWrapper left right op = do
   unless (numBits left == numBits right) $ error "Mismatched bits to operation"
   result <- op (vnode left) (vnode right)
   let (s, u) = case numBits left of
-                 1  -> (Bool, Bool)
-                 16 -> (Signed16, Unsigned16)
-                 32 -> (Signed, Unsigned)
-                 64 -> (Signed64, Unsigned64)
-                 e  -> error $ unwords [ "Unsupported type for operation"
-                                       , show e
-                                       ]
+                 1    -> (Bool, Bool)
+                 16   -> (Signed16, Unsigned16)
+                 32   -> (Signed, Unsigned)
+                 64   -> (Signed64, Unsigned64)
+                 1000 -> (Double, Double)
+                 e    -> error $ unwords [ "Unsupported type for operation"
+                                         , show e
+                                         ]
   let ty = if isUnsigned (vtype left) && isUnsigned (vtype right) then u else s
   newMaybeDefinedNode left right result ty
 
 DEFINEUNIOPCLASS(CppNeg, cppNeg)
 instance CppNeg VNode where
   cppNeg node = do
-    result <- D.neg (vnode node)
+    let op = if isDouble $ vtype node then D.fpNeg else D.neg
+    result <- op (vnode node)
     return $ VNode (vundef node) result (vtype node)
 
 DEFINEUNIOPCLASS(CppNot, cppNot)
 instance CppNot VNode where
   cppNot node = do
+    when (isDouble $ vtype node) $ error "Cannot bitwise negate double"
     result <- D.not (vnode node)
     return $ VNode (vundef node) result (vtype node)
 
 DEFINEBINOPCLASS(CppEq, cppEq)
 instance CppEq VNode VNode where
-  cppEq left right = noopWrapper left right D.iseq
+  cppEq left right
+    | (isDouble $ vtype left) || (isDouble $ vtype right) = noopWrapper left right D.fpEq
+    | otherwise = noopWrapper left right D.iseq
 
 DEFINEBINOPCLASS(CppOr, cppOr)
 instance CppOr VNode VNode where
-  cppOr left right = noopWrapper left right D.or
+  cppOr left right
+    | (isDouble $ vtype left) || (isDouble $ vtype right) = error "No bitwise or for doubles"
+    | otherwise = noopWrapper left right D.or
 
 DEFINEBINOPCLASS(CppAnd, cppAnd)
 instance CppAnd VNode VNode where
-  cppAnd left right = noopWrapper left right D.and
+  cppAnd left right
+    | (isDouble $ vtype left) || (isDouble $ vtype right) = error "No bitwise and for doubles"
+    | otherwise = noopWrapper left right D.and
 
 DEFINEBINOPCLASS(CppSub, cppSub)
 instance CppSub VNode VNode where
-  cppSub left right = noopWrapper left right D.sub
+  cppSub left right
+    | isDouble (vtype left) || isDouble (vtype right) = noopWrapper left right D.fpSub
+    | otherwise = noopWrapper left right D.sub
 
+DEFINEBINOPCLASS(CppMul, cppMul)
+instance CppMul VNode VNode where
+  cppMul left right
+    | isDouble (vtype left) || isDouble (vtype right) = noopWrapper left right D.fpMul
+    | otherwise = noopWrapper left right D.mul
+                  
 DEFINEBINOPCLASS(CppAdd, cppAdd)
 instance CppAdd VNode VNode where
-  cppAdd left right = noopWrapper left right D.add
+  cppAdd left right
+    | isDouble (vtype left) || isDouble (vtype right) = noopWrapper left right D.fpAdd
+    | otherwise = noopWrapper left right D.add
 
 DEFINEBINOPCLASS(CppMin, cppMin)
 instance CppMin VNode VNode where
   cppMin right left
+    | isDouble (vtype right) || isDouble (vtype left) = noopWrapper left right D.fpMin
     | isUnsigned (vtype right) && isUnsigned (vtype left) = noopWrapper left right D.umin
     | isSigned (vtype right) && isSigned (vtype left) = noopWrapper left right D.smin
     | otherwise = error "Compiler error: Can't use std:min on a signed and unsigned"
@@ -506,6 +539,7 @@ instance CppMin VNode VNode where
 DEFINEBINOPCLASS(CppMax, cppMax)
 instance CppMax VNode VNode where
   cppMax right left
+    | isDouble (vtype right) || isDouble (vtype left) = noopWrapper left right D.fpMax 
     | isUnsigned (vtype right) && isUnsigned (vtype left) = noopWrapper left right D.umax
     | isSigned (vtype right) && isSigned (vtype left) = noopWrapper left right D.smax
     | otherwise = error "Compiler error: Can't use std:max on a signed and unsigned"
@@ -516,6 +550,10 @@ cppCompareWrapper :: VNode
                   -> (D.Node -> D.Node -> D.Verif D.Node)
                   -> D.Verif VNode
 cppCompareWrapper left right uCompare sCompare
+ | isDouble (vtype left) || isDouble (vtype right) = do
+     unless (vtype left == vtype right) $ error "Expected two doubles as argumnets"
+     compare <- uCompare (vnode left) (vnode right)
+     newMaybeDefinedNode left right compare Bool
  | isUnsigned (vtype left) || isUnsigned (vtype right) = do
      compare <- uCompare (vnode left) (vnode right)
      newMaybeDefinedNode left right compare Bool
