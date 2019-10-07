@@ -270,6 +270,21 @@ fpTest = benchTestCase "fp test" $ do
     added <- T.jsAdd v c
     subbed <- T.jsSub v c
     mulled <- T.jsMul v c
+    pi <- T.posInf
+    ni <- T.negInf
+    pz <- T.posZero
+    nz <- T.negZero
+    n <- T.nan
+
+    t1 <- T.isInf pi
+    t2 <- T.isInf ni
+    t3 <- T.isNan n
+    t4 <- T.isNeg ni
+    t5 <- T.isNeg nz
+    t6 <- T.isPos pi
+    t7 <- T.isPos pz
+    t8 <- T.isZero pz
+    t9 <- T.isZero nz
 
     T.runSolver
 
