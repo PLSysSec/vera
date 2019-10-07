@@ -7,9 +7,11 @@ module DSL.Typed ( vassert
                  , assertDef
                  , newInputVar
                  , newResultVar
+                 -- * Query
                  , is32Bits
                  , is64Bits
                  , is16Bits
+                 -- * Constants and variables
                  , true
                  , false
                  , bool
@@ -19,15 +21,19 @@ module DSL.Typed ( vassert
                  , uint64
                  , int16
                  , uint16
+                 , fp
                  , num
                  , unum
                  , num64
                  , unum64
                  , num16
                  , unum16
+                 , fpnum
+                 -- * Types 
                  , VNode
                  , Type(..)
                  , vtype
+                 -- * Min/Max constants 
                  , intMax
                  , intMin
                  , uintMax
@@ -63,6 +69,7 @@ module DSL.Typed ( vassert
                  , cppShiftRight
                  , cppCond
                  , cppCast
+                 -- * Running the solver and getting the model
                  , D.runSolver
                  , D.evalVerif
                  , D.Verif
@@ -224,6 +231,7 @@ newInputVar ty name = do
            Unsigned64 -> D.i64v name
            Signed16   -> D.i16v name
            Unsigned16 -> D.i16v name
+           Double     -> D.doubv name 
            _          -> error "Not yet supported"
   undef <- D.i1c 0
   return $ VNode undef var ty
@@ -238,6 +246,7 @@ newResultVar Signed64   = int64
 newResultVar Unsigned64 = uint64
 newResultVar Signed16   = int16
 newResultVar Unsigned16 = uint16
+newResultVar Double     = fp
 newResultVar _          = error "No more"
 
 
@@ -309,6 +318,9 @@ int16 name = makeVar name D.i16v Signed16
 uint16 :: String -> D.Verif VNode
 uint16 name = makeVar name D.i16v Unsigned16
 
+fp :: String -> D.Verif VNode
+fp name = makeVar name D.doubv Double 
+              
 makeNum :: Integer -> (Integer -> D.Verif D.Node) -> Type -> D.Verif VNode
 makeNum val numMaker ty = do
   node <- numMaker val
@@ -338,6 +350,11 @@ unum16 val = makeNum val D.i16c Unsigned16
 num16 :: Integer -> D.Verif VNode
 num16 val = makeNum val D.i16c Signed16
 
+fpnum :: Double -> D.Verif VNode
+fpnum val = do
+  node <- D.double val 
+  newDefinedNode node Double  
+            
 --
 --
 --

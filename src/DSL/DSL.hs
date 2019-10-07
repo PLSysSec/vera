@@ -27,6 +27,7 @@ module DSL.DSL ( i64
                , i16v
                , i8v
                , i1v
+               , doubv
                , smin
                , smax
                , umin
