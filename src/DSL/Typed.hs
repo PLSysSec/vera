@@ -38,6 +38,17 @@ module DSL.Typed ( vassert
                  , intMin
                  , uintMax
                  , uintMin
+                   -- * Floating point specific 
+                 , posInf
+                 , negInf
+                 , posZero
+                 , negZero
+                 , nan
+                 , isInf
+                 , isNan
+                 , isNeg
+                 , isPos
+                 , isZero
                    -- * Js operations: what we are using to verify
                  , jsAdd
                  , jsSub
@@ -372,6 +383,60 @@ uintMax = unum 4294967295
 uintMin :: D.Verif VNode
 uintMin = unum 0
 
+--
+-- Floating point
+--
+
+posInf :: D.Verif VNode
+posInf = do
+  inf <- D.inf True
+  newDefinedNode inf Double 
+
+negInf :: D.Verif VNode
+negInf = do
+  inf <- D.inf False 
+  newDefinedNode inf Double   
+
+posZero :: D.Verif VNode
+posZero = do
+  z <- D.fpzero True
+  newDefinedNode z Double
+
+negZero :: D.Verif VNode
+negZero = do
+  z <- D.fpzero False
+  newDefinedNode z Double 
+
+nan :: D.Verif VNode                 
+nan = do
+  nan <- D.nan
+  newDefinedNode nan Double
+
+isInf :: VNode -> D.Verif VNode                 
+isInf n = do
+  c <- D.isInf $ vnode n
+  newMaybeDefinedNode n n c Double 
+
+isNan :: VNode -> D.Verif VNode                      
+isNan n = do
+  c <- D.isNan $ vnode n
+  newMaybeDefinedNode n n c Double
+
+isNeg :: VNode -> D.Verif VNode                      
+isNeg n = do
+  c <- D.isNeg $ vnode n
+  newMaybeDefinedNode n n c Double
+        
+isPos :: VNode -> D.Verif VNode
+isPos n = do
+  c <- D.isPos $ vnode n
+  newMaybeDefinedNode n n c Double 
+
+isZero :: VNode -> D.Verif VNode                       
+isZero n = do
+  c <- D.isZero $ vnode n
+  newMaybeDefinedNode n n c Double
+          
 --
 -- JavaScript operations
 --
