@@ -21,41 +21,79 @@ assert a = do
     s              -> error $ unwords ["Can't assert sort", show s]
   Z.assert a'
 
+typeSafeUnary' :: MonadZ3 z3 => AST -> z3 Z.Sort
+typeSafeUnary' ast = do
+  sort <- Z.getSort ast
+  kind <- Z.getSortKind sort
+  case kind of
+    Z.Z3_BV_SORT -> return sort
+    s            -> error $ unwords ["Expected BV sort, not", show s]
+
+typeSafeBinary :: MonadZ3 z3 => String -> AST -> AST -> z3 ()
+typeSafeBinary op ast1 ast2 = do
+  s1 <- typeSafeUnary' ast1
+  s2 <- typeSafeUnary' ast2
+  size1 <- Z.getBvSortSize s1
+  size2 <- Z.getBvSortSize s2
+  unless (s1 == s2) $ error $ unwords [op, ": bit-widths must match"]
+
 eq :: MonadZ3 z3 => AST -> AST -> z3 AST
 eq = Z.mkEq
 
 add :: MonadZ3 z3 => AST -> AST -> z3 AST
-add = Z.mkBvadd
+add a b = do
+  typeSafeBinary "add" a b
+  Z.mkBvadd a b
 
 sub :: MonadZ3 z3 => AST -> AST -> z3 AST
-sub = Z.mkBvsub
+sub a b = do
+  typeSafeBinary "sub" a b
+  Z.mkBvsub a b
 
 mul :: MonadZ3 z3 => AST -> AST -> z3 AST
-mul = Z.mkBvmul
+mul a b = do
+  typeSafeBinary "mul" a b
+  Z.mkBvmul a b
 
 sdiv :: MonadZ3 z3 => AST -> AST -> z3 AST
-sdiv = Z.mkBvsdiv
+sdiv a b = do
+  typeSafeBinary "sdiv" a b
+  Z.mkBvsdiv a b
 
 udiv :: MonadZ3 z3 => AST -> AST -> z3 AST
-udiv = Z.mkBvudiv
+udiv a b = do
+  typeSafeBinary "udiv" a b
+  Z.mkBvudiv a b
 
 mod :: MonadZ3 z3 => AST -> AST -> z3 AST
-mod = Z.mkBvsmod
+mod a b = do
+  typeSafeBinary "mod" a b
+  Z.mkBvsmod a b
 
 srem :: MonadZ3 z3 => AST -> AST -> z3 AST
-srem = Z.mkBvsrem
+srem a b = do
+  typeSafeBinary "srem" a b
+  Z.mkBvsrem a b
 
 urem :: MonadZ3 z3 => AST -> AST -> z3 AST
-urem = Z.mkBvurem
+urem a b = do
+  typeSafeBinary "urem" a b
+  Z.mkBvurem a b
 
 and :: MonadZ3 z3 => AST -> AST -> z3 AST
-and = Z.mkBvand
+and a b = do
+  typeSafeBinary "and" a b
+  Z.mkBvand a b
 
 or :: MonadZ3 z3 => AST -> AST -> z3 AST
-or = Z.mkBvor
+or a b = do
+  typeSafeBinary "or" a b
+  Z.mkBvor a b
 
 xor :: MonadZ3 z3 => AST -> AST -> z3 AST
-xor = Z.mkBvxor
+xor a b = do
+  typeSafeBinary "xor" a b
+  Z.mkBvxor a b
 
 not :: MonadZ3 z3 => AST -> z3 AST
 not = Z.mkBvnot
@@ -64,13 +102,19 @@ neg :: MonadZ3 z3 => AST -> z3 AST
 neg = Z.mkBvneg
 
 sll :: MonadZ3 z3 => AST -> AST -> z3 AST
-sll = Z.mkBvshl
+sll a b = do
+  typeSafeBinary "sll" a b
+  Z.mkBvshl a b
 
 srl :: MonadZ3 z3 => AST -> AST -> z3 AST
-srl = Z.mkBvlshr
+srl a b = do
+  typeSafeBinary "srl" a b
+  Z.mkBvlshr a b
 
 sra :: MonadZ3 z3 => AST -> AST -> z3 AST
-sra = Z.mkBvashr
+sra a b = do
+  typeSafeBinary "sra" a b
+  Z.mkBvashr a b
 
 -- Comparisons
 
@@ -78,31 +122,49 @@ cmpWrapper :: MonadZ3 z3 => AST -> z3 AST
 cmpWrapper a = Z.mkInt2bv 1 a
 
 ugt :: MonadZ3 z3 => AST -> AST -> z3 AST
-ugt a b = Z.mkBvugt a b >>= cmpWrapper
+ugt a b = do
+  typeSafeBinary "ugt" a b
+  Z.mkBvugt a b >>= cmpWrapper
 
 sgt :: MonadZ3 z3 => AST -> AST -> z3 AST
-sgt a b = Z.mkBvsgt a b >>= cmpWrapper
+sgt a b = do
+  typeSafeBinary "sgt" a b
+  Z.mkBvsgt a b >>= cmpWrapper
 
 ugte :: MonadZ3 z3 => AST -> AST -> z3 AST
-ugte a b = Z.mkBvuge a b >>= cmpWrapper
+ugte a b = do
+  typeSafeBinary "ugte" a b
+  Z.mkBvuge a b >>= cmpWrapper
 
 sgte :: MonadZ3 z3 => AST -> AST -> z3 AST
-sgte a b = Z.mkBvsge a b >>= cmpWrapper
+sgte a b = do
+  typeSafeBinary "sgte" a b
+  Z.mkBvsge a b >>= cmpWrapper
 
 ult :: MonadZ3 z3 => AST -> AST -> z3 AST
-ult a b = Z.mkBvult a b >>= cmpWrapper
+ult a b = do
+  typeSafeBinary "ult" a b
+  Z.mkBvult a b >>= cmpWrapper
 
 slt :: MonadZ3 z3 => AST -> AST -> z3 AST
-slt a b = Z.mkBvslt a b >>= cmpWrapper
+slt a b = do
+  typeSafeBinary "slt" a b
+  Z.mkBvslt a b >>= cmpWrapper
 
 ulte :: MonadZ3 z3 => AST -> AST -> z3 AST
-ulte a b = Z.mkBvule a b >>= cmpWrapper
+ulte a b = do
+  typeSafeBinary "ulte" a b
+  Z.mkBvule a b >>= cmpWrapper
 
 slte :: MonadZ3 z3 => AST -> AST -> z3 AST
-slte a b = Z.mkBvsle a b >>= cmpWrapper
+slte a b = do
+  typeSafeBinary "slte" a b
+  Z.mkBvsle a b >>= cmpWrapper
 
 iseq :: MonadZ3 z3 => AST -> AST -> z3 AST
-iseq a b = Z.mkEq a b >>= cmpWrapper
+iseq a b = do
+  typeSafeBinary "iseq" a b
+  Z.mkEq a b >>= cmpWrapper
 
 cond :: MonadZ3 z3 => AST -> AST -> AST -> z3 AST
 cond c a b = do
