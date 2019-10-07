@@ -12,9 +12,10 @@ import           Utils
 import qualified Z3.Monad                   as M
 
 dslTests :: BenchTest
-dslTests = benchTestGroup "DSL" [ --addTest
- --                                incrTest
-                                  incrTest2
+dslTests = benchTestGroup "DSL" [ addTest
+                                , incrTest
+                                , incrTest2
+                                , fpTest
                                 ]
 
 addTest :: BenchTest
@@ -93,6 +94,48 @@ incrTest2 = benchTestCase "incr2" $ do
     M.push
     leftRange <- inputRange T.Signed "left start range"
     M.pop 1
+
+    D.runSolver
+
+  satTest r
+
+fpTest :: BenchTest
+fpTest = benchTestCase "fp" $ do
+
+  r <- D.evalVerif Nothing $ do
+    doubSort <- M.mkDoubleSort
+    fp1 <- M.mkFpFromDouble 4.5 doubSort
+    fp2 <- M.mkFpFromInt 4 doubSort
+    z <- M.mkFpZero doubSort False
+    nan <- M.mkFpNan doubSort
+    -- inf <- M.mkFpInf doubSort True
+
+    rna <- M.mkFpRna
+    rne <- M.mkFpRne
+    rtn <- M.mkFpRtn
+    rtp <- M.mkFpRtp
+    rtz <- M.mkFpRtz
+
+    isInf <- M.mkFpIsInf z
+    isNan <- M.mkFpIsNan nan
+    -- isNeg <- M.mkFpIsNeg nan
+    isPos <- M.mkFpIsPos fp1
+    -- isZero <- M.mkFpIsZero z
+
+    abs <- M.mkFpAbs fp1
+    adds <- M.mkFpAdd rna fp1 fp2
+    subs <- M.mkFpSub rne fp1 fp2
+    divs <- M.mkFpDiv rtn fp1 fp2
+    muls <- M.mkFpMul rtz nan nan
+    -- rems <- M.mkFpRem rne fp1 fp2
+    negs <- M.mkFpNeg fp1
+    eqs <- M.mkFpEq fp1 fp2
+    geqs <- M.mkFpGeq fp1 fp2
+    gts <- M.mkFpGt fp1 fp2
+    leqs <- M.mkFpLeq fp1 fp2
+    lts <- M.mkFpLt fp1 nan
+    maxs <- M.mkFpMax fp1 fp2
+    -- mins <- M.mkFpMin fp1 fp2
 
     D.runSolver
 
