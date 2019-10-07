@@ -15,6 +15,7 @@ cppTests = benchTestGroup "C++ tests" [ cppMinTest
                                       , cppCmpTest
                                       , cppShlTest
                                       , cppShrTest
+                                      , fpTest
                                       ]
 
 trueBit :: Integer
@@ -257,3 +258,19 @@ cppShrTest = benchTestCase "shr test" $ do
                        , ("result4", -1)
                        , ("result5_undef", trueBit)
                        ]
+
+fpTest :: BenchTest
+fpTest = benchTestCase "fp test" $ do
+
+  r <- T.evalVerif Nothing $ do
+
+    v <- T.fp "fp var"
+    c <- T.fpnum 5.6
+
+    added <- T.jsAdd v c
+    subbed <- T.jsSub v c
+    mulled <- T.jsMul v c
+
+    T.runSolver
+
+  vtest r $ M.fromList []

@@ -40,6 +40,7 @@ module DSL.Typed ( vassert
                  , uintMin
                    -- * Js operations: what we are using to verify
                  , jsAdd
+                 , jsSub
                  , jsAnd
                  , jsOr
                  , jsNot
@@ -391,6 +392,13 @@ jsAdd node1 node2 = do
   let op = getOp node1 D.add D.fpAdd
   result <- op (vnode node1) (vnode node2)
   newDefinedNode result $ vtype node1
+
+jsSub :: VNode -> VNode -> D.Verif VNode
+jsSub node1 node2 = do
+  unless (vtype node1 == vtype node2) $ error "Types should match"
+  let op = getOp node1 D.sub D.fpSub
+  result <- op (vnode node1) (vnode node2)
+  newDefinedNode result $ vtype node1                 
 
 jsAnd :: VNode -> VNode -> D.Verif VNode
 jsAnd node1 node2 = do
