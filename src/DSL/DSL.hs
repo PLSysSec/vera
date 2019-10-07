@@ -46,7 +46,6 @@ module DSL.DSL ( i64
                , evalVerif
                , execVerif
                , runSolver
-               , wtf
                ) where
 import           Control.Monad              (foldM)
 import           Control.Monad.Reader
@@ -55,29 +54,6 @@ import qualified Data.Map.Strict            as M
 import qualified DSL.Z3Wrapper              as Z3
 import           Prelude                    hiding (map, max, min, not)
 import qualified Z3.Monad                   as Z
-
-wtf = runVerif Nothing $ do
-    liftIO $ putStrLn "A"
-    one <- i64c 1
-    liftIO $ putStrLn "B"
-    two <- i64c 2
-    liftIO $ putStrLn "C"
-    tmp0 <- Z3.xor one two
-    tmp1 <- Z3.slt one two
-    tmp2 <- Z3.slt one tmp0
-    tmp3 <- Z3.slt two tmp0
-
-    -- OK
-    Z.mkOr [tmp2, tmp3]
-    -- NOT OK
-    -- Z.or tmp2 tmp3
-
-    liftIO $ putStrLn "D"
-    res <- runSolver
-    liftIO $ putStrLn "E"
-    liftIO $ putStrLn $ show res
-
-
 
 {-|
 
@@ -140,6 +116,9 @@ runSolver = do
 --
 -- Ints and stuff
 --
+
+doub :: Verif Z3.Sort
+doub = Z.mkDoubleSort
 
 i64 :: Verif Z3.Sort
 i64 = Z.mkBvSort 64
@@ -237,14 +216,14 @@ var' sort name = do
       put $ s0 { vars = M.insert name result allVars }
       return result
 
+doubv :: String -> Verif Z3.Node
+doubv name = var' doub name
+
 i64v :: String -> Verif Z3.Node
 i64v name = var' i64 name
 
 i32v :: String -> Verif Z3.Node
-i32v name = var' i32 name -- do
-  -- bv32 <- Z.mkBvSort 32
-  -- sym <- Z.mkStringSymbol name
-  -- Z.mkVar sym bv32
+i32v name = var' i32 name
 
 i16v :: String -> Verif Z3.Node
 i16v name = var' i16 name

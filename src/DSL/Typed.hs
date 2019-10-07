@@ -176,6 +176,10 @@ isSigned _        = False
 isUnsigned :: Type -> Bool
 isUnsigned = not . isSigned
 
+isDouble :: Type -> Bool
+isDouble Double = True
+isDouble _      = False
+             
 numBits :: VNode -> Int
 numBits = numBits' . vtype
 

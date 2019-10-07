@@ -1,10 +1,12 @@
 module DSL.Z3Wrapper where
 
 import           Control.Monad.State.Strict (liftIO, unless)
-import           Z3.Monad                   as Z
+import           Z3.Monad                   (MonadZ3)
+import qualified Z3.Monad                   as Z
 
 type Sort = Z.Sort
 type Node = Z.AST
+type AST = Z.AST
 
 
 assert :: MonadZ3 z3 => AST -> z3 ()
@@ -262,4 +264,85 @@ nan = do
   doubSort <- Z.mkDoubleSort
   Z.mkFpNan doubSort
 
+rna :: MonadZ3 z3 => z3 AST
+rna = Z.mkFpRna
+
+rne :: MonadZ3 z3 => z3 AST
+rne = Z.mkFpRne
+
+rtn :: MonadZ3 z3 => z3 AST
+rtn = Z.mkFpRtn
+
+rtp :: MonadZ3 z3 => z3 AST
+rtp = Z.mkFpRtp
+
+rtz :: MonadZ3 z3 => z3 AST
+rtz = Z.mkFpRtz
+
+isInf :: MonadZ3 z3 => AST -> z3 AST
+isInf = Z.mkFpIsInf
+
+isNan :: MonadZ3 z3 => AST -> z3 AST
+isNan = Z.mkFpIsNan
+
+isNeg :: MonadZ3 z3 => AST -> z3 AST
+isNeg = Z.mkFpIsNeg
+
+isPos :: MonadZ3 z3 => AST -> z3 AST
+isPos = Z.mkFpIsPos
+
+isZero :: MonadZ3 z3 => AST -> z3 AST
+isZero = Z.mkFpIsZero
+
+rmWrapper :: MonadZ3 z3
+          => (AST -> AST -> AST -> z3 AST)
+          -> AST
+          -> AST
+          -> z3 AST
+rmWrapper op a b = do
+  -- In the future we will get the current rounding mode from the monad
+  rna_ <- rna
+  op rna_ a b
+
+fpAbs :: MonadZ3 z3 => AST -> z3 AST
+fpAbs = Z.mkFpAbs
+
+fpAdd :: MonadZ3 z3 => AST -> AST -> z3 AST
+fpAdd = rmWrapper Z.mkFpAdd
+
+fpSub :: MonadZ3 z3 => AST -> AST -> z3 AST
+fpSub = rmWrapper Z.mkFpSub
+
+fpDiv :: MonadZ3 z3 => AST -> AST -> z3 AST
+fpDiv = rmWrapper Z.mkFpDiv
+
+fpMul :: MonadZ3 z3 => AST -> AST -> z3 AST
+fpMul = rmWrapper Z.mkFpMul
+
+fpRem :: MonadZ3 z3 => AST -> AST -> z3 AST
+fpRem = Z.mkFpRem
+
+fpNeg :: MonadZ3 z3 => AST -> z3 AST
+fpNeg = Z.mkFpNeg
+
+fpEq :: MonadZ3 z3 => AST -> AST -> z3 AST
+fpEq = Z.mkFpEq
+
+fpGte :: MonadZ3 z3 => AST -> AST -> z3 AST
+fpGte = Z.mkFpGeq
+
+fpGt :: MonadZ3 z3 => AST -> AST -> z3 AST
+fpGt = Z.mkFpGt
+
+fpLte :: MonadZ3 z3 => AST -> AST -> z3 AST
+fpLte = Z.mkFpLeq
+
+fpLt :: MonadZ3 z3 => AST -> AST -> z3 AST
+fpLt = Z.mkFpLt
+
+fpMin :: MonadZ3 z3 => AST -> AST -> z3 AST
+fpMin = Z.mkFpMin
+
+fpMax :: MonadZ3 z3 => AST -> AST -> z3 AST
+fpMax = Z.mkFpMax
 
