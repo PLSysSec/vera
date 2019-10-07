@@ -1,8 +1,8 @@
 module DSL where
 import           BenchUtils
 import           Control.Monad.State.Strict (liftIO)
-import qualified Data.Map                   as M
 import qualified DSL.DSL                    as D
+import qualified DSL.Typed                  as T
 import qualified DSL.Z3Wrapper              as Ops
 import           IonMonkey.Objects
 import           IonMonkey.Operations
@@ -12,7 +12,10 @@ import           Utils
 import qualified Z3.Monad                   as M
 
 dslTests :: BenchTest
-dslTests = benchTestGroup "DSL" [ addTest ]
+dslTests = benchTestGroup "DSL" [ --addTest
+ --                                incrTest
+                                  incrTest2
+                                ]
 
 addTest :: BenchTest
 addTest = benchTestCase "add" $ do
@@ -64,4 +67,34 @@ addTest = benchTestCase "add" $ do
 
   satTest r
 
+
+incrTest :: BenchTest
+incrTest = benchTestCase "incr" $ do
+
+  r <- D.evalVerif Nothing $ do
+    one <- D.i32c 1
+    two <- D.i32c 2
+    added <- Ops.add one two
+    result <- D.i32v "r"
+    M.push
+    D.assign result added
+    r <- D.runSolver
+    M.pop 1
+    D.runSolver
+    return r
+
+  satTest r
+
+
+incrTest2 :: BenchTest
+incrTest2 = benchTestCase "incr2" $ do
+
+  r <- D.evalVerif Nothing $ do
+    M.push
+    leftRange <- inputRange T.Signed "left start range"
+    M.pop 1
+
+    D.runSolver
+
+  satTest r
 

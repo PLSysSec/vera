@@ -80,7 +80,7 @@ notTest = benchTestCase "not" $ do
     c1 <- verifySaneRange resultRange
     c2 <- verifyDefinedResult resultRange
 
-    -- Make sure that the result range actually corresponds to the range of the operator
+    -- -- Make sure that the result range actually corresponds to the range of the operator
     op <- operandWithRange "op" T.Signed opRange
     result <- T.jsNot op
     c3 <- verifyUpperBound result resultRange

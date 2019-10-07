@@ -145,10 +145,10 @@ verifyConsistent = do
 -- Expects UNSAT
 verifySaneRange :: Range -> D.Verif VerifResult
 verifySaneRange resultRange = do
-  D.push 1
+  D.push
   T.cppLt (upper resultRange) (lower resultRange) >>= T.vassert
   check <- D.runSolver
-  D.pop 1
+--  D.pop
   return $ case check of
     D.SolverUnsat  -> Verified
     D.SolverSat xs -> OverlappingRange xs
@@ -158,10 +158,10 @@ verifySaneRange resultRange = do
 -- Expects UNSAT
 verifyUpperBound :: T.VNode -> Range -> D.Verif VerifResult
 verifyUpperBound node range = do
-  D.push 1
+  D.push
   T.cppGt node (upper range) >>= T.vassert
   check <- D.runSolver
-  D.pop 1
+  D.pop
   return $ case check of
     D.SolverUnsat  -> Verified
     D.SolverSat xs -> BadUpperBound xs
@@ -171,10 +171,10 @@ verifyUpperBound node range = do
 -- Expects UNSAT
 verifyLowerBound :: T.VNode -> Range -> D.Verif VerifResult
 verifyLowerBound node range = do
-  D.push 1
+  D.push
   T.cppLt node (lower range) >>= T.vassert
   check <- D.runSolver
-  D.pop 1
+  D.pop
   return $ case check of
     D.SolverUnsat  -> Verified
     D.SolverSat xs -> BadLowerBound xs
@@ -182,11 +182,11 @@ verifyLowerBound node range = do
 
 verifyDefinedResult :: Range -> D.Verif VerifResult
 verifyDefinedResult range = do
-  D.push 1
+  D.push
   T.assertUndef (lower range)
   T.assertUndef (upper range)
   check <- D.runSolver
-  D.pop 1
+  D.pop
   return $ case check of
     D.SolverUnsat  -> Verified
     D.SolverSat xs -> UndefRange xs

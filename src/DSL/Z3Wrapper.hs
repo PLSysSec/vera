@@ -119,7 +119,10 @@ sra a b = do
 -- Comparisons
 
 cmpWrapper :: MonadZ3 z3 => AST -> z3 AST
-cmpWrapper a = Z.mkInt2bv 1 a
+cmpWrapper a = do
+  true <- Z.mkBvNum 1 1
+  false <- Z.mkBvNum 1 0
+  Z.mkIte a true false
 
 ugt :: MonadZ3 z3 => AST -> AST -> z3 AST
 ugt a b = do
@@ -187,11 +190,11 @@ slice a i1 i2 = Z.mkExtract i1 i2 a
 -- ror :: MonadZ3 z3 => AST -> AST -> z3 AST
 -- ror = mkExtRotateRight
 
-push :: MonadZ3 z3 => Int -> z3 ()
-push _ = solverPush
+push :: MonadZ3 z3 => z3 ()
+push = Z.push
 
-pop :: MonadZ3 z3 => Int -> z3 ()
-pop = solverPop
+pop :: MonadZ3 z3 => z3 ()
+pop = Z.pop 1
 
 -- | Safe boolector shift operations
 --
