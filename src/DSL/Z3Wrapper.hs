@@ -240,3 +240,26 @@ castToWidth varToCast newWidth = do
     GT -> slice varToCast (newWidth - 1) 0
     _  -> return varToCast
 
+-- Floating point wrappers
+
+double :: MonadZ3 z3 => Double -> z3 AST
+double doub = do
+  doubSort <- Z.mkDoubleSort
+  Z.mkFpFromDouble doub doubSort
+
+inf :: MonadZ3 z3 => Bool -> z3 AST
+inf positive = do
+  doubSort <- Z.mkDoubleSort
+  Z.mkFpInf doubSort positive
+
+fpzero ::MonadZ3 z3 => Bool -> z3 AST
+fpzero positive = do
+  doubSort <- Z.mkDoubleSort
+  Z.mkFpZero doubSort positive
+
+nan :: MonadZ3 z3 => z3 AST
+nan = do
+  doubSort <- Z.mkDoubleSort
+  Z.mkFpNan doubSort
+
+
