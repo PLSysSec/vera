@@ -191,3 +191,26 @@ verifyDefinedResult range = do
     D.SolverUnsat  -> Verified
     D.SolverSat xs -> UndefRange xs
     _              -> error "Error while verifying"
+
+-- | IsNan flag set for a non-nan value?
+-- | IsNan flag unset for a nan value?
+verifyInfNan :: T.VNode -> Range -> D.Verif VerifResult
+verifyInfNan node range = error ""
+
+-- | IsFract flag set for a non-fract value?
+-- | IsFract flag unset for a fact value?
+veriftFract :: T.VNode -> Range -> D.Verif VerifResult
+veriftFract node range = error ""
+
+verifInt32Bounds :: T.VNode -> Range -> D.Verif VerifResult
+verifInt32Bounds node range = error ""
+
+verifNegZero :: T.VNode -> Range -> D.Verif VerifResult
+verifNegZero node range = error ""
+
+verifExponent :: T.VNode -> Range -> D.Verif VerifResult
+verifExponent node range = error ""
+
+
+
+
