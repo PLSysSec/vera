@@ -148,7 +148,7 @@ verifySaneRange resultRange = do
   D.push
   T.cppLt (upper resultRange) (lower resultRange) >>= T.vassert
   check <- D.runSolver
---  D.pop
+  D.pop
   return $ case check of
     D.SolverUnsat  -> Verified
     D.SolverSat xs -> OverlappingRange xs
