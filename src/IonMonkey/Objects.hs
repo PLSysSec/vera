@@ -123,13 +123,25 @@ operandWithRange name ty range = do
     opIsNan <- T.isNan op
     isInfOrNan <- T.cppOr opIsInf opIsNan
     T.vassign isInfOrNan (canBeInfiniteOrNan range)
-    -- If the range says it has an int32 lower or upper bound, make sure that the op does
     -- If it can be negative zero the range should say so
     isNeg <- T.isNeg op
     isZero <- T.isZero op
     isNegZero <- T.cppOr isNeg isZero
     T.vassign isNegZero (canBeNegativeZero range)
     -- If it can have a fractional part the range should say so
+
+    -- If it can be outside of a standard int range, the flag should indicate so
+    fpJsMax <- T.fpnum 2147483647
+    fpJsMin <- T.fpnum (-2147483648)
+    isTooBig <- T.cppGt op fpJsMax
+    isTooSmall <- T.cppLt op fpJsMin
+    f <- T.false
+    let hasLower = hasInt32LowerBound range
+        hasUpper = hasInt32UpperBound range
+    hasLower' <- T.cppCond isTooSmall f hasLower
+    hasUpper' <- T.cppCond isTooBig f hasUpper
+    T.vassign hasLower hasLower'
+    T.vassign hasUpper hasUpper'
   else do
     T.cppLte op (upper range) >>= T.vassert
     T.cppGte op (lower range) >>= T.vassert

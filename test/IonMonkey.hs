@@ -9,16 +9,16 @@ import           Test.Tasty.HUnit
 
 ionMonkeyTests :: BenchTest
 ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ fpAddTest
-                                                   -- , addTest
-                                                   -- , andTest
-                                                   -- , notTest
-                                                   -- , lshTest
-                                                   -- , rshTest
-                                                   -- , urshTest
-                                                   -- , lsh'Test
-                                                   -- , rsh'Test
-                                                   -- , ursh'Test
-                                                   -- , orTest
+                                                   , addTest
+                                                   , andTest
+                                                   , notTest
+                                                   , lshTest
+                                                   , rshTest
+                                                   , urshTest
+                                                   , lsh'Test
+                                                   , rsh'Test
+                                                   , ursh'Test
+                                                   , orTest
                                                    ]
 
 fpAddTest :: BenchTest
