@@ -106,8 +106,6 @@ runSolver = do
   z3result <- Z.solverCheckAndGetModel
   result <- case z3result of
     (Z.Sat, Just model) -> do
-      -- mmap <- modelToMap model
-      -- liftIO $ putStrLn $ show mmap
       strModel <- Z.modelToString model
       return $ SolverSat strModel
     (Z.Unsat, _) -> return SolverUnsat
@@ -115,31 +113,6 @@ runSolver = do
   s0 <- get
   put $ s0 { solverResult = result }
   return result
-
-
--- | Data type encoding model values
-data ModelVal = ModelBool Bool
-              | ModelBv Integer
-              deriving (Eq)
-
-instance Show ModelVal where
-  show (ModelBool b) = show b
-  show (ModelBv   i) = show i
-
-modelToMap :: Z.Model -> Verif (Maybe (M.Map String ModelVal))
-modelToMap model = do
-  allVars <- vars <$> get
-  Z.mapEval doit model allVars
-
-doit :: Z.MonadZ3 m => Z.EvalAst m ModelVal
-doit model var = do
-  sort <- Z.getSort var
-  sortKind <- Z.getSortKind sort
-  case sortKind of
-    Z.Z3_BOOL_SORT -> liftM ModelBool <$> Z.evalBool model var
-    Z.Z3_BV_SORT   -> liftM ModelBv <$> Z.evalBv True model var
-    _ -> error "not supported"
-  -- return $ M.fromList allModelVars
 
 --
 -- Ints and stuff
