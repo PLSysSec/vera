@@ -24,7 +24,9 @@ module IonMonkey.Objects ( Range
                          , verifyNegZero
                          ) where
 import           Control.Monad   (unless, when)
+import           Data.List       (intersperse, isInfixOf)
 import qualified Data.Map.Strict as M
+import           Data.Maybe      (catMaybes)
 import qualified DSL.DSL         as D
 import           DSL.Typed       as T
 import qualified DSL.Z3Wrapper   as D
@@ -159,7 +161,34 @@ data VerifResult = Verified
                  | UndefRange { counterexample :: M.Map String Float }
                  | BadNans { counterexample :: M.Map String Float }
                  | BadNegZ { counterexample :: M.Map String Float }
-                 deriving (Eq, Ord, Show)
+                 deriving (Eq, Ord)
+
+instance Show VerifResult where
+    show (OverlappingRange ce) = "Upper and lower of result range may overlap\n:" ++
+                                 prettyCounterexampleInts ce
+    show (BadLowerBound ce)    = "Example operation can be outside of lower boud\n:" ++
+                                 prettyCounterexampleInts ce
+    show (BadUpperBound ce)    = "Example operation can be outside of upper bound\n" ++
+                                 prettyCounterexampleInts ce
+    show (UndefRange ce)       = "Example operation may introduce undefined behavior\n" ++
+                                 prettyCounterexampleInts ce
+    show Verified              = "Verified!"
+    show UnsatImpl             = "Verification failed (e.g., due to a timeout)"
+    show ce                    = show $ counterexample ce
+
+getIntList :: M.Map String Float -> [String]
+getIntList fls = catMaybes $ map (\(str, fl) ->
+                       case str of
+                         _ | "_exp" `isInfixOf` str -> Nothing
+                         _ | "_has" `isInfixOf` str -> Nothing
+                         _ | "_negZero" `isInfixOf` str -> Nothing
+                         _ | "infOrNan" `isInfixOf` str -> Nothing
+                         _ -> Just $ unwords [str, ":", show $ round fl]
+                     ) $ M.toList fls
+
+prettyCounterexampleInts :: M.Map String Float
+                         -> String
+prettyCounterexampleInts ce = unlines $ getIntList ce
 
 verifyConsistent :: D.Verif VerifResult
 verifyConsistent = do
