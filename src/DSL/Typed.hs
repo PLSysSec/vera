@@ -530,6 +530,8 @@ jsShr left right = do
   thirtyOne <- D.i32c 31
   shiftCount <- D.and (vnode right) thirtyOne
   result <- D.safeSra (vnode left) shiftCount
+  resultVar <- D.i32v "jsShrResult"
+  D.assign result resultVar
   undef <- D.i1c 0
   return $ VNode undef result Signed
 

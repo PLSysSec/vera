@@ -8,17 +8,17 @@ import           Prelude                    hiding (and, not, or)
 import           Test.Tasty.HUnit
 
 ionMonkeyTests :: BenchTest
-ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ -- fpAddTest
-                                                   -- , addTest
-                                                   -- , andTest
-                                                   -- , notTest
-                                                   -- , lshTest
-                                                   -- , rshTest
-                                                   -- , urshTest
-                                                   -- , lsh'Test
-                                                   rsh'Test
-                                                   -- , ursh'Test
-                                                   -- , orTest
+ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ fpAddTest
+                                                   , addTest
+                                                   , andTest
+                                                   , notTest
+                                                   , lshTest
+                                                   , rshTest
+                                                   , urshTest
+                                                   , lsh'Test
+                                                   , rsh'Test
+                                                   , ursh'Test
+                                                   , orTest
                                                    ]
 
 fpAddTest :: BenchTest
@@ -232,8 +232,8 @@ rsh'Test = benchTestCase "rsh'" $ do
     c1 <- verifySaneRange resultRange
     c2 <- verifyDefinedResult resultRange
 
-    left <- operandWithRange "value to shift" T.Signed leftRange
-    right <- operandWithRange "shit by" T.Signed rightRange
+    left <- operandWithRange "shiftee" T.Signed leftRange
+    right <- operandWithRange "shifter" T.Signed rightRange
     result <- T.jsShr left right
 
     c3 <- verifyUpperBound result resultRange
