@@ -23,18 +23,18 @@ assert a = do
     s              -> error $ unwords ["Can't assert sort", show s]
   Z.assert a'
 
-typeSafeUnary' :: MonadZ3 z3 => AST -> z3 Z.Sort
-typeSafeUnary' ast = do
+typeSafeUnary' :: MonadZ3 z3 => String -> AST -> z3 Z.Sort
+typeSafeUnary' op ast = do
   sort <- Z.getSort ast
   kind <- Z.getSortKind sort
   case kind of
     Z.Z3_BV_SORT -> return sort
-    s            -> error $ unwords ["Expected BV sort, not", show s]
+    s            -> error $ unwords ["Expected BV sort, not", show s, "in", op]
 
 typeSafeBinary :: MonadZ3 z3 => String -> AST -> AST -> z3 ()
 typeSafeBinary op ast1 ast2 = do
-  s1 <- typeSafeUnary' ast1
-  s2 <- typeSafeUnary' ast2
+  s1 <- typeSafeUnary' op ast1
+  s2 <- typeSafeUnary' op ast2
   size1 <- Z.getBvSortSize s1
   size2 <- Z.getBvSortSize s2
   unless (s1 == s2) $ error $ unwords [op, ": bit-widths must match"]

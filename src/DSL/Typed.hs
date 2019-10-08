@@ -679,12 +679,13 @@ instance CppMax VNode VNode where
 cppCompareWrapper :: VNode
                   -> VNode
                   -> (D.Node -> D.Node -> D.Verif D.Node)
-                  -> (D.Node -> D.Node -> D.Verif D.Node)
+                  -> (D.Node -> D.Node -> D.Verif D.Node) 
+                  -> (D.Node -> D.Node -> D.Verif D.Node)                    
                   -> D.Verif VNode
-cppCompareWrapper left right uCompare sCompare
+cppCompareWrapper left right uCompare sCompare fCompare 
  | isDouble (vtype left) || isDouble (vtype right) = do
      unless (vtype left == vtype right) $ error "Expected two doubles as argumnets"
-     compare <- uCompare (vnode left) (vnode right)
+     compare <- fCompare (vnode left) (vnode right)
      newMaybeDefinedNode left right compare Bool
  | isUnsigned (vtype left) || isUnsigned (vtype right) = do
      compare <- uCompare (vnode left) (vnode right)
@@ -695,19 +696,19 @@ cppCompareWrapper left right uCompare sCompare
 
 DEFINEBINOPCLASS(CppGt, cppGt)
 instance CppGt VNode VNode where
-  cppGt left right = cppCompareWrapper left right D.ugt D.sgt
+  cppGt left right = cppCompareWrapper left right D.ugt D.sgt D.fpGt
 
 DEFINEBINOPCLASS(CppGte, cppGte)
 instance CppGte VNode VNode where
-  cppGte left right = cppCompareWrapper left right D.ugte D.sgte
+  cppGte left right = cppCompareWrapper left right D.ugte D.sgte D.fpGte
 
 DEFINEBINOPCLASS(CppLt, cppLt)
 instance CppLt VNode VNode where
-  cppLt left right = cppCompareWrapper left right D.ult D.slt
+  cppLt left right = cppCompareWrapper left right D.ult D.slt D.fpLt
 
 DEFINEBINOPCLASS(CppLte, cppLte)
 instance CppLte VNode VNode where
-  cppLte left right = cppCompareWrapper left right D.ulte D.slte
+  cppLte left right = cppCompareWrapper left right D.ulte D.slte D.fpLte
 
 -- | C++ left shift operator. We are consulting CPP instead of Clang reference
 -- because we need to know what the CPP compiler will actually generate.

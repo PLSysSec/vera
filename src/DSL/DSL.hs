@@ -77,7 +77,7 @@ instance Z.MonadZ3 Verif where
     getSolver = Verif $ lift $ Z.getSolver
     getContext = Verif $ lift $ Z.getContext
 
-data SMTResult = SolverSat (M.Map String Integer)
+data SMTResult = SolverSat (M.Map String Float)
                | SolverUnsat
                | SolverFailed
                deriving (Eq, Ord, Show)
@@ -117,18 +117,20 @@ runSolver = do
   put $ s0 { solverResult = result }
   return result
 
-getIntModel :: String -> IO (M.Map String Integer)
+getIntModel :: String -> IO (M.Map String Float)
 getIntModel str = do
   let lines = splitOn "\n" str
   vars <- forM lines $ \line -> case splitOn "->" line of
             [var, strVal] -> do
               let maybeHexVal = drop 2 strVal
-                  val = case maybeHexVal of
+              let val = case maybeHexVal of
+                          -- Negative 0
+                          '_':' ':'-':'z':'e':'r':'o':_ -> "-0"
                           -- Boolean
-                          'b':n -> n
+                          'b':n                         -> n
                           -- Hex
-                          _     -> '0':maybeHexVal
-              return $ Just (init var, read val :: Integer)
+                          _                             -> '0':maybeHexVal
+              return $ Just (init var, read val :: Float)
             [""]          -> return Nothing
             e             -> error $ unwords ["Unexpected line in model"
                                              , show e

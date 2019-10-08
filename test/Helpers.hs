@@ -13,10 +13,10 @@ import           Utils
 helpersTests :: BenchTest
 helpersTests = benchTestGroup "Helpers tests" [ setRangeTest ]
 
-trueBit :: Integer
+trueBit :: Float
 trueBit = 1
 
-falseBit :: Integer
+falseBit :: Float
 falseBit = 0
 
 setRangeTest = benchTestCase "set range" $ do
@@ -52,7 +52,7 @@ setRangeTest = benchTestCase "set range" $ do
 
     T.runSolver
 
-  vtest r $ M.fromList [ ("r1_lower", 2147483648)
+  vtest r $ M.fromList [ ("r1_lower", 2147483648.0)
                        , ("r1_upper", 2147483648)
                        , ("r1_hasLowerBound", falseBit)
                        , ("r1_hasUpperBound", trueBit)

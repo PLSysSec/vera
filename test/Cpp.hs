@@ -18,13 +18,13 @@ cppTests = benchTestGroup "C++ tests" [ cppMinTest
                                       , fpTest
                                       ]
 
-trueBit :: Integer
+trueBit :: Float
 trueBit = 1
 
-falseBit :: Integer
+falseBit :: Float
 falseBit = 0
 
-negOne :: Integer
+negOne :: Float
 negOne = 4294967295
 
 cppMinTest :: BenchTest
