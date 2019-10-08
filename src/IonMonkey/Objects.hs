@@ -153,12 +153,12 @@ operandWithRange name ty range = do
 
 data VerifResult = Verified
                  | UnsatImpl
-                 | OverlappingRange { counterexample :: String }
-                 | BadLowerBound { counterexample :: String }
-                 | BadUpperBound { counterexample :: String }
-                 | UndefRange { counterexample :: String }
-                 | BadNans { counterexample :: String }
-                 | BadNegZ { counterexample :: String }
+                 | OverlappingRange { counterexample :: M.Map String Integer }
+                 | BadLowerBound { counterexample :: M.Map String Integer }
+                 | BadUpperBound { counterexample :: M.Map String Integer }
+                 | UndefRange { counterexample :: M.Map String Integer }
+                 | BadNans { counterexample :: M.Map String Integer }
+                 | BadNegZ { counterexample :: M.Map String Integer }
                  deriving (Eq, Ord, Show)
 
 verifyConsistent :: D.Verif VerifResult

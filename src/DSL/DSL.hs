@@ -51,7 +51,9 @@ module DSL.DSL ( i64
 import           Control.Monad              (foldM)
 import           Control.Monad.Reader
 import           Control.Monad.State.Strict
+import           Data.List.Split
 import qualified Data.Map.Strict            as M
+import           Data.Maybe                 (catMaybes)
 import qualified DSL.Z3Wrapper              as Z3
 import           Prelude                    hiding (map, max, min, not)
 import qualified Z3.Monad                   as Z
@@ -75,7 +77,7 @@ instance Z.MonadZ3 Verif where
     getSolver = Verif $ lift $ Z.getSolver
     getContext = Verif $ lift $ Z.getContext
 
-data SMTResult = SolverSat String
+data SMTResult = SolverSat (M.Map String Integer)
                | SolverUnsat
                | SolverFailed
                deriving (Eq, Ord, Show)
@@ -107,13 +109,31 @@ runSolver = do
   result <- case z3result of
     (Z.Sat, Just model) -> do
       strModel <- Z.modelToString model
-      return $ SolverSat strModel
+      intModel <- liftIO $ getIntModel strModel
+      return $ SolverSat intModel
     (Z.Unsat, _) -> return SolverUnsat
     _ -> return SolverFailed
   s0 <- get
   put $ s0 { solverResult = result }
   return result
 
+getIntModel :: String -> IO (M.Map String Integer)
+getIntModel str = do
+  let lines = splitOn "\n" str
+  vars <- forM lines $ \line -> case splitOn "->" line of
+            [var, strVal] -> do
+              let maybeHexVal = drop 2 strVal
+                  val = case maybeHexVal of
+                          -- Boolean
+                          'b':n -> n
+                          -- Hex
+                          _     -> '0':maybeHexVal
+              return $ Just (init var, read val :: Integer)
+            [""]          -> return Nothing
+            e             -> error $ unwords ["Unexpected line in model"
+                                             , show e
+                                             ]
+  return $ M.fromList $ catMaybes vars
 --
 -- Ints and stuff
 --
