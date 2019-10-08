@@ -24,7 +24,7 @@ ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ fpAddTest
 fpAddTest :: BenchTest
 fpAddTest = benchTestCase "fpadd" $ do
 
-  (c0) <- T.evalVerif Nothing $ do
+  (c0, c1) <- T.evalVerif Nothing $ do
 
     leftRange <- inputRange T.Double "left start range"
     rightRange <- inputRange T.Double "right start range"
@@ -35,9 +35,13 @@ fpAddTest = benchTestCase "fpadd" $ do
     right <- operandWithRange "right" T.Double rightRange
     result <- T.jsAdd left right
 
-    return (c0)
+    c1 <- verifyInfNan result resultRange
+    c2 <- verifyNegZero result resultRange
+
+    return (c0, c2)
 
   Verified @=? c0
+  Verified @=? c1
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#251
 addTest :: BenchTest

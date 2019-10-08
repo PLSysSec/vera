@@ -20,6 +20,8 @@ module IonMonkey.Objects ( Range
                          , verifyUpperBound
                          , verifyLowerBound
                          , verifyDefinedResult
+                         , verifyInfNan
+                         , verifyNegZero
                          ) where
 import           Control.Monad   (unless, when)
 import qualified Data.Map.Strict as M
@@ -123,6 +125,10 @@ operandWithRange name ty range = do
     T.vassign isInfOrNan (canBeInfiniteOrNan range)
     -- If the range says it has an int32 lower or upper bound, make sure that the op does
     -- If it can be negative zero the range should say so
+    isNeg <- T.isNeg op
+    isZero <- T.isZero op
+    isNegZero <- T.cppOr isNeg isZero
+    T.vassign isNegZero (canBeNegativeZero range)
     -- If it can have a fractional part the range should say so
   else do
     T.cppLte op (upper range) >>= T.vassert
@@ -140,6 +146,7 @@ data VerifResult = Verified
                  | BadUpperBound { counterexample :: String }
                  | UndefRange { counterexample :: String }
                  | BadNans { counterexample :: String }
+                 | BadNegZ { counterexample :: String }
                  deriving (Eq, Ord, Show)
 
 verifyConsistent :: D.Verif VerifResult
@@ -205,7 +212,6 @@ verifyDefinedResult range = do
 -- | IsNan flag unset for a nan value?
 verifyInfNan :: T.VNode -> Range -> D.Verif VerifResult
 verifyInfNan node range = do
-  D.push
   nodeIsInf <- T.isInf node
   nodeIsNan <- T.isNan node
   D.push
@@ -215,12 +221,12 @@ verifyInfNan node range = do
   T.cppNeg (canBeInfiniteOrNan range) >>= T.vassert
   check1 <- D.runSolver
   D.pop
+  D.push
   -- It's not nan or inf....
   T.cppOr nodeIsInf nodeIsNan >>= T.cppNeg >>= T.vassert
   -- ... but the nan or inf flag is set
   T.vassert $ canBeInfiniteOrNan range
   check2 <- D.runSolver
-  D.pop
   D.pop
   return $ case check1 of
     D.SolverSat xs -> BadNans xs
@@ -238,8 +244,31 @@ veriftFract node range = error ""
 verifInt32Bounds :: T.VNode -> Range -> D.Verif VerifResult
 verifInt32Bounds node range = error ""
 
-verifNegZero :: T.VNode -> Range -> D.Verif VerifResult
-verifNegZero node range = error ""
+verifyNegZero :: T.VNode -> Range -> D.Verif VerifResult
+verifyNegZero node range = do
+  isZero <- T.isZero node
+  isNeg <- T.isNeg node
+  D.push
+  -- It's negative zero...
+  T.cppAnd isZero isNeg >>= T.vassert
+  -- ... but the nz flag is not set
+  T.cppNeg (canBeNegativeZero range) >>= T.vassert
+  check1 <- T.runSolver
+  D.pop
+  D.push
+  -- It's not negative zero...
+  T.cppAnd isZero isNeg >>= T.cppNeg >>= T.vassert
+  -- but the nz flag is set
+  T.vassert $ canBeNegativeZero range
+  check2 <- T.runSolver
+  D.pop
+  return $ case check1 of
+    D.SolverSat xs -> BadNegZ xs
+    D.SolverFailed -> error "Error while verifying"
+    D.SolverUnsat -> case check2 of
+                       D.SolverUnsat  -> Verified
+                       D.SolverSat xs -> BadNegZ xs
+                       _              -> error "Error while verifying"
 
 verifExponent :: T.VNode -> Range -> D.Verif VerifResult
 verifExponent node range = error ""
