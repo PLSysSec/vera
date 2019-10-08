@@ -178,7 +178,7 @@ cond c a b = do
   Z.mkIte isTrue a b
 
 sext :: MonadZ3 z3 => AST -> Int -> z3 AST
-sext a i = Z.mkZeroExt i a
+sext a i = Z.mkSignExt i a
 
 uext :: MonadZ3 z3 => AST -> Int -> z3 AST
 uext a i = Z.mkZeroExt i a
