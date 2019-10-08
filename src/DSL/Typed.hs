@@ -11,6 +11,7 @@ module DSL.Typed ( vassert
                  , is32Bits
                  , is64Bits
                  , is16Bits
+                 , isDouble
                  -- * Constants and variables
                  , true
                  , false
@@ -415,27 +416,27 @@ nan = do
 isInf :: VNode -> D.Verif VNode                 
 isInf n = do
   c <- D.isInf $ vnode n
-  newMaybeDefinedNode n n c Double 
+  newMaybeDefinedNode n n c Bool
 
 isNan :: VNode -> D.Verif VNode                      
 isNan n = do
   c <- D.isNan $ vnode n
-  newMaybeDefinedNode n n c Double
+  newMaybeDefinedNode n n c Bool
 
 isNeg :: VNode -> D.Verif VNode                      
 isNeg n = do
   c <- D.isNeg $ vnode n
-  newMaybeDefinedNode n n c Double
+  newMaybeDefinedNode n n c Bool
         
 isPos :: VNode -> D.Verif VNode
 isPos n = do
   c <- D.isPos $ vnode n
-  newMaybeDefinedNode n n c Double 
+  newMaybeDefinedNode n n c Bool
 
 isZero :: VNode -> D.Verif VNode                       
 isZero n = do
   c <- D.isZero $ vnode n
-  newMaybeDefinedNode n n c Double
+  newMaybeDefinedNode n n c Bool
           
 --
 -- JavaScript operations

@@ -280,19 +280,19 @@ rtz :: MonadZ3 z3 => z3 AST
 rtz = Z.mkFpRtz
 
 isInf :: MonadZ3 z3 => AST -> z3 AST
-isInf = Z.mkFpIsInf
+isInf a = Z.mkFpIsInf a >>= cmpWrapper
 
 isNan :: MonadZ3 z3 => AST -> z3 AST
-isNan = Z.mkFpIsNan
+isNan a = Z.mkFpIsNan a >>= cmpWrapper
 
 isNeg :: MonadZ3 z3 => AST -> z3 AST
-isNeg = Z.mkFpIsNeg
+isNeg a = Z.mkFpIsNeg a >>= cmpWrapper
 
 isPos :: MonadZ3 z3 => AST -> z3 AST
-isPos = Z.mkFpIsPos
+isPos a = Z.mkFpIsPos a >>= cmpWrapper
 
 isZero :: MonadZ3 z3 => AST -> z3 AST
-isZero = Z.mkFpIsZero
+isZero a = Z.mkFpIsZero a >>= cmpWrapper
 
 rmWrapper :: MonadZ3 z3
           => (AST -> AST -> AST -> z3 AST)

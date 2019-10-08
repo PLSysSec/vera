@@ -114,8 +114,19 @@ resultRange ty operandName = do
 operandWithRange :: String -> Type -> Range -> D.Verif T.VNode
 operandWithRange name ty range = do
   op <- newInputVar ty name
-  T.cppLte op (upper range) >>= T.vassert
-  T.cppGte op (lower range) >>= T.vassert
+  if isDouble ty
+  then do
+    -- If it can be inf or nan, the range must say so
+    opIsInf <- T.isInf op
+    opIsNan <- T.isNan op
+    isInfOrNan <- T.cppOr opIsInf opIsNan
+    T.vassign isInfOrNan (canBeInfiniteOrNan range)
+    -- If the range says it has an int32 lower or upper bound, make sure that the op does
+    -- If it can be negative zero the range should say so
+    -- If it can have a fractional part the range should say so
+  else do
+    T.cppLte op (upper range) >>= T.vassert
+    T.cppGte op (lower range) >>= T.vassert
   return op
 
 --
@@ -202,12 +213,22 @@ verifyInfNan node range = do
   T.cppOr nodeIsInf nodeIsNan >>= T.vassert
   --- .... but the nan or inf flag isnt set
   T.cppNeg (canBeInfiniteOrNan range) >>= T.vassert
-  check <- D.runSolver
+  check1 <- D.runSolver
   D.pop
-  return $ case check of
-    D.SolverUnsat  -> Verified
+  -- It's not nan or inf....
+  T.cppOr nodeIsInf nodeIsNan >>= T.cppNeg >>= T.vassert
+  -- ... but the nan or inf flag is set
+  T.vassert $ canBeInfiniteOrNan range
+  check2 <- D.runSolver
+  D.pop
+  D.pop
+  return $ case check1 of
     D.SolverSat xs -> BadNans xs
-    _              -> error "Error while verifying"
+    D.SolverFailed -> error "Error while verifying"
+    D.SolverUnsat -> case check2 of
+                       D.SolverUnsat  -> Verified
+                       D.SolverSat xs -> BadNans xs
+                       _              -> error "Error while verifying"
 
 -- | IsFract flag set for a non-fract value?
 -- | IsFract flag unset for a fact value?

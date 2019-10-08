@@ -8,17 +8,37 @@ import           Prelude                    hiding (and, not, or)
 import           Test.Tasty.HUnit
 
 ionMonkeyTests :: BenchTest
-ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ addTest
-                                                   , andTest
-                                                   , notTest
-                                                   , lshTest
-                                                   , rshTest
-                                                   , urshTest
-                                                   , lsh'Test
-                                                   , rsh'Test
-                                                   , ursh'Test
-                                                   , orTest
+ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ fpAddTest
+                                                   -- , addTest
+                                                   -- , andTest
+                                                   -- , notTest
+                                                   -- , lshTest
+                                                   -- , rshTest
+                                                   -- , urshTest
+                                                   -- , lsh'Test
+                                                   -- , rsh'Test
+                                                   -- , ursh'Test
+                                                   -- , orTest
                                                    ]
+
+fpAddTest :: BenchTest
+fpAddTest = benchTestCase "fpadd" $ do
+
+  (c0) <- T.evalVerif Nothing $ do
+
+    leftRange <- inputRange T.Double "left start range"
+    rightRange <- inputRange T.Double "right start range"
+    resultRange <- add leftRange rightRange
+    c0 <- verifyConsistent
+
+    left <- operandWithRange "left" T.Double leftRange
+    right <- operandWithRange "right" T.Double rightRange
+    result <- T.jsAdd left right
+
+    return (c0)
+
+  Verified @=? c0
+
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#251
 addTest :: BenchTest
 addTest = benchTestCase "add" $ do
