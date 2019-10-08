@@ -8,17 +8,17 @@ import           Prelude                    hiding (and, not, or)
 import           Test.Tasty.HUnit
 
 ionMonkeyTests :: BenchTest
-ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ fpAddTest
-                                                   , addTest
-                                                   , andTest
-                                                   , notTest
-                                                   , lshTest
-                                                   , rshTest
-                                                   , urshTest
-                                                   , lsh'Test
-                                                   , rsh'Test
-                                                   , ursh'Test
-                                                   , orTest
+ionMonkeyTests = benchTestGroup "Ion Monkey tests" [--  fpAddTest
+                                                   -- , addTest
+                                                   -- , andTest
+                                                   -- , notTest
+                                                   -- , lshTest
+                                                   -- , rshTest
+                                                    urshTest
+                                                   -- , lsh'Test
+                                                   -- , rsh'Test
+                                                   -- , ursh'Test
+                                                   -- , orTest
                                                    ]
 
 fpAddTest :: BenchTest
@@ -185,7 +185,7 @@ urshTest = benchTestCase "ursh" $ T.evalVerif Nothing $ do
   liftIO $ Verified @=? c1
   liftIO $ Verified @=? c2
 
-  shiftee <- operandWithRange "shiftee" T.Signed shifteeRange
+  shiftee <- operandWithRange "shiftee" T.Unsigned shifteeRange
   -- I am not sure if we want this or not?
   castVal <- T.cppCast val T.Unsigned
   result <- T.jsUshr shiftee castVal
