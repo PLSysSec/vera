@@ -454,28 +454,28 @@ getOp representativeNode intOp fpOp =
 
 jsAdd :: VNode -> VNode -> D.Verif VNode
 jsAdd node1 node2 = do
-  unless (vtype node1 == vtype node2) $ error "Types should match"
+  unless (numBits node1 == numBits node2) $ error "Widths should match in jsAdd"
   let op = getOp node1 D.add D.fpAdd
   result <- op (vnode node1) (vnode node2)
   newDefinedNode result $ vtype node1
 
 jsSub :: VNode -> VNode -> D.Verif VNode
 jsSub node1 node2 = do
-  unless (vtype node1 == vtype node2) $ error "Types should match"
+  unless (numBits node1 == numBits node2) $ error "Widths should match in jsSub"
   let op = getOp node1 D.sub D.fpSub
   result <- op (vnode node1) (vnode node2)
   newDefinedNode result $ vtype node1                 
 
 jsAnd :: VNode -> VNode -> D.Verif VNode
 jsAnd node1 node2 = do
-  unless (vtype node1 == vtype node2) $ error "Types should match"
+  unless (numBits node1 == numBits node2) $ error "Widths should match in jsAnd"
   unless (is32Bits $ vtype node1) $ error "JavaScript AND does not support floats"
   result <- D.and (vnode node1) (vnode node2)
   newDefinedNode result $ vtype node1
 
 jsOr :: VNode -> VNode -> D.Verif VNode
 jsOr node1 node2 = do
-  unless (vtype node1 == vtype node2) $ error "Types should match"
+  unless (numBits node1 == numBits node2) $ error "Widths should match in jsOr"
   unless (is32Bits $ vtype node1) $ error "JavaScript OR does not support floats"         
   result <- D.or (vnode node1) (vnode node2)
   newDefinedNode result $ vtype node1
@@ -501,7 +501,7 @@ jsShl :: VNode
       -> VNode
       -> D.Verif VNode
 jsShl left right = do
-  unless (vtype left == vtype right) $ error "Types should match"  
+  unless (numBits left == numBits right) $ error "Widths should match in jsShl"  
   unless (is32Bits $ vtype left) $ error "JavaScript SHL does not support floats"  
   thirtyOne <- D.i32c 31
   shiftCount <- D.and (vnode right) thirtyOne
@@ -525,7 +525,7 @@ jsShr :: VNode
       -> VNode
       -> D.Verif VNode
 jsShr left right = do
-  unless (vtype left == vtype right) $ error "Types should match"  
+  unless (numBits left == numBits right) $ error "Widths should match in jsShr"  
   unless (is32Bits $ vtype left) $ error "JavaScript SHL does not support floats"    
   thirtyOne <- D.i32c 31
   shiftCount <- D.and (vnode right) thirtyOne
@@ -549,7 +549,7 @@ jsUshr :: VNode
        -> VNode
        -> D.Verif VNode
 jsUshr left right = do
-  unless (vtype left == vtype right) $ error "Types should match"  
+  unless (numBits left == numBits right) $ error "Widths should match"  
   unless (is32Bits $ vtype left) $ error "JavaScript SHL does not support floats"    
   thirtyOne <- D.i32c 31
   shiftCount <- D.and (vnode right) thirtyOne
