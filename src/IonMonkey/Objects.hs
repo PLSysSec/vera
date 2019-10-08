@@ -113,10 +113,7 @@ resultRange ty operandName = do
 --'range'---ie is greater than the range's lower and less than the range's upper
 operandWithRange :: String -> Type -> Range -> D.Verif T.VNode
 operandWithRange name ty range = do
-  op <- case ty of
-          T.Signed   -> T.int32 name
-          T.Unsigned -> T.uint32 name
-          _          -> error "we will fix this"
+  op <- newInputVar ty name
   T.cppLte op (upper range) >>= T.vassert
   T.cppGte op (lower range) >>= T.vassert
   return op
@@ -131,6 +128,7 @@ data VerifResult = Verified
                  | BadLowerBound { counterexample :: String }
                  | BadUpperBound { counterexample :: String }
                  | UndefRange { counterexample :: String }
+                 | BadNans { counterexample :: String }
                  deriving (Eq, Ord, Show)
 
 verifyConsistent :: D.Verif VerifResult
@@ -196,10 +194,20 @@ verifyDefinedResult range = do
 -- | IsNan flag unset for a nan value?
 verifyInfNan :: T.VNode -> Range -> D.Verif VerifResult
 verifyInfNan node range = do
+  D.push
   nodeIsInf <- T.isInf node
   nodeIsNan <- T.isNan node
-
-  error ""
+  D.push
+  -- It's nan or inf....
+  T.cppOr nodeIsInf nodeIsNan >>= T.vassert
+  --- .... but the nan or inf flag isnt set
+  T.cppNeg (canBeInfiniteOrNan range) >>= T.vassert
+  check <- D.runSolver
+  D.pop
+  return $ case check of
+    D.SolverUnsat  -> Verified
+    D.SolverSat xs -> BadNans xs
+    _              -> error "Error while verifying"
 
 -- | IsFract flag set for a non-fract value?
 -- | IsFract flag unset for a fact value?
