@@ -19,10 +19,13 @@ cppTests = benchTestGroup "C++ tests" [ cppMinTest
                                       ]
 
 trueBit :: Integer
-trueBit = -1
+trueBit = 1
 
 falseBit :: Integer
 falseBit = 0
+
+negOne :: Integer
+negOne = 4294967295
 
 cppMinTest :: BenchTest
 cppMinTest = benchTestCase "min test" $ do
@@ -45,7 +48,7 @@ cppMinTest = benchTestCase "min test" $ do
 
     T.runSolver
 
-  vtest r $ M.fromList [ ("result", -1)
+  vtest r $ M.fromList [ ("result", negOne)
                        , ("uresult", 1)
                        ]
 
@@ -71,7 +74,7 @@ cppMaxTest = benchTestCase "max test" $ do
     T.runSolver
 
   vtest r $ M.fromList [ ("result", 1)
-                       , ("uresult", -1)
+                       , ("uresult", negOne)
                        ]
 
 cppCmpTest :: BenchTest
@@ -255,7 +258,7 @@ cppShrTest = benchTestCase "shr test" $ do
   vtest r $ M.fromList [ ("result1_undef", trueBit)
                        , ("result2_undef", trueBit)
                        , ("result3", 1)
-                       , ("result4", -1)
+                       , ("result4", negOne)
                        , ("result5_undef", trueBit)
                        ]
 

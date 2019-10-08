@@ -13,6 +13,12 @@ import           Utils
 helpersTests :: BenchTest
 helpersTests = benchTestGroup "Helpers tests" [ setRangeTest ]
 
+trueBit :: Integer
+trueBit = 1
+
+falseBit :: Integer
+falseBit = 0
+
 setRangeTest = benchTestCase "set range" $ do
   r <- T.evalVerif Nothing $ do
 
@@ -46,30 +52,30 @@ setRangeTest = benchTestCase "set range" $ do
 
     T.runSolver
 
-  vtest r $ M.fromList [ ("r1_lower", -2147483648)
-                       , ("r1_upper", -2147483648)
-                       , ("r1_hasLowerBound", 0)
-                       , ("r1_hasUpperBound", -1)
+  vtest r $ M.fromList [ ("r1_lower", 2147483648)
+                       , ("r1_upper", 2147483648)
+                       , ("r1_hasLowerBound", falseBit)
+                       , ("r1_hasUpperBound", trueBit)
                          --
                        , ("r2_lower", 2147483647)
                        , ("r2_upper", 2147483647)
-                       , ("r2_hasLowerBound", -1)
-                       , ("r2_hasUpperBound", 0)
+                       , ("r2_hasLowerBound", trueBit)
+                       , ("r2_hasUpperBound", falseBit)
                          --
                        , ("r3_lower", 1)
                        , ("r3_upper", 5)
-                       , ("r3_hasLowerBound", -1)
-                       , ("r3_hasUpperBound", -1)
+                       , ("r3_hasLowerBound", trueBit)
+                       , ("r3_hasUpperBound", trueBit)
                          --
-                       , ("r4_lower", -2147483648)
+                       , ("r4_lower", 2147483648)
                        , ("r4_upper", 2147483647)
-                       , ("r4_hasLowerBound", -1)
-                       , ("r4_hasUpperBound", -1)
+                       , ("r4_hasLowerBound", trueBit)
+                       , ("r4_hasUpperBound", trueBit)
                          --
-                       , ("r5_lower", -2147483648)
-                       , ("r5_upper", -2147483648)
-                       , ("r5_hasLowerBound", 0)
-                       , ("r5_hasUpperBound", -1)
+                       , ("r5_lower", 2147483648)
+                       , ("r5_upper", 2147483648)
+                       , ("r5_hasLowerBound", falseBit)
+                       , ("r5_hasUpperBound", trueBit)
                        ]
 
 
