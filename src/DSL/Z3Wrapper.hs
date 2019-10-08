@@ -326,19 +326,19 @@ fpNeg :: MonadZ3 z3 => AST -> z3 AST
 fpNeg = Z.mkFpNeg
 
 fpEq :: MonadZ3 z3 => AST -> AST -> z3 AST
-fpEq = Z.mkFpEq
+fpEq a b = Z.mkFpEq a b >>= cmpWrapper
 
 fpGte :: MonadZ3 z3 => AST -> AST -> z3 AST
-fpGte = Z.mkFpGeq
+fpGte a b = Z.mkFpGeq a b >>= cmpWrapper
 
 fpGt :: MonadZ3 z3 => AST -> AST -> z3 AST
-fpGt = Z.mkFpGt
+fpGt a b = Z.mkFpGt a b >>= cmpWrapper
 
 fpLte :: MonadZ3 z3 => AST -> AST -> z3 AST
-fpLte = Z.mkFpLeq
+fpLte a b = Z.mkFpLeq a b >>= cmpWrapper
 
 fpLt :: MonadZ3 z3 => AST -> AST -> z3 AST
-fpLt = Z.mkFpLt
+fpLt a b = Z.mkFpLt a b >>= cmpWrapper
 
 fpMin :: MonadZ3 z3 => AST -> AST -> z3 AST
 fpMin = Z.mkFpMin

@@ -195,7 +195,11 @@ verifyDefinedResult range = do
 -- | IsNan flag set for a non-nan value?
 -- | IsNan flag unset for a nan value?
 verifyInfNan :: T.VNode -> Range -> D.Verif VerifResult
-verifyInfNan node range = error ""
+verifyInfNan node range = do
+  nodeIsInf <- T.isInf node
+  nodeIsNan <- T.isNan node
+
+  error ""
 
 -- | IsFract flag set for a non-fract value?
 -- | IsFract flag unset for a fact value?
