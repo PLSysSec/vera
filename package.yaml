@@ -27,7 +27,6 @@ library:
   ghc-options:
   - -Wall
   dependencies:
-  - boolector >= 0.0.0.8
   - z3 >= 4.3.1
   - containers >= 0.6
   - mtl >= 2.2.2

@@ -40,8 +40,6 @@ packages:
 #   commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a
 #
 extra-deps:
-  - github: PLSysSec/haskell-boolector
-    commit: bcfdf83ab57503637a6857fed933de6b39a742a4
   - github: PLSysSec/haskell-z3
     commit: 7f00b457c2e59870f5adc14e7c8617c53c0ae238
 
