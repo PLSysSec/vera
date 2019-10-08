@@ -555,7 +555,9 @@ jsUshr left right = do
   unless (is32Bits $ vtype left) $ error "JavaScript SHL does not support floats"    
   thirtyOne <- D.i32c 31
   shiftCount <- D.and (vnode right) thirtyOne
-  result <- D.safeSra (vnode left) shiftCount
+  result <- D.safeSrl (vnode left) shiftCount
+  resultVar <- D.i32v "jsUshrResult"
+  D.assign result resultVar            
   undef <- D.i1c 0
   return $ VNode undef result Signed
 
