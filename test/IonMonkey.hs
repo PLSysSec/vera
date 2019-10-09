@@ -5,7 +5,7 @@ import qualified DSL.Typed                  as T
 import           IonMonkey.Objects
 import           IonMonkey.Operations
 import           IonMonkey.Verify
-import           Prelude                    hiding (and, not, or)
+import           Prelude                    hiding (and, max, min, not, or)
 import           Test.Tasty.HUnit
 
 ionMonkeyTests :: BenchTest
@@ -21,6 +21,7 @@ ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ fpAddTest
                                                    , ursh'Test
                                                    , orTest
                                                    , fpMinTest
+                                                   , fpMaxTest
                                                    ]
 
 fpAddTest :: BenchTest
@@ -309,7 +310,7 @@ fpMinTest = benchTestCase "fpmin" $ do
 
     leftRange <- inputRange T.Double "left start range"
     rightRange <- inputRange T.Double "right start range"
-    resultRange <- add leftRange rightRange
+    resultRange <- min leftRange rightRange
     -- c0 <- verifyConsistent
 
     left <- operandWithRange "left" T.Double leftRange
@@ -318,7 +319,24 @@ fpMinTest = benchTestCase "fpmin" $ do
 
     -- c1 <- verifyInfNan result resultRange
     c2 <- verifyNegZero result resultRange
-
     return c2
 
   Verified @=? c2
+
+fpMaxTest :: BenchTest
+fpMaxTest = benchTestCase "fpmax" $ do
+  (c2) <- T.evalVerif Nothing $ do
+
+    leftRange <- inputRange T.Double "left start range"
+    rightRange <- inputRange T.Double "right start range"
+    resultRange <- max leftRange rightRange
+
+    left <- operandWithRange "left" T.Double leftRange
+    right <- operandWithRange "right" T.Double rightRange
+    result <- T.jsMax left right
+
+    c2 <- verifyNegZero result resultRange
+    return c2
+
+  Verified @=? c2
+

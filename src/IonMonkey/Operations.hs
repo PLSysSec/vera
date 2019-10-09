@@ -378,6 +378,7 @@ min left right = do
   T.vassign (upper result) newUpper
   T.vassign (hasInt32UpperBound result) hasUpper
   T.vassign (maxExponent result) exp
+  return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1123
 max left right = do
@@ -403,3 +404,4 @@ max left right = do
   T.vassign (upper result) newUpper
   T.vassign (hasInt32UpperBound result) hasUpper
   T.vassign (maxExponent result) exp
+  return result

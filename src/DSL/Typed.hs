@@ -596,6 +596,7 @@ jsMin :: VNode
       -> D.Verif VNode
 jsMin node1 node2 = do
   unless (vtype node1 == vtype node2) $ error "Types should match"
+  -- If anything is Nan the result is Nan
   leftIsNan <- D.isNan $ vnode node1
   rightIsNan <- D.isNan $ vnode node2
   eitherIsNan <- D.or leftIsNan rightIsNan 
@@ -609,14 +610,29 @@ jsMin node1 node2 = do
   D.assign nanOrResult resultVar
   newDefinedNode nanOrResult $ vtype node1  
 
+-- | https://es5.github.io/#x15.8.2.11
+-- If no arguments are given, the result is −∞.
+-- If any value is NaN, the result is NaN.
+-- The comparison of values to determine the largest value is done as in 11.8.5
+-- except that +0 is considered to be larger than −0.
 jsMax :: VNode
       -> VNode
       -> D.Verif VNode                    
-jsMax node1 node2 = error "LOOK UP SEMANTICS"
-  -- unless (vtype node1 == vtype node2) $ error "Types should match"
-  -- let op = getOp node1 D.max D.fpMax
-  -- result <- op (vnode node1) (vnode node2)
-  -- newDefinedNode result $ vtype node1    
+jsMax node1 node2 = do
+  unless (vtype node1 == vtype node2) $ error "Types should match"
+  -- If anything is Nan the result is Nan 
+  leftIsNan <- D.isNan $ vnode node1
+  rightIsNan <- D.isNan $ vnode node2
+  eitherIsNan <- D.or leftIsNan rightIsNan 
+  nan <- D.nan
+  -- Otherwise its the operation
+  let op = getOp node1 D.smax D.fpMax
+  result <- op (vnode node1) (vnode node2)
+  -- Return Nan or the result
+  nanOrResult <- D.cond eitherIsNan nan result
+  resultVar <- D.doubv "jsMaxResult"
+  D.assign nanOrResult resultVar  
+  newDefinedNode result $ vtype node1    
 
 jsAbs _left _right = error "JS abs not yet implemenetd"
   
