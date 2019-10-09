@@ -55,6 +55,7 @@ tests:
     - tasty
     - tasty-golden    
     - tasty-hunit
+    - tasty-quickcheck
     - criterion
     - bytestring
     - mtl >= 2.2.2

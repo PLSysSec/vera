@@ -8,6 +8,7 @@ import           IonMonkey.Objects
 import           IonMonkey.Operations
 import           Prelude                    hiding (and, not, or)
 import           Test.Tasty.HUnit
+import           Test.Tasty.QuickCheck
 import           Utils
 
 helpersTests :: BenchTest
@@ -135,3 +136,15 @@ countTrailingZeroesTest = benchTestCase "countTrailingZeroes" $ do
   vtest r $ M.fromList [ ("result1", 0)
                        , ("result2", 32)
                        , ("result3", 7)]
+                       , ("result2", 32)]
+
+-- propCtlz :: In32 -> 
+propCtlz input32 = do
+  (T.SolverSat vars) <- T.evalVerif Nothing $ do
+    num <- T.num input
+    T.named "result" $ countLeadingZeroes32 num
+    T.runSolver
+  let (Just val) = M.lookup "result" vars 
+  assert $ fromInteger input == val
+
+  where input = toInteger input32

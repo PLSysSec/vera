@@ -86,6 +86,7 @@ module DSL.Typed ( vassert
                  -- * Running the solver and getting the model
                  , D.runSolver
                  , D.evalVerif
+                 , D.SMTResult(..)
                  , D.Verif
                  , D.isSat
                  , D.isUnsat
