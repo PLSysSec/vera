@@ -42,6 +42,9 @@ module DSL.DSL ( i64
                , Verif
                , VerifState(..)
                , SMTResult(..)
+               , isSat
+               , isUnsat
+               , example
                , getVars
                , runVerif
                , evalVerif
@@ -71,6 +74,14 @@ data VerifState = VerifState { vars         :: M.Map String Z3.Node
                              , solverResult :: SMTResult
                              }
 
+isSat :: SMTResult -> Bool
+isSat SolverSat{} = True
+isSat _           = False
+
+isUnsat :: SMTResult -> Bool
+isUnsat SolverUnsat{} = True
+isUnsat _             = False
+
 newtype Verif a = Verif (StateT VerifState Z.Z3 a)
     deriving (Functor, Applicative, Monad, MonadState VerifState, MonadIO)
 
@@ -78,7 +89,7 @@ instance Z.MonadZ3 Verif where
     getSolver = Verif $ lift $ Z.getSolver
     getContext = Verif $ lift $ Z.getContext
 
-data SMTResult = SolverSat (M.Map String Float)
+data SMTResult = SolverSat { example :: (M.Map String Float) }
                | SolverUnsat
                | SolverFailed
                deriving (Eq, Ord, Show)

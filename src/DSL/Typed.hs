@@ -87,6 +87,8 @@ module DSL.Typed ( vassert
                  , D.runSolver
                  , D.evalVerif
                  , D.Verif
+                 , D.isSat
+                 , D.isUnsat
                  ) where
 import           Control.Monad.State.Strict (liftIO, unless, when)
 import qualified DSL.DSL                    as D
@@ -603,6 +605,8 @@ jsMin node1 node2 = do
   result <- op (vnode node1) (vnode node2)
   -- Return Nan or the result
   nanOrResult <- D.cond eitherIsNan nan result
+  resultVar <- D.doubv "jsMinResult"
+  D.assign nanOrResult resultVar
   newDefinedNode nanOrResult $ vtype node1  
 
 jsMax :: VNode

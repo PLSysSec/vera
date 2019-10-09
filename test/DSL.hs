@@ -141,3 +141,4 @@ fpTest = benchTestCase "fp" $ do
 
   satTest r
 
+
