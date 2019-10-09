@@ -170,11 +170,37 @@ instance Show VerifResult where
                                  prettyCounterexampleInts ce
     show (BadUpperBound ce)    = "Example operation can be outside of upper bound\n" ++
                                  prettyCounterexampleInts ce
-    show (UndefRange ce)       = "Example operation may introduce undefined behavior\n" ++
+    show (UndefRange ce)       = "Example operation may introduce undefined behavior:\n" ++
                                  prettyCounterexampleInts ce
+    show (BadNans ce)          = "Example operation mishandles Nan:\n" ++
+                                 (unlines $ getNanList ce)
+    show (BadNegZ ce)          = "Example operation mishandles negative zero:\n" ++
+                                 (unlines $ getNegzList ce)
     show Verified              = "Verified!"
     show UnsatImpl             = "Verification failed (e.g., due to a timeout)"
     show ce                    = show $ counterexample ce
+
+getNanList :: M.Map String Float -> [String]
+getNanList fls = catMaybes $ map (\(str, fl) ->
+                       case str of
+                         _ | "_undef" `isInfixOf` str -> Nothing
+                         _ | "_hasUpperBound" `isInfixOf` str -> Nothing
+                         _ | "_hasLowerBound" `isInfixOf` str -> Nothing
+                         _ | "hasFract" `isInfixOf` str -> Nothing
+                         _ | "negZero" `isInfixOf` str -> Nothing
+                         _ -> Just $ unwords [str, ":", show $ round fl]
+                     ) $ M.toList fls
+
+getNegzList :: M.Map String Float -> [String]
+getNegzList fls = catMaybes $ map (\(str, fl) ->
+                       case str of
+                         _ | "_undef" `isInfixOf` str -> Nothing
+                         _ | "_hasUpperBound" `isInfixOf` str -> Nothing
+                         _ | "_hasLowerBound" `isInfixOf` str -> Nothing
+                         _ | "hasFract" `isInfixOf` str -> Nothing
+                         _ | "infOrNan" `isInfixOf` str -> Nothing
+                         _ -> Just $ unwords [str, ":", show $ round fl]
+                     ) $ M.toList fls
 
 getIntList :: M.Map String Float -> [String]
 getIntList fls = catMaybes $ map (\(str, fl) ->

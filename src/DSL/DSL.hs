@@ -126,16 +126,24 @@ getIntModel str = do
               let maybeHexVal = drop 2 strVal
                   val = case maybeHexVal of
                           -- Negative 0
-                          '_':' ':'-':'z':'e':'r':'o':_ -> "-0"
+                          '_':' ':'-':'z':'e':'r':'o':_ -> Just "-0"
+                          '_':' ':'+':'z':'e':'r':'o':_ -> Just "0"
                           -- Boolean
-                          'b':n                         -> n
+                          'b':n                         -> Just n
                           -- Hex
-                          _                             -> '0':maybeHexVal
-              return $ Just (init var, read val :: Float)
-            [""]          -> return Nothing
-            e             -> error $ unwords ["Unexpected line in model"
-                                             , show e
-                                             ]
+                          'x':_                         -> Just $ '0':maybeHexVal
+                          _                             -> Nothing
+              -- This is gross for printing sorry
+              return $ case val of
+                         Just val -> Just (init var, read val :: Float)
+                         Nothing  -> Nothing
+            _ -> return Nothing
+            -- [""]          -> return Nothing
+            -- e             -> error $ unwords ["Unexpected line in model"
+            --                                  , show e
+            --                                  , "in"
+            --                                  , str
+            --                                  ]
   return $ M.fromList $ catMaybes vars
 --
 -- Ints and stuff

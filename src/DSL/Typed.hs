@@ -574,15 +574,27 @@ jsMul node1 node2 = do
   let op = getOp node1 D.mul D.fpMul
   result <- op (vnode node1) (vnode node2)
   newDefinedNode result $ vtype node1
-                 
+
+-- | https://es5.github.io/#x15.8.2.12
+-- If no arguments are given, the result is +∞.
+-- If any value is NaN, the result is NaN.
+-- The comparison of values to determine the smallest value is done as in 11.8.5
+-- except that +0 is considered to be larger than −0
 jsMin :: VNode
       -> VNode
       -> D.Verif VNode
-jsMin node1 node2 = error "LOOK UP SEMANTICS"
-  -- unless (vtype node1 == vtype node2) $ error "Types should match"
-  -- let op = getOp node1 D.min D.fpMin 
-  -- result <- op (vnode node1) (vnode node2)
-  -- newDefinedNode result $ vtype node1  
+jsMin node1 node2 = do
+  unless (vtype node1 == vtype node2) $ error "Types should match"
+  leftIsNan <- D.isNan $ vnode node1
+  rightIsNan <- D.isNan $ vnode node2
+  eitherIsNan <- D.or leftIsNan rightIsNan 
+  nan <- D.nan
+  -- Actually do the operation
+  let op = getOp node1 D.smin D.fpMin 
+  result <- op (vnode node1) (vnode node2)
+  -- Return Nan or the result
+  nanOrResult <- D.cond eitherIsNan nan result
+  newDefinedNode nanOrResult $ vtype node1  
 
 jsMax :: VNode
       -> VNode
