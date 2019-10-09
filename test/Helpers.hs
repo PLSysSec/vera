@@ -11,7 +11,8 @@ import           Test.Tasty.HUnit
 import           Utils
 
 helpersTests :: BenchTest
-helpersTests = benchTestGroup "Helpers tests" [ setRangeTest ]
+helpersTests = benchTestGroup "Helpers tests" [ setRangeTest
+                                              , countLeadingZeroesTest ]
 
 trueBit :: Float
 trueBit = 1
@@ -78,4 +79,23 @@ setRangeTest = benchTestCase "set range" $ do
                        , ("r5_hasUpperBound", trueBit)
                        ]
 
+countLeadingZeroesTest :: BenchTest
+countLeadingZeroesTest = benchTestCase "countLeadingZeroes" $ do
+  r <- T.evalVerif Nothing $ do
 
+    -- There should be no leading zeroes for a negative number
+    minusOne <- T.num (-1)
+    ctlz1 <- countLeadingZeroes32 minusOne
+    result1 <- T.int32 "result1"
+    T.vassign result1 ctlz1
+
+    -- There should be 32 leading zeroes for 0
+    zero <- T.num 0
+    ctlz2 <- countLeadingZeroes32 zero
+    result2 <- T.int32 "result2"
+    T.vassign result2 ctlz2
+
+    T.runSolver
+
+  vtest r $ M.fromList [ ("result1", 0)
+                       , ("result2", 32)]
