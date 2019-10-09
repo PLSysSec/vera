@@ -619,7 +619,7 @@ jsMax :: VNode
       -> VNode
       -> D.Verif VNode                    
 jsMax node1 node2 = do
-  unless (vtype node1 == vtype node2) $ error "Types should match"
+  unless (vtype node1 == vtype node2) $ error "Types should match: jsmax"
   -- If anything is Nan the result is Nan 
   leftIsNan <- D.isNan $ vnode node1
   rightIsNan <- D.isNan $ vnode node2
@@ -632,10 +632,25 @@ jsMax node1 node2 = do
   nanOrResult <- D.cond eitherIsNan nan result
   resultVar <- D.doubv "jsMaxResult"
   D.assign nanOrResult resultVar  
-  newDefinedNode result $ vtype node1    
+  newDefinedNode nanOrResult $ vtype node1    
 
-jsAbs _left _right = error "JS abs not yet implemenetd"
-  
+-- | https://es5.github.io/#x15.8.2.1
+-- If x is NaN, the result is NaN.
+-- If x is −0, the result is +0.
+-- If x is −∞, the result is +∞.
+jsAbs :: VNode
+      -> D.Verif VNode 
+jsAbs op = do
+  isNan <- D.isNan $ vnode op
+  nan <- D.nan
+  result <- do
+    isNeg <- D.isNeg $ vnode op
+    negOp <- D.fpNeg $ vnode op
+    D.cond isNeg negOp $ vnode op
+  nanOrResult <- D.cond isNan nan result
+  resultVar <- D.doubv "jsAbs"
+  D.assign nanOrResult resultVar  
+  newDefinedNode nanOrResult $ vtype op
          
 --
 -- C++ Operations
