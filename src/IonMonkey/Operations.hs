@@ -381,7 +381,29 @@ ursh' left _ = do
 abs = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1104
-min = undefined
+min left right = do
+
+  -- FractionalPart = lhs fract || rhs fract
+  fract <- T.cppOr (canHaveFractionalPart left) (canHaveFractionalPart right)
+  -- Nz = lhs nz || rhs nz
+  nz <- T.cppOr (canBeNegativeZero left) (canBeNegativeZero right)
+  -- Min(lhs lower, rhs lower), rhs has lower && rhs has lower
+  newLower <- T.cppMin (lower left) (lower right)
+  hasLower <- T.cppAnd (hasInt32LowerBound left) (hasInt32UpperBound right)
+  -- min(lhs upper, rhs upper), lhs has upper || rhs has upper
+  newUpper <- T.cppMin (lower right) (upper right)
+  hasUpper <- T.cppOr (hasInt32UpperBound left) (hasInt32LowerBound right)
+  -- max(lhs exp, rhs exp)
+  exp <- T.cppMax (maxExponent left) (maxExponent right)
+  -- Raw initialize
+  result <- resultRange T.Double "result"
+  T.vassign (canHaveFractionalPart result) fract
+  T.vassign (canBeNegativeZero result) nz
+  T.vassign (lower result) newLower
+  T.vassign (hasInt32LowerBound result) hasLower
+  T.vassign (upper result) newUpper
+  T.vassign (hasInt32UpperBound result) hasUpper
+  T.vassign (maxExponent result) exp
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1123
 max = undefined
