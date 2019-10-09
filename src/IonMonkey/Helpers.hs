@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances     #-}
 module IonMonkey.Helpers ( setRange
                          , noInt32LowerBound
                          , noInt32UpperBound
@@ -198,32 +199,38 @@ countOnes num = do
   mask <- T.cppAnd tmp5 sixtythree
   T.cppSub numBits mask
 
-countLeadingZeroes32 :: T.VNode -> D.Verif T.VNode
-countLeadingZeroes32 node = do
-    -- https://stackoverflow.com/questions/10439242/count-leading-zeroes-in-an-int32
-    -- const int numIntBits = sizeof(int) * 8; //compile time constant
-    -- //do the smearing
-    -- x |= x >> 1;
-    -- x |= x >> 2;
-    -- x |= x >> 4;
-    -- x |= x >> 8;
-    -- x |= x >> 16;
-  numBits <- T.num 32
-  one <- T.num 1
-  two <- T.num 2
-  four <- T.num 4
-  eight <- T.num 8
-  sixteen <- T.num 16
+class CountLeadingZeroes32 n where
+  countLeadingZeroes32 :: n -> D.Verif T.VNode
 
-  -- smear (ew)
-  tmp1 <- T.cppShiftRight node one >>= T.cppOr node
-  tmp2 <- T.cppShiftRight tmp1 two >>= T.cppOr tmp1
-  tmp3 <- T.cppShiftRight tmp2 four >>= T.cppOr tmp2
-  tmp4 <- T.cppShiftRight tmp3 eight >>= T.cppOr tmp3
-  tmp5 <- T.cppShiftRight tmp4 sixteen >>= T.cppOr tmp4
+instance CountLeadingZeroes32 (D.Verif T.VNode) where
+  countLeadingZeroes32 act = act >>= countLeadingZeroes32 
 
-  -- //count the ones
-  countOnes tmp5
+instance CountLeadingZeroes32 T.VNode where
+  countLeadingZeroes32 node = do
+      -- https://stackoverflow.com/questions/10439242/count-leading-zeroes-in-an-int32
+      -- const int numIntBits = sizeof(int) * 8; //compile time constant
+      -- //do the smearing
+      -- x |= x >> 1;
+      -- x |= x >> 2;
+      -- x |= x >> 4;
+      -- x |= x >> 8;
+      -- x |= x >> 16;
+    numBits <- T.num 32
+    one <- T.num 1
+    two <- T.num 2
+    four <- T.num 4
+    eight <- T.num 8
+    sixteen <- T.num 16
+
+    -- smear (ew)
+    tmp1 <- T.cppShiftRight node one >>= T.cppOr node
+    tmp2 <- T.cppShiftRight tmp1 two >>= T.cppOr tmp1
+    tmp3 <- T.cppShiftRight tmp2 four >>= T.cppOr tmp2
+    tmp4 <- T.cppShiftRight tmp3 eight >>= T.cppOr tmp3
+    tmp5 <- T.cppShiftRight tmp4 sixteen >>= T.cppOr tmp4
+
+    -- //count the ones
+    countOnes tmp5
 
 countTrailingZeroes32 :: T.VNode -> D.Verif T.VNode
 countTrailingZeroes32 node = undefined
