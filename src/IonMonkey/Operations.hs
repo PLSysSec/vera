@@ -126,15 +126,15 @@ or _lhs _rhs = do
   -- Compute the lower and upper, lines 865-890
 
   -- 879-880
-  lower1 <- do leadingOnes <- countLeadingZeroes32 $ T.cppNeg (lower _lhs)
-               T.cppMax int32Min (T.cppNeg $ T.cppCast (T.cppShiftRight uint32Max leadingOnes) T.Signed)
+  lower1 <- do leadingOnes <- countLeadingZeroes32 $ T.cppNot (lower _lhs)
+               T.cppMax int32Min (T.cppNot $ T.cppCast (T.cppShiftRight uint32Max leadingOnes) T.Signed)
 
   -- 884-885
-  lower2 <- do leadingOnes <- countLeadingZeroes32 $ T.cppNeg (lower _rhs)
+  lower2 <- do leadingOnes <- countLeadingZeroes32 $ T.cppNot (lower _rhs)
                T.cppMax (T.cppCond (T.cppLt (upper _lhs) zero)
                           lower1
                           int32Min)
-                        (T.cppNeg $ T.cppCast (T.cppShiftRight uint32Max leadingOnes) T.Signed)
+                        (T.cppNot $ T.cppCast (T.cppShiftRight uint32Max leadingOnes) T.Signed)
 
   -- lines 868-889
   lowerEnd <- T.cppCond ((T.cppGte (lower _lhs) zero) `T.cppAnd` (T.cppGte (lower _rhs) zero))
