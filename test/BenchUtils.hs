@@ -5,6 +5,7 @@ import           Data.ByteString.Lazy (ByteString)
 import           Test.Tasty
 import           Test.Tasty.Golden
 import           Test.Tasty.HUnit
+import           Test.Tasty.QuickCheck
 
 -- Thanks to CRAIG DISSELKOEN for this benchmarking/testing framework setup.
 -- He wrote the code in this file.
@@ -26,6 +27,12 @@ benchTestCase :: String -> IO () -> BenchTest
 benchTestCase name act = BenchTest {
     getTest = testCase name act
   , getBench = bench (replaceDoubleQuotes name) $ nfIO act
+}
+
+benchTestProperty :: Testable a => String -> a -> BenchTest
+benchTestProperty name prop = BenchTest {
+    getTest = testProperty name prop
+  , getBench = bench (replaceDoubleQuotes name) $ nfIO $ return ()
 }
 
 benchGoldenVsString :: String -> FilePath -> IO ByteString -> BenchTest

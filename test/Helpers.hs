@@ -1,6 +1,8 @@
 module Helpers where
 import           BenchUtils
 import           Control.Monad.State.Strict (liftIO)
+import           Data.Int
+import qualified Data.Bits                  as B
 import qualified Data.Map                   as M
 import qualified DSL.Typed                  as T
 import           IonMonkey.Helpers
@@ -8,12 +10,14 @@ import           IonMonkey.Objects
 import           IonMonkey.Operations
 import           Prelude                    hiding (and, not, or)
 import           Test.Tasty.HUnit
+import qualified Test.QuickCheck.Monadic    as Q
 import qualified Test.Tasty.QuickCheck      as Q
 import           Utils
 
 helpersTests :: BenchTest
 helpersTests = benchTestGroup "Helpers tests" [ setRangeTest
                                               , countLeadingZeroesTest 
+                                              , propCtlz_test 
                                               , countTrailingZeroesTest ]
 
 trueBit :: Float
@@ -137,13 +141,14 @@ countTrailingZeroesTest = benchTestCase "countTrailingZeroes" $ do
                        , ("result2", 32)
                        , ("result3", 7)]
 
--- propCtlz :: In32 -> 
-propCtlz input32 = do
-  (T.SolverSat vars) <- T.evalVerif Nothing $ do
-    num <- T.num input
-    T.named "result" $ countLeadingZeroes32 num
-    T.runSolver
-  let (Just val) = M.lookup "result" vars 
-  Q.assert $ fromInteger input == val
+propCtlz_test = benchTestProperty "countTrailingZeroes QuickCheck" propCtlz
+  where propCtlz :: Int32 -> Q.Property
+        propCtlz input32 = Q.monadicIO $ do
+          (T.SolverSat vars) <- Q.run $ T.evalVerif Nothing $ do
+            num <- T.num input
+            T.named "result" $ countLeadingZeroes32 num
+            T.runSolver
+          let (Just val) = M.lookup "result" vars 
+          Q.assert $ fromIntegral (B.countLeadingZeros input32) == val
 
-  where input = toInteger input32
+          where input = toInteger input32

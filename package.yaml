@@ -55,6 +55,7 @@ tests:
     - tasty
     - tasty-golden    
     - tasty-hunit
+    - QuickCheck
     - tasty-quickcheck
     - criterion
     - bytestring
