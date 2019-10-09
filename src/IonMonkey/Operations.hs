@@ -135,14 +135,14 @@ or _lhs _rhs = do
   lowerEnd <- T.cppCond ((T.cppGte (lower _lhs) zero) `T.cppAnd` (T.cppGte (lower _rhs) zero))
                 (T.cppMax (lower _lhs) (lower _rhs))
                 -- we do rhs first cause lhs is a fall through if
-                (T.cppCond (T.cppLt (upper _rhs) zero) 
-                      lower2 
-                      (T.cppCond (T.cppLt (upper _lhs) zero) 
-                        lower1 
+                (T.cppCond (T.cppLt (upper _rhs) zero)
+                      lower2
+                      (T.cppCond (T.cppLt (upper _lhs) zero)
+                        lower1
                         int32Min))
   upperEnd <- T.cppCond ((T.cppGte (lower _lhs) zero) `T.cppAnd` (T.cppGte (lower _rhs) zero))
-                 (T.cppCast (T.cppShiftRight uint32Max 
-                              (T.cppMin (T.named "ctlzUpperLhs" $ countLeadingZeroes32 $ upper _lhs) 
+                 (T.cppCast (T.cppShiftRight uint32Max
+                              (T.cppMin (T.named "ctlzUpperLhs" $ countLeadingZeroes32 $ upper _lhs)
                                         (T.named "ctlzUpperRhs" $ countLeadingZeroes32 $ upper _rhs))) T.Signed)
                 (T.cppCond ((T.cppLt (upper _lhs) zero)  `T.cppOr` (T.cppLt (upper _lhs) zero))
                       neg1
@@ -380,4 +380,26 @@ min left right = do
   T.vassign (maxExponent result) exp
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1123
-max = undefined
+max left right = do
+
+  -- fract part = lhs fract || rhs fract
+  fract <- T.cppOr (canHaveFractionalPart left) (canHaveFractionalPart right)
+  -- negz = lhs nz || rhs nz
+  nz <- T.cppOr (canBeNegativeZero left) (canBeNegativeZero right)
+  -- lb = max(lhs lower, rhs lower), lhs haslower || rhs haslower
+  newLower <- T.cppMax (lower left) (lower right)
+  hasLower <- T.cppOr (hasInt32LowerBound left) (hasInt32LowerBound right)
+  -- ub = max(lhs upper, rhs upper), lhs hasupper && rhs hasupper
+  newUpper <- T.cppMax (upper left) (upper right)
+  hasUpper <- T.cppAnd (hasInt32UpperBound left) (hasInt32UpperBound right)
+  -- max(lhs exp, rhs exp)
+  exp <- T.cppMax (maxExponent left) (maxExponent right)
+  -- Raw initialize
+  result <- resultRange T.Double "result"
+  T.vassign (canHaveFractionalPart result) fract
+  T.vassign (canBeNegativeZero result) nz
+  T.vassign (lower result) newLower
+  T.vassign (hasInt32LowerBound result) hasLower
+  T.vassign (upper result) newUpper
+  T.vassign (hasInt32UpperBound result) hasUpper
+  T.vassign (maxExponent result) exp
