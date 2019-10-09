@@ -353,19 +353,63 @@ ursh' left _ = do
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1089
 abs :: Range -> T.Verif Range
-abs op = error ""
+abs op = do
 
-  -- -- FractionalPartFlag canHaveFractionalPart = op->canHaveFractionalPart_;
-  -- let fract = canHaveFractionalPart op
-  -- -- // Abs never produces a negative zero.
-  -- nz <- T.false
+  -- FractionalPartFlag canHaveFractionalPart = op->canHaveFractionalPart_;
+  let fract = canHaveFractionalPart op
+  -- // Abs never produces a negative zero.
+  nz <- T.false
 
-  -- -- Max(Max(int32_t(0), l), u == INT32_MIN ? INT32_MAX : -u)
+  -- Setup for later calculations
+  zero <- T.num 0
+  t <- T.true
+  intMin <- T.intMin
+  intMax <- T.intMax
 
+  -- Max(Max(int32_t(0), l), u == INT32_MIN ? INT32_MAX : -u)
+  lb <- do
+    max1 <- T.cppMax (lower op) zero
+    max2 <- do
+      cond <- T.cppEq (upper op) intMin
+      let trueBr = intMax
+      falseBr <- T.cppNeg (upper op)
+      T.cppCond cond trueBr falseBr
+    T.cppMax max1 max2
+
+  let hasLower = t
+
+  -- Max(Max(int32_t(0), u), l == INT32_MIN ? INT32_MAX : -l)
+  ub <- do
+    max1 <- T.cppMax (upper op) zero
+    max2 <- do
+      cond <- T.cppEq (lower op) intMin
+      let trueBr = intMax
+      falseBr <- T.cppNeg (lower op)
+      T.cppCond cond trueBr falseBr
+    T.cppMax max1 max2
+
+  -- op->hasInt32Bounds() && l != INT32_MIN
+  hasUpper <- do
+    notLowest <- T.cppEq (lower op) intMin >>= T.cppNot
+    T.cppAnd (hasInt32LowerBound op) (hasInt32UpperBound op) >>= T.cppAnd notLowest
+
+  let e = maxExponent op
+
+  -- Raw initialize
   --   Range(Max(Max(int32_t(0), l), u == INT32_MIN ? INT32_MAX : -u), true,
   --            Max(Max(int32_t(0), u), l == INT32_MIN ? INT32_MAX : -l),
   --            op->hasInt32Bounds() && l != INT32_MIN, canHaveFractionalPart,
   --            canBeNegativeZero, op->max_exponent_);)
+  result <- resultRange T.Double "result"
+  T.vassign (canHaveFractionalPart result) fract
+  T.vassign (canBeNegativeZero result) nz
+  T.vassign (lower result) lb
+  T.vassign (hasInt32LowerBound result) hasLower
+  T.vassign (upper result) ub
+  T.vassign (hasInt32UpperBound result) hasUpper
+  T.vassign (maxExponent result) e
+  return result
+
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1104
 min :: Range -> Range -> T.Verif Range
