@@ -42,6 +42,9 @@ module DSL.DSL ( i64
                , Verif
                , VerifState(..)
                , SMTResult(..)
+               , isSat
+               , isUnsat
+               , example
                , getVars
                , runVerif
                , evalVerif
@@ -71,6 +74,14 @@ data VerifState = VerifState { vars         :: M.Map String Z3.Node
                              , solverResult :: SMTResult
                              }
 
+isSat :: SMTResult -> Bool
+isSat SolverSat{} = True
+isSat _           = False
+
+isUnsat :: SMTResult -> Bool
+isUnsat SolverUnsat{} = True
+isUnsat _             = False
+
 newtype Verif a = Verif (StateT VerifState Z.Z3 a)
     deriving (Functor, Applicative, Monad, MonadState VerifState, MonadIO)
 
@@ -78,7 +89,7 @@ instance Z.MonadZ3 Verif where
     getSolver = Verif $ lift $ Z.getSolver
     getContext = Verif $ lift $ Z.getContext
 
-data SMTResult = SolverSat (M.Map String Float)
+data SMTResult = SolverSat { example :: (M.Map String Float) }
                | SolverUnsat
                | SolverFailed
                deriving (Eq, Ord, Show)
@@ -126,16 +137,24 @@ getIntModel str = do
               let maybeHexVal = drop 2 strVal
                   val = case maybeHexVal of
                           -- Negative 0
-                          '_':' ':'-':'z':'e':'r':'o':_ -> "-0"
+                          '_':' ':'-':'z':'e':'r':'o':_ -> Just "-0"
+                          '_':' ':'+':'z':'e':'r':'o':_ -> Just "0"
                           -- Boolean
-                          'b':n                         -> n
+                          'b':n                         -> Just n
                           -- Hex
-                          _                             -> '0':maybeHexVal
-              return $ Just (init var, read val :: Float)
-            [""]          -> return Nothing
-            e             -> error $ unwords ["Unexpected line in model"
-                                             , show e
-                                             ]
+                          'x':_                         -> Just $ '0':maybeHexVal
+                          _                             -> Nothing
+              -- This is gross for printing sorry
+              return $ case val of
+                         Just val -> Just (init var, read val :: Float)
+                         Nothing  -> Nothing
+            _ -> return Nothing
+            -- [""]          -> return Nothing
+            -- e             -> error $ unwords ["Unexpected line in model"
+            --                                  , show e
+            --                                  , "in"
+            --                                  , str
+            --                                  ]
   return $ M.fromList $ catMaybes vars
 --
 -- Ints and stuff
@@ -259,9 +278,8 @@ i1v :: String -> Verif Z3.Node
 i1v name = var' i1 name
 
 -- | Named intermediate expression
-named :: String -> Verif Z3.Node -> Verif Z3.Node
-named str act = do
-  res <- act
+named :: String -> Z3.Node -> Verif Z3.Node
+named str res = do
   v <- var' (Z.getSort res) str
   assign v res
   return v

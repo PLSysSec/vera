@@ -4,7 +4,8 @@ import           Control.Monad.State.Strict (liftIO)
 import qualified DSL.Typed                  as T
 import           IonMonkey.Objects
 import           IonMonkey.Operations
-import           Prelude                    hiding (and, not, or)
+import           IonMonkey.Verify
+import           Prelude                    hiding (and, max, min, not, or)
 import           Test.Tasty.HUnit
 
 ionMonkeyTests :: BenchTest
@@ -19,6 +20,8 @@ ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ fpAddTest
                                                    , rsh'Test
                                                    , ursh'Test
                                                    , orTest
+                                                   , fpMinTest
+                                                   , fpMaxTest
                                                    ]
 
 fpAddTest :: BenchTest
@@ -300,3 +303,40 @@ orTest = benchTestCase "or" $ do
   Verified @=? c2
   Verified @=? c3
   Verified @=? c4
+
+fpMinTest :: BenchTest
+fpMinTest = benchTestCase "fpmin" $ do
+  (c2) <- T.evalVerif Nothing $ do
+
+    leftRange <- inputRange T.Double "left start range"
+    rightRange <- inputRange T.Double "right start range"
+    resultRange <- min leftRange rightRange
+    -- c0 <- verifyConsistent
+
+    left <- operandWithRange "left" T.Double leftRange
+    right <- operandWithRange "right" T.Double rightRange
+    result <- T.jsMin left right
+
+    -- c1 <- verifyInfNan result resultRange
+    c2 <- verifyNegZero result resultRange
+    return c2
+
+  Verified @=? c2
+
+fpMaxTest :: BenchTest
+fpMaxTest = benchTestCase "fpmax" $ do
+  (c2) <- T.evalVerif Nothing $ do
+
+    leftRange <- inputRange T.Double "left start range"
+    rightRange <- inputRange T.Double "right start range"
+    resultRange <- max leftRange rightRange
+
+    left <- operandWithRange "left" T.Double leftRange
+    right <- operandWithRange "right" T.Double rightRange
+    result <- T.jsMax left right
+
+    c2 <- verifyNegZero result resultRange
+    return c2
+
+  Verified @=? c2
+
