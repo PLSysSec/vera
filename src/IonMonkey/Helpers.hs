@@ -163,7 +163,6 @@ isFiniteNegative range = do
   T.cppLt (upper range) zero
 
 countOnes :: T.VNode -> D.Verif T.VNode
-countOnes num = do
   numBits <- T.num 32
   one <- T.num 1
   two <- T.num 2
@@ -172,32 +171,36 @@ countOnes num = do
   sixteen <- T.num 16
   fives <- T.num 1431655765
   threes <- T.num 858993459
-  fs <- T.num 252645135
+  f0s <- T.num 252645135
   sixtythree <- T.num 63
 
   -- count
   -- x -= x >> 1 & 0x55555555;
-  right <- T.cppAnd one fives
-  total <- T.cppShiftRight num right
-  tmp1 <- T.cppSub num total
+  shift1 <- T.cppShiftRight num one
+  and1 <- T.cppAnd shift1 fives
+  tmp1 <- T.cppSub num and1
+
   -- x = (x >> 2 & 0x33333333) + (x & 0x33333333);
-  firstAnd <- T.cppAnd two threes
-  left <- T.cppShiftRight tmp1 firstAnd
-  right <- T.cppAnd tmp1 threes
-  tmp2 <- T.cppAnd left right
+  shift2 <- T.cppShiftRight tmp1 two
+  and2 <- T.cppAnd shift2 threes
+  and3 <- T.cppAnd tmp1 threes
+  tmp2 <- T.cppAdd and2 and3
+
   -- x = (x >> 4) + x & 0x0f0f0f0f;
-  left <- T.cppShiftRight tmp2 four
-  right <- T.cppAnd tmp2 fs
-  tmp3 <- T.cppAnd left right
+  shift3 <- T.cppShiftRight tmp2 four
+  add1 <- T.cppAdd shift3 tmp2
+  tmp3 <- T.cppAdd add1 f0s
+
   -- x += x >> 8;
-  shift <- T.cppShiftRight tmp3 eight
-  tmp4 <- T.cppAdd tmp3 shift
+  shift4 <- T.cppShiftRight tmp3 eight
+  tmp4 <- T.cppAdd tmp3 shift4
+
   -- x += x >> 16;
-  shift2 <- T.cppShiftRight tmp4 sixteen
-  tmp5 <- T.cppAdd tmp4 shift2
+  shift5 <- T.cppShiftRight tmp4 sixteen
+  tmp5 <- T.cppAdd tmp4 shift5
+
   -- return numIntBits - (x & 0x0000003f); //subtract # of 1s from 32)
-  mask <- T.cppAnd tmp5 sixtythree
-  T.cppSub numBits mask
+  T.cppAnd tmp5 sixtythree
 
 class CountLeadingZeroes32 n where
   countLeadingZeroes32 :: n -> D.Verif T.VNode
