@@ -110,7 +110,6 @@ runSolver = do
   result <- case z3result of
     (Z.Sat, Just model) -> do
       strModel <- Z.modelToString model
-      putStrLn strModel
       intModel <- liftIO $ getIntModel strModel
       return $ SolverSat intModel
     (Z.Unsat, _) -> return SolverUnsat
