@@ -164,6 +164,7 @@ isFiniteNegative range = do
 
 countOnes :: T.VNode -> D.Verif T.VNode
 countOnes num = do
+  -- http://aggregate.org/MAGIC/#Population%20Count%20(Ones%20Count)
   one <- T.num 1
   two <- T.num 2
   four <- T.num 4
@@ -210,7 +211,7 @@ instance CountLeadingZeroes32 (D.Verif T.VNode) where
 
 instance CountLeadingZeroes32 T.VNode where
   countLeadingZeroes32 node = do
-      -- https://stackoverflow.com/questions/10439242/count-leading-zeroes-in-an-int32
+      -- http://aggregate.org/MAGIC/#Leading%20Zero%20Count
       -- const int numIntBits = sizeof(int) * 8; //compile time constant
       -- //do the smearing
       -- x |= x >> 1;
