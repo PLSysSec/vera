@@ -472,23 +472,53 @@ max left right = do
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1142
 floor :: Range -> T.Verif Range
-floor op = error "not yet implmented"
-  -- result <- resultRange T.Double "result"
+floor op = do
 
   -- if (op->canHaveFractionalPart() && op->hasInt32LowerBound())
   --            copy->setLowerInit(int64_t(copy->lower_) - 1);
 
-  -- cond <- T.cppAnd (canHaveFractionalPart op) (hasInt32LowerBound op)
-  -- error ""
+  cond <- T.cppAnd (canHaveFractionalPart op) (hasInt32LowerBound op)
+  (trueLower, trueHasLower) <- do
+    one64 <- T.num64 1
+    extLower <- T.cppCast (lower op) T.Signed64
+    arg <- T.cppSub extLower one64
+    setLowerInit' arg
+
+  newLower <- T.cppCond cond trueLower (lower op)
+  newHasLower <- T.cppCond cond trueHasLower (hasInt32LowerBound op)
+
+  maxExp <- maxFiniteExponent
 
   -- if (copy->hasInt32Bounds())
   --    copy->max_exponent_ = copy->exponentImpliedByInt32Bounds();)
   -- else if (copy->max_exponent_ < MaxFiniteExponent)
   --      copy->max_exponent_++;
+  -- Create the conditions
+  hasInt32Bound <- T.cppAnd (hasInt32LowerBound op) (hasInt32UpperBound op)
+  expRoom <- T.cppLt (maxExponent op) maxExp
+  -- Create the results
+  ifResult <- exponentImpliedByInt32Bounds op
+  elseIfResult <- do
+    one16 <- T.unum 1
+    T.cppAdd (maxExponent op) one16
+  let elseResult = maxExponent op
 
-  -- copy->canHaveFractionalPart_ = ExcludesFractionalParts;
+  elseAndElseIfResult <- T.cppCond expRoom elseIfResult elseResult
+  e <- T.cppCond hasInt32Bound ifResult elseAndElseIfResult
 
+  fractPart <- T.false
 
+  -- The result is just a copy of the original with a new exponent, lower, haslower, and fract
+  result <- resultRange T.Double "result"
+  T.vassign (lower result) newLower
+  T.vassign (upper result) (upper op)
+  T.vassign (hasInt32LowerBound result) newHasLower
+  T.vassign (hasInt32UpperBound result) (hasInt32UpperBound op)
+  T.vassign (canBeInfiniteOrNan result) (canBeInfiniteOrNan op)
+  T.vassign (canBeNegativeZero result) (canBeNegativeZero op)
+  T.vassign (canHaveFractionalPart result) fractPart
+  T.vassign (maxExponent result) e
+  return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1166
 ceil :: Range -> T.Verif Range

@@ -1,13 +1,13 @@
 {-# LANGUAGE FlexibleInstances #-}
 module IonMonkey.Helpers ( setRange
-                         , setLowerInit
-                         , setUpperInit
+                         , setLowerInit'
                          , noInt32LowerBound
                          , noInt32UpperBound
                          , isFiniteNonNegative
                          , isFiniteNegative
                          , maxFiniteExponent
                          , includesInfinityAndNan
+                         , exponentImpliedByInt32Bounds
                          , countLeadingZeroes32
                          , countTrailingZeroes32
                          ) where
@@ -38,11 +38,18 @@ optimize :: Range
          -> D.Verif ()
 optimize _ = return ()
 
--- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#252
 setLowerInit :: T.VNode
              -> Range
              -> D.Verif ()
 setLowerInit lower_ range = do
+  (newLower, hasLower) <- setLowerInit' lower_
+  T.vassign newLower (lower range)
+  T.vassign hasLower (hasInt32LowerBound range)
+
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#252
+setLowerInit' :: T.VNode
+             -> D.Verif (T.VNode, T.VNode)
+setLowerInit' lower_ = do
   when (T.vtype lower_ /= T.Signed64) $ error "Expected a signed 64-bit lower"
   min <- jsValIntMin
   max <- jsValIntMax
@@ -69,8 +76,8 @@ setLowerInit lower_ range = do
   lower'' <- T.cppCond oobLower min lower'
   hasLower'' <- T.cppCond oobLower f hasLower'
   -- Set the flag and the bound
-  T.vassign lower'' (lower range)
-  T.vassign hasLower'' (hasInt32LowerBound range)
+  return (lower'', hasLower'')
+
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#265
 setUpperInit :: T.VNode
@@ -163,6 +170,11 @@ isFiniteNegative :: Range -> D.Verif T.VNode
 isFiniteNegative range = do
   zero <- T.num 0
   T.cppLt (upper range) zero
+
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#284
+-- This is not yet implemeneted
+exponentImpliedByInt32Bounds :: Range -> D.Verif T.VNode
+exponentImpliedByInt32Bounds _ = T.unum16 0
 
 countOnes :: T.VNode -> D.Verif T.VNode
 countOnes num = do
