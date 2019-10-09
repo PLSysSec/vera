@@ -163,7 +163,7 @@ isFiniteNegative range = do
   T.cppLt (upper range) zero
 
 countOnes :: T.VNode -> D.Verif T.VNode
-  numBits <- T.num 32
+countOnes num = do
   one <- T.num 1
   two <- T.num 2
   four <- T.num 4
