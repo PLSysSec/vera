@@ -286,7 +286,10 @@ vassert = D.assert . vnode
 
 vassign :: VNode -> VNode -> D.Verif ()
 vassign n1 n2 = do
-  unless (vtype n1 == vtype n2) $ error "Tried to assign different typed nodes"
+  unless (vtype n1 == vtype n2) $ error $ unwords ["Tried to assign different typed nodes"
+                                                  , show $ vtype n1
+                                                  , show $ vtype n2
+                                                  ]
   D.eq (vnode n1) (vnode n2) >>= D.assert
   D.eq (vundef n1) (vundef n2) >>= D.assert
 
@@ -506,6 +509,8 @@ jsShl left right = do
   thirtyOne <- D.i32c 31
   shiftCount <- D.and (vnode right) thirtyOne
   result <- D.safeSll (vnode left) shiftCount
+  resultVar <- D.i32v "jsShlResult"
+  D.assign result resultVar
   undef <- D.i1c 0
   return $ VNode undef result Signed
 
@@ -628,12 +633,6 @@ instance CppNot VNode where
     result <- D.not (vnode node)
     return $ VNode (vundef node) result (vtype node)
 
-DEFINEBINOPCLASS(CppEq, cppEq)
-instance CppEq VNode VNode where
-  cppEq left right
-    | (isDouble $ vtype left) || (isDouble $ vtype right) = noopWrapper left right D.fpEq
-    | otherwise = noopWrapper left right D.iseq
-
 DEFINEBINOPCLASS(CppOr, cppOr)
 instance CppOr VNode VNode where
   cppOr left right
@@ -698,6 +697,10 @@ cppCompareWrapper left right uCompare sCompare fCompare
      compare <- sCompare (vnode left) (vnode right)
      newMaybeDefinedNode left right compare Bool
 
+DEFINEBINOPCLASS(CppEq, cppEq)
+instance CppEq VNode VNode where
+  cppEq left right = cppCompareWrapper left right D.iseq D.iseq D.fpEq
+                         
 DEFINEBINOPCLASS(CppGt, cppGt)
 instance CppGt VNode VNode where
   cppGt left right = cppCompareWrapper left right D.ugt D.sgt D.fpGt
@@ -748,7 +751,6 @@ instance CppShiftLeft VNode VNode where
     | not (is32Bits $ vtype left) || not (is32Bits $ vtype right) =
         error "Only support 32 bit SHL"
     | isUnsigned (vtype left) = do
-
         parentsUndef <- D.or (vundef left) (vundef right)
         -- If the right is signed and negative, undefined behavior
         undef <- if isSigned (vtype right)
@@ -840,6 +842,7 @@ instance CppShiftRight VNode VNode where
 DEFINETEROPCLASS(CppCon, cppCond)
 instance CppCon VNode VNode VNode where
   cppCond cond true false = do
+    unless (vtype cond == Bool) $ error "Conditional must be a boolean"
     unless (vtype true == vtype false) $ error "Must have both branches of cond be same type"
     result <- D.cond (vnode cond) (vnode true) (vnode false)
     undef <- D.or (vundef cond) (vundef true) >>= D.or (vundef false)

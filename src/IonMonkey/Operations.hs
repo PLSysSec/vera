@@ -230,11 +230,13 @@ lsh shiftee val = do
   -- Setup the shift
   thirtyOne <- T.num 31
   one <- T.num 1
-  shift <- T.cppAnd val thirtyOne
+  shift <- T.cppAnd thirtyOne val
 
   -- Desired range
-  shiftedLower <- T.cppShiftLeft (lower shiftee) shift
-  shiftedUpper <- T.cppShiftLeft (upper shiftee) shift
+  castLower <- T.cppCast (lower shiftee) T.Unsigned
+  castUpper <- T.cppCast (upper shiftee) T.Unsigned
+  shiftedLower <- T.cppShiftLeft castLower shift
+  shiftedUpper <- T.cppShiftLeft castUpper shift
 
   -- Compute the branch conditions
   doesntLoseBits <- do
@@ -242,24 +244,31 @@ lsh shiftee val = do
       tmp1 <- T.cppShiftLeft shiftedLower one
       tmp2 <- T.cppShiftRight tmp1 shift
       tmp3 <- T.cppShiftRight tmp2 one
-      T.cppEq tmp3 (lower shiftee)
+      castTmp <- T.cppCast tmp3 T.Signed
+      T.cppEq castTmp (lower shiftee)
 
     upperDoesntLoseBits <- do
       tmp1 <- T.cppShiftLeft shiftedUpper one
       tmp2 <- T.cppShiftRight tmp1 shift
       tmp3 <- T.cppShiftRight tmp2 one
-      T.cppEq tmp3 (upper shiftee)
+      castTmp <- T.cppCast tmp3 T.Signed
+      T.cppEq castTmp (upper shiftee)
 
     T.cppAnd lowerDoesntLoseBits upperDoesntLoseBits
 
   result <- resultRange T.Signed "result"
 
   -- fallback range
-  i32min <- T.intMin
-  i32max <- T.intMax
+  i32min <- T.num (-2147483648) -- WHY ARE THESE NOT SHOWING UP AS DIFFERENT
+  i32max <- T.num 2147483647
 
-  T.cppCond doesntLoseBits shiftedLower i32min >>= T.vassign (lower result)
-  T.cppCond doesntLoseBits shiftedUpper i32max >>= T.vassign (upper result)
+  -- They get cast back on assignment
+  -- https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1009
+  shiftedLowerSigned <- T.cppCast shiftedLower T.Signed
+  shiftedUpperSigned <- T.cppCast shiftedUpper T.Signed
+
+  T.cppCond doesntLoseBits shiftedLowerSigned i32min >>= T.vassign (lower result)
+  T.cppCond doesntLoseBits shiftedUpperSigned i32max >>= T.vassign (upper result)
 
   return result
 

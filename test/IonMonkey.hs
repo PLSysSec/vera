@@ -8,17 +8,17 @@ import           Prelude                    hiding (and, not, or)
 import           Test.Tasty.HUnit
 
 ionMonkeyTests :: BenchTest
-ionMonkeyTests = benchTestGroup "Ion Monkey tests" [--  fpAddTest
-                                                   -- , addTest
-                                                   -- , andTest
-                                                   -- , notTest
-                                                   -- , lshTest
-                                                   -- , rshTest
-                                                    urshTest
-                                                   -- , lsh'Test
-                                                   -- , rsh'Test
-                                                   -- , ursh'Test
-                                                   -- , orTest
+ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ fpAddTest
+                                                   , addTest
+                                                   , andTest
+                                                   , notTest
+                                                   , lshTest
+                                                   , rshTest
+                                                   , urshTest
+                                                   , lsh'Test
+                                                   , rsh'Test
+                                                   , ursh'Test
+                                                   , orTest
                                                    ]
 
 fpAddTest :: BenchTest
@@ -126,11 +126,11 @@ lshTest = benchTestCase "lsh" $ do
     val <- T.newInputVar T.Signed "val"
     resultRange <- lsh shifteeRange val
     c0 <- verifyConsistent
-    c1 <- verifySaneRange resultRange
-    c2 <- verifyDefinedResult resultRange
 
     shiftee <- operandWithRange "shiftee" T.Signed shifteeRange
     result <- T.jsShl shiftee val
+    c1 <- verifySaneRange resultRange
+    c2 <- verifyDefinedResult resultRange
     c3 <- verifyUpperBound result resultRange
     c4 <- verifyLowerBound result resultRange
 

@@ -51,6 +51,7 @@ module DSL.DSL ( i64
 import           Control.Monad              (foldM)
 import           Control.Monad.Reader
 import           Control.Monad.State.Strict
+import           Data.List                  (isInfixOf)
 import           Data.List.Split
 import qualified Data.Map.Strict            as M
 import           Data.Maybe                 (catMaybes)
@@ -123,7 +124,7 @@ getIntModel str = do
   vars <- forM lines $ \line -> case splitOn "->" line of
             [var, strVal] -> do
               let maybeHexVal = drop 2 strVal
-              let val = case maybeHexVal of
+                  val = case maybeHexVal of
                           -- Negative 0
                           '_':' ':'-':'z':'e':'r':'o':_ -> "-0"
                           -- Boolean
