@@ -1,5 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 module IonMonkey.Helpers ( setRange
+                         , setLowerInit
+                         , setUpperInit
                          , noInt32LowerBound
                          , noInt32UpperBound
                          , isFiniteNonNegative

@@ -472,7 +472,23 @@ max left right = do
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1142
 floor :: Range -> T.Verif Range
-floor op = undefined
+floor op = error "not yet implmented"
+  -- result <- resultRange T.Double "result"
+
+  -- if (op->canHaveFractionalPart() && op->hasInt32LowerBound())
+  --            copy->setLowerInit(int64_t(copy->lower_) - 1);
+
+  -- cond <- T.cppAnd (canHaveFractionalPart op) (hasInt32LowerBound op)
+  -- error ""
+
+  -- if (copy->hasInt32Bounds())
+  --    copy->max_exponent_ = copy->exponentImpliedByInt32Bounds();)
+  -- else if (copy->max_exponent_ < MaxFiniteExponent)
+  --      copy->max_exponent_++;
+
+  -- copy->canHaveFractionalPart_ = ExcludesFractionalParts;
+
+
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1166
 ceil :: Range -> T.Verif Range
