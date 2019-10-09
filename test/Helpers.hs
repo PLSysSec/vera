@@ -96,10 +96,17 @@ countLeadingZeroesTest = benchTestCase "countLeadingZeroes" $ do
     result2 <- T.int32 "result2"
     T.vassign result2 ctlz2
 
+    -- There should be 24 leading zeroes for 128
+    num128 <- T.num 128
+    ctlz3 <- countLeadingZeroes32 num128
+    result3 <- T.int32 "result3"
+    T.vassign result3 ctlz3
+
     T.runSolver
 
   vtest r $ M.fromList [ ("result1", 0)
-                       , ("result2", 32)]
+                       , ("result2", 32)
+                       , ("result3", 24)]
 
 countTrailingZeroesTest :: BenchTest
 countTrailingZeroesTest = benchTestCase "countTrailingZeroes" $ do
@@ -117,7 +124,14 @@ countTrailingZeroesTest = benchTestCase "countTrailingZeroes" $ do
     result2 <- T.int32 "result2"
     T.vassign result2 cttz2
 
+    -- There should be 7 trailing zeroes for 128
+    num128 <- T.num 128
+    ctlz3 <- countTrailingZeroes32 num128
+    result3 <- T.int32 "result3"
+    T.vassign result3 ctlz3
+
     T.runSolver
 
   vtest r $ M.fromList [ ("result1", 0)
-                       , ("result2", 32)]
+                       , ("result2", 32)
+                       , ("result3", 7)]
