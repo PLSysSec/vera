@@ -239,4 +239,13 @@ instance CountLeadingZeroes32 T.VNode where
     T.cppSub thirtytwo numOnes
 
 countTrailingZeroes32 :: T.VNode -> D.Verif T.VNode
-countTrailingZeroes32 node = undefined
+countTrailingZeroes32 num = do
+  -- http://aggregate.org/MAGIC/#Trailing%20Zero%20Count
+  one <- T.num 1
+  zero <- T.num 0
+
+  --ones((x & -x) - 1)
+  negNum <- T.cppSub zero num
+  tmp1 <- T.cppAnd num negNum
+  tmp2 <- T.cppSub tmp1 one
+  countOnes tmp2
