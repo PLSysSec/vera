@@ -14,13 +14,18 @@ module IonMonkey.Operations ( add
                             , abs
                             , min
                             , max
+                            , floor
+                            , ceil
+                            , sign
+                            , nanToZero
                             ) where
 import           Control.Monad.State.Strict (liftIO)
 import           Data.Maybe                 (fromJust)
 import qualified DSL.Typed                  as T
 import           IonMonkey.Helpers
 import           IonMonkey.Objects
-import           Prelude                    hiding (abs, and, max, min, not, or)
+import           Prelude                    hiding (abs, and, ceil, floor, max,
+                                             min, not, or)
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#744
 add :: Range -> Range -> T.Verif Range
@@ -464,3 +469,36 @@ max left right = do
   T.vassign (hasInt32UpperBound result) hasUpper
   T.vassign (maxExponent result) exp
   return result
+
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1142
+floor :: Range -> T.Verif Range
+floor op = undefined
+
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1166
+ceil :: Range -> T.Verif Range
+ceil op = undefined
+
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1184
+sign :: Range -> T.Verif Range
+sign op = do
+  one <- T.num 1
+  negOne <- T.num (-1)
+  zero <- T.num 0
+
+  -- Max(Min(op->lower_, 1), -1)
+  low <- T.cppMin (lower op) one >>= T.cppMax negOne
+  -- Max(Min(op->upper_, 1)
+  up <- T.cppMin (upper op) one >>= T.cppMax negOne
+  -- ExcludesFractionalParts is just false
+  fract <- T.false
+  let nz = canBeNegativeZero op
+      e = zero
+
+  result <- resultRange T.Double "result"
+  setRange low up fract nz e result
+  return result
+
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1195
+nanToZero :: Range -> T.Verif Range
+nanToZero = undefined
+

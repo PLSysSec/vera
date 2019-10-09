@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE FlexibleInstances #-}
 module IonMonkey.Helpers ( setRange
                          , noInt32LowerBound
                          , noInt32UpperBound
@@ -207,7 +207,7 @@ class CountLeadingZeroes32 n where
   countLeadingZeroes32 :: n -> D.Verif T.VNode
 
 instance CountLeadingZeroes32 (D.Verif T.VNode) where
-  countLeadingZeroes32 act = act >>= countLeadingZeroes32 
+  countLeadingZeroes32 act = act >>= countLeadingZeroes32
 
 instance CountLeadingZeroes32 T.VNode where
   countLeadingZeroes32 node = do
