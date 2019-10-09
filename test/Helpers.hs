@@ -12,7 +12,8 @@ import           Utils
 
 helpersTests :: BenchTest
 helpersTests = benchTestGroup "Helpers tests" [ setRangeTest
-                                              , countLeadingZeroesTest ]
+                                              , countLeadingZeroesTest 
+                                              , countTrailingZeroesTest ]
 
 trueBit :: Float
 trueBit = 1
@@ -94,6 +95,27 @@ countLeadingZeroesTest = benchTestCase "countLeadingZeroes" $ do
     ctlz2 <- countLeadingZeroes32 zero
     result2 <- T.int32 "result2"
     T.vassign result2 ctlz2
+
+    T.runSolver
+
+  vtest r $ M.fromList [ ("result1", 0)
+                       , ("result2", 32)]
+
+countTrailingZeroesTest :: BenchTest
+countTrailingZeroesTest = benchTestCase "countTrailingZeroes" $ do
+  r <- T.evalVerif Nothing $ do
+
+    -- There shoud be no trailing zeroes for 1
+    one <- T.num 1
+    cttz1 <- countTrailingZeroes32 one
+    result1 <- T.int32 "result1"
+    T.vassign result1 cttz1
+
+    -- There should be 32 trailing zeroes for 0
+    zero <- T.num 0
+    cttz2 <- countTrailingZeroes32 zero
+    result2 <- T.int32 "result2"
+    T.vassign result2 cttz2
 
     T.runSolver
 
