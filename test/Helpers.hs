@@ -8,7 +8,7 @@ import           IonMonkey.Objects
 import           IonMonkey.Operations
 import           Prelude                    hiding (and, not, or)
 import           Test.Tasty.HUnit
-import           Test.Tasty.QuickCheck
+import qualified Test.Tasty.QuickCheck      as Q
 import           Utils
 
 helpersTests :: BenchTest
@@ -144,6 +144,6 @@ propCtlz input32 = do
     T.named "result" $ countLeadingZeroes32 num
     T.runSolver
   let (Just val) = M.lookup "result" vars 
-  assert $ fromInteger input == val
+  Q.assert $ fromInteger input == val
 
   where input = toInteger input32
