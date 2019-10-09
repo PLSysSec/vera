@@ -352,9 +352,23 @@ ursh' left _ = do
   return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1089
-abs = undefined
+abs :: Range -> T.Verif Range
+abs op = error ""
+
+  -- -- FractionalPartFlag canHaveFractionalPart = op->canHaveFractionalPart_;
+  -- let fract = canHaveFractionalPart op
+  -- -- // Abs never produces a negative zero.
+  -- nz <- T.false
+
+  -- -- Max(Max(int32_t(0), l), u == INT32_MIN ? INT32_MAX : -u)
+
+  --   Range(Max(Max(int32_t(0), l), u == INT32_MIN ? INT32_MAX : -u), true,
+  --            Max(Max(int32_t(0), u), l == INT32_MIN ? INT32_MAX : -l),
+  --            op->hasInt32Bounds() && l != INT32_MIN, canHaveFractionalPart,
+  --            canBeNegativeZero, op->max_exponent_);)
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1104
+min :: Range -> Range -> T.Verif Range
 min left right = do
 
   -- FractionalPart = lhs fract || rhs fract
@@ -381,6 +395,7 @@ min left right = do
   return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1123
+max :: Range -> Range -> T.Verif Range
 max left right = do
 
   -- fract part = lhs fract || rhs fract
