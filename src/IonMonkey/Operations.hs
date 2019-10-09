@@ -126,7 +126,9 @@ or _lhs _rhs = do
 
   -- 884-885
   lower2 <- do leadingOnes <- countLeadingZeroes32 $ T.cppNeg (lower _rhs)
-               T.cppMax (T.cppCond (T.cppLt (upper _lhs) zero) lower1 int32Min)
+               T.cppMax (T.cppCond (T.cppLt (upper _lhs) zero)
+                          lower1
+                          int32Min)
                         (T.cppNeg $ T.cppCast (T.cppShiftRight uint32Max leadingOnes) T.Signed)
 
   -- lines 868-889
@@ -140,39 +142,24 @@ or _lhs _rhs = do
                         int32Min))
   upperEnd <- T.cppCond ((T.cppGte (lower _lhs) zero) `T.cppAnd` (T.cppGte (lower _rhs) zero))
                  (T.cppCast (T.cppShiftRight uint32Max 
-                              (T.cppMin (countLeadingZeroes32 $ upper _lhs) 
-                                        (countLeadingZeroes32 $ upper _rhs))) T.Signed)
+                              (T.cppMin (T.named "ctlzUpperLhs" $ countLeadingZeroes32 $ upper _lhs) 
+                                        (T.named "ctlzUpperRhs" $ countLeadingZeroes32 $ upper _rhs))) T.Signed)
                 (T.cppCond ((T.cppLt (upper _lhs) zero)  `T.cppOr` (T.cppLt (upper _lhs) zero))
                       neg1
-                      int32Min)
+                      int32Max)
   --
-
-  resultLower <- T.cppCond (T.cppEq (lower _lhs) (upper _lhs))
-                    (T.cppCond (T.cppEq (lower _lhs) zero) 
-                      (lower _rhs)
-                      (T.cppCond (T.cppEq (lower _lhs) neg1) 
-                        (lower _lhs) 
-                        lowerEnd))
-                    (T.cppCond (T.cppEq (lower _rhs) (upper _rhs))
-                         (T.cppCond (T.cppEq (lower _rhs) zero) 
-                           (lower _lhs)
-                           (T.cppCond (T.cppEq (lower _rhs) neg1) 
-                             (lower _rhs) 
-                             lowerEnd))
-                          lowerEnd)
-  resultUpper <- T.cppCond (T.cppEq (lower _lhs) (upper _lhs))
-                    (T.cppCond (T.cppEq (lower _lhs) zero) 
-                      (upper _rhs)
-                      (T.cppCond (T.cppEq (lower _lhs) neg1) 
-                        (upper _lhs) 
-                        upperEnd))
-                    (T.cppCond (T.cppEq (lower _rhs) (upper _rhs))
-                         (T.cppCond (T.cppEq (lower _rhs) zero) 
-                           (upper _lhs)
-                           (T.cppCond (T.cppEq (lower _rhs) neg1) 
-                             (upper _rhs) 
-                             upperEnd))
-                          upperEnd)
+  resultLower <-
+      T.cppCond ((T.cppEq (lower _lhs) (upper _lhs)) `T.cppAnd` (T.cppEq (lower _lhs) zero)) (lower _rhs) $
+      T.cppCond ((T.cppEq (lower _lhs) (upper _lhs)) `T.cppAnd` (T.cppEq (lower _lhs) neg1)) (lower _lhs) $
+      T.cppCond ((T.cppEq (lower _rhs) (upper _rhs)) `T.cppAnd` (T.cppEq (lower _rhs) zero)) (lower _lhs) $
+      T.cppCond ((T.cppEq (lower _rhs) (upper _rhs)) `T.cppAnd` (T.cppEq (lower _rhs) neg1)) (lower _rhs)
+      lowerEnd
+  resultUpper <-
+      T.cppCond ((T.cppEq (lower _lhs) (upper _lhs)) `T.cppAnd` (T.cppEq (lower _lhs) zero)) (upper _rhs) $
+      T.cppCond ((T.cppEq (lower _lhs) (upper _lhs)) `T.cppAnd` (T.cppEq (lower _lhs) neg1)) (upper _lhs) $
+      T.cppCond ((T.cppEq (lower _rhs) (upper _rhs)) `T.cppAnd` (T.cppEq (lower _rhs) zero)) (upper _lhs) $
+      T.cppCond ((T.cppEq (lower _rhs) (upper _rhs)) `T.cppAnd` (T.cppEq (lower _rhs) neg1)) (upper _rhs)
+      upperEnd
 
 
   T.vassign (lower result) resultLower

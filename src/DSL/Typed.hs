@@ -30,6 +30,7 @@ module DSL.Typed ( vassert
                  , num16
                  , unum16
                  , fpnum
+                 , named
                  -- * Types 
                  , VNode
                  , Type(..)
@@ -280,6 +281,14 @@ newDefinedNode node ty = do
   return $ VNode undefBit node ty
 
 --
+
+-- | Name an intermediate node (action). Useful for debugging.
+named :: String -> D.Verif VNode -> D.Verif VNode
+named name act = do
+  n <- act
+  D.named name $ vnode n
+  return n
+
 
 vassert :: VNode -> D.Verif ()
 vassert = D.assert . vnode
