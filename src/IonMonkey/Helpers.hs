@@ -224,6 +224,7 @@ instance CountLeadingZeroes32 T.VNode where
     four <- T.num 4
     eight <- T.num 8
     sixteen <- T.num 16
+    thirtytwo <- T.num 32
 
     -- smear (ew)
     tmp1 <- T.cppShiftRight node one >>= T.cppOr node
@@ -233,7 +234,8 @@ instance CountLeadingZeroes32 T.VNode where
     tmp5 <- T.cppShiftRight tmp4 sixteen >>= T.cppOr tmp4
 
     -- //count the ones
-    countOnes tmp5
+    numOnes <- countOnes tmp5
+    T.cppSub thirtytwo numOnes
 
 countTrailingZeroes32 :: T.VNode -> D.Verif T.VNode
 countTrailingZeroes32 node = undefined
