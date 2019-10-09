@@ -23,6 +23,7 @@ ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ fpAddTest
                                                    , fpMinTest
                                                    , fpMaxTest
                                                    , fpAbsTest
+                                                   , fpSignTest
                                                    ]
 
 fpAddTest :: BenchTest
@@ -348,6 +349,21 @@ fpAbsTest = benchTestCase "fpabs" $ do
 
     input <- operandWithRange "input" T.Double inputRange
     result <- T.jsAbs input
+
+    c2 <- verifyNegZero result resultRange
+    return c2
+
+  Verified @=? c2
+
+fpSignTest :: BenchTest
+fpSignTest = benchTestCase "fpsign" $ do
+  (c2) <- T.evalVerif Nothing $ do
+
+    inputRange <- inputRange T.Double "left start range"
+    resultRange <- sign inputRange
+
+    input <- operandWithRange "input" T.Double inputRange
+    result <- T.jsSign input
 
     c2 <- verifyNegZero result resultRange
     return c2

@@ -492,10 +492,15 @@ sign op = do
   -- ExcludesFractionalParts is just false
   fract <- T.false
   let nz = canBeNegativeZero op
-      e = zero
+  e <- T.unum16 0
+
+  -- cast lower and upper to int64 before sending to setRange, which takes
+  -- signed 64s as input
+  castLower <- T.cppCast low T.Signed64
+  castUpper <- T.cppCast up T.Signed64
 
   result <- resultRange T.Double "result"
-  setRange low up fract nz e result
+  setRange castLower castUpper fract nz e result
   return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1195

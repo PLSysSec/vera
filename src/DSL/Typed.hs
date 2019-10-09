@@ -64,6 +64,7 @@ module DSL.Typed ( vassert
                  , jsAbs
                  , jsMin
                  , jsMax
+                 , jsSign
                    -- * Cpp operations: building blocks for what we are verifying
                  , cppNeg
                  , cppNot
@@ -634,7 +635,7 @@ jsMax node1 node2 = do
   resultVar <- D.doubv "jsMaxResult"
   D.assign nanOrResult resultVar  
   newDefinedNode nanOrResult $ vtype node1    
-
+                 
 -- | https://es5.github.io/#x15.8.2.1
 -- If x is NaN, the result is NaN.
 -- If x is −0, the result is +0.
@@ -652,7 +653,26 @@ jsAbs op = do
   resultVar <- D.doubv "jsAbs"
   D.assign nanOrResult resultVar  
   newDefinedNode nanOrResult $ vtype op
-         
+
+-- ceil: https://es5.github.io/#x15.8.2.6
+-- floor: https://es5.github.io/#x15.8.2.9
+--
+
+-- | Have not found this one yet but we're guessing based on js
+-- The mathematical function sign(x) yields 1 if x is positive and −1 if x is negative.
+-- The sign function is not used in this standard for cases when x is zero.
+jsSign :: VNode
+       -> D.Verif VNode
+jsSign op = do
+  unless (vtype op == Double) $ error "Only accept double for sign right now"
+  one <- D.double 1
+  minusOne <- D.double (-1)
+  isPos <- D.isPos $ vnode op
+  result <- D.cond isPos one minusOne
+  resultVar <- D.doubv "jsSign"
+  D.assign result resultVar
+  newDefinedNode result Double
+  
 --
 -- C++ Operations
 --
