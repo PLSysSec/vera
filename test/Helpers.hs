@@ -136,7 +136,6 @@ countTrailingZeroesTest = benchTestCase "countTrailingZeroes" $ do
   vtest r $ M.fromList [ ("result1", 0)
                        , ("result2", 32)
                        , ("result3", 7)]
-                       , ("result2", 32)]
 
 -- propCtlz :: In32 -> 
 propCtlz input32 = do
