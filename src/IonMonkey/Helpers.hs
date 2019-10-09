@@ -172,7 +172,7 @@ countOnes num = do
   sixteen <- T.num 16
   fives <- T.num 1431655765
   threes <- T.num 858993459
-  f0s <- T.num 252645135
+  zeroF <- T.num 252645135
   sixtythree <- T.num 63
 
   -- count
@@ -190,7 +190,7 @@ countOnes num = do
   -- x = (x >> 4) + x & 0x0f0f0f0f;
   shift3 <- T.cppShiftRight tmp2 four
   add1 <- T.cppAdd shift3 tmp2
-  tmp3 <- T.cppAdd add1 f0s
+  tmp3 <- T.cppAnd add1 zeroF
 
   -- x += x >> 8;
   shift4 <- T.cppShiftRight tmp3 eight
