@@ -66,6 +66,7 @@ module DSL.Typed ( vassert
                  , jsMin
                  , jsMax
                  , jsSign
+                 , jsFloor
                    -- * Cpp operations: building blocks for what we are verifying
                  , cppNeg
                  , cppNot
@@ -671,7 +672,7 @@ jsAbs op = do
     negOp <- D.fpNeg $ vnode op
     D.cond isNeg negOp $ vnode op
   nanOrResult <- D.cond isNan nan result
-  resultVar <- D.doubv "jsAbs"
+  resultVar <- D.doubv "jsAbsResult"
   D.assign nanOrResult resultVar  
   newDefinedNode nanOrResult $ vtype op
 
@@ -683,7 +684,10 @@ jsFloor :: VNode
         -> D.Verif VNode
 jsFloor op = do
   unless (vtype op == Double) $ error "Only accept double for jsFloor right now"
-  error ""
+  result <- D.fpFloor $ vnode op
+  resultVar <- D.doubv "jsFloorResult"
+  D.assign result resultVar
+  newDefinedNode result Double
 
 -- | Have not found this one yet but we're guessing based on js
 -- The mathematical function sign(x) yields 1 if x is positive and −1 if x is negative.
