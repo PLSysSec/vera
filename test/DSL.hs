@@ -137,6 +137,10 @@ fpTest = benchTestCase "fp" $ do
     z <- M.mkFpZero doubSort False
     nan <- M.mkFpNan doubSort
     inf <- M.mkFpInf doubSort True
+    inf2 <- M.mkFpInf doubSort False
+    D.doubv "nan" >>= D.assign nan
+    D.doubv "neginf" >>= D.assign inf
+    D.doubv "posinf" >>= D.assign inf2
 
     rna <- M.mkFpRna
     rne <- M.mkFpRne
@@ -167,6 +171,9 @@ fpTest = benchTestCase "fp" $ do
 
     D.runSolver
 
-  satTest r
+  vtest r $ Map.fromList [ ("nan", 0/0)
+                         , ("neginf", (-1/0))
+                         , ("posinf", 1/0)
+                         ]
 
 

@@ -143,6 +143,9 @@ getIntModel str = do
                           -- Negative 0
                           '_':' ':'-':'z':'e':'r':'o':_ -> Just (read "-0" :: Float)
                           '_':' ':'+':'z':'e':'r':'o':_ -> Just (read "0" :: Float)
+                          '_':' ':'N':'a':'N':_         -> Just $ 0 / 0
+                          '_':' ':'-':_                 -> Just $ negate $ 1 / 0
+                          '_':' ':'+':_                 -> Just $ 1 / 0
                           -- Boolean
                           'b':n                         -> Just (read n :: Float)
                           -- Hex

@@ -20,7 +20,8 @@ vtest result expectedVars = case result of
                                    , "in"
                                    , show actualVars
                                    ]
-        Just actualVal -> unless (actualVal == expectedVal) $
+        Just actualVal -> unless (actualVal == expectedVal ||
+                                 (isNaN actualVal && isNaN expectedVal)) $
                           error $ unwords ["Expected"
                                           , show expectedVar
                                           , "to be"
