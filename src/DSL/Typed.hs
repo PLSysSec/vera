@@ -955,6 +955,50 @@ instance CppCast (D.Verif VNode) where
 
 instance CppCast VNode where
   cppCast node toTy
+    | is16Bits fromTy = case toTy of
+                          Unsigned16 -> return $ VNode (vundef node) (vnode node) Unsigned16
+                          Signed16   -> return $ VNode (vundef node) (vnode node) Signed16
+                          Unsigned64 -> do
+                            result <- D.uext (vnode node) 48
+                            return $ VNode (vundef node) result Unsigned64
+                          Signed64   -> do
+                            result <- D.sext (vnode node) 48
+                            return $ VNode (vundef node) result Signed64
+                          Unsigned   -> do
+                            result <- D.uext (vnode node) 16
+                            return $ VNode (vundef node) result Unsigned
+                          Signed     -> do
+                            result <- D.sext (vnode node) 16
+                            return $ VNode (vundef node) result Signed
+                          Unsigned8  -> do
+                            result <- D.slice (vnode node) 7 0
+                            return $ VNode (vundef node) result Unsigned8
+                          Signed8    -> do
+                            result <- D.slice (vnode node) 7 0
+                            return $ VNode (vundef node) result Signed8
+                          _          -> error "Illegal cast types"
+    | is8Bits fromTy = case toTy of
+                          Unsigned8  -> return $ VNode (vundef node) (vnode node) Unsigned8
+                          Signed8    -> return $ VNode (vundef node) (vnode node) Signed8
+                          Unsigned64 -> do
+                            result <- D.uext (vnode node) 56
+                            return $ VNode (vundef node) result Unsigned64
+                          Signed64   -> do
+                            result <- D.sext (vnode node) 56
+                            return $ VNode (vundef node) result Signed64
+                          Unsigned   -> do
+                            result <- D.uext (vnode node) 24
+                            return $ VNode (vundef node) result Unsigned
+                          Signed     -> do
+                            result <- D.sext (vnode node) 24
+                            return $ VNode (vundef node) result Signed
+                          Unsigned16  -> do
+                            result <- D.uext (vnode node) 8
+                            return $ VNode (vundef node) result Unsigned16
+                          Signed16    -> do
+                            result <- D.sext (vnode node) 8
+                            return $ VNode (vundef node) result Signed16
+                          _          -> error "Illegal cast types"
     | is32Bits fromTy = case toTy of
                           Unsigned   -> return $ VNode (vundef node) (vnode node) Unsigned
                           Signed     -> return $ VNode (vundef node) (vnode node) Signed
