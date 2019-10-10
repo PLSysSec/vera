@@ -172,7 +172,26 @@ or _lhs _rhs = do
   return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#893
-xor left right = undefined
+xor _lhs _rhs = undefined
+  -- zero <- T.num 0
+  --
+  -- -- 906-917
+  -- lhsLower <- T.cppCond (T.cppLt (upper _lhs) zero)
+  --               (T.cppNot $ upper _lhs)
+  --               (lower _lhs)
+  -- lhsUpper <- T.cppCond (T.cppLt (upper _lhs) zero)
+  --               (T.cppNot $ lower _lhs)
+  --               (upper _lhs)
+  -- rhsLower <- T.cppCond (T.cppLt (upper _rhs) zero)
+  --               (T.cppNot $ upper _rhs)
+  --               (lower _rhs)
+  -- rhsUpper <- T.cppCond (T.cppLt (upper _rhs) zero)
+  --               (T.cppNot $ lower _rhs)
+  --               (upper _rhs)
+  -- invertAfter <- T.cppCond ((T.cppLt (upper _lhs) zero) `T.cppAnd` (T.cppLt (upper _rhs) zero))
+  --                   false
+  --                   ((T.cppLt (upper _lhs) zero) `T.cppOr` (T.cppLt (upper _rhs) zero))
+
 
   -- invertAfter <- D.false
 
