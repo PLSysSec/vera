@@ -174,7 +174,19 @@ isFiniteNegative range = do
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#284
 -- This is not yet implemeneted
 exponentImpliedByInt32Bounds :: Range -> D.Verif T.VNode
-exponentImpliedByInt32Bounds _ = T.unum16 0
+exponentImpliedByInt32Bounds range = do
+  absLower <- T.cppAbs $ lower range
+  absUpper <- T.cppAbs $ upper range
+  max <- T.cppMax absLower absUpper
+  error "exponent implied by int 32 bounds not implemented"
+  -- uint32_t max = Max(mozilla::Abs(lower()), mozilla::Abs(upper()));
+  -- uint16_t result = mozilla::FloorLog2(max);)
+  -- inline uint_fast8_t FloorLog2(const T aValue))
+  -- FloorLog2(0..1) is 0;
+  -- FloorLog2(2..3) is 1;
+  -- FloorLog2(4..7) is 2;
+  -- FloorLog2(8..15) is 3; and so on.)
+  T.unum16 0
 
 countOnes :: T.VNode -> D.Verif T.VNode
 countOnes num = do

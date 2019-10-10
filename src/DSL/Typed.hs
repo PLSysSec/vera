@@ -84,6 +84,7 @@ module DSL.Typed ( vassert
                  , cppShiftRight
                  , cppCond
                  , cppCast
+                 , cppAbs
                  -- * Running the solver and getting the model
                  , D.runSolver
                  , D.evalVerif
@@ -955,3 +956,6 @@ instance CppCast VNode where
                           _          -> error "Illegal cast types"
     | otherwise = error "Illegal cast types"
     where fromTy = vtype node
+
+cppAbs :: VNode -> D.Verif VNode                    
+cppAbs = error "cpp abs not implemented"                   
