@@ -679,13 +679,19 @@ jsAbs op = do
 -- floor: https://es5.github.io/#x15.8.2.9
 --
 
+jsFloor :: VNode
+        -> D.Verif VNode
+jsFloor op = do
+  unless (vtype op == Double) $ error "Only accept double for jsFloor right now"
+  error ""
+
 -- | Have not found this one yet but we're guessing based on js
 -- The mathematical function sign(x) yields 1 if x is positive and −1 if x is negative.
 -- The sign function is not used in this standard for cases when x is zero.
 jsSign :: VNode
        -> D.Verif VNode
 jsSign op = do
-  unless (vtype op == Double) $ error "Only accept double for sign right now"
+  unless (vtype op == Double) $ error "Only accept double for jsSign right now"
   one <- D.double 1
   minusOne <- D.double (-1)
   isPos <- D.isPos $ vnode op

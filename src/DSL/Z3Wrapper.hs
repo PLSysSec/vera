@@ -346,3 +346,13 @@ fpMin = Z.mkFpMin
 fpMax :: MonadZ3 z3 => AST -> AST -> z3 AST
 fpMax = Z.mkFpMax
 
+fpFloor :: MonadZ3 z3 => AST -> z3 AST
+fpFloor toRound = do
+  rm <- rtn
+  Z.mkFpRound rm toRound
+
+fpCeil :: MonadZ3 z3 => AST -> z3 AST
+fpCeil toRound = do
+  rm <- rtp
+  Z.mkFpRound rm toRound
+

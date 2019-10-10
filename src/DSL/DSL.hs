@@ -50,6 +50,8 @@ module DSL.DSL ( i64
                , evalVerif
                , execVerif
                , runSolver
+               , Z3.fpFloor
+               , Z3.fpCeil
                ) where
 import           Control.Monad              (foldM)
 import           Control.Monad.Reader
@@ -316,4 +318,5 @@ conjunction xs = foldM Z3.and (head xs) (tail xs)
 disjunction :: [Z3.Node] -> Verif Z3.Node
 disjunction [] = error "Cannot have a disjunction of zero nodes"
 disjunction xs = foldM Z3.or (head xs) (tail xs)
+
 

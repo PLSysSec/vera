@@ -1,6 +1,8 @@
 module DSL where
 import           BenchUtils
 import           Control.Monad.State.Strict (liftIO)
+import qualified Data.Map                   as Map
+import           DSL.DSL                    (fpCeil, fpFloor)
 import qualified DSL.DSL                    as D
 import qualified DSL.Typed                  as T
 import qualified DSL.Z3Wrapper              as Ops
@@ -16,6 +18,7 @@ dslTests = benchTestGroup "DSL" [ addTest
                                 , incrTest
                                 , incrTest2
                                 , fpTest
+                                , fpRoundTest
                                 ]
 
 addTest :: BenchTest
@@ -98,6 +101,31 @@ incrTest2 = benchTestCase "incr2" $ do
     D.runSolver
 
   satTest r
+
+fpRoundTest :: BenchTest
+fpRoundTest = benchTestCase "fp rounding" $ do
+  r <- D.evalVerif Nothing $ do
+    doubSort <- M.mkDoubleSort
+    -- Make some stuff to round
+    four5 <- M.mkFpFromDouble 4.5 doubSort
+    minusFour5 <- M.mkFpFromDouble (-4.5) doubSort
+    -- Make sure it rounds to the correct values
+    r1 <- fpFloor four5
+    r2 <- fpFloor minusFour5
+    r3 <- fpCeil four5
+    r4 <- fpCeil minusFour5
+    D.doubv "r1" >>= D.assign r1
+    D.doubv "r2" >>= D.assign r2
+    D.doubv "r3" >>= D.assign r3
+    D.doubv "r4" >>= D.assign r4
+
+    T.runSolver
+  -- works, our representation just doesnt parse floats yet
+  vtest r $ Map.fromList [ ("r1", 4)
+                         , ("r2", -5)
+                         , ("r3", 5)
+                         , ("r4", -4)
+                         ]
 
 fpTest :: BenchTest
 fpTest = benchTestCase "fp" $ do

@@ -15,7 +15,11 @@ vtest result expectedVars = case result of
   D.SolverSat actualVars -> do
     forM_ (M.toList expectedVars) $ \(expectedVar, expectedVal) ->
       case M.lookup expectedVar actualVars of
-        Nothing -> error $ unwords ["Expected to find", show expectedVar]
+        Nothing -> error $ unwords ["Expected to find"
+                                   , show expectedVar
+                                   , "in"
+                                   , show actualVars
+                                   ]
         Just actualVal -> unless (actualVal == expectedVal) $
                           error $ unwords ["Expected"
                                           , show expectedVar
