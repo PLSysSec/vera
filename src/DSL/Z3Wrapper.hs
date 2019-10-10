@@ -301,8 +301,8 @@ rmWrapper :: MonadZ3 z3
           -> z3 AST
 rmWrapper op a b = do
   -- In the future we will get the current rounding mode from the monad
-  rna_ <- rna
-  op rna_ a b
+  rtn_ <- rtn
+  op rtn_ a b
 
 fpAbs :: MonadZ3 z3 => AST -> z3 AST
 fpAbs = Z.mkFpAbs

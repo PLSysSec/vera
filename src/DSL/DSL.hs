@@ -37,7 +37,7 @@ module DSL.DSL ( i64
                , assign
                , conjunction
                , disjunction
-               , module Z3
+               , module DSL.Z3Wrapper
                -- ** Verif monad
                , Verif
                , VerifState(..)
@@ -50,8 +50,6 @@ module DSL.DSL ( i64
                , evalVerif
                , execVerif
                , runSolver
-               , Z3.fpFloor
-               , Z3.fpCeil
                ) where
 import           Control.Monad              (foldM)
 import           Control.Monad.Reader
@@ -62,6 +60,7 @@ import           Data.List                  (foldl')
 import           Data.List.Split
 import qualified Data.Map.Strict            as M
 import           Data.Maybe                 (catMaybes)
+import           DSL.Z3Wrapper
 import qualified DSL.Z3Wrapper              as Z3
 import           Prelude                    hiding (map, max, min, not)
 import qualified Z3.Monad                   as Z
