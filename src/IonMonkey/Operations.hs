@@ -216,44 +216,57 @@ or _lhs _rhs = do
   return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#893
-xor _lhs _rhs = undefined
-  -- zero <- T.num 0
-  --
-  -- -- 906-917
-  -- lhsLower <- T.cppCond (T.cppLt (upper _lhs) zero)
-  --               (T.cppNot $ upper _lhs)
-  --               (lower _lhs)
-  -- lhsUpper <- T.cppCond (T.cppLt (upper _lhs) zero)
-  --               (T.cppNot $ lower _lhs)
-  --               (upper _lhs)
-  -- rhsLower <- T.cppCond (T.cppLt (upper _rhs) zero)
-  --               (T.cppNot $ upper _rhs)
-  --               (lower _rhs)
-  -- rhsUpper <- T.cppCond (T.cppLt (upper _rhs) zero)
-  --               (T.cppNot $ lower _rhs)
-  --               (upper _rhs)
-  -- invertAfter <- T.cppCond ((T.cppLt (upper _lhs) zero) `T.cppAnd` (T.cppLt (upper _rhs) zero))
-  --                   false
-  --                   ((T.cppLt (upper _lhs) zero) `T.cppOr` (T.cppLt (upper _rhs) zero))
 
+xor :: Range -> Range -> T.Verif Range
+xor _lhs _rhs = do
+  result <- resultRange T.Signed "result"
+  zero <- T.num 0
+  uint32Max <- T.uintMax
+  int32Max <- T.intMax
+  int32Min <- T.intMin
+  false <- T.false
 
-  -- invertAfter <- D.false
+  -- 906-917
+  lhsLower <- T.cppCond (T.cppLt (upper _lhs) zero)
+                (T.cppNot $ upper _lhs)
+                (lower _lhs)
+  lhsUpper <- T.cppCond (T.cppLt (upper _lhs) zero)
+                (T.cppNot $ lower _lhs)
+                (upper _lhs)
+  rhsLower <- T.cppCond (T.cppLt (upper _rhs) zero)
+                (T.cppNot $ upper _rhs)
+                (lower _rhs)
+  rhsUpper <- T.cppCond (T.cppLt (upper _rhs) zero)
+                (T.cppNot $ lower _rhs)
+                (upper _rhs)
+  invertAfter <- T.cppCond ((T.cppLt (upper _lhs) zero) `T.cppAnd` (T.cppLt (upper _rhs) zero))
+                    false
+                    ((T.cppLt (upper _lhs) zero) `T.cppOr` (T.cppLt (upper _rhs) zero))
 
+  -- 938 - 941
+  lhsLeadingZeros <- T.named "ctlzUpperLhs" $ countLeadingZeroes32 $ lhsUpper
+  rhsLeadingZeros <- T.named "ctlzUpperRhs" $ countLeadingZeroes32 $ rhsUpper
+  tmp_upper <- T.cppMin
+                 (T.cppOr rhsUpper (T.cppShiftRight uint32Max lhsLeadingZeros))
+                 (T.cppOr lhsUpper (T.cppShiftRight uint32Max rhsLeadingZeros))
 
+  -- 925 - 942
+  upperEnd <- T.cppCond ((T.cppEq lhsLower zero) `T.cppAnd` (T.cppEq lhsUpper zero)) rhsUpper $
+           T.cppCond ((T.cppEq rhsLower zero) `T.cppAnd` (T.cppEq rhsUpper zero)) lhsUpper $
+           T.cppCond ((T.cppGte lhsLower zero) `T.cppAnd` (T.cppGte rhsLower zero)) tmp_upper $
+           int32Max
+  lowerEnd <- T.cppCond ((T.cppEq lhsLower zero) `T.cppAnd` (T.cppEq lhsUpper zero)) rhsLower $
+           T.cppCond ((T.cppEq rhsLower zero) `T.cppAnd` (T.cppEq rhsUpper zero)) lhsLower $
+           T.cppCond ((T.cppGte lhsLower zero) `T.cppAnd` (T.cppGte rhsLower zero)) zero $
+           int32Min
 
-  --  if (lhsUpper < 0) {
-  --                    lhsLower = ~lhsLower;
-  --                    lhsUpper = ~lhsUpper;
-  --                    Swap(lhsLower, lhsUpper);
-  --                    invertAfter = !invertAfter;
-  --                  }
-  --           if (rhsUpper < 0) {
-  --                      rhsLower = ~rhsLower;
-  --                      rhsUpper = ~rhsUpper;
-  --                      Swap(rhsLower, rhsUpper);
-  --                      invertAfter = !invertAfter;
-  --                    })
+  -- 946 - 950
+  resultLower <- T.cppCond invertAfter (T.cppNot upperEnd) lowerEnd
+  resultUpper <- T.cppCond invertAfter (T.cppNot lowerEnd) upperEnd
 
+  T.vassign (lower result) resultLower
+  T.vassign (upper result) resultUpper
+  return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#955
 not :: Range -> T.Verif Range

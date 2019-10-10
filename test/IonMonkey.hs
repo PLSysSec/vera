@@ -23,6 +23,7 @@ ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ fpAddTest
                                                    , rsh'Test
                                                    , ursh'Test
                                                    , orTest
+                                                   , xorTest
                                                    , fpMinTest
                                                    , fpMaxTest
                                                    , fpAbsTest
@@ -338,6 +339,30 @@ orTest = benchTestCase "or" $ do
     left <- operandWithRange "left" T.Signed leftRange
     right <- operandWithRange "right" T.Signed rightRange
     result <- T.jsOr left right
+    c3 <- verifyLowerBound result resultRange
+    c4 <- verifyUpperBound result resultRange
+    return (c0, c1, c2, c3, c4)
+
+  Verified @=? c0
+  Verified @=? c1
+  Verified @=? c2
+  Verified @=? c3
+  Verified @=? c4
+
+xorTest :: BenchTest
+xorTest = benchTestCase "xor" $ do
+  (c0, c1, c2, c3, c4) <- T.evalVerif Nothing $ do
+
+    leftRange <- inputRange T.Signed "left start range"
+    rightRange <- inputRange T.Signed "right start range"
+    resultRange <- xor leftRange rightRange
+    c0 <- verifyConsistent
+    c1 <- verifySaneRange resultRange
+    c2 <- verifyDefinedResult resultRange
+
+    left <- operandWithRange "left" T.Signed leftRange
+    right <- operandWithRange "right" T.Signed rightRange
+    result <- T.jsXor left right
     c3 <- verifyLowerBound result resultRange
     c4 <- verifyUpperBound result resultRange
     return (c0, c1, c2, c3, c4)

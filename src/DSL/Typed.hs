@@ -57,6 +57,7 @@ module DSL.Typed ( vassert
                  , jsSub
                  , jsAnd
                  , jsOr
+                 , jsXor
                  , jsNot
                  , jsShl
                  , jsShr
@@ -519,6 +520,13 @@ jsOr node1 node2 = do
   result <- D.or (vnode node1) (vnode node2)
   newDefinedNode result $ vtype node1
 
+jsXor :: VNode -> VNode -> D.Verif VNode
+jsXor node1 node2 = do
+  unless (numBits node1 == numBits node2) $ error "Widths should match in jsXor"
+  unless (is32Bits $ vtype node1) $ error "Javascripts Xor does not support floats"
+  result <- D.xor (vnode node1) (vnode node2)
+  newDefinedNode result $ vtype node1
+  
 jsNot :: VNode -> D.Verif VNode
 jsNot node = do
   result <- D.not (vnode node)
