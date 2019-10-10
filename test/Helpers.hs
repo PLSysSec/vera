@@ -18,7 +18,8 @@ helpersTests :: BenchTest
 helpersTests = benchTestGroup "Helpers tests" [ setRangeTest
                                               , countLeadingZeroesTest 
                                               , propCtlz_test 
-                                              , countTrailingZeroesTest ]
+                                              , countTrailingZeroesTest
+                                              , propCttz_test]
 
 trueBit :: Float
 trueBit = 1
@@ -141,7 +142,7 @@ countTrailingZeroesTest = benchTestCase "countTrailingZeroes" $ do
                        , ("result2", 32)
                        , ("result3", 7)]
 
-propCtlz_test = benchTestProperty "countTrailingZeroes QuickCheck" propCtlz
+propCtlz_test = benchTestProperty "countLeadingZeroes QuickCheck" propCtlz
   where propCtlz :: Int32 -> Q.Property
         propCtlz input32 = Q.monadicIO $ do
           (T.SolverSat vars) <- Q.run $ T.evalVerif Nothing $ do
@@ -150,5 +151,17 @@ propCtlz_test = benchTestProperty "countTrailingZeroes QuickCheck" propCtlz
             T.runSolver
           let (Just val) = M.lookup "result" vars 
           Q.assert $ fromIntegral (B.countLeadingZeros input32) == val
+
+          where input = toInteger input32
+
+propCttz_test = benchTestProperty "countTrailingZeroes QuickCheck" propCttz
+  where propCttz :: Int32 -> Q.Property
+        propCttz input32 = Q.monadicIO $ do
+          (T.SolverSat vars) <- Q.run $ T.evalVerif Nothing $ do
+            num <- T.num input
+            T.named "result" $ countTrailingZeroes32 num
+            T.runSolver
+          let (Just val) = M.lookup "result" vars
+          Q.assert $ fromIntegral (B.countTrailingZeros input32) == val
 
           where input = toInteger input32
