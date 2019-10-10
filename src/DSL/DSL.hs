@@ -56,7 +56,9 @@ module DSL.DSL ( i64
 import           Control.Monad              (foldM)
 import           Control.Monad.Reader
 import           Control.Monad.State.Strict
+import           Data.Char                  (digitToInt)
 import           Data.List                  (isInfixOf)
+import           Data.List                  (foldl')
 import           Data.List.Split
 import qualified Data.Map.Strict            as M
 import           Data.Maybe                 (catMaybes)
@@ -139,25 +141,42 @@ getIntModel str = do
               let maybeHexVal = drop 2 strVal
                   val = case maybeHexVal of
                           -- Negative 0
-                          '_':' ':'-':'z':'e':'r':'o':_ -> Just "-0"
-                          '_':' ':'+':'z':'e':'r':'o':_ -> Just "0"
+                          '_':' ':'-':'z':'e':'r':'o':_ -> Just (read "-0" :: Float)
+                          '_':' ':'+':'z':'e':'r':'o':_ -> Just (read "0" :: Float)
                           -- Boolean
-                          'b':n                         -> Just n
+                          'b':n                         -> Just (read n :: Float)
                           -- Hex
-                          'x':_                         -> Just $ '0':maybeHexVal
+                          'x':_                         ->
+                            Just (read ('0':maybeHexVal) :: Float)
+                          'f':'p':' ':rest              ->
+                            let components = splitOn " " rest
+                                sign = read (drop 2 $ components !! 0) :: Int
+                                exp = realToFrac $ toDec $ drop 2 $ components !! 1
+                                sig = read ('0':(drop 2 $ init $ components !! 2)) :: Integer
+                                sigAsFract = read ("1." ++ show sig) :: Float
+                                sigAsFractSub = read ("0." ++ show sig) :: Float
+                                result = if exp == 0
+                                         -- subnormal
+                                         -- 2^-1022 * 0.fraction
+                                         then 2**(-1022) * sigAsFractSub
+                                         -- normal
+                                         -- -1^sign * 2^(e-1023) * 1.fraction
+                                         -- haskell seems weird with the -1**sign thing,
+                                         -- so well just do it later
+                                         else 2**(exp-1023) * sigAsFract
+                                signedResult = if sign == 1 then negate result else result
+                            in Just signedResult
                           _                             -> Nothing
-              -- This is gross for printing sorry
               return $ case val of
-                         Just val -> Just (init var, read val :: Float)
-                         Nothing  -> Nothing
+                   -- gross for printing
+                   Just v  -> Just (init var, v)
+                   Nothing -> Nothing
             _ -> return Nothing
-            -- [""]          -> return Nothing
-            -- e             -> error $ unwords ["Unexpected line in model"
-            --                                  , show e
-            --                                  , "in"
-            --                                  , str
-            --                                  ]
   return $ M.fromList $ catMaybes vars
+  where
+    -- https://stackoverflow.com/questions/5921573/convert-a-string-representing-a-binary-number-to-a-base-10-string-haskell
+    toDec :: String -> Int
+    toDec = foldl' (\acc x -> acc * 2 + digitToInt x) 0
 --
 -- Ints and stuff
 --
