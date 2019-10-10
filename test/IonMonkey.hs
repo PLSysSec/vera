@@ -11,6 +11,8 @@ import           Test.Tasty.HUnit
 
 ionMonkeyTests :: BenchTest
 ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ fpAddTest
+                                                   , fpMulTest
+                                                   , fpSubTest
                                                    , addTest
                                                    , andTest
                                                    , notTest
@@ -50,6 +52,43 @@ fpAddTest = benchTestCase "fpadd" $ do
 
   Verified @=? c0
   Verified @=? c1
+
+fpMulTest :: BenchTest
+fpMulTest = benchTestCase "fpmul" $ do
+
+  (c0) <- T.evalVerif Nothing $ do
+
+    leftRange <- inputRange T.Double "left start range"
+    rightRange <- inputRange T.Double "right start range"
+    resultRange <- mul leftRange rightRange
+
+    left <- operandWithRange "left" T.Double leftRange
+    right <- operandWithRange "right" T.Double rightRange
+    result <- T.jsMul left right
+
+    c0 <- verifyNegZero result resultRange
+
+    return (c0)
+
+  Verified @=? c0
+
+fpSubTest :: BenchTest
+fpSubTest = benchTestCase "fpsub" $ do
+
+  (c0) <- T.evalVerif Nothing $ do
+
+    leftRange <- inputRange T.Double "left start range"
+    rightRange <- inputRange T.Double "right start range"
+    resultRange <- sub leftRange rightRange
+
+    left <- operandWithRange "left" T.Double leftRange
+    right <- operandWithRange "right" T.Double rightRange
+    result <- T.jsSub left right
+
+    c0 <- verifyNegZero result resultRange
+    return c0
+
+  Verified @=? c0
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#251
 addTest :: BenchTest
