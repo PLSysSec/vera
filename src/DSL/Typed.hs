@@ -11,6 +11,7 @@ module DSL.Typed ( vassert
                  , is32Bits
                  , is64Bits
                  , is16Bits
+                 , is8Bits
                  , isDouble
                  -- * Constants and variables
                  , true
@@ -192,6 +193,8 @@ data Type = Unsigned
           | Signed64
           | Unsigned16
           | Signed16
+          | Unsigned8
+          | Signed8
           | Double
           | Bool
           deriving (Eq, Ord, Show)
@@ -201,6 +204,7 @@ isSigned :: Type -> Bool
 isSigned Signed   = True
 isSigned Signed64 = True
 isSigned Signed16 = True
+isSigned Signed8  = True
 isSigned _        = False
 
 -- | Is the unsigned?
@@ -221,6 +225,7 @@ numBits' ty
     | is32Bits ty = 32
     | is64Bits ty = 64
     | is16Bits ty = 16
+    | is8Bits ty  = 8
     | otherwise   = error "Not supported type"
 
 is32Bits :: Type -> Bool
@@ -238,6 +243,11 @@ is16Bits Signed16   = True
 is16Bits Unsigned16 = True
 is16Bits _          = False
 
+is8Bits :: Type -> Bool
+is8Bits Signed8   = True
+is8Bits Unsigned8 = True
+is8Bits _         = False                      
+
 newInputVar :: Type
             -> String
             -> D.Verif VNode
@@ -250,6 +260,8 @@ newInputVar ty name = do
            Unsigned64 -> D.i64v name
            Signed16   -> D.i16v name
            Unsigned16 -> D.i16v name
+           Signed8    -> D.i8v name
+           Unsigned8  -> D.i8v name 
            Double     -> D.doubv name 
            _          -> error "Not yet supported"
   undef <- D.i1c 0
@@ -265,6 +277,8 @@ newResultVar Signed64   = int64
 newResultVar Unsigned64 = uint64
 newResultVar Signed16   = int16
 newResultVar Unsigned16 = uint16
+newResultVar Signed8    = int8
+newResultVar Unsigned8  = uint8
 newResultVar Double     = fp
 newResultVar _          = error "No more"
 
@@ -347,6 +361,12 @@ int16 name = makeVar name D.i16v Signed16
 
 uint16 :: String -> D.Verif VNode
 uint16 name = makeVar name D.i16v Unsigned16
+
+int8 :: String -> D.Verif VNode
+int8 name = makeVar name D.i16v Signed8
+
+uint8 :: String -> D.Verif VNode
+uint8 name = makeVar name D.i16v Unsigned8
 
 fp :: String -> D.Verif VNode
 fp name = makeVar name D.doubv Double 
@@ -687,6 +707,7 @@ noopWrapper left right op = do
   result <- op (vnode left) (vnode right)
   let (s, u) = case numBits left of
                  1    -> (Bool, Bool)
+                 8    -> (Signed8, Unsigned8)
                  16   -> (Signed16, Unsigned16)
                  32   -> (Signed, Unsigned)
                  64   -> (Signed64, Unsigned64)
