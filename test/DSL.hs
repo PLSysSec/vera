@@ -133,7 +133,9 @@ fpTest = benchTestCase "fp" $ do
   r <- D.evalVerif Nothing $ do
     doubSort <- M.mkDoubleSort
     fp1 <- M.mkFpFromDouble 4.5 doubSort
+    D.doubv "fourFive" >>= D.assign fp1
     fp2 <- M.mkFpFromInt (-4) doubSort
+    D.doubv "minusFour" >>= D.assign fp2
     z <- M.mkFpZero doubSort False
     nan <- M.mkFpNan doubSort
     inf <- M.mkFpInf doubSort True
@@ -197,7 +199,9 @@ fpTest = benchTestCase "fp" $ do
 
     D.runSolver
 
-  vtest r $ Map.fromList [ ("nan", 0/0)
+  vtest r $ Map.fromList [ ("fourFive", 4.5)
+                         , ("minusFour", -4.0)
+                         , ("nan", 0/0)
                          , ("neginf", (-1/0))
                          , ("posinf", 1/0)
                          , ("zeroNotInf", 0)
