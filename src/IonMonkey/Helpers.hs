@@ -4,10 +4,18 @@ module IonMonkey.Helpers ( setRange
                          , noInt32LowerBound
                          , noInt32UpperBound
                          , isFiniteNonNegative
+                         , canBeFiniteNonNegative
                          , isFiniteNegative
                          , maxFiniteExponent
                          , includesInfinityAndNan
                          , exponentImpliedByInt32Bounds
+                         , missingAnyInt32Bounds
+                         , includesInfinity
+                         , canHaveSignBitSet
+                         , canBeZero
+                         , canBeInfiniteOrNan'
+                         , numBits
+                         , canBeNan
                          , countLeadingZeroes32
                          , countTrailingZeroes32
                          ) where
@@ -153,11 +161,32 @@ jsValIntMax64 = T.num64 2147483647
 maxFiniteExponent :: D.Verif T.VNode
 maxFiniteExponent = T.unum16 4
 
+includesInfinity :: D.Verif T.VNode
+includesInfinity = error "Includes infinite"
+
+canBeNan :: Range -> D.Verif T.VNode
+canBeNan = error "can be nan"
+
+canBeZero :: Range -> D.Verif T.VNode
+canBeZero = error "can be zero"
+
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#145
 -- static const uint16_t IncludesInfinityAndNaN = UINT16_MAX;
 -- #   define UINT16_MAX      ((uint16_t)(65535U))
 includesInfinityAndNan :: D.Verif T.VNode
 includesInfinityAndNan = T.unum16 65535
+
+canHaveSignBitSet :: Range -> D.Verif T.VNode
+canHaveSignBitSet range = error "Not implemeneted: can have sign bit set"
+
+canBeInfiniteOrNan' :: Range -> D.Verif T.VNode
+canBeInfiniteOrNan' range = error "Not implemented: cen be infinite"
+
+numBits :: Range -> D.Verif T.VNode
+numBits range = error "error"
+
+canBeFiniteNonNegative :: Range -> D.Verif T.VNode
+canBeFiniteNonNegative = error "fininite non neg"
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#551
 isFiniteNonNegative :: Range -> D.Verif T.VNode
@@ -187,6 +216,9 @@ exponentImpliedByInt32Bounds range = do
   -- FloorLog2(4..7) is 2;
   -- FloorLog2(8..15) is 3; and so on.)
   T.unum16 0
+
+missingAnyInt32Bounds :: Range -> Range -> D.Verif T.VNode
+missingAnyInt32Bounds _ _ = error "missing any int 32 bounds"
 
 countOnes :: T.VNode -> D.Verif T.VNode
 countOnes num = do

@@ -201,7 +201,105 @@ not op = do
   return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#960
-mul = undefined
+mul :: Range -> Range -> T.Verif Range
+mul left right = do
+
+  fract <- T.cppOr (canHaveFractionalPart left) (canHaveFractionalPart right)
+
+  nzf <- do
+
+    lSign <- canHaveSignBitSet left
+    rNeg <- canBeFiniteNonNegative right
+    topLine <- T.cppAnd lSign rNeg
+
+    rSign <- canHaveSignBitSet right
+    lNeg <- canBeFiniteNonNegative left
+    bottomLine <- T.cppAnd rSign lNeg
+
+    T.cppOr topLine bottomLine
+
+  -- the exponent
+  e <- do
+    ifCond <- do
+      lInf <- canBeInfiniteOrNan' left
+      rInf <- canBeInfiniteOrNan' right
+      T.cppAnd lInf rInf
+    ifResult <- do
+      -- Get the variables
+      numLeft <- numBits left
+      numRight <- numBits right
+      one <- T.unum16 1
+      -- Do the arithmetic for the conditional
+      added <- T.cppAdd numLeft numRight
+      tmpExp <- T.cppSub added one
+      -- Make the actual conditional
+      maxExp <- maxFiniteExponent
+      cond <- T.cppGt tmpExp maxExp
+      -- If the conditional is true, return includes infinity
+      includesInf <- includesInfinity
+      T.cppCond cond includesInf maxExp
+
+    elseIfCond <- do
+      firstLine <- do
+        lNan <- canBeNan left >>= T.cppNot
+        rNan <- canBeNan right >>= T.cppNot
+        T.cppAnd lNan rNan
+
+      secondLine <- do
+        lZero <- canBeZero left
+        rInf <- canBeInfiniteOrNan' right
+        T.cppAnd lZero rInf >>= T.cppNot
+
+      thirdLine <- do
+        rZero <- canBeZero right
+        lInf <- canBeInfiniteOrNan' left
+        T.cppAnd rZero lInf >>= T.cppNot
+
+      T.cppAnd firstLine secondLine >>= T.cppAnd thirdLine
+    elseIfResult <- includesInfinity
+
+    elseResult <- includesInfinityAndNan
+
+    elseBrCond <- T.cppCond elseIfCond elseIfResult elseResult
+    T.cppCond ifCond ifResult elseBrCond
+
+  -- Now do the upper and lower: tmp variables
+  missingInt32Bounds <- missingAnyInt32Bounds left right
+  castLeftLower <- T.cppCast (lower left) T.Signed64
+  castLeftUpper <- T.cppCast (upper left) T.Signed64
+  castRightLower <- T.cppCast (lower right) T.Signed64
+  castRightUpper <- T.cppCast (upper right) T.Signed64
+  a <- T.cppMul castLeftLower castRightLower
+  b <- T.cppMul castLeftLower castRightUpper
+  c <- T.cppMul castLeftUpper castRightLower
+  d <- T.cppMul castLeftUpper castRightUpper
+
+  newLower <- do
+
+    trueBr <- noInt32LowerBound
+
+    falseBr <- do
+      tmp1 <- T.cppMin a b
+      tmp2 <- T.cppMin c d
+      T.cppMin tmp1 tmp2
+
+    T.cppCond missingInt32Bounds trueBr falseBr
+
+  newUpper <- do
+
+    trueBr <- noInt32UpperBound
+
+    falseBr <- do
+      tmp1 <- T.cppMax a b
+      tmp2 <- T.cppMax c d
+      T.cppMax tmp1 tmp2
+
+    T.cppCond missingInt32Bounds trueBr falseBr
+
+  result <- resultRange T.Double "result"
+  setRange newLower newUpper fract nzf e result
+  return result
+
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#999
 lsh :: Range -> T.VNode -> T.Verif Range
