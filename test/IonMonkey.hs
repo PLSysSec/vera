@@ -26,6 +26,7 @@ ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ fpAddTest
                                                    , fpAbsTest
                                                    , fpSignTest
                                                    , fpFloorTest
+                                                   , fpCeilTest
                                                    ]
 
 fpAddTest :: BenchTest
@@ -381,6 +382,22 @@ fpFloorTest = benchTestCase "fpfloor" $ do
 
     input <- operandWithRange "input" T.Double inputRange
     result <- T.jsFloor input
+
+    c2 <- verifyNegZero result resultRange
+    return c2
+
+  Verified @=? c2
+
+fpCeilTest :: BenchTest
+fpCeilTest = benchTestCase "fpceil" $ do
+
+  (c2) <- T.evalVerif Nothing $ do
+
+    inputRange <- inputRange T.Double "left start range"
+    resultRange <- ceil inputRange
+
+    input <- operandWithRange "input" T.Double inputRange
+    result <- T.jsCeil input
 
     c2 <- verifyNegZero result resultRange
     return c2

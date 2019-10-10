@@ -522,7 +522,39 @@ floor op = do
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1166
 ceil :: Range -> T.Verif Range
-ceil op = undefined
+ceil op = do
+  -- What we're trying to do:
+  -- if (copy->hasInt32Bounds())
+  --    copy->max_exponent_ = copy->exponentImpliedByInt32Bounds();)
+  -- else if (copy->max_exponent_ < MaxFiniteExponent)
+  --      copy->max_exponent_++;
+  maxExp <- maxFiniteExponent
+  -- Conditions
+  hasInt32Bound <- T.cppAnd (hasInt32LowerBound op) (hasInt32UpperBound op)
+  expRoom <- T.cppLt (maxExponent op) maxExp
+  -- Result
+  ifResult <- exponentImpliedByInt32Bounds op
+  elseIfResult <- do
+    one16 <- T.unum 1
+    T.cppAdd (maxExponent op) one16
+  let elseResult = maxExponent op
+
+  elseAndElseIfResult <- T.cppCond expRoom elseIfResult elseResult
+  e <- T.cppCond hasInt32Bound ifResult elseAndElseIfResult
+
+  fract <- T.false
+
+  -- The result is a copy of the original
+  result <- resultRange T.Double "result"
+  T.vassign (lower result) (lower op)
+  T.vassign (upper result) (upper op)
+  T.vassign (hasInt32LowerBound result) (hasInt32LowerBound op)
+  T.vassign (hasInt32UpperBound result) (hasInt32UpperBound op)
+  T.vassign (canBeInfiniteOrNan result) (canBeInfiniteOrNan op)
+  T.vassign (canBeNegativeZero result) (canBeNegativeZero op)
+  T.vassign (canHaveFractionalPart result) fract
+  T.vassign (maxExponent result) e
+  return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1184
 sign :: Range -> T.Verif Range
