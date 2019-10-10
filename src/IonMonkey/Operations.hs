@@ -81,7 +81,51 @@ add left right = do
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#775
 sub :: Range -> Range -> T.Verif Range
-sub = undefined
+sub left right = do
+
+  newLower <- do
+    -- setup the results
+    trueLower <- noInt32LowerBound
+    castLower <- T.cppCast (lower left) T.Signed64
+    castUpper <- T.cppCast (upper right) T.Signed64
+    falseLower <- T.cppSub castLower castUpper
+    -- make the cond
+    cond <- T.cppOr (hasInt32LowerBound left) (hasInt32UpperBound right)
+    T.cppCond cond trueLower falseLower
+
+  newUpper <- do
+    -- results
+    trueUpper <- noInt32UpperBound
+    castUpper <- T.cppCast (upper left) T.Signed64
+    castLower <- T.cppCast (lower right) T.Signed64
+    falseUpper <- T.cppSub castUpper castLower
+    -- cond
+    cond <- T.cppOr (hasInt32UpperBound left) (hasInt32LowerBound right)
+    T.cppCond cond trueUpper falseUpper
+
+  e <- do
+    tmpExp <- do
+      tmpExp <- T.cppMax (maxExponent left) (maxExponent right)
+      tmpExpPlus <- T.unum16 1 >>= T.cppAdd tmpExp
+      maxExp <- maxFiniteExponent
+      -- return the right exp
+      tmpExpLtMaxExp <- T.cppLte tmpExp maxExp
+      T.cppCond tmpExpLtMaxExp tmpExpPlus tmpExp
+    nanExp <- includesInfinityAndNan
+
+    cond <- do
+      lInf <- canBeInfiniteOrNan' left
+      rInf <- canBeInfiniteOrNan' right
+      T.cppAnd lInf rInf
+
+    T.cppCond cond nanExp tmpExp
+
+  fract <- T.cppOr (canHaveFractionalPart left) (canHaveFractionalPart right)
+  nz <- T.cppAnd (canBeNegativeZero left) (canBeNegativeZero right)
+
+  result <- resultRange T.Double "result"
+  setRange newLower newUpper fract nz e result
+  return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#805
 -- IonMonkey function only applies to i32s
