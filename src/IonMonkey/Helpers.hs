@@ -271,8 +271,16 @@ exponentImpliedByInt32Bounds range = do
   -- FloorLog2(8..15) is 3; and so on.)
   T.unum16 0
 
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#488
+hasInt32Bounds :: Range -> D.Verif T.VNode
+hasInt32Bounds range = T.cppAnd (hasInt32LowerBound range) (hasInt32UpperBound range)
+
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#740
 missingAnyInt32Bounds :: Range -> Range -> D.Verif T.VNode
-missingAnyInt32Bounds _ _ = error "missing any int 32 bounds"
+missingAnyInt32Bounds left right = do
+  noLeftBounds <- hasInt32Bounds left >>= T.cppNot
+  noRightBounds <- hasInt32Bounds right >>= T.cppNot
+  T.cppOr noLeftBounds noRightBounds
 
 countOnes :: T.VNode -> D.Verif T.VNode
 countOnes num = do
