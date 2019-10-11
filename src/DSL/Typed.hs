@@ -529,8 +529,8 @@ jsXor node1 node2 = do
   
 jsNot :: VNode -> D.Verif VNode
 jsNot node = do
+  unless (is32Bits $ vtype node) $ error "JavaScript NOT does not support floats"  
   result <- D.not (vnode node)
-  unless (is32Bits $ vtype node) $ error "JavaScript NOT does not support floats"
   newDefinedNode result $ vtype node
 
 -- | https://es5.github.io/#x11.7.1
@@ -614,9 +614,12 @@ jsMul :: VNode
       -> VNode
       -> D.Verif VNode
 jsMul node1 node2 = do
-  unless (vtype node1 == vtype node2) $ error "Types should match"
+  unless (vtype node1 == vtype node2) $ error "Types should match in jsMul"
+  unless (isDouble $ vtype node1) $ error "Expected double type for jsMul"
   let op = getOp node1 D.mul D.fpMul
   result <- op (vnode node1) (vnode node2)
+  resultVar <- D.doubv "jsMulResult"
+  D.assign result resultVar                        
   newDefinedNode result $ vtype node1
 
 -- | https://es5.github.io/#x15.8.2.12

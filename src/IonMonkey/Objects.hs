@@ -14,26 +14,15 @@ module IonMonkey.Objects ( Range
                          , resultRange
                          , operandWithRange
                          ) where
-import           Control.Monad   (unless, when)
-import           Data.List       (intersperse, isInfixOf)
-import qualified Data.Map.Strict as M
-import           Data.Maybe      (catMaybes)
-import qualified DSL.DSL         as D
-import           DSL.Typed       as T
-import qualified DSL.Z3Wrapper   as D
-
--- | IonMonkey's range object
--- https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#119
-data Range = Range {
-      rangeName             :: String
-    , lower                 :: T.VNode
-    , upper                 :: T.VNode
-    , hasInt32LowerBound    :: T.VNode
-    , hasInt32UpperBound    :: T.VNode
-    , canBeNegativeZero     :: T.VNode
-    , canHaveFractionalPart :: T.VNode
-    , maxExponent           :: T.VNode
-    }
+import           Control.Monad         (unless, when)
+import           Data.List             (intersperse, isInfixOf)
+import qualified Data.Map.Strict       as M
+import           Data.Maybe            (catMaybes)
+import qualified DSL.DSL               as D
+import           DSL.Typed             as T
+import qualified DSL.Z3Wrapper         as D
+import           IonMonkey.Helpers
+import           IonMonkey.ObjectTypes
 
 inputRange :: Type -> String -> D.Verif Range
 inputRange ty operandName = do
@@ -116,7 +105,7 @@ operandWithRange name ty range = do
     opIsInf <- T.isInf op
     opIsNan <- T.isNan op
     isInfOrNan <- T.cppOr opIsInf opIsNan
-    -- TODO: EXPONENT
+
     -- If it can be negative zero the range should say so
     isNeg <- T.isNeg op
     isZero <- T.isZero op

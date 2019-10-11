@@ -23,7 +23,7 @@ import           Control.Monad              (when)
 import           Control.Monad.State.Strict
 import qualified DSL.DSL                    as D
 import qualified DSL.Typed                  as T
-import           IonMonkey.Objects
+import           IonMonkey.ObjectTypes
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#370
 -- https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#621
@@ -178,7 +178,8 @@ maxUInt32Exponent = T.unum16 31
 includesInfinity :: D.Verif T.VNode
 includesInfinity = do
   one <- T.unum16 1
-  maxFiniteExponent >>= T.cppAdd one
+  maxExponent <- maxFiniteExponent
+  T.cppAdd one maxExponent
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#515
 canBeNan :: Range -> D.Verif T.VNode

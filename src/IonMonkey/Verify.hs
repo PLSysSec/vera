@@ -7,6 +7,7 @@ import           Data.Maybe                 (catMaybes)
 import qualified DSL.DSL                    as D
 import           DSL.Typed                  as T
 import qualified DSL.Z3Wrapper              as D
+import           IonMonkey.Helpers
 import           IonMonkey.Objects
 
 data VerifResult = Verified
@@ -16,7 +17,7 @@ data VerifResult = Verified
                  | BadUpperBound { counterexample :: M.Map String Float }
                  | UndefRange { counterexample :: M.Map String Float }
                  | NoNanFlag { counterexample :: M.Map String Float }
-                 | NoNan { counterexample :: M.Map String Float }
+                 | NoInfFlag { counterexample :: M.Map String Float }
                  | NoNegzFlag { counterexample :: M.Map String Float }
                  deriving (Eq, Ord)
 
@@ -31,7 +32,7 @@ instance Show VerifResult where
                                  prettyCounterexampleInts ce
     show (NoNanFlag ce)        = "Example operation returns :\n" ++
                                  (unlines $ getNanList ce)
-    show (NoNan ce)            = "Example operation:\n" ++
+    show (NoInfFlag ce)            = "Example operation:\n" ++
                                  (unlines $ getNanList ce)
     show (NoNegzFlag ce)       = "Example operation returns -0 without flag set:\n" ++
                                  (unlines $ getNegzList ce)
@@ -137,30 +138,28 @@ verifyDefinedResult range = do
 -- | IsNan flag set for a non-nan value?
 -- | IsNan flag unset for a nan value?
 verifyInfNan :: T.VNode -> Range -> D.Verif VerifResult
-verifyInfNan node range = error "NYI"
-  -- nodeIsInf <- T.isInf node
-  -- nodeIsNan <- T.isNan node
-  -- D.push
-  -- -- It's nan or inf....
-  -- T.cppOr nodeIsInf nodeIsNan >>= T.vassert
-  -- --- .... but the nan or inf flag isnt set
-  -- T.cppNeg (canBeInfiniteOrNan range) >>= T.vassert
-  -- check1 <- D.runSolver
-  -- D.pop
-  -- D.push
-  -- -- It's not nan or inf....
-  -- T.cppOr nodeIsInf nodeIsNan >>= T.cppNeg >>= T.vassert
-  -- -- ... but the nan or inf flag is set
-  -- T.vassert $ canBeInfiniteOrNan range
-  -- check2 <- D.runSolver
-  -- D.pop
-  -- return $ case check1 of
-  --   D.SolverSat xs -> NoNanFlag xs
-  --   D.SolverFailed -> error "Error while verifying"
-  --   D.SolverUnsat -> case check2 of
-  --                      D.SolverUnsat  -> Verified
-  --                      D.SolverSat xs -> NoNan xs
-  --                      _              -> error "Error while verifying"
+verifyInfNan node range = do
+  nodeIsInf <- T.isInf node
+  nodeIsNan <- T.isNan node
+  D.push
+  -- If it is infinity, includesInfinity should always be true
+  T.vassert nodeIsInf
+  T.cppEq (maxExponent range) includesInfinity >>= T.cppNot >>= T.vassert
+  check1 <- D.runSolver
+  D.pop
+  D.push
+  -- If it is Nan, includes infinityAndNan should be true
+  T.vassert nodeIsNan
+  T.cppEq (maxExponent range) includesInfinityAndNan >>= T.cppNot >>= T.vassert
+  check2 <- D.runSolver
+  D.pop
+  return $ case check1 of
+    D.SolverSat xs -> NoInfFlag xs
+    D.SolverFailed -> error "Error while verifying"
+    D.SolverUnsat -> case check2 of
+                       D.SolverUnsat  -> Verified
+                       D.SolverSat xs -> NoNanFlag xs
+                       _              -> error "Error while verifying"
 
 -- | IsFract flag set for a non-fract value?
 -- | IsFract flag unset for a fact value?
