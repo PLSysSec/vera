@@ -97,6 +97,8 @@ operandWithRange :: String -> Type -> Range -> D.Verif T.VNode
 operandWithRange name ty range = do
   op <- newInputVar ty name
   if isDouble ty
+
+  -- For doubles, its complicated AF because there are a lot of flags
   then do
     -- If the range says includes inf or nan, the result should be inf or nan
     inf <- T.posInf
@@ -130,6 +132,8 @@ operandWithRange name ty range = do
     hasUpper' <- T.cppCond isTooBig f hasUpper
     T.vassign hasLower hasLower'
     T.vassign hasUpper hasUpper'
+
+  -- For int32s, just make sure the operand is within the range
   else do
     T.cppLte op (upper range) >>= T.vassert
     T.cppGte op (lower range) >>= T.vassert
