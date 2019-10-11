@@ -62,6 +62,8 @@ import qualified Data.Map.Strict            as M
 import           Data.Maybe                 (catMaybes)
 import           DSL.Z3Wrapper
 import qualified DSL.Z3Wrapper              as Z3
+import           GHC.Exts
+import           GHC.Integer
 import           Prelude                    hiding (map, max, min, not)
 import qualified Z3.Monad                   as Z
 
@@ -137,6 +139,7 @@ getIntModel str = do
   let lines = splitOn "\n" str
   vars <- forM lines $ \line -> case splitOn "->" line of
             [var, strVal] -> do
+              liftIO $ print strVal
               let maybeHexVal = drop 2 strVal
                   val = case maybeHexVal of
                           -- Negative 0
@@ -153,21 +156,10 @@ getIntModel str = do
                           'f':'p':' ':rest              ->
                             let components = splitOn " " rest
                                 sign = read (drop 2 $ components !! 0) :: Int
-                                exp = realToFrac $ toDec $ drop 2 $ components !! 1
-                                sig = read ('0':(drop 2 $ init $ components !! 2)) :: Integer
-                                sigAsFract = read ("1." ++ show sig) :: Float
-                                sigAsFractSub = read ("0." ++ show sig) :: Float
-                                result = if exp == 0
-                                         -- subnormal
-                                         -- 2^-1022 * 0.fraction
-                                         then 2**(-1022) * sigAsFractSub
-                                         -- normal
-                                         -- -1^sign * 2^(e-1023) * 1.fraction
-                                         -- haskell seems weird with the -1**sign thing,
-                                         -- so well just do it later
-                                         else 2**(exp-1023) * sigAsFract
-                                signedResult = if sign == 1 then negate result else result
-                            in Just signedResult
+                                exp = integerToInt $ toDec $ drop 2 $ components !! 1
+                                sig = read ('0':(drop 1 $ init $ components !! 2)) :: Integer
+                                result = encodeDoubleInteger sig exp
+                            in error $ "show the result here"
                           _                             -> Nothing
               return $ case val of
                    -- gross for printing
@@ -177,8 +169,8 @@ getIntModel str = do
   return $ M.fromList $ catMaybes vars
   where
     -- https://stackoverflow.com/questions/5921573/convert-a-string-representing-a-binary-number-to-a-base-10-string-haskell
-    toDec :: String -> Int
-    toDec = foldl' (\acc x -> acc * 2 + digitToInt x) 0
+    toDec :: String -> Integer
+    toDec = foldl' (\acc x -> acc * 2 + (fromIntegral $ digitToInt x)) 0
 --
 -- Ints and stuff
 --

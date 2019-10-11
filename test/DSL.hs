@@ -14,11 +14,11 @@ import           Utils
 import qualified Z3.Monad                   as M
 
 dslTests :: BenchTest
-dslTests = benchTestGroup "DSL" [ addTest
-                                , incrTest
-                                , incrTest2
-                                , fpTest
-                                , fpRoundTest
+dslTests = benchTestGroup "DSL" [ -- addTest
+                                -- , incrTest
+                                -- , incrTest2
+                                 fpTest
+                                -- , fpRoundTest
                                 ]
 
 addTest :: BenchTest
@@ -132,95 +132,95 @@ fpTest = benchTestCase "fp" $ do
 
   r <- D.evalVerif Nothing $ do
     doubSort <- M.mkDoubleSort
-    fp1 <- M.mkFpFromDouble 4.5 doubSort
+    fp1 <- M.mkFpFromDouble 4.2 doubSort
     D.doubv "fourFive" >>= D.assign fp1
-    fp2 <- M.mkFpFromInt (-4) doubSort
-    D.doubv "minusFour" >>= D.assign fp2
-    z <- M.mkFpZero doubSort False
-    nan <- M.mkFpNan doubSort
-    inf <- M.mkFpInf doubSort True
-    inf2 <- M.mkFpInf doubSort False
-    D.doubv "nan" >>= D.assign nan
-    D.doubv "neginf" >>= D.assign inf
-    D.doubv "posinf" >>= D.assign inf2
+    -- fp2 <- M.mkFpFromInt (-4) doubSort
+    -- D.doubv "minusFour" >>= D.assign fp2
+    -- z <- M.mkFpZero doubSort False
+    -- nan <- M.mkFpNan doubSort
+    -- inf <- M.mkFpInf doubSort True
+    -- inf2 <- M.mkFpInf doubSort False
+    -- D.doubv "nan" >>= D.assign nan
+    -- D.doubv "neginf" >>= D.assign inf
+    -- D.doubv "posinf" >>= D.assign inf2
 
-    rna <- M.mkFpRna
-    rne <- M.mkFpRne
-    rtn <- M.mkFpRtn
-    rtp <- M.mkFpRtp
-    rtz <- M.mkFpRtz
+    -- rna <- M.mkFpRna
+    -- rne <- M.mkFpRne
+    -- rtn <- M.mkFpRtn
+    -- rtp <- M.mkFpRtp
+    -- rtz <- M.mkFpRtz
 
-    isInf <- D.isInf z
-    D.i1v "zeroNotInf" >>= D.assign isInf
-    isNan <- D.isNan nan
-    D.i1v "isNan" >>= D.assign isNan
-    isNeg <- D.isNeg nan
-    D.i1v "nanIsNeg" >>= D.assign isNeg
-    isPos <- D.isPos fp1
-    D.i1v "fourFiveIsPos" >>= D.assign isPos
-    isZero <- D.isZero z
-    D.i1v "zeroIsZero" >>= D.assign isZero
+    -- isInf <- D.isInf z
+    -- D.i1v "zeroNotInf" >>= D.assign isInf
+    -- isNan <- D.isNan nan
+    -- D.i1v "isNan" >>= D.assign isNan
+    -- isNeg <- D.isNeg nan
+    -- D.i1v "nanIsNeg" >>= D.assign isNeg
+    -- isPos <- D.isPos fp1
+    -- D.i1v "fourFiveIsPos" >>= D.assign isPos
+    -- isZero <- D.isZero z
+    -- D.i1v "zeroIsZero" >>= D.assign isZero
 
-    abs <- D.fpAbs fp2
-    D.doubv "abs" >>= D.assign abs
+    -- abs <- D.fpAbs fp2
+    -- D.doubv "abs" >>= D.assign abs
 
-    adds <- D.fpAdd fp1 fp2
-    D.doubv "adds" >>= D.assign adds
+    -- adds <- D.fpAdd fp1 fp2
+    -- D.doubv "adds" >>= D.assign adds
 
-    subs <- D.fpSub fp1 fp2
-    D.doubv "subs" >>= D.assign subs
+    -- subs <- D.fpSub fp1 fp2
+    -- D.doubv "subs" >>= D.assign subs
 
-    muls <- D.fpMul nan nan
-    D.doubv "muls" >>= D.assign muls
+    -- muls <- D.fpMul nan nan
+    -- D.doubv "muls" >>= D.assign muls
 
-    negs <- D.fpNeg fp2
-    D.doubv "negs" >>= D.assign negs
+    -- negs <- D.fpNeg fp2
+    -- D.doubv "negs" >>= D.assign negs
 
-    eqs <- D.fpEq fp1 fp2
-    D.i1v "eqs" >>= D.assign eqs
+    -- eqs <- D.fpEq fp1 fp2
+    -- D.i1v "eqs" >>= D.assign eqs
 
-    geqs <- D.fpGte fp1 fp2
-    D.i1v "geqs" >>= D.assign geqs
+    -- geqs <- D.fpGte fp1 fp2
+    -- D.i1v "geqs" >>= D.assign geqs
 
-    gts <- D.fpGt fp1 fp2
-    D.i1v "gts" >>= D.assign gts
+    -- gts <- D.fpGt fp1 fp2
+    -- D.i1v "gts" >>= D.assign gts
 
-    leqs <- D.fpLte fp1 fp2
-    D.i1v "leq" >>= D.assign leqs
+    -- leqs <- D.fpLte fp1 fp2
+    -- D.i1v "leq" >>= D.assign leqs
 
-    lts <- D.fpLt fp1 nan
-    D.i1v "lts" >>= D.assign lts
+    -- lts <- D.fpLt fp1 nan
+    -- D.i1v "lts" >>= D.assign lts
 
-    maxs <- D.fpMax fp1 fp2
-    D.doubv "maxs" >>= D.assign maxs
+    -- maxs <- D.fpMax fp1 fp2
+    -- D.doubv "maxs" >>= D.assign maxs
 
-    mins <- D.fpMin fp1 fp2
-    D.doubv "mins" >>= D.assign mins
+    -- mins <- D.fpMin fp1 fp2
+    -- D.doubv "mins" >>= D.assign mins
 
     D.runSolver
 
-  vtest r $ Map.fromList [ ("fourFive", 4.5)
-                         , ("minusFour", -4.0)
-                         , ("nan", 0/0)
-                         , ("neginf", (-1/0))
-                         , ("posinf", 1/0)
-                         , ("zeroNotInf", 0)
-                         , ("isNan", 1)
-                         , ("nanIsNeg", 0)
-                         , ("fourFiveIsPos", 1)
-                         , ("zeroIsZero", 1)
-                         , ("abs", 4)
-                         , ("adds", 0.5)
-                         , ("muls", 0/0)
-                         , ("negs", 4)
-                         , ("eqs", 0)
-                         , ("geqs", 1)
-                         , ("gts", 1)
-                         , ("leq", 0)
-                         , ("lts", 0)
-                         , ("maxs", 4.5)
-                         , ("mins", -4.0)
-                         , ("subs", 8.5)
+  vtest r $ Map.fromList [ ("fourFive", 4.2)
+                         -- , ("minusFour", -4.0)
+                         -- , ("nan", 0/0)
+                         -- , ("neginf", (-1/0))
+                         -- , ("posinf", 1/0)
+                         -- , ("zeroNotInf", 0)
+                         -- , ("isNan", 1)
+                         -- , ("nanIsNeg", 0)
+                         -- , ("fourFiveIsPos", 1)
+                         -- , ("zeroIsZero", 1)
+                         -- , ("abs", 4)
+                         -- , ("adds", 0.5)
+                         -- , ("muls", 0/0)
+                         -- , ("negs", 4)
+                         -- , ("eqs", 0)
+                         -- , ("geqs", 1)
+                         -- , ("gts", 1)
+                         -- , ("leq", 0)
+                         -- , ("lts", 0)
+                         -- , ("maxs", 4.5)
+                         -- , ("mins", -4.0)
+                         -- , ("subs", 8.5)
                          ]
 
 

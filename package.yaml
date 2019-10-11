@@ -31,6 +31,7 @@ library:
   - containers >= 0.6
   - mtl >= 2.2.2
   - split >= 0.2.3.3
+  - integer-gmp >= 1.0.2.0
 
 executables:
   lejit-exe:
