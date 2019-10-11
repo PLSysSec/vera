@@ -100,15 +100,18 @@ operandWithRange name ty range = do
 
   -- For doubles, its complicated AF because there are a lot of flags
   then do
-    -- If the range says includes inf or nan, the result should be inf or nan
+    -- If the range doesn't include inf or nan, it shouldnt be inf or nan
     inf <- T.posInf
     nan <- T.nan
+    opIsNan <- T.cppEq op nan
+    opIsInf <- T.cppEq op inf
 
-    isInf <- includesInfinityAndNan >>= T.cppEq (maxExponent range)
-    isNan <- includesInfinity >>= T.cppEq (maxExponent range)
+    notInfOrNan <- includesInfinityAndNan >>= T.cppEq (maxExponent range) >>= T.cppNot
+    notInf <- includesInfinity >>= T.cppEq (maxExponent range) >>= T.cppNot
 
-    T.cppCond isInf inf op >>= T.vassign op
-    T.cppCond isNan nan op >>= T.vassign op
+    T.cppXor notInf opIsInf >>= T.vassert
+    T.cppXor notInfOrNan opIsInf >>= T.vassert
+    T.cppXor notInfOrNan opIsNan >>= T.vassert
 
     -- If the range doesn't say can-be-neg-zero, it can't be neg zero
     cantBeNegZero <- T.cppNot $ canBeNegativeZero range
