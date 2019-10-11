@@ -89,6 +89,7 @@ module DSL.Typed ( vassert
                  , cppCond
                  , cppCast
                  , cppAbs
+                 , cppXor
                  -- * Running the solver and getting the model
                  , D.runSolver
                  , D.evalVerif
@@ -217,7 +218,11 @@ isUnsigned = not . isSigned
 isDouble :: Type -> Bool
 isDouble Double = True
 isDouble _      = False
-             
+
+isBool :: Type -> Bool
+isBool Bool = True
+isBool _ = False 
+                  
 numBits :: VNode -> Int
 numBits = numBits' . vtype
 
@@ -1075,3 +1080,10 @@ cppAbs node = if isUnsigned $ vtype node
                 negated <- op (vnode node)
                 result <- D.cond cond negated $ vnode node
                 return $ VNode (vundef node) result $ vtype node
+
+cppXor :: VNode -> VNode -> D.Verif VNode
+cppXor n1 n2 = do
+  unless (isBool (vtype n1) && isBool (vtype n2)) $ error "Only support xor bools"
+  result <- D.xor (vnode n1) (vnode n2)
+  undef <- D.or (vundef n1) (vundef n2)
+  return $ VNode undef result Bool

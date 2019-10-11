@@ -62,10 +62,7 @@ inputRange ty operandName = do
     T.vassign fractPart f
     T.unum16 0 >>= T.vassign exp
 
-
-
   return $ Range operandName lowerNode upperNode hasLowerBound hasUpperBound negZero fractPart exp
-
 
 resultRange :: Type -> String -> D.Verif Range
 resultRange ty operandName = do
@@ -101,16 +98,23 @@ operandWithRange name ty range = do
   op <- newInputVar ty name
   if isDouble ty
   then do
-    -- If it can be inf or nan, the range must say so
-    opIsInf <- T.isInf op
-    opIsNan <- T.isNan op
-    isInfOrNan <- T.cppOr opIsInf opIsNan
+    -- If the range says includes inf or nan, the result should be inf or nan
+    inf <- T.posInf
+    nan <- T.nan
 
-    -- If it can be negative zero the range should say so
+    isInf <- includesInfinityAndNan >>= T.cppEq (maxExponent range)
+    isNan <- includesInfinity >>= T.cppEq (maxExponent range)
+
+    T.cppCond isInf inf op >>= T.vassign op
+    T.cppCond isNan nan op >>= T.vassign op
+
+    -- If the range doesn't say can-be-neg-zero, it can't be neg zero
+    cantBeNegZero <- T.cppNot $ canBeNegativeZero range
     isNeg <- T.isNeg op
     isZero <- T.isZero op
-    isNegZero <- T.cppOr isNeg isZero
-    T.vassign isNegZero (canBeNegativeZero range)
+    isNegZero <- T.cppAnd isNeg isZero
+    T.cppXor cantBeNegZero isNegZero >>= T.vassert
+
     -- If it can have a fractional part the range should say so
 
     -- If it can be outside of a standard int range, the flag should indicate so
