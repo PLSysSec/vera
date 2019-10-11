@@ -137,30 +137,30 @@ verifyDefinedResult range = do
 -- | IsNan flag set for a non-nan value?
 -- | IsNan flag unset for a nan value?
 verifyInfNan :: T.VNode -> Range -> D.Verif VerifResult
-verifyInfNan node range = do
-  nodeIsInf <- T.isInf node
-  nodeIsNan <- T.isNan node
-  D.push
-  -- It's nan or inf....
-  T.cppOr nodeIsInf nodeIsNan >>= T.vassert
-  --- .... but the nan or inf flag isnt set
-  T.cppNeg (canBeInfiniteOrNan range) >>= T.vassert
-  check1 <- D.runSolver
-  D.pop
-  D.push
-  -- It's not nan or inf....
-  T.cppOr nodeIsInf nodeIsNan >>= T.cppNeg >>= T.vassert
-  -- ... but the nan or inf flag is set
-  T.vassert $ canBeInfiniteOrNan range
-  check2 <- D.runSolver
-  D.pop
-  return $ case check1 of
-    D.SolverSat xs -> NoNanFlag xs
-    D.SolverFailed -> error "Error while verifying"
-    D.SolverUnsat -> case check2 of
-                       D.SolverUnsat  -> Verified
-                       D.SolverSat xs -> NoNan xs
-                       _              -> error "Error while verifying"
+verifyInfNan node range = error "NYI"
+  -- nodeIsInf <- T.isInf node
+  -- nodeIsNan <- T.isNan node
+  -- D.push
+  -- -- It's nan or inf....
+  -- T.cppOr nodeIsInf nodeIsNan >>= T.vassert
+  -- --- .... but the nan or inf flag isnt set
+  -- T.cppNeg (canBeInfiniteOrNan range) >>= T.vassert
+  -- check1 <- D.runSolver
+  -- D.pop
+  -- D.push
+  -- -- It's not nan or inf....
+  -- T.cppOr nodeIsInf nodeIsNan >>= T.cppNeg >>= T.vassert
+  -- -- ... but the nan or inf flag is set
+  -- T.vassert $ canBeInfiniteOrNan range
+  -- check2 <- D.runSolver
+  -- D.pop
+  -- return $ case check1 of
+  --   D.SolverSat xs -> NoNanFlag xs
+  --   D.SolverFailed -> error "Error while verifying"
+  --   D.SolverUnsat -> case check2 of
+  --                      D.SolverUnsat  -> Verified
+  --                      D.SolverSat xs -> NoNan xs
+  --                      _              -> error "Error while verifying"
 
 -- | IsFract flag set for a non-fract value?
 -- | IsFract flag unset for a fact value?

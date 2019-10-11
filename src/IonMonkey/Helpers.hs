@@ -13,7 +13,7 @@ module IonMonkey.Helpers ( setRange
                          , includesInfinity
                          , canHaveSignBitSet
                          , canBeZero
-                         , canBeInfiniteOrNan'
+                         , canBeInfiniteOrNan
                          , numBits
                          , canBeNan
                          , countLeadingZeroes32
@@ -218,8 +218,8 @@ canHaveSignBitSet range = do
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#518
 --   bool canBeInfiniteOrNaN() const { return max_exponent_ >= IncludesInfinity; }
-canBeInfiniteOrNan' :: Range -> D.Verif T.VNode
-canBeInfiniteOrNan' range = do
+canBeInfiniteOrNan :: Range -> D.Verif T.VNode
+canBeInfiniteOrNan range = do
   includesInf <- includesInfinity
   T.cppGte (maxExponent range) includesInf
 

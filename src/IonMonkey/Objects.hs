@@ -5,7 +5,6 @@ module IonMonkey.Objects ( Range
                          , upper
                          , hasInt32LowerBound
                          , hasInt32UpperBound
-                         , canBeInfiniteOrNan
                          , canBeNegativeZero
                          , canHaveFractionalPart
                          , maxExponent
@@ -31,7 +30,6 @@ data Range = Range {
     , upper                 :: T.VNode
     , hasInt32LowerBound    :: T.VNode
     , hasInt32UpperBound    :: T.VNode
-    , canBeInfiniteOrNan    :: T.VNode
     , canBeNegativeZero     :: T.VNode
     , canHaveFractionalPart :: T.VNode
     , maxExponent           :: T.VNode
@@ -77,7 +75,7 @@ inputRange ty operandName = do
 
 
 
-  return $ Range operandName lowerNode upperNode hasLowerBound hasUpperBound infOrNan negZero fractPart exp
+  return $ Range operandName lowerNode upperNode hasLowerBound hasUpperBound negZero fractPart exp
 
 
 resultRange :: Type -> String -> D.Verif Range
@@ -105,7 +103,7 @@ resultRange ty operandName = do
   fractPart     <- T.newResultVar T.Bool fractPartName
   exp           <- T.newResultVar T.Unsigned16 expName
 
-  return $ Range operandName lowerNode upperNode hasLowerBound hasUpperBound infOrNan negZero fractPart exp
+  return $ Range operandName lowerNode upperNode hasLowerBound hasUpperBound negZero fractPart exp
 
 -- | Make a new operand with name 'name' of sort 'sort' that is in the range
 --'range'---ie is greater than the range's lower and less than the range's upper
@@ -118,7 +116,7 @@ operandWithRange name ty range = do
     opIsInf <- T.isInf op
     opIsNan <- T.isNan op
     isInfOrNan <- T.cppOr opIsInf opIsNan
-    T.vassign isInfOrNan (canBeInfiniteOrNan range)
+    -- TODO: EXPONENT
     -- If it can be negative zero the range should say so
     isNeg <- T.isNeg op
     isZero <- T.isZero op

@@ -66,8 +66,8 @@ add left right = do
 
     -- if (lhs->canBeInfiniteOrNaN() && rhs->canBeInfiniteOrNaN())
     -- e = includesInfiniteAndNan
-    let leftInfNan  = canBeInfiniteOrNan left
-        rightInfNan = canBeInfiniteOrNan right
+    leftInfNan  <- canBeInfiniteOrNan left
+    rightInfNan <- canBeInfiniteOrNan right
     infNanCond <- T.cppOr leftInfNan rightInfNan
     includesInfFlag <- includesInfinityAndNan
     T.cppCond infNanCond includesInfFlag e3
@@ -114,8 +114,8 @@ sub left right = do
     nanExp <- includesInfinityAndNan
 
     cond <- do
-      lInf <- canBeInfiniteOrNan' left
-      rInf <- canBeInfiniteOrNan' right
+      lInf <- canBeInfiniteOrNan left
+      rInf <- canBeInfiniteOrNan right
       T.cppAnd lInf rInf
 
     T.cppCond cond nanExp tmpExp
@@ -297,8 +297,8 @@ mul left right = do
   -- the exponent
   e <- do
     ifCond <- do
-      lInf <- canBeInfiniteOrNan' left
-      rInf <- canBeInfiniteOrNan' right
+      lInf <- canBeInfiniteOrNan left
+      rInf <- canBeInfiniteOrNan right
       T.cppAnd lInf rInf
     ifResult <- do
       -- Get the variables
@@ -323,12 +323,12 @@ mul left right = do
 
       secondLine <- do
         lZero <- canBeZero left
-        rInf <- canBeInfiniteOrNan' right
+        rInf <- canBeInfiniteOrNan right
         T.cppAnd lZero rInf >>= T.cppNot
 
       thirdLine <- do
         rZero <- canBeZero right
-        lInf <- canBeInfiniteOrNan' left
+        lInf <- canBeInfiniteOrNan left
         T.cppAnd rZero lInf >>= T.cppNot
 
       T.cppAnd firstLine secondLine >>= T.cppAnd thirdLine
@@ -688,7 +688,6 @@ floor op = do
   T.vassign (upper result) (upper op)
   T.vassign (hasInt32LowerBound result) newHasLower
   T.vassign (hasInt32UpperBound result) (hasInt32UpperBound op)
-  T.vassign (canBeInfiniteOrNan result) (canBeInfiniteOrNan op)
   T.vassign (canBeNegativeZero result) (canBeNegativeZero op)
   T.vassign (canHaveFractionalPart result) fractPart
   T.vassign (maxExponent result) e
@@ -724,7 +723,6 @@ ceil op = do
   T.vassign (upper result) (upper op)
   T.vassign (hasInt32LowerBound result) (hasInt32LowerBound op)
   T.vassign (hasInt32UpperBound result) (hasInt32UpperBound op)
-  T.vassign (canBeInfiniteOrNan result) (canBeInfiniteOrNan op)
   T.vassign (canBeNegativeZero result) (canBeNegativeZero op)
   T.vassign (canHaveFractionalPart result) fract
   T.vassign (maxExponent result) e
