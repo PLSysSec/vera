@@ -117,6 +117,7 @@ operandWithRange name ty range = do
 
     -- If it can have a fractional part the range should say so
 
+
     -- If it can be outside of a standard int range, the flag should indicate so
     fpJsMax <- T.fpnum 2147483647
     fpJsMin <- T.fpnum (-2147483648)
