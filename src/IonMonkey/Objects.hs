@@ -75,6 +75,8 @@ inputRange ty operandName = do
     T.vassign fractPart f
     T.unum16 0 >>= T.vassign exp
 
+
+
   return $ Range operandName lowerNode upperNode hasLowerBound hasUpperBound infOrNan negZero fractPart exp
 
 

@@ -156,19 +156,50 @@ jsValIntMax64 :: D.Verif T.VNode
 jsValIntMax64 = T.num64 2147483647
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#136
---  static const uint16_t MaxFiniteExponent = mozilla::FloatingPoint<double>::kExponentBias;
--- TODO: WHAT IS THIS????? MLFB
+-- static const uint16_t MaxFiniteExponent = mozilla::FloatingPoint<double>::kExponentBias;
+-- static const int kExponentBias = 0x3FF + kPhysicalSignificandSize;
+-- signifSize = 52
+-- 1023 + 52 = 1075
 maxFiniteExponent :: D.Verif T.VNode
-maxFiniteExponent = T.unum16 4
+maxFiniteExponent = T.unum16 1075
 
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#123
+--  static const uint16_t MaxInt32Exponent = 31;
+maxInt32Exponent :: D.Verif T.VNode
+maxInt32Exponent = T.unum16 31
+
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#127
+-- static const uint16_t MaxUInt32Exponent = 31;
+maxUInt32Exponent :: D.Verif T.VNode
+maxUInt32Exponent = T.unum16 31
+
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#141
+-- static const uint16_t IncludesInfinity = MaxFiniteExponent + 1;
 includesInfinity :: D.Verif T.VNode
-includesInfinity = error "Includes infinite"
+includesInfinity = do
+  one <- T.unum16 1
+  maxFiniteExponent >>= T.cppAdd one
 
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#515
 canBeNan :: Range -> D.Verif T.VNode
-canBeNan = error "can be nan"
+canBeNan range = do
+  includesNan <- includesInfinityAndNan
+  T.cppEq (maxExponent range) includesNan
 
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#512
+--   bool canBeZero() const { return contains(0); }
 canBeZero :: Range -> D.Verif T.VNode
-canBeZero = error "can be zero"
+canBeZero range = do
+  zero <- T.num 0
+  contains zero range
+
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#509
+--   bool contains(int32_t x) const { return x >= lower_ && x <= upper_; }
+contains :: T.VNode -> Range -> D.Verif T.VNode
+contains val range = do
+  withinLower <- T.cppGte val (lower range)
+  withinUpper <- T.cppLte val (upper range)
+  T.cppAnd withinLower withinUpper
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#145
 -- static const uint16_t IncludesInfinityAndNaN = UINT16_MAX;
@@ -176,17 +207,40 @@ canBeZero = error "can be zero"
 includesInfinityAndNan :: D.Verif T.VNode
 includesInfinityAndNan = T.unum16 65535
 
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#565
+-- !hasInt32LowerBound() || canBeFiniteNegative() || canBeNegativeZero()
 canHaveSignBitSet :: Range -> D.Verif T.VNode
-canHaveSignBitSet range = error "Not implemeneted: can have sign bit set"
+canHaveSignBitSet range = do
+  noLowerBound <- T.cppNot $ hasInt32LowerBound range
+  negative <- canBeFiniteNegative range
+  let negZero = canBeNegativeZero range
+  T.cppOr noLowerBound negative >>= T.cppOr negZero
 
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#518
+--   bool canBeInfiniteOrNaN() const { return max_exponent_ >= IncludesInfinity; }
 canBeInfiniteOrNan' :: Range -> D.Verif T.VNode
-canBeInfiniteOrNan' range = error "Not implemented: cen be infinite"
+canBeInfiniteOrNan' range = do
+  includesInf <- includesInfinity
+  T.cppGte (maxExponent range) includesInf
 
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#531
+-- return exponent() + 1;  // 2^0 -> 1
 numBits :: Range -> D.Verif T.VNode
-numBits range = error "error"
+numBits range = T.unum16 1 >>= T.cppAdd (maxExponent range)
 
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#561
+--  bool canBeFiniteNonNegative() const { return upper_ >= 0; }
 canBeFiniteNonNegative :: Range -> D.Verif T.VNode
-canBeFiniteNonNegative = error "fininite non neg"
+canBeFiniteNonNegative range = do
+  zero <- T.num 0
+  T.cppGte (upper range) zero
+
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#557
+-- bool canBeFiniteNegative() const { return lower_ < 0; }
+canBeFiniteNegative :: Range -> D.Verif T.VNode
+canBeFiniteNegative range = do
+  zero <- T.num 0
+  T.cppLt (lower range) zero
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#551
 isFiniteNonNegative :: Range -> D.Verif T.VNode
