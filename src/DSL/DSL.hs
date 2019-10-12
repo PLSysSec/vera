@@ -51,6 +51,7 @@ module DSL.DSL ( i64
                , evalVerif
                , execVerif
                , runSolver
+               , wtf
                ) where
 import           Control.Monad              (foldM)
 import           Control.Monad.Reader
@@ -135,12 +136,16 @@ runSolver = do
   put $ s0 { solverResult = result }
   return result
 
+wtf  = D# (encodeDoubleInteger sig exp)
+  where sig = 2049
+        exp = integerToInt 0x0cccccccccccd
+
 getIntModel :: String -> IO (M.Map String Double)
 getIntModel str = do
   let lines = splitOn "\n" str
   vars <- forM lines $ \line -> case splitOn "->" line of
             [var, strVal] -> do
-              -- liftIO $ print strVal
+              liftIO $ print strVal
               let maybeHexVal = drop 2 strVal
                   val = case maybeHexVal of
                           -- Negative 0
