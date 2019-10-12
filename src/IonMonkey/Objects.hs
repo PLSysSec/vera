@@ -101,17 +101,20 @@ operandWithRange name ty range = do
   -- For doubles, its complicated AF because there are a lot of flags
   then do
     -- If the range doesn't include inf or nan, it shouldnt be inf or nan
-    inf <- T.posInf
-    nan <- T.nan
-    opIsNan <- T.cppEq op nan
-    opIsInf <- T.cppEq op inf
+    opIsNan <- T.isNan op
+    opIsInf <- T.isInf op
+    opIsInfOrNan <- T.cppOr opIsInf opIsNan
 
-    notInfOrNan <- includesInfinityAndNan >>= T.cppEq (maxExponent range) >>= T.cppNot
-    notInf <- includesInfinity >>= T.cppEq (maxExponent range) >>= T.cppNot
+    notInfOrNan <- includesInfinityAndNan >>= T.cppLt (maxExponent range)
+    notInf <- includesInfinity >>= T.cppLt (maxExponent range)
 
     T.cppXor notInf opIsInf >>= T.vassert
-    T.cppXor notInfOrNan opIsInf >>= T.vassert
-    T.cppXor notInfOrNan opIsNan >>= T.vassert
+    T.cppXor notInfOrNan opIsInfOrNan >>= T.vassert
+
+    -- As a second and less precise range analysis, we represent the maximal
+    -- exponent taken by a value. The exponent is calculated by taking the
+    -- absolute value and looking at the position of the highest bit.
+
 
     -- If the range doesn't say can-be-neg-zero, it can't be neg zero
     cantBeNegZero <- T.cppNot $ canBeNegativeZero range
@@ -120,21 +123,19 @@ operandWithRange name ty range = do
     isNegZero <- T.cppAnd isNeg isZero
     T.cppXor cantBeNegZero isNegZero >>= T.vassert
 
-    -- If it can have a fractional part the range should say so
-
 
     -- If it can be outside of a standard int range, the flag should indicate so
-    fpJsMax <- T.fpnum 2147483647
-    fpJsMin <- T.fpnum (-2147483648)
-    isTooBig <- T.cppGt op fpJsMax
-    isTooSmall <- T.cppLt op fpJsMin
-    f <- T.false
-    let hasLower = hasInt32LowerBound range
-        hasUpper = hasInt32UpperBound range
-    hasLower' <- T.cppCond isTooSmall f hasLower
-    hasUpper' <- T.cppCond isTooBig f hasUpper
-    T.vassign hasLower hasLower'
-    T.vassign hasUpper hasUpper'
+    -- fpJsMax <- T.fpnum 2147483647
+    -- fpJsMin <- T.fpnum (-2147483648)
+    -- isTooBig <- T.cppGt op fpJsMax
+    -- isTooSmall <- T.cppLt op fpJsMin
+    -- f <- T.false
+    -- let hasLower = hasInt32LowerBound range
+    --     hasUpper = hasInt32UpperBound range
+    -- hasLower' <- T.cppCond isTooSmall f hasLower
+    -- hasUpper' <- T.cppCond isTooBig f hasUpper
+    -- T.vassign hasLower hasLower'
+    -- T.vassign hasUpper hasUpper'
 
   -- For int32s, just make sure the operand is within the range
   else do

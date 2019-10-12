@@ -8,6 +8,10 @@ satTest :: D.SMTResult -> IO ()
 satTest D.SolverSat{} = return ()
 satTest e = error $ unwords ["Expected a SAT result but got", show e]
 
+unsatTest :: D.SMTResult -> IO ()
+unsatTest D.SolverUnsat{} = return ()
+unsatTest e = error $ unwords ["Expected a UNSAT result but got", show e]
+
 vtest :: D.SMTResult -> M.Map String Float -> IO ()
 vtest result expectedVars = case result of
   D.SolverUnsat -> error "Expected SAT but got UNSAT"

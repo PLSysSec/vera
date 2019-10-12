@@ -142,9 +142,10 @@ verifyInfNan node range = do
   nodeIsInf <- T.isInf node
   nodeIsNan <- T.isNan node
   D.push
-  -- If it is infinity, includesInfinity should always be true
+  -- If it is infinity...
   T.vassert nodeIsInf
-  T.cppEq (maxExponent range) includesInfinity >>= T.cppNot >>= T.vassert
+  -- ... maxExponent should not be less than includesInfinity
+  T.cppLt (maxExponent range) includesInfinity >>= T.vassert
   check1 <- D.runSolver
   D.pop
   D.push

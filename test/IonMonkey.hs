@@ -384,19 +384,23 @@ xorTest = benchTestCase "xor" $ do
 
 fpMinTest :: BenchTest
 fpMinTest = benchTestCase "fpmin" $ do
-  (c2) <- T.evalVerif Nothing $ do
+  (c0, c1, c2) <- T.evalVerif Nothing $ do
 
     leftRange <- inputRange T.Double "left start range"
     rightRange <- inputRange T.Double "right start range"
     resultRange <- min leftRange rightRange
+    c0 <- verifyConsistent
 
     left <- operandWithRange "left" T.Double leftRange
     right <- operandWithRange "right" T.Double rightRange
     result <- T.jsMin left right
-
+    c1 <- verifyInfNan result resultRange
     c2 <- verifyNegZero result resultRange
-    return c2
 
+    return (c0, c1, c2)
+
+  Verified @=? c0
+  Verified @=? c1
   Verified @=? c2
 
 fpMaxTest :: BenchTest
