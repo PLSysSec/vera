@@ -13,6 +13,7 @@ import           Utils
 inputTests :: BenchTest
 inputTests = benchTestGroup "Input range tests" [ nanInfFlag
                                                 , negZeroFlag
+                                                , rangeTest
                                                 ]
 
 
@@ -43,6 +44,24 @@ negZeroFlag = benchTestCase "nan flag for input ranges" $ do
     T.false >>= T.vassign nz
     T.isZero test >>= T.vassert
     T.isNeg test >>= T.vassert
+
+    T.runSolver
+
+  unsatTest r
+
+rangeTest :: BenchTest
+rangeTest = benchTestCase "correct input ranges for hasbounds" $ do
+
+  r <- T.evalVerif Nothing $ do
+
+    testRange <- inputRange T.Double "test range"
+    let hasLower = hasInt32LowerBound testRange
+        lower_   = lower testRange
+    test <- operandWithRange "test" T.Double testRange
+
+    T.true >>= T.vassign hasLower
+    T.num 1 >>= T.vassign lower_
+    T.fpnum 0 >>= T.vassign test
 
     T.runSolver
 
