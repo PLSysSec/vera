@@ -125,17 +125,25 @@ operandWithRange name ty range = do
 
 
     -- If it can be outside of a standard int range, the flag should indicate so
-    -- fpJsMax <- T.fpnum 2147483647
-    -- fpJsMin <- T.fpnum (-2147483648)
-    -- isTooBig <- T.cppGt op fpJsMax
-    -- isTooSmall <- T.cppLt op fpJsMin
-    -- f <- T.false
-    -- let hasLower = hasInt32LowerBound range
-    --     hasUpper = hasInt32UpperBound range
-    -- hasLower' <- T.cppCond isTooSmall f hasLower
-    -- hasUpper' <- T.cppCond isTooBig f hasUpper
-    -- T.vassign hasLower hasLower'
-    -- T.vassign hasUpper hasUpper'
+    fpJsMax <- T.fpnum 2147483647
+    fpJsMin <- T.fpnum (-2147483648)
+    isTooBig <- T.cppGt op fpJsMax
+    isTooSmall <- T.cppLt op fpJsMin
+    f <- T.false
+    let hasLower = hasInt32LowerBound range
+        hasUpper = hasInt32UpperBound range
+    hasLower' <- T.cppCond isTooSmall f hasLower
+    hasUpper' <- T.cppCond isTooBig f hasUpper
+    T.vassign hasLower hasLower'
+    T.vassign hasUpper hasUpper'
+
+    castLower <- T.cppCast (lower range) T.Double
+    castUpper <- T.cppCast (upper range) T.Double
+    inRangeLower <- T.cppGte op castLower
+    inRangeUpper <- T.cppLte op castUpper
+
+    T.cppXor inRangeLower isTooSmall >>= T.vassert
+    T.cppXor inRangeUpper isTooBig >>= T.vassert
 
   -- For int32s, just make sure the operand is within the range
   else do

@@ -1050,6 +1050,10 @@ instance CppCast VNode where
                           Signed64   -> do
                             result <- D.sext (vnode node) 32
                             return $ VNode (vundef node) result Signed64
+                          Double     -> do
+                            exted <- D.uext (vnode node) 32
+                            result <- D.castBv exted
+                            return $ VNode (vundef node) result Double
                           _          -> error "Illegal cast types"
     | is64Bits fromTy = case toTy of
                           Unsigned   -> do

@@ -11,7 +11,9 @@ import           Test.Tasty.HUnit
 import           Utils
 
 inputTests :: BenchTest
-inputTests = benchTestGroup "Input range tests" [ nanInfFlag ]
+inputTests = benchTestGroup "Input range tests" [ nanInfFlag
+                                                , negZeroFlag
+                                                ]
 
 
 nanInfFlag :: BenchTest
@@ -25,6 +27,22 @@ nanInfFlag = benchTestCase "nan flag for input ranges" $ do
     test <- operandWithRange "test" T.Double testRange
     one <- T.fpnum 1
     T.vassign test one
+
+    T.runSolver
+
+  unsatTest r
+
+negZeroFlag :: BenchTest
+negZeroFlag = benchTestCase "nan flag for input ranges" $ do
+
+  r <- T.evalVerif Nothing $ do
+
+    testRange <- inputRange T.Double "test range"
+    let nz = canBeNegativeZero testRange
+    test <- operandWithRange "test" T.Double testRange
+    T.false >>= T.vassign nz
+    T.isZero test >>= T.vassert
+    T.isNeg test >>= T.vassert
 
     T.runSolver
 

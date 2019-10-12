@@ -41,7 +41,7 @@ packages:
 #
 extra-deps:
   - github: PLSysSec/haskell-z3
-    commit: 342f59ebb814d5cb557d0217dc8a00b4ef70b394
+    commit: de174e49b1ee394dc826d9fca12ea282646153e7
 
 # Override default flag values for local packages and extra-deps
 # flags: {}
