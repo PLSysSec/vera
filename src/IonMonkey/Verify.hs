@@ -11,13 +11,13 @@ import           IonMonkey.Objects
 
 data VerifResult = Verified
                  | UnsatImpl
-                 | OverlappingRange { counterexample :: M.Map String Float }
-                 | BadLowerBound { counterexample :: M.Map String Float }
-                 | BadUpperBound { counterexample :: M.Map String Float }
-                 | UndefRange { counterexample :: M.Map String Float }
-                 | NoNanFlag { counterexample :: M.Map String Float }
-                 | NoNan { counterexample :: M.Map String Float }
-                 | NoNegzFlag { counterexample :: M.Map String Float }
+                 | OverlappingRange { counterexample :: M.Map String Double }
+                 | BadLowerBound { counterexample :: M.Map String Double }
+                 | BadUpperBound { counterexample :: M.Map String Double }
+                 | UndefRange { counterexample :: M.Map String Double }
+                 | NoNanFlag { counterexample :: M.Map String Double }
+                 | NoNan { counterexample :: M.Map String Double }
+                 | NoNegzFlag { counterexample :: M.Map String Double }
                  deriving (Eq, Ord)
 
 instance Show VerifResult where
@@ -39,7 +39,7 @@ instance Show VerifResult where
     show UnsatImpl             = "Verification failed (e.g., due to a timeout)"
     show ce                    = show $ counterexample ce
 
-getNanList :: M.Map String Float -> [String]
+getNanList :: M.Map String Double -> [String]
 getNanList fls = catMaybes $ map (\(str, fl) ->
                        case str of
                          _ | "_undef" `isInfixOf` str -> Nothing
@@ -50,7 +50,7 @@ getNanList fls = catMaybes $ map (\(str, fl) ->
                          _ -> Just $ unwords [str, ":", show $ round fl]
                      ) $ M.toList fls
 
-getNegzList :: M.Map String Float -> [String]
+getNegzList :: M.Map String Double -> [String]
 getNegzList fls = catMaybes $ map (\(str, fl) ->
                        case str of
                          _ | "_undef" `isInfixOf` str -> Nothing
@@ -61,7 +61,7 @@ getNegzList fls = catMaybes $ map (\(str, fl) ->
                          _ -> Just $ unwords [str, ":", show $ round fl]
                      ) $ M.toList fls
 
-getIntList :: M.Map String Float -> [String]
+getIntList :: M.Map String Double -> [String]
 getIntList fls = catMaybes $ map (\(str, fl) ->
                        case str of
                          _ | "_exp" `isInfixOf` str -> Nothing
@@ -71,7 +71,7 @@ getIntList fls = catMaybes $ map (\(str, fl) ->
                          _ -> Just $ unwords [str, ":", show $ round fl]
                      ) $ M.toList fls
 
-prettyCounterexampleInts :: M.Map String Float
+prettyCounterexampleInts :: M.Map String Double
                          -> String
 prettyCounterexampleInts ce = unlines $ getIntList ce
 

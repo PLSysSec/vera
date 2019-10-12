@@ -21,10 +21,10 @@ helpersTests = benchTestGroup "Helpers tests" [ setRangeTest
                                               , countTrailingZeroesTest
                                               , propCttz_test]
 
-trueBit :: Float
+trueBit :: Double
 trueBit = 1
 
-falseBit :: Float
+falseBit :: Double
 falseBit = 0
 
 setRangeTest = benchTestCase "set range" $ do

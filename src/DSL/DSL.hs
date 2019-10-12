@@ -1,4 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MagicHash #-}
 module DSL.DSL ( i64
                , i32
                , i16
@@ -94,7 +95,7 @@ instance Z.MonadZ3 Verif where
     getSolver = Verif $ lift $ Z.getSolver
     getContext = Verif $ lift $ Z.getContext
 
-data SMTResult = SolverSat { example :: (M.Map String Float) }
+data SMTResult = SolverSat { example :: (M.Map String Double) }
                | SolverUnsat
                | SolverFailed
                deriving (Eq, Ord, Show)
@@ -134,32 +135,32 @@ runSolver = do
   put $ s0 { solverResult = result }
   return result
 
-getIntModel :: String -> IO (M.Map String Float)
+getIntModel :: String -> IO (M.Map String Double)
 getIntModel str = do
   let lines = splitOn "\n" str
   vars <- forM lines $ \line -> case splitOn "->" line of
             [var, strVal] -> do
-              liftIO $ print strVal
+              -- liftIO $ print strVal
               let maybeHexVal = drop 2 strVal
                   val = case maybeHexVal of
                           -- Negative 0
-                          '_':' ':'-':'z':'e':'r':'o':_ -> Just (read "-0" :: Float)
-                          '_':' ':'+':'z':'e':'r':'o':_ -> Just (read "0" :: Float)
+                          '_':' ':'-':'z':'e':'r':'o':_ -> Just (read "-0" :: Double)
+                          '_':' ':'+':'z':'e':'r':'o':_ -> Just (read "0" :: Double)
                           '_':' ':'N':'a':'N':_         -> Just $ 0 / 0
                           '_':' ':'-':_                 -> Just $ negate $ 1 / 0
                           '_':' ':'+':_                 -> Just $ 1 / 0
                           -- Boolean
-                          'b':n                         -> Just (read n :: Float)
+                          'b':n                         -> Just (read n :: Double)
                           -- Hex
                           'x':_                         ->
-                            Just (read ('0':maybeHexVal) :: Float)
+                            Just (read ('0':maybeHexVal) :: Double)
                           'f':'p':' ':rest              ->
                             let components = splitOn " " rest
                                 sign = read (drop 2 $ components !! 0) :: Int
                                 exp = integerToInt $ toDec $ drop 2 $ components !! 1
                                 sig = read ('0':(drop 1 $ init $ components !! 2)) :: Integer
-                                result = encodeDoubleInteger sig exp
-                            in error $ "show the result here"
+                                result = D# (encodeDoubleInteger sig exp)
+                            in Just result
                           _                             -> Nothing
               return $ case val of
                    -- gross for printing

@@ -14,10 +14,10 @@ import           Utils
 import qualified Z3.Monad                   as M
 
 dslTests :: BenchTest
-dslTests = benchTestGroup "DSL" [ -- addTest
-                                -- , incrTest
-                                -- , incrTest2
-                                 fpTest
+dslTests = benchTestGroup "DSL" [ addTest
+                                , incrTest
+                                , incrTest2
+                                -- , fpTest
                                 -- , fpRoundTest
                                 ]
 
