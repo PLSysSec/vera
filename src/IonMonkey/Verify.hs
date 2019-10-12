@@ -30,10 +30,10 @@ instance Show VerifResult where
                                  prettyCounterexampleInts ce
     show (UndefRange ce)       = "Example operation may introduce undefined behavior:\n" ++
                                  prettyCounterexampleInts ce
-    show (NoNanFlag ce)        = "Example operation returns NAN without flag set:\n" ++
-                                 (unlines $ getNanList ce)
-    show (NoInfFlag ce)            = "Example operation returns INF without flag set:\n" ++
-                                 (unlines $ getNanList ce)
+    show (NoNanFlag ce)        = "Example operation returns NAN without flag set:\n"
+                                 -- (unlines $ getNanList ce)
+    show (NoInfFlag ce)            = "Example operation returns INF without flag set:\n"
+                                 -- (unlines $ getNanList ce)
     show (NoNegzFlag ce)       = "Example operation returns -0 without flag set:\n" ++
                                  (unlines $ getNegzList ce)
     show Verified              = "Verified!"
