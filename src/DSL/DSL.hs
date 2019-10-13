@@ -1,5 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MagicHash #-}
+{-# OPTIONS_GHC -fobject-code #-}
+{-# OPTIONS_GHC -fglasgow-exts #-}
 module DSL.DSL ( i64
                , i32
                , i16
@@ -52,6 +54,7 @@ module DSL.DSL ( i64
                , execVerif
                , runSolver
                , wtf
+               , unwtf
                ) where
 import           Control.Monad              (foldM)
 import           Control.Monad.Reader
@@ -136,9 +139,13 @@ runSolver = do
   put $ s0 { solverResult = result }
   return result
 
+
 wtf  = D# (encodeDoubleInteger sig exp)
-  where sig = 2049
-        exp = integerToInt 0x0cccccccccccd
+  where exp = integerToInt (2049)
+        sig = 0x0cccccccccccd
+
+unwtf = let (# i1, i2 #) = decodeDoubleInteger 4.3##
+        in (i1, I# i2)
 
 getIntModel :: String -> IO (M.Map String Double)
 getIntModel str = do
