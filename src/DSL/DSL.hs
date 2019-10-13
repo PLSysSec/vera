@@ -54,6 +54,8 @@ module DSL.DSL ( i64
 import           Control.Monad              (foldM)
 import           Control.Monad.Reader
 import           Control.Monad.State.Strict
+import           Data.Binary.IEEE754
+import           Data.Bits
 import           Data.Char                  (digitToInt)
 import           Data.List                  (isInfixOf)
 import           Data.List                  (foldl')
@@ -63,6 +65,7 @@ import           Data.Maybe                 (catMaybes)
 import           DSL.Z3Wrapper
 import qualified DSL.Z3Wrapper              as Z3
 import           Prelude                    hiding (map, max, min, not)
+import           Text.Printf
 import qualified Z3.Monad                   as Z
 
 {-|
@@ -92,7 +95,7 @@ instance Z.MonadZ3 Verif where
     getSolver = Verif $ lift $ Z.getSolver
     getContext = Verif $ lift $ Z.getContext
 
-data SMTResult = SolverSat { example :: (M.Map String Float) }
+data SMTResult = SolverSat { example :: (M.Map String Double) }
                | SolverUnsat
                | SolverFailed
                deriving (Eq, Ord, Show)
@@ -132,7 +135,8 @@ runSolver = do
   put $ s0 { solverResult = result }
   return result
 
-getIntModel :: String -> IO (M.Map String Float)
+
+getIntModel :: String -> IO (M.Map String Double)
 getIntModel str = do
   let lines = splitOn "\n" str
   vars <- forM lines $ \line -> case splitOn "->" line of
@@ -140,34 +144,22 @@ getIntModel str = do
               let maybeHexVal = drop 2 strVal
                   val = case maybeHexVal of
                           -- Negative 0
-                          '_':' ':'-':'z':'e':'r':'o':_ -> Just (read "-0" :: Float)
-                          '_':' ':'+':'z':'e':'r':'o':_ -> Just (read "0" :: Float)
+                          '_':' ':'-':'z':'e':'r':'o':_ -> Just (read "-0" :: Double)
+                          '_':' ':'+':'z':'e':'r':'o':_ -> Just (read "0" :: Double)
                           '_':' ':'N':'a':'N':_         -> Just $ 0 / 0
                           '_':' ':'-':_                 -> Just $ negate $ 1 / 0
                           '_':' ':'+':_                 -> Just $ 1 / 0
                           -- Boolean
-                          'b':n                         -> Just (read n :: Float)
+                          'b':n                         -> Just (read n :: Double)
                           -- Hex
-                          'x':_                         ->
-                            Just (read ('0':maybeHexVal) :: Float)
+                          'x':_                         -> Just (read ('0':maybeHexVal) :: Double)
                           'f':'p':' ':rest              ->
                             let components = splitOn " " rest
-                                sign = read (drop 2 $ components !! 0) :: Int
-                                exp = realToFrac $ toDec $ drop 2 $ components !! 1
-                                sig = read ('0':(drop 2 $ init $ components !! 2)) :: Integer
-                                sigAsFract = read ("1." ++ show sig) :: Float
-                                sigAsFractSub = read ("0." ++ show sig) :: Float
-                                result = if exp == 0
-                                         -- subnormal
-                                         -- 2^-1022 * 0.fraction
-                                         then 2**(-1022) * sigAsFractSub
-                                         -- normal
-                                         -- -1^sign * 2^(e-1023) * 1.fraction
-                                         -- haskell seems weird with the -1**sign thing,
-                                         -- so well just do it later
-                                         else 2**(exp-1023) * sigAsFract
-                                signedResult = if sign == 1 then negate result else result
-                            in Just signedResult
+                                sign = read (drop 2 $ components !! 0) :: Integer
+                                exp = toDec $ drop 2 $ components !! 1
+                                sig = read ('0':(drop 1 $ init $ components !! 2)) :: Integer
+                                result = (sig .&. 0xfffffffffffff) .|. ((exp .&. 0x7ff) `shiftL` 52) .|. ((sign .&. 0x1) `shiftL` 63)
+                            in Just $ wordToDouble $ fromIntegral $ result
                           _                             -> Nothing
               return $ case val of
                    -- gross for printing
@@ -177,8 +169,8 @@ getIntModel str = do
   return $ M.fromList $ catMaybes vars
   where
     -- https://stackoverflow.com/questions/5921573/convert-a-string-representing-a-binary-number-to-a-base-10-string-haskell
-    toDec :: String -> Int
-    toDec = foldl' (\acc x -> acc * 2 + digitToInt x) 0
+    toDec :: String -> Integer
+    toDec = foldl' (\acc x -> acc * 2 + (fromIntegral $ digitToInt x)) 0
 --
 -- Ints and stuff
 --

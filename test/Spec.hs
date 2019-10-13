@@ -15,5 +15,6 @@ allTests = [ ionMonkeyTests
            , inputTests
            , cppTests
            , dslTests
+           , dslTests
            ]
 

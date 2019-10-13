@@ -31,6 +31,7 @@ library:
   - containers >= 0.6
   - mtl >= 2.2.2
   - split >= 0.2.3.3
+  - data-binary-ieee754
 
 executables:
   lejit-exe:
