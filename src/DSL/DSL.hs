@@ -54,6 +54,8 @@ module DSL.DSL ( i64
 import           Control.Monad              (foldM)
 import           Control.Monad.Reader
 import           Control.Monad.State.Strict
+import           Data.Binary.IEEE754
+import           Data.Bits
 import           Data.Char                  (digitToInt)
 import           Data.List                  (isInfixOf)
 import           Data.List                  (foldl')
@@ -62,11 +64,9 @@ import qualified Data.Map.Strict            as M
 import           Data.Maybe                 (catMaybes)
 import           DSL.Z3Wrapper
 import qualified DSL.Z3Wrapper              as Z3
-import           Data.Bits
-import           Data.Binary.IEEE754
 import           Prelude                    hiding (map, max, min, not)
-import qualified Z3.Monad                   as Z
 import           Text.Printf
+import qualified Z3.Monad                   as Z
 
 {-|
 
@@ -141,7 +141,6 @@ getIntModel str = do
   let lines = splitOn "\n" str
   vars <- forM lines $ \line -> case splitOn "->" line of
             [var, strVal] -> do
-              liftIO $ print strVal
               let maybeHexVal = drop 2 strVal
                   val = case maybeHexVal of
                           -- Negative 0

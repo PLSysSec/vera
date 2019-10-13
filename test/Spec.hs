@@ -9,10 +9,10 @@ main :: IO ()
 main = defaultMain $ testGroup "All tests" $ map getTest allTests
 
 allTests :: [BenchTest]
-allTests = [ --ionMonkeyTests
-           -- , helpersTests
-           -- , cppTests
-           -- , dslTests
-           dslTests
+allTests = [ ionMonkeyTests
+           , helpersTests
+           , cppTests
+           , dslTests
+           , dslTests
            ]
 
