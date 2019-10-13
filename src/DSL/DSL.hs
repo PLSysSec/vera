@@ -1,7 +1,4 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MagicHash #-}
-{-# OPTIONS_GHC -fobject-code #-}
-{-# OPTIONS_GHC -fglasgow-exts #-}
 module DSL.DSL ( i64
                , i32
                , i16
@@ -53,8 +50,6 @@ module DSL.DSL ( i64
                , evalVerif
                , execVerif
                , runSolver
-               , wtf
-               , unwtf
                ) where
 import           Control.Monad              (foldM)
 import           Control.Monad.Reader
@@ -67,10 +62,11 @@ import qualified Data.Map.Strict            as M
 import           Data.Maybe                 (catMaybes)
 import           DSL.Z3Wrapper
 import qualified DSL.Z3Wrapper              as Z3
-import           GHC.Exts
-import           GHC.Integer
+import           Data.Bits
+import           Data.Binary.IEEE754
 import           Prelude                    hiding (map, max, min, not)
 import qualified Z3.Monad                   as Z
+import           Text.Printf
 
 {-|
 
@@ -140,13 +136,6 @@ runSolver = do
   return result
 
 
-wtf  = D# (encodeDoubleInteger sig exp)
-  where exp = integerToInt (2049)
-        sig = 0x0cccccccccccd
-
-unwtf = let (# i1, i2 #) = decodeDoubleInteger 4.3##
-        in (i1, I# i2)
-
 getIntModel :: String -> IO (M.Map String Double)
 getIntModel str = do
   let lines = splitOn "\n" str
@@ -164,15 +153,14 @@ getIntModel str = do
                           -- Boolean
                           'b':n                         -> Just (read n :: Double)
                           -- Hex
-                          'x':_                         ->
-                            Just (read ('0':maybeHexVal) :: Double)
+                          'x':_                         -> Just (read ('0':maybeHexVal) :: Double)
                           'f':'p':' ':rest              ->
                             let components = splitOn " " rest
-                                sign = read (drop 2 $ components !! 0) :: Int
-                                exp = integerToInt $ toDec $ drop 2 $ components !! 1
+                                sign = read (drop 2 $ components !! 0) :: Integer
+                                exp = toDec $ drop 2 $ components !! 1
                                 sig = read ('0':(drop 1 $ init $ components !! 2)) :: Integer
-                                result = D# (encodeDoubleInteger sig exp)
-                            in Just result
+                                result = (sig .&. 0xfffffffffffff) .|. ((exp .&. 0x7ff) `shiftL` 52) .|. ((sign .&. 0x1) `shiftL` 63)
+                            in Just $ wordToDouble $ fromIntegral $ result
                           _                             -> Nothing
               return $ case val of
                    -- gross for printing

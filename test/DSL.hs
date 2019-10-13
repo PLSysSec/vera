@@ -133,24 +133,24 @@ fpTest = benchTestCase "fp" $ do
 
   r <- D.evalVerif Nothing $ do
     doubSort <- M.mkDoubleSort
-    fp1 <- M.mkFpFromDouble 4.2 doubSort
+    fp1 <- M.mkFpFromDouble (-4.2) doubSort
     D.doubv "fourFive" >>= D.assign fp1
-    -- fp2 <- M.mkFpFromInt (-4) doubSort
-    -- D.doubv "minusFour" >>= D.assign fp2
-    -- z <- M.mkFpZero doubSort False
-    -- nan <- M.mkFpNan doubSort
-    -- inf <- M.mkFpInf doubSort True
-    -- inf2 <- M.mkFpInf doubSort False
-    -- D.doubv "nan" >>= D.assign nan
-    -- D.doubv "neginf" >>= D.assign inf
-    -- D.doubv "posinf" >>= D.assign inf2
+    fp2 <- M.mkFpFromInt (-4) doubSort
+    D.doubv "minusFour" >>= D.assign fp2
+    z <- M.mkFpZero doubSort False
+    nan <- M.mkFpNan doubSort
+    inf <- M.mkFpInf doubSort True
+    inf2 <- M.mkFpInf doubSort False
+    D.doubv "nan" >>= D.assign nan
+    D.doubv "neginf" >>= D.assign inf
+    D.doubv "posinf" >>= D.assign inf2
 
     -- rna <- M.mkFpRna
     -- rne <- M.mkFpRne
     -- rtn <- M.mkFpRtn
     -- rtp <- M.mkFpRtp
     -- rtz <- M.mkFpRtz
-
+    --
     -- isInf <- D.isInf z
     -- D.i1v "zeroNotInf" >>= D.assign isInf
     -- isNan <- D.isNan nan
@@ -161,50 +161,50 @@ fpTest = benchTestCase "fp" $ do
     -- D.i1v "fourFiveIsPos" >>= D.assign isPos
     -- isZero <- D.isZero z
     -- D.i1v "zeroIsZero" >>= D.assign isZero
-
+    --
     -- abs <- D.fpAbs fp2
     -- D.doubv "abs" >>= D.assign abs
-
+    --
     -- adds <- D.fpAdd fp1 fp2
     -- D.doubv "adds" >>= D.assign adds
 
     -- subs <- D.fpSub fp1 fp2
     -- D.doubv "subs" >>= D.assign subs
-
+    --
     -- muls <- D.fpMul nan nan
     -- D.doubv "muls" >>= D.assign muls
-
+    --
     -- negs <- D.fpNeg fp2
     -- D.doubv "negs" >>= D.assign negs
-
+    --
     -- eqs <- D.fpEq fp1 fp2
     -- D.i1v "eqs" >>= D.assign eqs
-
+    --
     -- geqs <- D.fpGte fp1 fp2
     -- D.i1v "geqs" >>= D.assign geqs
-
+    --
     -- gts <- D.fpGt fp1 fp2
     -- D.i1v "gts" >>= D.assign gts
-
+    --
     -- leqs <- D.fpLte fp1 fp2
     -- D.i1v "leq" >>= D.assign leqs
-
+    --
     -- lts <- D.fpLt fp1 nan
     -- D.i1v "lts" >>= D.assign lts
-
+    --
     -- maxs <- D.fpMax fp1 fp2
     -- D.doubv "maxs" >>= D.assign maxs
-
+    --
     -- mins <- D.fpMin fp1 fp2
     -- D.doubv "mins" >>= D.assign mins
 
     D.runSolver
 
-  vtest r $ Map.fromList [ ("fourFive", 4.2)
-                         -- , ("minusFour", -4.0)
-                         -- , ("nan", 0/0)
-                         -- , ("neginf", (-1/0))
-                         -- , ("posinf", 1/0)
+  vtest r $ Map.fromList [ ("fourFive", -4.2)
+                         , ("minusFour", -4.0)
+                         , ("nan", 0/0)
+                         , ("neginf", (-1/0))
+                         , ("posinf", 1/0)
                          -- , ("zeroNotInf", 0)
                          -- , ("isNan", 1)
                          -- , ("nanIsNeg", 0)
