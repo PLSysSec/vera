@@ -361,3 +361,8 @@ castBv bv = do
   rm <- rtn
   doubSort <- Z.mkDoubleSort
   Z.mkBvToFp rm bv doubSort
+
+castFp :: MonadZ3 z3 => AST -> Int -> z3 AST
+castFp fp sz = do
+  rm <- rtn
+  Z.mkFpToBv rm fp $ fromIntegral sz

@@ -10,32 +10,32 @@ import           Prelude                    hiding (abs, and, floor, max, min,
 import           Test.Tasty.HUnit
 
 ionMonkeyTests :: BenchTest
-ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ -- fpAddTest
-                                                   -- , fpMulTest
-                                                   -- , fpSubTest
-                                                   -- , addTest
-                                                   -- , andTest
-                                                   -- , notTest
-                                                   -- , lshTest
-                                                   -- , rshTest
-                                                   -- , urshTest
-                                                   -- , lsh'Test
-                                                   -- , rsh'Test
-                                                   -- , ursh'Test
-                                                   -- , orTest
-                                                   -- , xorTest
-                                                    fpMinTest
-                                                   -- , fpMaxTest
-                                                   -- , fpAbsTest
-                                                   -- , fpSignTest
-                                                   -- , fpFloorTest
-                                                   -- , fpCeilTest
+ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ fpAddTest
+                                                   , fpMulTest
+                                                   , fpSubTest
+                                                   , addTest
+                                                   , andTest
+                                                   , notTest
+                                                   , lshTest
+                                                   , rshTest
+                                                   , urshTest
+                                                   , lsh'Test
+                                                   , rsh'Test
+                                                   , ursh'Test
+                                                   , orTest
+                                                   , xorTest
+                                                   , fpMinTest
+                                                   , fpMaxTest
+                                                   , fpAbsTest
+                                                   , fpSignTest
+                                                   , fpFloorTest
+                                                   , fpCeilTest
                                                    ]
 
 fpAddTest :: BenchTest
 fpAddTest = benchTestCase "fpadd" $ do
 
-  (c0, c1, c2, c3) <- T.evalVerif Nothing $ do
+  (c0, c2, c3) <- T.evalVerif Nothing $ do
 
     leftRange <- inputRange T.Double "left start range"
     rightRange <- inputRange T.Double "right start range"
@@ -46,14 +46,13 @@ fpAddTest = benchTestCase "fpadd" $ do
     right <- operandWithRange "right" T.Double rightRange
     result <- T.jsAdd left right
 
-    c1 <- verifyInt32Bounds result resultRange
+--    c1 <- verifyInt32Bounds result resultRange
     c2 <- verifyInfNan result resultRange
     c3 <- verifyNegZero result resultRange
 
-    return (c0, c1, c2, c3)
+    return (c0, c2, c3)
 
   Verified @=? c0
-  Verified @=? c1
   Verified @=? c2
   Verified @=? c3
 
@@ -411,20 +410,27 @@ fpMinTest = benchTestCase "fpmin" $ do
 
 fpMaxTest :: BenchTest
 fpMaxTest = benchTestCase "fpmax" $ do
-  (c2) <- T.evalVerif Nothing $ do
+  (c0, c1, c2, c3, c4) <- T.evalVerif Nothing $ do
 
     leftRange <- inputRange T.Double "left start range"
     rightRange <- inputRange T.Double "right start range"
     resultRange <- max leftRange rightRange
+    c0 <- verifyConsistent
+    c1 <- verifySaneRange resultRange
 
     left <- operandWithRange "left" T.Double leftRange
     right <- operandWithRange "right" T.Double rightRange
     result <- T.jsMax left right
+    c2 <- verifyInt32Bounds result resultRange
+    c3 <- verifyInfNan result resultRange
+    c4 <- verifyNegZero result resultRange
+    return (c0, c1, c2, c3, c4)
 
-    c2 <- verifyNegZero result resultRange
-    return c2
-
+  Verified @=? c0
+  Verified @=? c1
   Verified @=? c2
+  Verified @=? c3
+  Verified @=? c4
 
 fpAbsTest :: BenchTest
 fpAbsTest = benchTestCase "fpabs" $ do

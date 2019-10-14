@@ -170,12 +170,21 @@ veriftFract :: T.VNode -> Range -> D.Verif VerifResult
 veriftFract node range = error ""
 
 -- | If the result has int32 bounds, the result should be within the specified range
+-- It would be better to do this over doubles, but instead we'll cast doubles to
+-- int32s so that the anlaysis has a chance at finishing.
 verifyInt32Bounds :: T.VNode -> Range -> D.Verif VerifResult
 verifyInt32Bounds node range = do
-  castLower <- T.cppCast (lower range) T.Double
-  castUpper <- T.cppCast (upper range) T.Double
-  outOfRangeLower <- T.cppLt node castLower
-  outOfRangeUpper <- T.cppGt node castUpper
+  -- Cap it in the range
+  minNum <- T.fpnum (-2147483648)
+  maxNum <- T.fpnum 2147483647
+  nodeTooSmall <- T.cppLt node minNum
+  nodeTooBig <- T.cppGt node maxNum
+  inLowerRange <- T.cppCond nodeTooSmall minNum node
+  inUpperRange <- T.cppCond nodeTooBig maxNum inLowerRange
+
+  castValue <- T.cppCast inUpperRange T.Signed
+  outOfRangeLower <- T.cppLt castValue (lower range)
+  outOfRangeUpper <- T.cppGt castValue (upper range)
 
   let hasLowerBound = hasInt32LowerBound range
       hasUpperBound = hasInt32UpperBound range

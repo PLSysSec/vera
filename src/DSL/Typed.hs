@@ -997,6 +997,11 @@ instance CppCast (D.Verif VNode) where
 
 instance CppCast VNode where
   cppCast node toTy
+    | isDouble fromTy = case toTy of
+                          Signed     -> do
+                            result <- D.castFp (vnode node) 32
+                            return $ VNode (vundef node) result Signed
+                          _          -> error "We only suppor Double to int32 casts rn"
     | is16Bits fromTy = case toTy of
                           Unsigned16 -> return $ VNode (vundef node) (vnode node) Unsigned16
                           Signed16   -> return $ VNode (vundef node) (vnode node) Signed16
