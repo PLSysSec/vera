@@ -11,10 +11,9 @@ main = defaultMain $ testGroup "All tests" $ map getTest allTests
 
 allTests :: [BenchTest]
 allTests = [ ionMonkeyTests
-           , helpersTests
-           , inputTests
-           , cppTests
-           , dslTests
-           , dslTests
+           -- , helpersTests
+           -- , inputTests
+           -- , cppTests
+           -- , dslTests
            ]
 

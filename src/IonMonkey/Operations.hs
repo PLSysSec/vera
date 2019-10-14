@@ -600,10 +600,10 @@ min left right = do
   nz <- T.cppOr (canBeNegativeZero left) (canBeNegativeZero right)
   -- Min(lhs lower, rhs lower), rhs has lower && rhs has lower
   newLower <- T.cppMin (lower left) (lower right)
-  hasLower <- T.cppAnd (hasInt32LowerBound left) (hasInt32UpperBound right)
+  hasLower <- T.cppAnd (hasInt32LowerBound left) (hasInt32LowerBound right)
   -- min(lhs upper, rhs upper), lhs has upper || rhs has upper
   newUpper <- T.cppMin (lower right) (upper right)
-  hasUpper <- T.cppOr (hasInt32UpperBound left) (hasInt32LowerBound right)
+  hasUpper <- T.cppOr (hasInt32UpperBound left) (hasInt32UpperBound right)
   -- max(lhs exp, rhs exp)
   exp <- T.cppMax (maxExponent left) (maxExponent right)
   -- Raw initialize

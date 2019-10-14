@@ -54,21 +54,21 @@ getNanList fls = catMaybes $ map (\(str, fl) ->
 getNegzList :: M.Map String Double -> [String]
 getNegzList fls = catMaybes $ map (\(str, fl) ->
                        case str of
-                         _ | "_undef" `isInfixOf` str -> Nothing
+                         _ | "_undef" `isInfixOf` str         -> Nothing
                          _ | "_hasUpperBound" `isInfixOf` str -> Nothing
                          _ | "_hasLowerBound" `isInfixOf` str -> Nothing
-                         _ | "hasFract" `isInfixOf` str -> Nothing
-                         _ | "infOrNan" `isInfixOf` str -> Nothing
+                         _ | "hasFract" `isInfixOf` str       -> Nothing
+                         _ | "infOrNan" `isInfixOf` str       -> Nothing
                          _ -> Just $ unwords [str, ":", show $ round fl]
                      ) $ M.toList fls
 
 getIntList :: M.Map String Double -> [String]
 getIntList fls = catMaybes $ map (\(str, fl) ->
                        case str of
-                         _ | "_exp" `isInfixOf` str -> Nothing
-                         _ | "_has" `isInfixOf` str -> Nothing
-                         _ | "_negZero" `isInfixOf` str -> Nothing
-                         _ | "infOrNan" `isInfixOf` str -> Nothing
+                         _ | "_exp" `isInfixOf` str      -> Nothing
+                         _ | "_hasFract" `isInfixOf` str -> Nothing
+                         _ | "_negZero" `isInfixOf` str  -> Nothing
+                         _ | "infOrNan" `isInfixOf` str  -> Nothing
                          _ -> Just $ unwords [str, ":", show $ round fl]
                      ) $ M.toList fls
 
@@ -89,6 +89,8 @@ verifyConsistent = do
 verifySaneRange :: Range -> D.Verif VerifResult
 verifySaneRange resultRange = do
   D.push
+  T.vassert $ hasInt32LowerBound resultRange
+  T.vassert $ hasInt32UpperBound resultRange
   T.cppLt (upper resultRange) (lower resultRange) >>= T.vassert
   check <- D.runSolver
   D.pop

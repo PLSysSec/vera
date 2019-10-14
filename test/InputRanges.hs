@@ -66,3 +66,18 @@ rangeTest = benchTestCase "correct input ranges for hasbounds" $ do
     T.runSolver
 
   unsatTest r
+
+  r <- T.evalVerif Nothing $ do
+
+    testRange <- inputRange T.Double "test range"
+    let hasUpper = hasInt32LowerBound testRange
+        upper_   = upper testRange
+    test <- operandWithRange "test" T.Double testRange
+
+    T.true >>= T.vassign hasUpper
+    T.num 0 >>= T.vassign upper_
+    T.fpnum 1 >>= T.vassign test
+
+    T.runSolver
+
+  unsatTest r

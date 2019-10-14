@@ -30,12 +30,15 @@ inputRange ty operandName = do
   -- Make and setup the int32 bounds
   let lowerName = operandName ++ "_lower"
       upperName = operandName ++ "_upper"
-      -- If it's not a 32-bit input range, this should be irrelevant
+      -- Doubles are signed, so the int32 range will be signed, too
       rangeType = if is32Bits ty then ty else T.Signed
   lowerNode <- T.newInputVar rangeType lowerName
   upperNode <- T.newInputVar rangeType upperName
   T.cppLte lowerNode upperNode >>= T.vassert
-
+  when (isDouble ty) $ do
+    castLower <- T.cppCast lowerNode T.Double
+    castUpper <- T.cppCast upperNode T.Double
+    T.cppLte castLower castUpper >>= T.vassert
   -- Make the flags
   let hasLowerBoundName = operandName ++ "_hasLowerBound"
       hasUpperBoundName = operandName ++ "_hasUpperBound"
@@ -61,6 +64,15 @@ inputRange ty operandName = do
     T.vassign negZero f
     T.vassign fractPart f
     T.unum16 0 >>= T.vassign exp
+
+  -- // To facilitate this trick, we maintain the invariants that:
+  -- // 1) hasInt32LowerBound_ == false implies lower_ == JSVAL_INT_MIN
+  -- // 2) hasInt32UpperBound_ == false implies upper_ == JSVAL_INT_MAX
+  when (isDouble ty) $ do
+    lowerIsMin <- T.num (-2147483648) >>= T.cppEq lowerNode
+    upperIsMax <- T.num 2147483647 >>= T.cppEq upperNode
+    T.cppOr lowerIsMin hasLowerBound >>= T.vassert
+    T.cppOr upperIsMax hasUpperBound >>= T.vassert
 
   return $ Range operandName lowerNode upperNode hasLowerBound hasUpperBound negZero fractPart exp
 
@@ -123,27 +135,25 @@ operandWithRange name ty range = do
     isNegZero <- T.cppAnd isNeg isZero
     T.cppXor cantBeNegZero isNegZero >>= T.vassert
 
-
     -- If it can be outside of a standard int range, the flag should indicate so
     fpJsMax <- T.fpnum 2147483647
     fpJsMin <- T.fpnum (-2147483648)
     isTooBig <- T.cppGt op fpJsMax
     isTooSmall <- T.cppLt op fpJsMin
-    f <- T.false
     let hasLower = hasInt32LowerBound range
         hasUpper = hasInt32UpperBound range
-    hasLower' <- T.cppCond isTooSmall f hasLower
-    hasUpper' <- T.cppCond isTooBig f hasUpper
-    T.vassign hasLower hasLower'
-    T.vassign hasUpper hasUpper'
+    T.cppXor isTooSmall hasLower >>= T.vassert
+    T.cppXor isTooBig hasUpper >>= T.vassert
 
+    -- If hasLower and hasUpper, the op should be within the specified range
     castLower <- T.cppCast (lower range) T.Double
     castUpper <- T.cppCast (upper range) T.Double
     inRangeLower <- T.cppGte op castLower
     inRangeUpper <- T.cppLte op castUpper
-
-    T.cppXor inRangeLower isTooSmall >>= T.vassert
-    T.cppXor inRangeUpper isTooBig >>= T.vassert
+    noLower <- T.cppNot hasLower
+    noUpper <- T.cppNot hasUpper
+    T.cppXor noLower inRangeLower >>= T.vassert
+    T.cppXor noUpper inRangeUpper >>= T.vassert
 
   -- For int32s, just make sure the operand is within the range
   else do
