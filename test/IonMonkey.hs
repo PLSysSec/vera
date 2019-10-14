@@ -434,32 +434,44 @@ fpMaxTest = benchTestCase "fpmax" $ do
 
 fpAbsTest :: BenchTest
 fpAbsTest = benchTestCase "fpabs" $ do
-  (c2) <- T.evalVerif Nothing $ do
+  (c0, c1, c2, c3, c4) <- T.evalVerif Nothing $ do
 
     inputRange <- inputRange T.Double "left start range"
     resultRange <- abs inputRange
+    c0 <- verifyConsistent
+    c1 <- verifySaneRange resultRange
 
     input <- operandWithRange "input" T.Double inputRange
     result <- T.jsAbs input
+    c2 <- verifyInt32Bounds result resultRange
+    c3 <- verifyInfNan result resultRange
+    c4 <- verifyNegZero result resultRange
+    return (c0, c1, c2, c3, c4)
 
-    c2 <- verifyNegZero result resultRange
-    return c2
-
+  Verified @=? c2
+  Verified @=? c2
+  Verified @=? c2
   Verified @=? c2
 
 fpSignTest :: BenchTest
 fpSignTest = benchTestCase "fpsign" $ do
-  (c2) <- T.evalVerif Nothing $ do
+  (c0, c1, c2, c3, c4) <- T.evalVerif Nothing $ do
 
     inputRange <- inputRange T.Double "left start range"
     resultRange <- sign inputRange
+    c0 <- verifyConsistent
+    c1 <- verifySaneRange resultRange
 
     input <- operandWithRange "input" T.Double inputRange
     result <- T.jsSign input
+    c2 <- verifyInt32Bounds result resultRange
+    c3 <- verifyInfNan result resultRange
+    c4 <- verifyNegZero result resultRange
+    return (c0, c1, c2, c3, c4)
 
-    c2 <- verifyNegZero result resultRange
-    return c2
-
+  Verified @=? c2
+  Verified @=? c2
+  Verified @=? c2
   Verified @=? c2
 
 fpFloorTest :: BenchTest
