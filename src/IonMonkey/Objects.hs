@@ -155,6 +155,14 @@ operandWithRange name ty range = do
     T.cppXor noLower inRangeLower >>= T.vassert
     T.cppXor noUpper inRangeUpper >>= T.vassert
 
+    -- Finally, exponent:
+    -- As a second and less precise range analysis, we represent the maximal
+    -- exponent taken by a value. The exponent is calculated by taking the
+    -- absolute value and looking at the position of the highest bit.  All
+    -- exponent computation have to be over-estimations of the actual result. On
+    -- the Int32 this over approximation is rectified.
+
+
   -- For int32s, just make sure the operand is within the range
   else do
     T.cppLte op (upper range) >>= T.vassert

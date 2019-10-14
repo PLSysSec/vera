@@ -59,25 +59,28 @@ fpAddTest = benchTestCase "fpadd" $ do
 fpMulTest :: BenchTest
 fpMulTest = benchTestCase "fpmul" $ do
 
-  (c2) <- T.evalVerif Nothing $ do
+  (c0, c1, c2, c3) <- T.evalVerif Nothing $ do
 
     leftRange <- inputRange T.Double "left start range"
     rightRange <- inputRange T.Double "right start range"
     resultRange <- mul leftRange rightRange
-    -- c0 <- verifyConsistent
+    c0 <- verifyConsistent
+    c1 <- verifySaneRange resultRange
 
     left <- operandWithRange "left" T.Double leftRange
     right <- operandWithRange "right" T.Double rightRange
     result <- T.jsMul left right
 
-    -- c1 <- verifyInfNan result resultRange
-    c2 <- verifyNegZero result resultRange
+    c2 <- verifyInfNan result resultRange
+    c3 <- verifyNegZero result resultRange
 
-    return c2
+    return (c0, c1, c2, c3)
 
-  -- Verified @=? c0
-  -- Verified @=? c1
+  Verified @=? c0
+  Verified @=? c1
   Verified @=? c2
+  Verified @=? c3
+
 
 fpSubTest :: BenchTest
 fpSubTest = benchTestCase "fpsub" $ do
