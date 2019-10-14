@@ -602,7 +602,7 @@ min left right = do
   newLower <- T.cppMin (lower left) (lower right)
   hasLower <- T.cppAnd (hasInt32LowerBound left) (hasInt32LowerBound right)
   -- min(lhs upper, rhs upper), lhs has upper || rhs has upper
-  newUpper <- T.cppMin (lower right) (upper right)
+  newUpper <- T.cppMin (upper left) (upper right)
   hasUpper <- T.cppOr (hasInt32UpperBound left) (hasInt32UpperBound right)
   -- max(lhs exp, rhs exp)
   exp <- T.cppMax (maxExponent left) (maxExponent right)
