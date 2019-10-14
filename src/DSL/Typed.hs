@@ -52,6 +52,7 @@ module DSL.Typed ( vassert
                  , isNeg
                  , isPos
                  , isZero
+                 , getFpExponent
                    -- * Js operations: what we are using to verify
                  , jsAdd
                  , jsSub
@@ -1096,3 +1097,12 @@ cppXor n1 n2 = do
   result <- D.xor (vnode n1) (vnode n2)
   undef <- D.or (vundef n1) (vundef n2)
   return $ VNode undef result Bool
+
+getFpExponent :: VNode -> D.Verif VNode
+getFpExponent node = do
+  unless (isDouble $ vtype node) $ error "Cannot get exponent of non-double"
+  exp <- D.fpExponent $ vnode node
+  sig <- D.fpSignificand $ vnode node
+  expWidth <- D.bvSize exp
+  sigWidth <- D.bvSize sig
+  error $ show sigWidth
