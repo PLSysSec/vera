@@ -167,8 +167,37 @@ verifyInfNan node range = do
 veriftFract :: T.VNode -> Range -> D.Verif VerifResult
 veriftFract node range = error ""
 
-verifInt32Bounds :: T.VNode -> Range -> D.Verif VerifResult
-verifInt32Bounds node range = error ""
+-- | If the result has int32 bounds, the result should be within the specified range
+verifyInt32Bounds :: T.VNode -> Range -> D.Verif VerifResult
+verifyInt32Bounds node range = do
+  castLower <- T.cppCast (lower range) T.Double
+  castUpper <- T.cppCast (upper range) T.Double
+  outOfRangeLower <- T.cppLt node castLower
+  outOfRangeUpper <- T.cppGt node castUpper
+
+  let hasLowerBound = hasInt32LowerBound range
+      hasUpperBound = hasInt32UpperBound range
+
+  -- hasUpperBound && outside of upper bound should be impossible
+  D.push
+  T.vassert hasLowerBound
+  T.vassert outOfRangeLower
+  check1 <- D.runSolver
+  D.pop
+  case check1 of
+    SolverSat xs -> return $ BadLowerBound xs
+    SolverFailed -> error "Error while verifying"
+    _            -> do
+      -- hasLowerBound && outside of lower bound should be impossible
+      D.push
+      T.vassert hasUpperBound
+      T.vassert outOfRangeUpper
+      check2 <- D.runSolver
+      D.pop
+      return $ case check2 of
+        SolverSat xs -> BadUpperBound xs
+        SolverFailed -> error "Error while verifying"
+        _            -> Verified
 
 verifyNegZero :: T.VNode -> Range -> D.Verif VerifResult
 verifyNegZero node range = do

@@ -35,25 +35,27 @@ ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ fpAddTest
 fpAddTest :: BenchTest
 fpAddTest = benchTestCase "fpadd" $ do
 
-  (c0) <- T.evalVerif Nothing $ do
+  (c0, c1, c2, c3) <- T.evalVerif Nothing $ do
 
     leftRange <- inputRange T.Double "left start range"
     rightRange <- inputRange T.Double "right start range"
     resultRange <- add leftRange rightRange
-    -- c0 <- verifyConsistent
+    c0 <- verifyConsistent
 
     left <- operandWithRange "left" T.Double leftRange
     right <- operandWithRange "right" T.Double rightRange
     result <- T.jsAdd left right
 
-    c0 <- verifyInfNan result resultRange
-    -- c2 <- verifyNegZero result resultRange
+    c1 <- verifyInt32Bounds result resultRange
+    c2 <- verifyInfNan result resultRange
+    c3 <- verifyNegZero result resultRange
 
-    return (c0)
+    return (c0, c1, c2, c3)
 
   Verified @=? c0
-  -- Verified @=? c1
-  -- Verified @=? c2
+  Verified @=? c1
+  Verified @=? c2
+  Verified @=? c3
 
 fpMulTest :: BenchTest
 fpMulTest = benchTestCase "fpmul" $ do
