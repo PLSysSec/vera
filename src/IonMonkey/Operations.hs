@@ -45,7 +45,7 @@ add left right = do
 
   extLeftUpper <- T.cppCast (upper left) T.Signed64
   extRightUpper <- T.cppCast (upper right) T.Signed64
-  tmp_h <- T.cppAdd extLeftLower extRightLower
+  tmp_h <- T.cppAdd extLeftUpper extRightUpper
 
   notLeftUpper <- T.cppNot (hasInt32UpperBound left)
   notRightUpper <- T.cppNot (hasInt32UpperBound right)
@@ -68,12 +68,12 @@ add left right = do
     -- e = includesInfiniteAndNan
     leftInfNan  <- canBeInfiniteOrNan left
     rightInfNan <- canBeInfiniteOrNan right
-    infNanCond <- T.cppOr leftInfNan rightInfNan
+    infNanCond <- T.cppAnd leftInfNan rightInfNan
     includesInfFlag <- includesInfinityAndNan
     T.cppCond infNanCond includesInfFlag e3
 
   fractFlag <- T.cppOr (canHaveFractionalPart left) (canHaveFractionalPart right)
-  negZeroFlag <- T.cppOr (canBeNegativeZero left) (canBeNegativeZero right)
+  negZeroFlag <- T.cppAnd (canBeNegativeZero left) (canBeNegativeZero right)
 
   result <- resultRange T.Double "result"
   setRange l h fractFlag negZeroFlag e result

@@ -247,13 +247,13 @@ canBeFiniteNegative range = do
 isFiniteNonNegative :: Range -> D.Verif T.VNode
 isFiniteNonNegative range = do
   zero <- T.num 0
-  T.cppGte (lower range) zero
+  T.cppAnd (T.cppGte (lower range) zero) (T.cppNot $ canBeInfiniteOrNan range)
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#548
 isFiniteNegative :: Range -> D.Verif T.VNode
 isFiniteNegative range = do
   zero <- T.num 0
-  T.cppLt (upper range) zero
+  T.cppAnd (T.cppLt (upper range) zero) (T.cppNot $ canBeInfiniteOrNan range)
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#284
 -- This is not yet implemeneted
