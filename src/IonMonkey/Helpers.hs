@@ -157,11 +157,8 @@ jsValIntMax64 = T.num64 2147483647
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#136
 -- static const uint16_t MaxFiniteExponent = mozilla::FloatingPoint<double>::kExponentBias;
--- static const int kExponentBias = 0x3FF + kPhysicalSignificandSize;
--- signifSize = 52
--- 1023 + 52 = 1075
 maxFiniteExponent :: D.Verif T.VNode
-maxFiniteExponent = T.unum16 1075
+maxFiniteExponent = T.unum16 1023
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#123
 --  static const uint16_t MaxInt32Exponent = 31;
