@@ -744,9 +744,10 @@ jsSign op = do
 noopWrapper :: VNode
             -> VNode
             -> (D.Node -> D.Node -> D.Verif D.Node)
+            -> Maybe (Bool -> D.Node -> D.Node -> D.Verif D.Node)
             -> String 
             -> D.Verif VNode
-noopWrapper left right op opName = do
+noopWrapper left right op overflowOp opName = do
   unless (numBits left == numBits right) $
     error $ unwords ["Mismatched bits to operation"
                     , opName 
@@ -755,6 +756,12 @@ noopWrapper left right op opName = do
                     , "and"
                     , show $ numBits right
                     ]
+  parentsUndef <- D.or (vundef left) (vundef right)
+  canOverflow <- case overflowOp of
+                   Nothing  -> return parentsUndef
+                   Just oop -> do
+                     flow <- oop (isSigned $ vtype left) (vnode left) (vnode right)
+                     D.or parentsUndef flow 
   result <- op (vnode left) (vnode right)
   let (s, u) = case numBits left of
                  1    -> (Bool, Bool)
@@ -767,7 +774,7 @@ noopWrapper left right op opName = do
                                          , show e
                                          ]
   let ty = if isUnsigned (vtype left) && isUnsigned (vtype right) then u else s
-  newMaybeDefinedNode left right result ty
+  return $ VNode canOverflow result ty 
 
 DEFINEUNIOPCLASS(CppNeg, cppNeg)
 instance CppNeg VNode where
@@ -787,46 +794,57 @@ DEFINEBINOPCLASS(CppOr, cppOr)
 instance CppOr VNode VNode where
   cppOr left right
     | (isDouble $ vtype left) || (isDouble $ vtype right) = error "No bitwise or for doubles"
-    | otherwise = noopWrapper left right D.or "or"
+    | otherwise = noopWrapper left right D.or Nothing "or"
 
 DEFINEBINOPCLASS(CppAnd, cppAnd)
 instance CppAnd VNode VNode where
   cppAnd left right
     | (isDouble $ vtype left) || (isDouble $ vtype right) = error "No bitwise and for doubles"
-    | otherwise = noopWrapper left right D.and "and"
+    | otherwise = noopWrapper left right D.and Nothing "and"
 
 DEFINEBINOPCLASS(CppSub, cppSub)
 instance CppSub VNode VNode where
   cppSub left right
-    | isDouble (vtype left) || isDouble (vtype right) = noopWrapper left right D.fpSub "sub"
-    | otherwise = noopWrapper left right D.sub "sub"
+    | isDouble (vtype left) || isDouble (vtype right) =
+        noopWrapper left right D.fpSub Nothing "sub"
+    | otherwise = noopWrapper left right D.sub (Just D.subUndef) "sub"
 
 DEFINEBINOPCLASS(CppMul, cppMul)
 instance CppMul VNode VNode where
   cppMul left right
-    | isDouble (vtype left) || isDouble (vtype right) = noopWrapper left right D.fpMul "mul"
-    | otherwise = noopWrapper left right D.mul "mul"
+    | isDouble (vtype left) || isDouble (vtype right) =
+        noopWrapper left right D.fpMul Nothing "mul"
+    | otherwise =
+        noopWrapper left right D.mul (Just D.mulUndef) "mul"
                   
 DEFINEBINOPCLASS(CppAdd, cppAdd)
 instance CppAdd VNode VNode where
   cppAdd left right
-    | isDouble (vtype left) || isDouble (vtype right) = noopWrapper left right D.fpAdd "add"
-    | otherwise = noopWrapper left right D.add "add"
+    | isDouble (vtype left) || isDouble (vtype right) =
+        noopWrapper left right D.fpAdd Nothing "add"
+    | otherwise =
+        noopWrapper left right D.add (Just D.addUndef) "add"
 
 DEFINEBINOPCLASS(CppMin, cppMin)
 instance CppMin VNode VNode where
   cppMin right left
-    | isDouble (vtype right) || isDouble (vtype left) = noopWrapper left right D.fpMin "min"
-    | isUnsigned (vtype right) && isUnsigned (vtype left) = noopWrapper left right D.umin "min"
-    | isSigned (vtype right) && isSigned (vtype left) = noopWrapper left right D.smin "min"
+    | isDouble (vtype right) || isDouble (vtype left) =
+        noopWrapper left right D.fpMin Nothing "min"
+    | isUnsigned (vtype right) && isUnsigned (vtype left)
+        = noopWrapper left right D.umin Nothing "min"
+    | isSigned (vtype right) && isSigned (vtype left) =
+        noopWrapper left right D.smin Nothing "min"
     | otherwise = error "Compiler error: Can't use std:min on a signed and unsigned"
 
 DEFINEBINOPCLASS(CppMax, cppMax)
 instance CppMax VNode VNode where
   cppMax right left
-    | isDouble (vtype right) || isDouble (vtype left) = noopWrapper left right D.fpMax "max"
-    | isUnsigned (vtype right) && isUnsigned (vtype left) = noopWrapper left right D.umax "max"
-    | isSigned (vtype right) && isSigned (vtype left) = noopWrapper left right D.smax "max"
+    | isDouble (vtype right) || isDouble (vtype left) =
+        noopWrapper left right D.fpMax Nothing "max"
+    | isUnsigned (vtype right) && isUnsigned (vtype left) =
+        noopWrapper left right D.umax Nothing "max"
+    | isSigned (vtype right) && isSigned (vtype left) =
+        noopWrapper left right D.smax Nothing "max" 
     | otherwise = error "Compiler error: Can't use std:max on a signed and unsigned"
 
 cppCompareWrapper :: VNode
