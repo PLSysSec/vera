@@ -511,8 +511,6 @@ jsAdd node1 node2 = do
   unless (numBits node1 == numBits node2) $ error "Widths should match in jsAdd"
   let op = getOp node1 D.add D.fpAdd
   result <- op (vnode node1) (vnode node2)
-  resultVar <- D.doubv "jsAddResult"
-  D.assign result resultVar
   newDefinedNode result $ vtype node1
 
 jsSub :: VNode -> VNode -> D.Verif VNode
