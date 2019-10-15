@@ -367,12 +367,6 @@ castFp fp sz = do
   rm <- rtn
   Z.mkFpToBv rm fp $ fromIntegral sz
 
-fpExponent :: MonadZ3 z3 => AST -> z3 AST
-fpExponent fp = Z.mkFpExp fp False
-
-fpSignificand :: MonadZ3 z3 => AST -> z3 AST
-fpSignificand = Z.mkFpSig
-
 bvSize :: MonadZ3 z3 => AST -> z3 Int
 bvSize bv = do
   sort <- Z.getSort bv

@@ -5,19 +5,19 @@
 
 packages:
 - completed:
-    size: 68774
-    url: https://github.com/PLSysSec/haskell-z3/archive/261190bdda7ea9f09b08ad219216ecf55955df55.tar.gz
+    size: 68833
+    url: https://github.com/PLSysSec/haskell-z3/archive/7f8765bd127d9883e56d6fe69bd4824ecf0083e4.tar.gz
     cabal-file:
       size: 4116
       sha256: 980e6e2d63104c25a8660c2f50c6dda760a9c600cc001c9179d618ceb1cf7850
     name: z3
     version: '408.0'
-    sha256: e311e66ad73f16a8c4e06179dfb8c973750f2ad421bd7db1a1fe935901e75b4b
+    sha256: 0d9d20b154e2b331ae1d29fe94d78d3b241e22e1453161eaa7b31f742be4a115
     pantry-tree:
       size: 1525
-      sha256: 68e8f806b7b2d532ef7d38213ac4ae68a7f79aae541cb631d0cd9feb221ea7ff
+      sha256: d8e75857f2c2ce1596755dd2168b324cd576bddbfb4debc3dd6e2d3e9d906b71
   original:
-    url: https://github.com/PLSysSec/haskell-z3/archive/261190bdda7ea9f09b08ad219216ecf55955df55.tar.gz
+    url: https://github.com/PLSysSec/haskell-z3/archive/7f8765bd127d9883e56d6fe69bd4824ecf0083e4.tar.gz
 snapshots:
 - completed:
     size: 524127

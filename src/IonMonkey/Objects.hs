@@ -112,6 +112,7 @@ operandWithRange name ty range = do
 
   -- For doubles, its complicated AF because there are a lot of flags
   then do
+    T.fpnum 4.5 >>= T.getFpExponent
     -- If the range doesn't include inf or nan, it shouldnt be inf or nan
     opIsNan <- T.isNan op
     opIsInf <- T.isInf op
