@@ -197,6 +197,13 @@ fpTest = benchTestCase "fp" $ do
     mins <- D.fpMin fp1 fp2
     D.doubv "mins" >>= D.assign mins
 
+    huge <- M.mkFpFromDouble 2428336115282161338649327383529398633303008548815174401564765512173630356506510622720.0 doubSort
+
+    small <- M.mkFpFromDouble (-2428336115282161338649327383529398633303008548815174401564765512173630356506510622720.0) doubSort
+
+    notNegZ <- D.fpAdd huge small
+    D.doubv "notNegZ" >>= D.assign notNegZ
+
     D.runSolver
 
   vtest r $ Map.fromList [ ("fourFive", -4.2)
@@ -210,7 +217,7 @@ fpTest = benchTestCase "fp" $ do
                          , ("fourFiveIsPos", 0)
                          , ("zeroIsZero", 1)
                          , ("abs", 4)
-                         , ("adds", -8.200000000000001)
+                         , ("adds", -8.2)
                          , ("muls", 0/0)
                          , ("negs", 4)
                          , ("eqs", 0)
@@ -221,6 +228,7 @@ fpTest = benchTestCase "fp" $ do
                          , ("maxs", -4.0)
                          , ("mins", -4.2)
                          , ("subs", -0.20000000000000018)
+                         , ("notNegZ", 0.0)
                          ]
 
 

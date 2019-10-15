@@ -148,8 +148,8 @@ getIntModel str = do
               let maybeHexVal = drop 2 strVal
                   val = case maybeHexVal of
                           -- Negative 0
-                          '_':' ':'-':'z':'e':'r':'o':_ -> Just (read "-0" :: Double)
-                          '_':' ':'+':'z':'e':'r':'o':_ -> Just (read "0" :: Double)
+                          '_':' ':'-':'z':'e':'r':'o':_ -> Just (-0.0)
+                          '_':' ':'+':'z':'e':'r':'o':_ -> Just (0.0)
                           '_':' ':'N':'a':'N':_         -> Just $ 0 / 0
                           '_':' ':'-':_                 -> Just $ negate $ 1 / 0
                           '_':' ':'+':_                 -> Just $ 1 / 0

@@ -24,12 +24,34 @@ vtest result expectedVars = case result of
                                    , "in"
                                    , show actualVars
                                    ]
-        Just actualVal -> unless (actualVal == expectedVal ||
-                                 (isNaN actualVal && isNaN expectedVal)) $
-                          error $ unwords ["Expected"
+        Just actualVal -> do
+          case expectedVal of
+            -0.0 -> case actualVal of
+                    -0.0 -> return ()
+                    _  -> error $ unwords [ "Expected"
+                                          , show expectedVar
+                                          , "to be negative zero but got"
+                                          , show actualVal
+                                          ]
+            _ -> return ()
+
+          case actualVal of
+            -0.0 -> case expectedVal of
+                    -0.0 -> return ()
+                    _  -> error $ unwords [ "Expected"
                                           , show expectedVar
                                           , "to be"
                                           , show expectedVal
-                                          , "but got"
-                                          , show actualVal
+                                          , "but got negative zero"
                                           ]
+            _ -> return ()
+
+          unless (actualVal == expectedVal ||
+                  (isNaN actualVal && isNaN expectedVal)) $
+            error $ unwords ["Expected"
+                            , show expectedVar
+                            , "to be"
+                            , show expectedVal
+                            , "but got"
+                            , show actualVal
+                            ]

@@ -279,6 +279,9 @@ rtp = Z.mkFpRtp
 rtz :: MonadZ3 z3 => z3 AST
 rtz = Z.mkFpRtz
 
+rtntte :: MonadZ3 z3 => z3 AST
+rtntte = Z.mkFpRoundToNearestTiesToEven
+
 isInf :: MonadZ3 z3 => AST -> z3 AST
 isInf a = Z.mkFpIsInf a >>= cmpWrapper
 
@@ -301,8 +304,8 @@ rmWrapper :: MonadZ3 z3
           -> z3 AST
 rmWrapper op a b = do
   -- In the future we will get the current rounding mode from the monad
-  rtn_ <- rtn
-  op rtn_ a b
+  rm <- rtntte
+  op rm a b
 
 fpAbs :: MonadZ3 z3 => AST -> z3 AST
 fpAbs = Z.mkFpAbs
@@ -358,13 +361,13 @@ fpCeil toRound = do
 
 castBv :: MonadZ3 z3 => AST -> z3 AST
 castBv bv = do
-  rm <- rtn
+  rm <- rtntte
   doubSort <- Z.mkDoubleSort
   Z.mkBvToFp rm bv doubSort
 
 castFp :: MonadZ3 z3 => AST -> Int -> z3 AST
 castFp fp sz = do
-  rm <- rtn
+  rm <- rtntte
   Z.mkFpToBv rm fp $ fromIntegral sz
 
 bvSize :: MonadZ3 z3 => AST -> z3 Int

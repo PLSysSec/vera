@@ -13,7 +13,7 @@ ionMonkeyTests :: BenchTest
 ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ fpAddTest
                                                    , fpMulTest
                                                    , fpSubTest
-                                                   , addTest
+         --                                          , addTest
                                                    , andTest
                                                    , notTest
                                                    , lshTest
@@ -35,74 +35,83 @@ ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ fpAddTest
 fpAddTest :: BenchTest
 fpAddTest = benchTestCase "fpadd" $ do
 
-  (c0, c2, c3) <- T.evalVerif Nothing $ do
+  (c0, c1, c2, c3, c4) <- T.evalVerif Nothing $ do
 
     leftRange <- inputRange T.Double "left start range"
     rightRange <- inputRange T.Double "right start range"
     resultRange <- add leftRange rightRange
     c0 <- verifyConsistent
+    c1 <- verifySaneRange resultRange
+    c2 <- verifyDefinedResult resultRange
 
     left <- operandWithRange "left" T.Double leftRange
     right <- operandWithRange "right" T.Double rightRange
     result <- T.jsAdd left right
 
---    c1 <- verifyInt32Bounds result resultRange
-    c2 <- verifyInfNan result resultRange
-    c3 <- verifyNegZero result resultRange
-
-    return (c0, c2, c3)
+    c3 <- verifyInfNan result resultRange
+    c4 <- verifyNegZero result resultRange
+    return (c0, c1, c2, c3, c4)
 
   Verified @=? c0
+  Verified @=? c1
   Verified @=? c2
   Verified @=? c3
+  Verified @=? c4
 
 fpMulTest :: BenchTest
 fpMulTest = benchTestCase "fpmul" $ do
 
-  (c0, c1, c2, c3) <- T.evalVerif Nothing $ do
+  (c0, c1, c2, c3, c4) <- T.evalVerif Nothing $ do
 
     leftRange <- inputRange T.Double "left start range"
     rightRange <- inputRange T.Double "right start range"
     resultRange <- mul leftRange rightRange
     c0 <- verifyConsistent
     c1 <- verifySaneRange resultRange
+    c2 <- verifyDefinedResult resultRange
 
     left <- operandWithRange "left" T.Double leftRange
     right <- operandWithRange "right" T.Double rightRange
     result <- T.jsMul left right
 
-    c2 <- verifyInfNan result resultRange
-    c3 <- verifyNegZero result resultRange
+    c3 <- verifyInfNan result resultRange
+    c4 <- verifyNegZero result resultRange
 
-    return (c0, c1, c2, c3)
+    return (c0, c1, c2, c3, c4)
 
   Verified @=? c0
   Verified @=? c1
   Verified @=? c2
   Verified @=? c3
+  Verified @=? c4
 
 
 fpSubTest :: BenchTest
 fpSubTest = benchTestCase "fpsub" $ do
 
-  (c0, c1, c2) <- T.evalVerif Nothing $ do
+  (c0, c1, c2, c3, c4) <- T.evalVerif Nothing $ do
 
     leftRange <- inputRange T.Double "left start range"
     rightRange <- inputRange T.Double "right start range"
     resultRange <- sub leftRange rightRange
     c0 <- verifyConsistent
+    c1 <- verifySaneRange resultRange
+    c2 <- verifyDefinedResult resultRange
 
     left <- operandWithRange "left" T.Double leftRange
     right <- operandWithRange "right" T.Double rightRange
     result <- T.jsSub left right
-    c1 <- verifyInfNan result resultRange
-    c2 <- verifyNegZero result resultRange
+    c3 <- verifyInfNan result resultRange
+    c4 <- verifyNegZero result resultRange
 
-    return (c0, c1, c2)
+    return (c0, c1, c2, c3, c4)
 
   Verified @=? c0
   Verified @=? c1
   Verified @=? c2
+  Verified @=? c3
+  Verified @=? c4
+
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#251
 addTest :: BenchTest
@@ -388,94 +397,104 @@ xorTest = benchTestCase "xor" $ do
 
 fpMinTest :: BenchTest
 fpMinTest = benchTestCase "fpmin" $ do
-  (c0, c1, c2, c3, c4) <- T.evalVerif Nothing $ do
+  (c0, c1, c2, c3, c4, c5) <- T.evalVerif Nothing $ do
 
     leftRange <- inputRange T.Double "left start range"
     rightRange <- inputRange T.Double "right start range"
     resultRange <- min leftRange rightRange
     c0 <- verifyConsistent
     c1 <- verifySaneRange resultRange
+    c2 <- verifyDefinedResult resultRange
 
     left <- operandWithRange "left" T.Double leftRange
     right <- operandWithRange "right" T.Double rightRange
     result <- T.jsMin left right
-    c2 <- verifyInt32Bounds result resultRange
-    c3 <- verifyInfNan result resultRange
-    c4 <- verifyNegZero result resultRange
+    c3 <- verifyInt32Bounds result resultRange
+    c4 <- verifyInfNan result resultRange
+    c5 <- verifyNegZero result resultRange
 
-    return (c0, c1, c2, c3, c4)
+    return (c0, c1, c2, c3, c4, c5)
 
   Verified @=? c0
   Verified @=? c1
   Verified @=? c2
   Verified @=? c3
   Verified @=? c4
+  Verified @=? c5
 
 fpMaxTest :: BenchTest
 fpMaxTest = benchTestCase "fpmax" $ do
-  (c0, c1, c2, c3, c4) <- T.evalVerif Nothing $ do
+  (c0, c1, c2, c3, c4, c5) <- T.evalVerif Nothing $ do
 
     leftRange <- inputRange T.Double "left start range"
     rightRange <- inputRange T.Double "right start range"
     resultRange <- max leftRange rightRange
     c0 <- verifyConsistent
     c1 <- verifySaneRange resultRange
+    c2 <- verifyDefinedResult resultRange
 
     left <- operandWithRange "left" T.Double leftRange
     right <- operandWithRange "right" T.Double rightRange
     result <- T.jsMax left right
-    c2 <- verifyInt32Bounds result resultRange
-    c3 <- verifyInfNan result resultRange
-    c4 <- verifyNegZero result resultRange
-    return (c0, c1, c2, c3, c4)
+    c3 <- verifyInt32Bounds result resultRange
+    c4 <- verifyInfNan result resultRange
+    c5 <- verifyNegZero result resultRange
+    return (c0, c1, c2, c3, c4, c5)
 
   Verified @=? c0
   Verified @=? c1
   Verified @=? c2
   Verified @=? c3
   Verified @=? c4
+  Verified @=? c5
 
 fpAbsTest :: BenchTest
 fpAbsTest = benchTestCase "fpabs" $ do
-  (c0, c1, c2, c3, c4) <- T.evalVerif Nothing $ do
+  (c0, c1, c2, c3, c4, c5) <- T.evalVerif Nothing $ do
 
     inputRange <- inputRange T.Double "left start range"
     resultRange <- abs inputRange
     c0 <- verifyConsistent
     c1 <- verifySaneRange resultRange
+    c2 <- verifyDefinedResult resultRange
 
     input <- operandWithRange "input" T.Double inputRange
     result <- T.jsAbs input
-    c2 <- verifyInt32Bounds result resultRange
-    c3 <- verifyInfNan result resultRange
-    c4 <- verifyNegZero result resultRange
-    return (c0, c1, c2, c3, c4)
+    c3 <- verifyInt32Bounds result resultRange
+    c4 <- verifyInfNan result resultRange
+    c5 <- verifyNegZero result resultRange
+    return (c0, c1, c2, c3, c4, c5)
 
+  Verified @=? c0
+  Verified @=? c1
   Verified @=? c2
-  Verified @=? c2
-  Verified @=? c2
-  Verified @=? c2
+  Verified @=? c3
+  Verified @=? c4
+  Verified @=? c5
 
 fpSignTest :: BenchTest
 fpSignTest = benchTestCase "fpsign" $ do
-  (c0, c1, c2, c3, c4) <- T.evalVerif Nothing $ do
+  (c0, c1, c2, c3, c4, c5) <- T.evalVerif Nothing $ do
 
     inputRange <- inputRange T.Double "left start range"
     resultRange <- sign inputRange
     c0 <- verifyConsistent
     c1 <- verifySaneRange resultRange
+    c2 <- verifyDefinedResult resultRange
 
     input <- operandWithRange "input" T.Double inputRange
     result <- T.jsSign input
-    c2 <- verifyInt32Bounds result resultRange
-    c3 <- verifyInfNan result resultRange
-    c4 <- verifyNegZero result resultRange
-    return (c0, c1, c2, c3, c4)
+    c3 <- verifyInt32Bounds result resultRange
+    c4 <- verifyInfNan result resultRange
+    c5 <- verifyNegZero result resultRange
+    return (c0, c1, c2, c3, c4, c5)
 
+  Verified @=? c0
+  Verified @=? c1
   Verified @=? c2
-  Verified @=? c2
-  Verified @=? c2
-  Verified @=? c2
+  Verified @=? c3
+  Verified @=? c4
+  Verified @=? c5
 
 fpFloorTest :: BenchTest
 fpFloorTest = benchTestCase "fpfloor" $ do
