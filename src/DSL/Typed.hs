@@ -327,6 +327,14 @@ vassign n1 n2 = do
                                                   , show $ vtype n1
                                                   , show $ vtype n2
                                                   ]
+  when (not $ isDouble $ vtype n1) $ do
+    sort1 <- D.bvSize $ vnode n1
+    sort2 <- D.bvSize $ vnode n2
+    unless (sort1 == sort2) $ error $ unwords [ "Mismatched widths to assignment:"
+                                              , show sort1
+                                              , "and"
+                                              , show sort2
+                                              ]
   D.eq (vnode n1) (vnode n2) >>= D.assert
   D.eq (vundef n1) (vundef n2) >>= D.assert
 
@@ -1101,7 +1109,16 @@ cppXor n1 n2 = do
 getFpExponent :: VNode -> D.Verif VNode
 getFpExponent node = do
   unless (isDouble $ vtype node) $ error "Cannot get exponent of non-double"
-  -- sig <- D.fpSignificand $ vnode node
-  -- expWidth <- D.bvSize exp
-  -- sigWidth <- D.bvSize sig
-  error ""
+  bv <- D.ieeeBv $ vnode node
+  -- get the exponent from the bitvector
+  exp <- D.slice bv 62 52 >>= D.exponent
+  -- get the significand
+  sig <- D.slice bv 51 0
+  -- if the significand is zero, the max exponent is just the exponent.
+  -- otherwise, it is the exponent + 1 
+  sigZero <- D.significandConst 0
+  sigIsZero <- D.iseq sig sigZero
+  expPlusOne <- D.exponentConst 1 >>= D.add exp 
+  result <- D.cond sigIsZero exp expPlusOne
+  castResult <- D.uext result 5
+  return $ VNode (vundef node) castResult Unsigned16

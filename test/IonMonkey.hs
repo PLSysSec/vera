@@ -11,25 +11,25 @@ import           Test.Tasty.HUnit
 
 ionMonkeyTests :: BenchTest
 ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ fpAddTest
-                                                   -- , fpMulTest
-                                                   -- , fpSubTest
-                                                   -- , addTest
-                                                   -- , andTest
-                                                   -- , notTest
-                                                   -- , lshTest
-                                                   -- , rshTest
-                                                   -- , urshTest
-                                                   -- , lsh'Test
-                                                   -- , rsh'Test
-                                                   -- , ursh'Test
-                                                   -- , orTest
-                                                   -- , xorTest
-                                                   -- , fpMinTest
-                                                   -- , fpMaxTest
-                                                   -- , fpAbsTest
-                                                   -- , fpSignTest
-                                                   -- , fpFloorTest
-                                                   -- , fpCeilTest
+                                                   , fpMulTest
+                                                   , fpSubTest
+                                                   , addTest
+                                                   , andTest
+                                                   , notTest
+                                                   , lshTest
+                                                   , rshTest
+                                                   , urshTest
+                                                   , lsh'Test
+                                                   , rsh'Test
+                                                   , ursh'Test
+                                                   , orTest
+                                                   , xorTest
+                                                   , fpMinTest
+                                                   , fpMaxTest
+                                                   , fpAbsTest
+                                                   , fpSignTest
+                                                   , fpFloorTest
+                                                   , fpCeilTest
                                                    ]
 
 fpAddTest :: BenchTest

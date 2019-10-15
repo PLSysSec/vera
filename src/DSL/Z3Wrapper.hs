@@ -371,3 +371,8 @@ bvSize :: MonadZ3 z3 => AST -> z3 Int
 bvSize bv = do
   sort <- Z.getSort bv
   Z.getBvSortSize sort
+
+ieeeBv :: MonadZ3 z3 => AST -> z3 AST
+ieeeBv = Z.mkFpIEEEBv
+
+

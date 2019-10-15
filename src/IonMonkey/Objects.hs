@@ -14,13 +14,14 @@ module IonMonkey.Objects ( Range
                          , resultRange
                          , operandWithRange
                          ) where
-import           Control.Monad         (unless, when)
-import           Data.List             (intersperse, isInfixOf)
-import qualified Data.Map.Strict       as M
-import           Data.Maybe            (catMaybes)
-import qualified DSL.DSL               as D
-import           DSL.Typed             as T
-import qualified DSL.Z3Wrapper         as D
+import           Control.Monad              (unless, when)
+import           Control.Monad.State.Strict (liftIO)
+import           Data.List                  (intersperse, isInfixOf)
+import qualified Data.Map.Strict            as M
+import           Data.Maybe                 (catMaybes)
+import qualified DSL.DSL                    as D
+import           DSL.Typed                  as T
+import qualified DSL.Z3Wrapper              as D
 import           IonMonkey.Helpers
 import           IonMonkey.ObjectTypes
 
@@ -112,7 +113,7 @@ operandWithRange name ty range = do
 
   -- For doubles, its complicated AF because there are a lot of flags
   then do
-    T.fpnum 4.5 >>= T.getFpExponent
+
     -- If the range doesn't include inf or nan, it shouldnt be inf or nan
     opIsNan <- T.isNan op
     opIsInf <- T.isInf op
@@ -162,7 +163,9 @@ operandWithRange name ty range = do
     -- absolute value and looking at the position of the highest bit.  All
     -- exponent computation have to be over-estimations of the actual result. On
     -- the Int32 this over approximation is rectified.
-
+    exp <- T.getFpExponent op
+    maxExpIsExp <- T.cppEq (maxExponent range) exp
+    T.cppXor opIsInfOrNan maxExpIsExp >>= T.vassert
 
   -- For int32s, just make sure the operand is within the range
   else do

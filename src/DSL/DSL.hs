@@ -4,6 +4,9 @@ module DSL.DSL ( i64
                , i16
                , i8
                , i1
+               , significandConst
+               , exponentConst
+               , exponent
                , i64c
                , i64max
                , i64min
@@ -64,7 +67,8 @@ import qualified Data.Map.Strict            as M
 import           Data.Maybe                 (catMaybes)
 import           DSL.Z3Wrapper
 import qualified DSL.Z3Wrapper              as Z3
-import           Prelude                    hiding (map, max, min, not)
+import           Prelude                    hiding (exponent, map, max, min,
+                                             not)
 import           Text.Printf
 import qualified Z3.Monad                   as Z
 
@@ -194,6 +198,17 @@ i1 :: Verif Z3.Sort
 i1 = Z.mkBvSort 1
 
 -- Integer consts
+
+significandConst :: Integer -> Verif Z3.Node
+significandConst val = Z.mkBitvector 52 val
+
+exponentConst :: Integer -> Verif Z3.Node
+exponentConst val = Z.mkBitvector 11 val
+
+exponent :: Z3.Node -> Verif Z3.Node
+exponent expVal = do
+  _1023 <- Z.mkBitvector 11 1023
+  Z3.sub expVal _1023
 
 -- | 64-bit constant
 i64c :: Integer -> Verif Z3.Node
