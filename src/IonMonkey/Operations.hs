@@ -677,7 +677,7 @@ floor op = do
   -- Create the results
   ifResult <- exponentImpliedByInt32Bounds op
   elseIfResult <- do
-    one16 <- T.unum 1
+    one16 <- T.unum16 1
     T.cppAdd (maxExponent op) one16
   let elseResult = maxExponent op
 
@@ -712,7 +712,7 @@ ceil op = do
   -- Result
   ifResult <- exponentImpliedByInt32Bounds op
   elseIfResult <- do
-    one16 <- T.unum 1
+    one16 <- T.unum16 1
     T.cppAdd (maxExponent op) one16
   let elseResult = maxExponent op
 

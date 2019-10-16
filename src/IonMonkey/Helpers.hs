@@ -253,13 +253,13 @@ isFiniteNegative range = do
   T.cppAnd (T.cppLt (upper range) zero) (T.cppNot $ canBeInfiniteOrNan range)
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#284
--- This is not yet implemeneted
 exponentImpliedByInt32Bounds :: Range -> D.Verif T.VNode
 exponentImpliedByInt32Bounds range = do
   absLower <- T.cppAbs $ lower range
   absUpper <- T.cppAbs $ upper range
   max <- T.cppMax absLower absUpper
-  error "exponent implied by int 32 bounds not implemented"
+  maxToFp <- T.cppCast max T.Double
+  T.getFpExponent maxToFp
   -- uint32_t max = Max(mozilla::Abs(lower()), mozilla::Abs(upper()));
   -- uint16_t result = mozilla::FloorLog2(max);)
   -- inline uint_fast8_t FloorLog2(const T aValue))
@@ -267,7 +267,6 @@ exponentImpliedByInt32Bounds range = do
   -- FloorLog2(2..3) is 1;
   -- FloorLog2(4..7) is 2;
   -- FloorLog2(8..15) is 3; and so on.)
-  T.unum16 0
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#488
 hasInt32Bounds :: Range -> D.Verif T.VNode

@@ -500,32 +500,52 @@ fpSignTest = benchTestCase "fpsign" $ do
 
 fpFloorTest :: BenchTest
 fpFloorTest = benchTestCase "fpfloor" $ do
-  (c2) <- T.evalVerif Nothing $ do
+  (c0, c1, c2, c3, c4, c5) <- T.evalVerif Nothing $ do
 
     inputRange <- inputRange T.Double "left start range"
     resultRange <- floor inputRange
+    c0 <- verifyConsistent
+    c1 <- verifySaneRange resultRange
+    c2 <- verifyDefinedResult resultRange
 
     input <- operandWithRange "input" T.Double inputRange
     result <- T.jsFloor input
+    c3 <- verifyInt32Bounds result resultRange
+    c4 <- verifyInfNan result resultRange
+    c5 <- verifyNegZero result resultRange
 
-    c2 <- verifyNegZero result resultRange
-    return c2
+    return (c0, c1, c2, c3, c4, c5)
 
+  Verified @=? c0
+  Verified @=? c1
   Verified @=? c2
+  Verified @=? c3
+  Verified @=? c4
+  Verified @=? c5
 
 fpCeilTest :: BenchTest
 fpCeilTest = benchTestCase "fpceil" $ do
 
-  (c2) <- T.evalVerif Nothing $ do
+  (c0, c1, c2, c3, c4, c5) <- T.evalVerif Nothing $ do
 
     inputRange <- inputRange T.Double "left start range"
     resultRange <- ceil inputRange
+    c0 <- verifyConsistent
+    c1 <- verifySaneRange resultRange
+    c2 <- verifyDefinedResult resultRange
 
     input <- operandWithRange "input" T.Double inputRange
     result <- T.jsCeil input
+    c3 <- verifyInt32Bounds result resultRange
+    c4 <- verifyInfNan result resultRange
+    c5 <- verifyNegZero result resultRange
 
-    c2 <- verifyNegZero result resultRange
-    return c2
+    return (c0, c1, c2, c3, c4, c5)
 
+  Verified @=? c0
+  Verified @=? c1
   Verified @=? c2
+  Verified @=? c3
+  Verified @=? c4
+  Verified @=? c5
 
