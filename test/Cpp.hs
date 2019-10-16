@@ -2,6 +2,7 @@ module Cpp (cppTests) where
 import           BenchUtils
 import           Control.Monad.State.Strict (liftIO)
 import qualified Data.Map                   as M
+import           DSL.DSL                    as D
 import qualified DSL.Typed                  as T
 import           IonMonkey.Objects
 import           IonMonkey.Operations
@@ -16,6 +17,7 @@ cppTests = benchTestGroup "C++ tests" [ cppMinTest
                                       , cppShlTest
                                       , cppShrTest
                                       , fpTest
+                                      , cppOverflowTest
                                       ]
 
 trueBit :: Double
@@ -26,6 +28,19 @@ falseBit = 0
 
 negOne :: Double
 negOne = 4294967295
+
+cppOverflowTest :: BenchTest
+cppOverflowTest = benchTestCase "overflow test" $ do
+  r <- T.evalVerif Nothing $ do
+    _1 <- T.num 0
+    big <- T.num 270205441
+    result <- T.cppAdd _1 big
+    let undef = T.vundef result
+    D.i1v "undef_bit" >>= D.assign undef
+    T.runSolver
+
+  vtest r $ M.fromList [ ("undef_bit", 0)
+                       ]
 
 cppMinTest :: BenchTest
 cppMinTest = benchTestCase "min test" $ do

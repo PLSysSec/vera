@@ -4,6 +4,7 @@ module DSL.DSL ( i64
                , i16
                , i8
                , i1
+               , getNextCt
                , significandConst
                , exponentConst
                , exponent
@@ -82,6 +83,7 @@ Low-level DSL for manipulating SMT variables.
 -- to keep track of more things
 data VerifState = VerifState { vars         :: M.Map String Z3.Node
                              , solverResult :: SMTResult
+                             , ctr          :: Int
                              }
 
 isSat :: SMTResult -> Bool
@@ -110,6 +112,7 @@ getVars = vars `liftM` get
 emptyVerifState :: VerifState
 emptyVerifState = VerifState { vars = M.empty
                              , solverResult = SolverFailed
+                             , ctr = 0
                              }
 
 -- | Run verification computation
@@ -175,6 +178,14 @@ getIntModel str = do
     -- https://stackoverflow.com/questions/5921573/convert-a-string-representing-a-binary-number-to-a-base-10-string-haskell
     toDec :: String -> Integer
     toDec = foldl' (\acc x -> acc * 2 + (fromIntegral $ digitToInt x)) 0
+
+getNextCt :: Verif Int
+getNextCt = do
+  s0 <- get
+  let ct = ctr s0
+  put $ s0 { ctr = ct + 1 }
+  return ct
+
 --
 -- Ints and stuff
 --

@@ -1,7 +1,7 @@
 module DSL.Z3Wrapper where
 
 import           Control.Monad.State.Strict (liftIO, unless)
-import           Prelude                    hiding (or)
+import           Prelude                    hiding (not, or)
 import           Z3.Monad                   (MonadZ3)
 import qualified Z3.Monad                   as Z
 
@@ -380,10 +380,10 @@ ieeeBv :: MonadZ3 z3 => AST -> z3 AST
 ieeeBv = Z.mkFpIEEEBv
 
 addOverflows :: MonadZ3 z3 => AST -> AST -> Bool -> z3 AST
-addOverflows a b s = Z.mkBvaddNoOverflow a b s >>= cmpWrapper
+addOverflows a b s = Z.mkBvaddNoOverflow a b s >>= cmpWrapper >>= not
 
 addUnderflows :: MonadZ3 z3 => AST -> AST -> z3 AST
-addUnderflows a b = Z.mkBvaddNoUnderflow a b >>= cmpWrapper
+addUnderflows a b = Z.mkBvaddNoUnderflow a b >>= cmpWrapper >>= not
 
 addUndef :: MonadZ3 z3 => Bool -> AST -> AST -> z3 AST
 addUndef signed a1 a2 = do
@@ -392,10 +392,10 @@ addUndef signed a1 a2 = do
   or overflows underflows
 
 mulOverflows :: MonadZ3 z3 => AST -> AST -> Bool -> z3 AST
-mulOverflows a b s = Z.mkBvmulNoOverflow a b s >>= cmpWrapper
+mulOverflows a b s = Z.mkBvmulNoOverflow a b s >>= cmpWrapper >>= not
 
 mulUnderflows :: MonadZ3 z3 => AST -> AST -> z3 AST
-mulUnderflows a b = Z.mkBvmulNoUnderflow a b >>= cmpWrapper
+mulUnderflows a b = Z.mkBvmulNoUnderflow a b >>= cmpWrapper >>= not
 
 mulUndef :: MonadZ3 z3 => Bool -> AST -> AST -> z3 AST
 mulUndef signed a1 a2 = do
@@ -404,10 +404,10 @@ mulUndef signed a1 a2 = do
   or overflows underflows
 
 subOverflows :: MonadZ3 z3 => AST -> AST -> z3 AST
-subOverflows a b = Z.mkBvsubNoOverflow a b >>= cmpWrapper
+subOverflows a b = Z.mkBvsubNoOverflow a b >>= cmpWrapper >>= not
 
 subUnderflows :: MonadZ3 z3 => AST -> AST -> z3 AST
-subUnderflows a b = Z.mkBvsubNoUnderflow a b >>= cmpWrapper
+subUnderflows a b = Z.mkBvsubNoUnderflow a b >>= cmpWrapper >>= not
 
 subUndef :: MonadZ3 z3 => Bool -> AST -> AST -> z3 AST
 subUndef _ a1 a2 = do

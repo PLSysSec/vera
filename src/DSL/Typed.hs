@@ -33,7 +33,7 @@ module DSL.Typed ( vassert
                  , fpnum
                  , named
                  -- * Types 
-                 , VNode
+                 , VNode(..)
                  , Type(..)
                  , vtype
                  -- * Min/Max constants 
@@ -760,7 +760,10 @@ noopWrapper left right op overflowOp opName = do
   canOverflow <- case overflowOp of
                    Nothing  -> return parentsUndef
                    Just oop -> do
+                     ct <- D.getNextCt
+                     canOverflow <- D.i1v $ opName ++ "_canOverflow_" ++ show ct
                      flow <- oop (isSigned $ vtype left) (vnode left) (vnode right)
+                     D.assign canOverflow flow
                      D.or parentsUndef flow 
   result <- op (vnode left) (vnode right)
   let (s, u) = case numBits left of
