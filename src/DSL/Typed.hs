@@ -629,11 +629,8 @@ jsMul :: VNode
       -> D.Verif VNode
 jsMul node1 node2 = do
   unless (vtype node1 == vtype node2) $ error "Types should match in jsMul"
-  unless (isDouble $ vtype node1) $ error "Expected double type for jsMul"
   let op = getOp node1 D.mul D.fpMul
   result <- op (vnode node1) (vnode node2)
-  resultVar <- D.doubv "jsMulResult"
-  D.assign result resultVar                        
   newDefinedNode result $ vtype node1
 
 -- | https://es5.github.io/#x15.8.2.12
@@ -646,19 +643,21 @@ jsMin :: VNode
       -> D.Verif VNode
 jsMin node1 node2 = do
   unless (vtype node1 == vtype node2) $ error "Types should match"
-  -- If anything is Nan the result is Nan
-  leftIsNan <- D.isNan $ vnode node1
-  rightIsNan <- D.isNan $ vnode node2
-  eitherIsNan <- D.or leftIsNan rightIsNan 
-  nan <- D.nan
   -- Actually do the operation
   let op = getOp node1 D.smin D.fpMin 
   result <- op (vnode node1) (vnode node2)
-  -- Return Nan or the result
-  nanOrResult <- D.cond eitherIsNan nan result
-  resultVar <- D.doubv "jsMinResult"
-  D.assign nanOrResult resultVar
-  newDefinedNode nanOrResult $ vtype node1  
+  -- If its 32 bits, thats all, otherwise we have to handle nans
+  if is32Bits $ vtype node1
+  then newDefinedNode result $ vtype node1
+  else do 
+    -- If anything is Nan the result is Nan
+    leftIsNan <- D.isNan $ vnode node1
+    rightIsNan <- D.isNan $ vnode node2
+    eitherIsNan <- D.or leftIsNan rightIsNan 
+    nan <- D.nan
+    -- Return Nan or the result
+    nanOrResult <- D.cond eitherIsNan nan result
+    newDefinedNode nanOrResult $ vtype node1  
 
 -- | https://es5.github.io/#x15.8.2.11
 -- If no arguments are given, the result is −∞.
@@ -670,19 +669,18 @@ jsMax :: VNode
       -> D.Verif VNode                    
 jsMax node1 node2 = do
   unless (vtype node1 == vtype node2) $ error "Types should match: jsmax"
-  -- If anything is Nan the result is Nan 
-  leftIsNan <- D.isNan $ vnode node1
-  rightIsNan <- D.isNan $ vnode node2
-  eitherIsNan <- D.or leftIsNan rightIsNan 
-  nan <- D.nan
-  -- Otherwise its the operation
   let op = getOp node1 D.smax D.fpMax
   result <- op (vnode node1) (vnode node2)
-  -- Return Nan or the result
-  nanOrResult <- D.cond eitherIsNan nan result
-  resultVar <- D.doubv "jsMaxResult"
-  D.assign nanOrResult resultVar  
-  newDefinedNode nanOrResult $ vtype node1    
+  if is32Bits $ vtype node1
+  then newDefinedNode result $ vtype node1
+  else do 
+    -- If anything is Nan the result is Nan 
+    leftIsNan <- D.isNan $ vnode node1
+    rightIsNan <- D.isNan $ vnode node2
+    eitherIsNan <- D.or leftIsNan rightIsNan 
+    nan <- D.nan
+    nanOrResult <- D.cond eitherIsNan nan result
+    newDefinedNode nanOrResult $ vtype node1    
                  
 -- | https://es5.github.io/#x15.8.2.1
 -- If x is NaN, the result is NaN.
@@ -761,9 +759,7 @@ noopWrapper left right op overflowOp opName = do
                    Nothing  -> return parentsUndef
                    Just oop -> do
                      ct <- D.getNextCt
-                     canOverflow <- D.i1v $ opName ++ "_canOverflow_" ++ show ct
                      flow <- oop (isSigned $ vtype left) (vnode left) (vnode right)
-                     D.assign canOverflow flow
                      D.or parentsUndef flow 
   result <- op (vnode left) (vnode right)
   let (s, u) = case numBits left of
