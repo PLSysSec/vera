@@ -39,48 +39,46 @@ add left right = do
 
   -- We have to do this the same annoying way they do in case it introduces any
   -- weirdness. How annoying
-  -- notLeftLower <- T.cppNot (hasInt32LowerBound left)
-  -- notRightLower <- T.cppNot (hasInt32LowerBound right)
-  -- hasNoLower <- T.cppOr notLeftLower notRightLower
-  -- noLower <- noInt32LowerBound
-  -- l <- T.cppCond hasNoLower noLower tmp_l
+  notLeftLower <- T.cppNot (hasInt32LowerBound left)
+  notRightLower <- T.cppNot (hasInt32LowerBound right)
+  hasNoLower <- T.cppOr notLeftLower notRightLower
+  noLower <- noInt32LowerBound
+  l <- T.cppCond hasNoLower noLower tmp_l
 
-  -- extLeftUpper <- T.cppCast (upper left) T.Signed64
-  -- extRightUpper <- T.cppCast (upper right) T.Signed64
-  -- tmp_h <- T.cppAdd extLeftUpper extRightUpper
+  extLeftUpper <- T.cppCast (upper left) T.Signed64
+  extRightUpper <- T.cppCast (upper right) T.Signed64
+  tmp_h <- T.cppAdd extLeftUpper extRightUpper
 
-  -- notLeftUpper <- T.cppNot (hasInt32UpperBound left)
-  -- notRightUpper <- T.cppNot (hasInt32UpperBound right)
-  -- hasNoUpper <- T.cppOr notLeftUpper notRightUpper
-  -- noUpper <- noInt32UpperBound
-  -- h <- T.cppCond hasNoUpper noUpper tmp_h
+  notLeftUpper <- T.cppNot (hasInt32UpperBound left)
+  notRightUpper <- T.cppNot (hasInt32UpperBound right)
+  hasNoUpper <- T.cppOr notLeftUpper notRightUpper
+  noUpper <- noInt32UpperBound
+  h <- T.cppCond hasNoUpper noUpper tmp_h
 
-  -- e <- do
-  --   -- uint16_t e = Max(lhs->max_exponent_, rhs->max_exponent_);
-  --   e1 <- T.cppMax (maxExponent left) (maxExponent right)
+  e <- do
+    -- uint16_t e = Max(lhs->max_exponent_, rhs->max_exponent_);
+    e1 <- T.cppMax (maxExponent left) (maxExponent right)
 
-  --   -- if (e <= Range::MaxFiniteExponent) ++e;
-  --   one <- T.unum16 1
-  --   e2 <- T.cppAdd e1 one
-  --   maxExp <- maxFiniteExponent
-  --   underMax <- T.cppLte e1 maxExp
-  --   e3 <- T.cppCond underMax e2 e1
+    -- if (e <= Range::MaxFiniteExponent) ++e;
+    one <- T.unum16 1
+    e2 <- T.cppAdd e1 one
+    maxExp <- maxFiniteExponent
+    underMax <- T.cppLte e1 maxExp
+    e3 <- T.cppCond underMax e2 e1
 
-  --   -- if (lhs->canBeInfiniteOrNaN() && rhs->canBeInfiniteOrNaN())
-  --   -- e = includesInfiniteAndNan
-  --   leftInfNan  <- canBeInfiniteOrNan left
-  --   rightInfNan <- canBeInfiniteOrNan right
-  --   infNanCond <- T.cppAnd leftInfNan rightInfNan
-  --   includesInfFlag <- includesInfinityAndNan
-  --   T.cppCond infNanCond includesInfFlag e3
+    -- if (lhs->canBeInfiniteOrNaN() && rhs->canBeInfiniteOrNaN())
+    -- e = includesInfiniteAndNan
+    leftInfNan  <- canBeInfiniteOrNan left
+    rightInfNan <- canBeInfiniteOrNan right
+    infNanCond <- T.cppAnd leftInfNan rightInfNan
+    includesInfFlag <- includesInfinityAndNan
+    T.cppCond infNanCond includesInfFlag e3
 
-  -- fractFlag <- T.cppOr (canHaveFractionalPart left) (canHaveFractionalPart right)
-  -- negZeroFlag <- T.cppAnd (canBeNegativeZero left) (canBeNegativeZero right)
+  fractFlag <- T.cppOr (canHaveFractionalPart left) (canHaveFractionalPart right)
+  negZeroFlag <- T.cppAnd (canBeNegativeZero left) (canBeNegativeZero right)
 
   result <- resultRange T.Double "result"
-  D.assign (T.vundef $ lower result) (T.vundef tmp_l)
-  D.assign (T.vundef $ upper result) (T.vundef tmp_l)
-  -- setRange l h fractFlag negZeroFlag e result
+  setRange l h fractFlag negZeroFlag e result
   return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#775
@@ -741,7 +739,7 @@ sign op = do
 
   -- Max(Min(op->lower_, 1), -1)
   low <- T.cppMin (lower op) one >>= T.cppMax negOne
-  -- Max(Min(op->upper_, 1)
+  -- Max(Min(op->upper_, 1), -1)
   up <- T.cppMin (upper op) one >>= T.cppMax negOne
   -- ExcludesFractionalParts is just false
   fract <- T.false

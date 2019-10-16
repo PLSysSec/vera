@@ -744,13 +744,26 @@ jsSign op =
     _1 <- D.i32c 1
     _n1 <- D.i32c (-1)
     isNeg <- D.slt (vnode op) _0
-    result <- D.cond isNeg _n1 _1
+    result' <- D.cond isNeg _n1 _1
+    -- if it's zero, return zero
+    isZero <- D.iseq (vnode op) _0
+    result <- D.cond isZero _0 result'
+    -- make a variable 
+    resultVar <- D.i32v "jsSign"
+    D.assign result resultVar
     newDefinedNode result $ vtype op 
   else do
     one <- D.double 1
     minusOne <- D.double (-1)
     isPos <- D.isPos $ vnode op
-    result <- D.cond isPos one minusOne
+    result' <- D.cond isPos one minusOne
+    -- if its pos zero return pos zero, neg zero return neg zero
+    isZero <- D.isZero $ vnode op
+    posZero <- D.fpzero True
+    negZero <- D.fpzero False
+    correctZero <- D.cond isPos posZero negZero
+    result <- D.cond isZero correctZero result'
+    -- make a variable
     resultVar <- D.doubv "jsSign"
     D.assign result resultVar
     newDefinedNode result Double
