@@ -31,13 +31,13 @@ ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ fpAddTest
                                                    , fpMaxTest
                                                    , maxTest
                                                    , fpAbsTest
-                                                   -- , absTest
+                                                   , absTest
                                                    , fpSignTest
-                                                   -- , signTest
+                                                   , signTest
                                                    , fpFloorTest
-                                                   -- , floorTest
+                                                   , floorTest
                                                    , fpCeilTest
-                                                   -- , ceilTest
+                                                   , ceilTest
                                                    ]
 
 fpAddTest :: BenchTest
@@ -66,7 +66,6 @@ fpAddTest = benchTestCase "fpadd" $ do
   Verified @=? c3
   Verified @=? c4
 
--- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#251
 addTest :: BenchTest
 addTest = benchTestCase "add" $ do
   -- For now, verify it over int 32
@@ -550,6 +549,23 @@ fpAbsTest = benchTestCase "fpabs" $ do
   Verified @=? c4
   Verified @=? c5
 
+absTest :: BenchTest
+absTest = benchTestCase "abs" $ do
+  -- For now, verify it over int 32
+  (c1, c2) <- T.evalVerif Nothing $ do
+
+    leftRange <- inputRange T.Signed "left start range"
+    resultRange <- abs leftRange
+
+    left <- operandWithRange "left" T.Signed leftRange
+    result <- T.jsAbs left
+    c1 <- verifyLowerBound result resultRange
+    c2 <- verifyUpperBound result resultRange
+    return (c1, c2)
+
+  Verified @=? c1
+  Verified @=? c2
+
 fpSignTest :: BenchTest
 fpSignTest = benchTestCase "fpsign" $ do
   (c0, c1, c2, c3, c4, c5) <- T.evalVerif Nothing $ do
@@ -573,6 +589,23 @@ fpSignTest = benchTestCase "fpsign" $ do
   Verified @=? c3
   Verified @=? c4
   Verified @=? c5
+
+signTest :: BenchTest
+signTest = benchTestCase "sign" $ do
+  -- For now, verify it over int 32
+  (c1, c2) <- T.evalVerif Nothing $ do
+
+    leftRange <- inputRange T.Signed "left start range"
+    resultRange <- sign leftRange
+
+    left <- operandWithRange "left" T.Signed leftRange
+    result <- T.jsSign left
+    c1 <- verifyLowerBound result resultRange
+    c2 <- verifyUpperBound result resultRange
+    return (c1, c2)
+
+  Verified @=? c1
+  Verified @=? c2
 
 fpFloorTest :: BenchTest
 fpFloorTest = benchTestCase "fpfloor" $ do
@@ -598,6 +631,22 @@ fpFloorTest = benchTestCase "fpfloor" $ do
   Verified @=? c3
   Verified @=? c4
   Verified @=? c5
+
+floorTest :: BenchTest
+floorTest = benchTestCase "floor" $ do
+  -- For now, verify it over int 32
+  (c1, c2) <- T.evalVerif Nothing $ do
+
+    leftRange <- inputRange T.Signed "left start range"
+    resultRange <- floor leftRange
+    left <- operandWithRange "left" T.Signed leftRange
+    result <- T.jsFloor left
+    c1 <- verifyLowerBound result resultRange
+    c2 <- verifyUpperBound result resultRange
+    return (c1, c2)
+
+  Verified @=? c1
+  Verified @=? c2
 
 fpCeilTest :: BenchTest
 fpCeilTest = benchTestCase "fpceil" $ do
@@ -625,3 +674,19 @@ fpCeilTest = benchTestCase "fpceil" $ do
   Verified @=? c4
   Verified @=? c5
 
+ceilTest :: BenchTest
+ceilTest = benchTestCase "abs" $ do
+  -- For now, verify it over int 32
+  (c1, c2) <- T.evalVerif Nothing $ do
+
+    leftRange <- inputRange T.Signed "left start range"
+    resultRange <- ceil leftRange
+
+    left <- operandWithRange "left" T.Signed leftRange
+    result <- T.jsCeil left
+    c1 <- verifyLowerBound result resultRange
+    c2 <- verifyUpperBound result resultRange
+    return (c1, c2)
+
+  Verified @=? c1
+  Verified @=? c2

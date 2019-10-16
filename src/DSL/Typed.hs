@@ -689,51 +689,71 @@ jsMax node1 node2 = do
 jsAbs :: VNode
       -> D.Verif VNode 
 jsAbs op = do
-  isNan <- D.isNan $ vnode op
-  nan <- D.nan
-  result <- do
-    isNeg <- D.isNeg $ vnode op
-    negOp <- D.fpNeg $ vnode op
-    D.cond isNeg negOp $ vnode op
-  nanOrResult <- D.cond isNan nan result
-  resultVar <- D.doubv "jsAbsResult"
-  D.assign nanOrResult resultVar  
-  newDefinedNode nanOrResult $ vtype op
+  if is32Bits $ vtype op
+  then do
+    _0 <- D.i32c 0
+    isNeg <- D.slt (vnode op) _0
+    negOp <- D.neg (vnode op)
+    result <- D.cond isNeg negOp (vnode op)
+    newDefinedNode result $ vtype op
+  else do 
+    isNan <- D.isNan $ vnode op
+    nan <- D.nan
+    result <- do
+      isNeg <- D.isNeg $ vnode op
+      negOp <- D.fpNeg $ vnode op
+      D.cond isNeg negOp $ vnode op
+    nanOrResult <- D.cond isNan nan result
+    resultVar <- D.doubv "jsAbsResult"
+    D.assign nanOrResult resultVar  
+    newDefinedNode nanOrResult $ vtype op
 
 -- | https://es5.github.io/#x15.8.2.9
 jsFloor :: VNode
         -> D.Verif VNode
-jsFloor op = do
-  unless (vtype op == Double) $ error "Only accept double for jsFloor right now"
-  result <- D.fpFloor $ vnode op
-  resultVar <- D.doubv "jsFloorResult"
-  D.assign result resultVar
-  newDefinedNode result Double
+jsFloor op =
+  if is32Bits $ vtype op
+  then return op
+  else do 
+    result <- D.fpFloor $ vnode op
+    resultVar <- D.doubv "jsFloorResult"
+    D.assign result resultVar
+    newDefinedNode result Double
 
 -- | https://es5.github.io/#x15.8.2.9
 jsCeil :: VNode
         -> D.Verif VNode
-jsCeil op = do
-  unless (vtype op == Double) $ error "Only accept double for jsFloor right now"
-  result <- D.fpCeil $ vnode op
-  resultVar <- D.doubv "jsCailResult"
-  D.assign result resultVar
-  newDefinedNode result Double                 
+jsCeil op = 
+  if is32Bits $ vtype op
+  then return op
+  else do 
+    result <- D.fpCeil $ vnode op
+    resultVar <- D.doubv "jsCailResult"
+    D.assign result resultVar
+    newDefinedNode result Double                 
 
 -- | Have not found this one yet but we're guessing based on js
 -- The mathematical function sign(x) yields 1 if x is positive and −1 if x is negative.
 -- The sign function is not used in this standard for cases when x is zero.
 jsSign :: VNode
        -> D.Verif VNode
-jsSign op = do
-  unless (vtype op == Double) $ error "Only accept double for jsSign right now"
-  one <- D.double 1
-  minusOne <- D.double (-1)
-  isPos <- D.isPos $ vnode op
-  result <- D.cond isPos one minusOne
-  resultVar <- D.doubv "jsSign"
-  D.assign result resultVar
-  newDefinedNode result Double
+jsSign op =
+  if is32Bits $ vtype op
+  then do
+    _0 <- D.i32c 0
+    _1 <- D.i32c 1
+    _n1 <- D.i32c (-1)
+    isNeg <- D.slt (vnode op) _0
+    result <- D.cond isNeg _n1 _1
+    newDefinedNode result $ vtype op 
+  else do
+    one <- D.double 1
+    minusOne <- D.double (-1)
+    isPos <- D.isPos $ vnode op
+    result <- D.cond isPos one minusOne
+    resultVar <- D.doubv "jsSign"
+    D.assign result resultVar
+    newDefinedNode result Double
   
 --
 -- C++ Operations
