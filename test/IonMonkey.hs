@@ -13,7 +13,7 @@ ionMonkeyTests :: BenchTest
 ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ fpAddTest
                                                    , addTest
                                                    , fpMulTest
-                                                   , mulTest
+                                                   -- , mulTest
                                                    , fpSubTest
                                                    , subTest
                                                    , andTest
