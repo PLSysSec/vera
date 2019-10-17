@@ -549,7 +549,7 @@ abs op = do
 
   -- Max(Max(int32_t(0), l), u == INT32_MIN ? INT32_MAX : -u)
   lb <- do
-    max1 <- T.cppMax (lower op) zero
+    max1 <- T.cppMax zero (lower op)
     max2 <- do
       cond <- T.cppEq (upper op) intMin
       let trueBr = intMax
@@ -561,7 +561,7 @@ abs op = do
 
   -- Max(Max(int32_t(0), u), l == INT32_MIN ? INT32_MAX : -l)
   ub <- do
-    max1 <- T.cppMax (upper op) zero
+    max1 <- T.cppMax zero (upper op)
     max2 <- do
       cond <- T.cppEq (lower op) intMin
       let trueBr = intMax

@@ -695,6 +695,8 @@ jsAbs op = do
     isNeg <- D.slt (vnode op) _0
     negOp <- D.neg (vnode op)
     result <- D.cond isNeg negOp (vnode op)
+    resultVar <- D.i32v "jsAbsResult"
+    D.assign result resultVar
     newDefinedNode result $ vtype op
   else do 
     isNan <- D.isNan $ vnode op

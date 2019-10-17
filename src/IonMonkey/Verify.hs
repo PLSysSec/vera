@@ -104,6 +104,7 @@ verifySaneRange resultRange = do
 verifyUpperBound :: T.VNode -> Range -> D.Verif VerifResult
 verifyUpperBound node range = do
   D.push
+  T.vassert $ hasInt32UpperBound range
   T.cppGt node (upper range) >>= T.vassert
   check <- D.runSolver
   D.pop
@@ -117,6 +118,7 @@ verifyUpperBound node range = do
 verifyLowerBound :: T.VNode -> Range -> D.Verif VerifResult
 verifyLowerBound node range = do
   D.push
+  T.vassert $ hasInt32LowerBound range
   T.cppLt node (lower range) >>= T.vassert
   check <- D.runSolver
   D.pop
