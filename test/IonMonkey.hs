@@ -13,7 +13,6 @@ ionMonkeyTests :: BenchTest
 ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ fpAddTest
                                                    , addTest
                                                    , fpMulTest
-                                                   -- , mulTest
                                                    , fpSubTest
                                                    , subTest
                                                    , andTest
@@ -39,6 +38,71 @@ ionMonkeyTests = benchTestGroup "Ion Monkey tests" [ fpAddTest
                                                    , fpCeilTest
                                                    , ceilTest
                                                    ]
+
+notTerminating :: BenchTest
+notTerminating = benchTestGroup "Tests not terminating" [ slowFpAdd
+                                                        , slowFpMul
+                                                        , slowMul
+                                                        , slowFpSub
+                                                        ]
+---
+--- Tests that don't terminate
+---
+
+slowFpAdd :: BenchTest
+slowFpAdd = benchTestCase "slow fp add" $ do
+
+  r <- T.evalVerif Nothing $ do
+
+    leftRange <- inputRange T.Double "left start range"
+    rightRange <- inputRange T.Double "right start range"
+    resultRange <- add leftRange rightRange
+    left <- operandWithRange "left" T.Double leftRange
+    right <- operandWithRange "right" T.Double rightRange
+    result <- T.jsAdd left right
+--    error "Too slow to finish"
+    verifyInt32Bounds result resultRange
+
+  Verified @=? r
+
+slowFpMul :: BenchTest
+slowFpMul = benchTestCase "slow fp add" $ do
+
+  r <- T.evalVerif Nothing $ do
+
+    leftRange <- inputRange T.Double "left start range"
+    rightRange <- inputRange T.Double "right start range"
+    resultRange <- mul leftRange rightRange
+    left <- operandWithRange "left" T.Double leftRange
+    right <- operandWithRange "right" T.Double rightRange
+    result <- T.jsMul left right
+    error "Too slow to finish"
+    verifyInt32Bounds result resultRange
+
+  Verified @=? r
+
+slowMul :: BenchTest
+slowMul = mulTest
+
+slowFpSub :: BenchTest
+slowFpSub = benchTestCase "slow fp add" $ do
+
+  r <- T.evalVerif Nothing $ do
+
+    leftRange <- inputRange T.Double "left start range"
+    rightRange <- inputRange T.Double "right start range"
+    resultRange <- sub leftRange rightRange
+    left <- operandWithRange "left" T.Double leftRange
+    right <- operandWithRange "right" T.Double rightRange
+    result <- T.jsSub left right
+    error "Too slow to finish"
+    verifyInt32Bounds result resultRange
+
+  Verified @=? r
+
+--
+-- Tests that terminate
+--
 
 fpAddTest :: BenchTest
 fpAddTest = benchTestCase "fpadd" $ do
@@ -125,10 +189,12 @@ mulTest = benchTestCase "mul" $ do
     left <- operandWithRange "left" T.Signed leftRange
     right <- operandWithRange "right" T.Signed rightRange
     result <- T.jsMul left right
+    error "Too slow to finish"
     c1 <- verifyLowerBound result resultRange
     c2 <- verifyUpperBound result resultRange
     return (c1, c2)
 
+  error "Too slow to finish"
   Verified @=? c1
   Verified @=? c2
 
