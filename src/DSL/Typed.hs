@@ -94,6 +94,7 @@ module DSL.Typed ( vassert
                  -- * Running the solver and getting the model
                  , D.runSolver
                  , D.evalVerif
+                 , D.solverToString
                  , D.SMTResult(..)
                  , D.Verif
                  , D.isSat

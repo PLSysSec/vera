@@ -80,6 +80,10 @@ addTest = benchTestCase "add" $ do
     result <- T.jsAdd left right
     c1 <- verifyLowerBound result resultRange
     c2 <- verifyUpperBound result resultRange
+    -- PRINT actual SMT
+    str <- T.solverToString
+    liftIO $ putStrLn str
+    --
     return (c1, c2)
 
   Verified @=? c1
