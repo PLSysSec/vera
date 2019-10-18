@@ -198,9 +198,6 @@ verifyInt32Bounds node range = do
   D.push
   T.vassert hasLowerBound
   T.vassert outOfRangeLower
-  t <- T.solverToString
-  liftIO $ writeFile "slowsmt2/fpadd.txt" t
-  error "Too slow"
   check1 <- D.runSolver
   D.pop
   case check1 of

@@ -60,13 +60,13 @@ slowFpAdd = benchTestCase "slow fp add" $ do
     left <- operandWithRange "left" T.Double leftRange
     right <- operandWithRange "right" T.Double rightRange
     result <- T.jsAdd left right
---    error "Too slow to finish"
+    error "Too slow to finish"
     verifyInt32Bounds result resultRange
 
   Verified @=? r
 
 slowFpMul :: BenchTest
-slowFpMul = benchTestCase "slow fp add" $ do
+slowFpMul = benchTestCase "slow fp mul" $ do
 
   r <- T.evalVerif Nothing $ do
 
