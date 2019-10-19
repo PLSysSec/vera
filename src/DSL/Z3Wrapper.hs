@@ -1,6 +1,6 @@
 module DSL.Z3Wrapper where
 
-import           Control.Monad.State.Strict (liftIO, unless)
+import           Control.Monad.State.Strict (unless)
 import           Prelude                    hiding (not, or)
 import           Z3.Monad                   (MonadZ3)
 import qualified Z3.Monad                   as Z
@@ -23,7 +23,7 @@ assert a = do
     Z.Z3_BV_SORT -> do
       size <- Z.getBvSortSize sort
       unless (size == 1) $ error "Cannot assert multibit BV"
-      bvTrue <- Z.mkBvNum 1 1
+      bvTrue <- Z.mkBvNum 1 (1 :: Integer)
       Z.mkEq a bvTrue
     s              -> error $ unwords ["Can't assert sort", show s]
   Z.assert a'
@@ -42,7 +42,7 @@ typeSafeBinary op ast1 ast2 = do
   s2 <- typeSafeUnary' op ast2
   size1 <- Z.getBvSortSize s1
   size2 <- Z.getBvSortSize s2
-  unless (s1 == s2) $ error $ unwords [op, ": bit-widths must match"]
+  unless (size1 == size2) $ error $ unwords [op, ": bit-widths must match"]
 
 eq :: MonadZ3 z3 => AST -> AST -> z3 AST
 eq = Z.mkEq
@@ -127,8 +127,8 @@ sra a b = do
 
 cmpWrapper :: MonadZ3 z3 => AST -> z3 AST
 cmpWrapper a = do
-  true <- Z.mkBvNum 1 1
-  false <- Z.mkBvNum 1 0
+  true <- Z.mkBvNum 1 (1 :: Integer)
+  false <- Z.mkBvNum 1 (0 :: Integer)
   Z.mkIte a true false
 
 ugt :: MonadZ3 z3 => AST -> AST -> z3 AST
@@ -178,7 +178,7 @@ iseq a b = do
 
 cond :: MonadZ3 z3 => AST -> AST -> AST -> z3 AST
 cond c a b = do
-  bvTrue <- Z.mkBvNum 1 1
+  bvTrue <- Z.mkBvNum 1 (1 :: Integer)
   isTrue <- Z.mkEq c bvTrue
   Z.mkIte isTrue a b
 

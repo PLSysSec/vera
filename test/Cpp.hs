@@ -1,13 +1,9 @@
 module Cpp (cppTests) where
 import           BenchUtils
-import           Control.Monad.State.Strict (liftIO)
-import qualified Data.Map                   as M
-import           DSL.DSL                    as D
-import qualified DSL.Typed                  as T
-import           IonMonkey.Objects
-import           IonMonkey.Operations
-import           Prelude                    hiding (and, not)
-import           Test.Tasty.HUnit
+import qualified Data.Map   as M
+import           DSL.DSL    as D
+import qualified DSL.Typed  as T
+import           Prelude    hiding (and, max, min, not, pi)
 import           Utils
 
 cppTests :: BenchTest
@@ -51,15 +47,15 @@ cppMinTest = benchTestCase "min test" $ do
     one <- T.num 1
     minusOne <- T.num (-1)
     result <- T.int32 "result"
-    min <- T.cppMin one minusOne
-    T.vassign result min
+    min' <- T.cppMin one minusOne
+    T.vassign result min'
 
     -- Check that cppMin does the right thing with unsigned numbers
     uMinusOne <- T.unum (-1)
     uOne <- T.unum 1
-    umin <- T.cppMin uMinusOne uOne
+    umin' <- T.cppMin uMinusOne uOne
     uresult <- T.uint32 "uresult"
-    T.vassign uresult umin
+    T.vassign uresult umin'
 
     T.runSolver
 
@@ -82,9 +78,9 @@ cppMaxTest = benchTestCase "max test" $ do
     -- Check that cppMin does the right thing with unsigned numbers
     uMinusOne <- T.unum (-1)
     uOne <- T.unum 1
-    umin <- T.cppMax uMinusOne uOne
+    umin' <- T.cppMax uMinusOne uOne
     uresult <- T.uint32 "uresult"
-    T.vassign uresult umin
+    T.vassign uresult umin'
 
     T.runSolver
 
@@ -141,15 +137,15 @@ cppCmpTest = benchTestCase "cmp test" $ do
     T.vassign result7 blt
     T.vassign result8 blte
 
-    ugt <- T.cppGt uOne uMinusOne
-    ugte <- T.cppGte uOne uMinusOne
-    ult <- T.cppLt uOne uMinusOne
-    ulte <- T.cppLte uOne uMinusOne
+    ugt' <- T.cppGt uOne uMinusOne
+    ugte' <- T.cppGte uOne uMinusOne
+    ult' <- T.cppLt uOne uMinusOne
+    ulte' <- T.cppLte uOne uMinusOne
 
-    T.vassign result9 ugt
-    T.vassign result10 ugte
-    T.vassign result11 ult
-    T.vassign result12 ulte
+    T.vassign result9 ugt'
+    T.vassign result10 ugte'
+    T.vassign result11 ult'
+    T.vassign result12 ulte'
 
     T.runSolver
 
@@ -285,24 +281,24 @@ fpTest = benchTestCase "fp test" $ do
     v <- T.fp "fp var"
     c <- T.fpnum 5.6
 
-    added <- T.jsAdd v c
-    subbed <- T.jsSub v c
-    mulled <- T.jsMul v c
+    _added <- T.jsAdd v c
+    _subbed <- T.jsSub v c
+    _mulled <- T.jsMul v c
     pi <- T.posInf
     ni <- T.negInf
     pz <- T.posZero
     nz <- T.negZero
     n <- T.nan
 
-    t1 <- T.isInf pi
-    t2 <- T.isInf ni
-    t3 <- T.isNan n
-    t4 <- T.isNeg ni
-    t5 <- T.isNeg nz
-    t6 <- T.isPos pi
-    t7 <- T.isPos pz
-    t8 <- T.isZero pz
-    t9 <- T.isZero nz
+    _t1 <- T.isInf pi
+    _t2 <- T.isInf ni
+    _t3 <- T.isNan n
+    _t4 <- T.isNeg ni
+    _t5 <- T.isNeg nz
+    _t6 <- T.isPos pi
+    _t7 <- T.isPos pz
+    _t8 <- T.isZero pz
+    _t9 <- T.isZero nz
 
     T.runSolver
 

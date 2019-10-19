@@ -1,12 +1,9 @@
 module IonMonkey.Verify where
-import           Control.Monad              (unless, when)
-import           Control.Monad.State.Strict (liftIO)
-import           Data.List                  (intersperse, isInfixOf)
-import qualified Data.Map.Strict            as M
-import           Data.Maybe                 (catMaybes)
-import qualified DSL.DSL                    as D
-import           DSL.Typed                  as T
-import qualified DSL.Z3Wrapper              as D
+import           Data.List         (isInfixOf)
+import qualified Data.Map.Strict   as M
+import           Data.Maybe        (catMaybes)
+import qualified DSL.DSL           as D
+import           DSL.Typed         as T
 import           IonMonkey.Helpers
 import           IonMonkey.Objects
 
@@ -38,7 +35,6 @@ instance Show VerifResult where
                                  (unlines $ getNegzList ce)
     show Verified              = "Verified!"
     show UnsatImpl             = "Verification failed (e.g., due to a timeout)"
-    show ce                    = show $ counterexample ce
 
 getNanList :: M.Map String Double -> [String]
 getNanList fls = catMaybes $ map (\(str, fl) ->
@@ -48,7 +44,7 @@ getNanList fls = catMaybes $ map (\(str, fl) ->
                          _ | "_hasLowerBound" `isInfixOf` str -> Nothing
                          _ | "hasFract" `isInfixOf` str -> Nothing
                          _ | "negZero" `isInfixOf` str -> Nothing
-                         _ -> Just $ unwords [str, ":", show $ round fl]
+                         _ -> Just $ unwords [str, ":", show (round fl :: Integer)]
                      ) $ M.toList fls
 
 getNegzList :: M.Map String Double -> [String]
@@ -59,7 +55,7 @@ getNegzList fls = catMaybes $ map (\(str, fl) ->
                          _ | "_hasLowerBound" `isInfixOf` str -> Nothing
                          _ | "hasFract" `isInfixOf` str       -> Nothing
                          _ | "infOrNan" `isInfixOf` str       -> Nothing
-                         _ -> Just $ unwords [str, ":", show $ round fl]
+                         _ -> Just $ unwords [str, ":", show (round fl :: Integer)]
                      ) $ M.toList fls
 
 getIntList :: M.Map String Double -> [String]
@@ -69,7 +65,7 @@ getIntList fls = catMaybes $ map (\(str, fl) ->
                          _ | "_hasFract" `isInfixOf` str -> Nothing
                          _ | "_negZero" `isInfixOf` str  -> Nothing
                          _ | "infOrNan" `isInfixOf` str  -> Nothing
-                         _ -> Just $ unwords [str, ":", show $ round fl]
+                         _ -> Just $ unwords [str, ":", show (round fl :: Integer)]
                      ) $ M.toList fls
 
 prettyCounterexampleInts :: M.Map String Double
@@ -87,11 +83,11 @@ verifyConsistent = do
 -- | Verify that the upper bound of a range is greater than the lower
 -- Expects UNSAT
 verifySaneRange :: Range -> D.Verif VerifResult
-verifySaneRange resultRange = do
+verifySaneRange range = do
   D.push
-  T.vassert $ hasInt32LowerBound resultRange
-  T.vassert $ hasInt32UpperBound resultRange
-  T.cppLt (upper resultRange) (lower resultRange) >>= T.vassert
+  T.vassert $ hasInt32LowerBound range
+  T.vassert $ hasInt32UpperBound range
+  T.cppLt (upper range) (lower range) >>= T.vassert
   check <- D.runSolver
   D.pop
   return $ case check of
@@ -172,7 +168,7 @@ verifyInfNan node range = do
 -- | IsFract flag set for a non-fract value?
 -- | IsFract flag unset for a fact value?
 veriftFract :: T.VNode -> Range -> D.Verif VerifResult
-veriftFract node range = error ""
+veriftFract _node _range = error ""
 
 -- | If the result has int32 bounds, the result should be within the specified range
 -- It would be better to do this over doubles, but instead we'll cast doubles to
@@ -217,11 +213,11 @@ verifyInt32Bounds node range = do
 
 verifyNegZero :: T.VNode -> Range -> D.Verif VerifResult
 verifyNegZero node range = do
-  isZero <- T.isZero node
-  isNeg <- T.isNeg node
+  _isZero <- T.isZero node
+  _isNeg <- T.isNeg node
   D.push
   -- It's negative zero...
-  T.cppAnd isZero isNeg >>= T.vassert
+  T.cppAnd _isZero _isNeg >>= T.vassert
   -- ... but the nz flag is not set
   T.cppNot (canBeNegativeZero range) >>= T.vassert
   check1 <- T.runSolver
@@ -232,7 +228,7 @@ verifyNegZero node range = do
     D.SolverUnsat  -> Verified
 
 verifExponent :: T.VNode -> Range -> D.Verif VerifResult
-verifExponent node range = error ""
+verifExponent _node _range = error ""
 
 
 

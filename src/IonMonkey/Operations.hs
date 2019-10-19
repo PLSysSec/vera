@@ -19,15 +19,11 @@ module IonMonkey.Operations ( add
                             , sign
                             , nanToZero
                             ) where
-import           Control.Monad.State.Strict (liftIO)
-import           Data.Maybe                 (fromJust)
-import qualified DSL.DSL                    as D
-import qualified DSL.Typed                  as T
+import qualified DSL.Typed         as T
 import           IonMonkey.Helpers
 import           IonMonkey.Objects
-import           IonMonkey.ObjectTypes
-import           Prelude                    hiding (abs, and, ceil, floor, max,
-                                             min, not, or)
+import           Prelude           hiding (abs, and, exp, floor, max, min, not,
+                                    or)
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#744
 add :: Range -> Range -> T.Verif Range
@@ -482,9 +478,9 @@ rsh' shiftee shifter = do
   cond <- do
     extShiftLower <- T.cppCast (lower shifter) T.Signed64
     extShiftUpper <- T.cppCast (upper shifter) T.Signed64
-    sub <- T.cppSub extShiftUpper extShiftLower
-    thirtyOne <- T.num64 31
-    T.cppGte sub thirtyOne
+    _sub <- T.cppSub extShiftUpper extShiftLower
+    _thirtyOne <- T.num64 31
+    T.cppGte _sub _thirtyOne
 
   trueShiftLower <- T.num 0
   trueShiftUpper <- T.num 31
@@ -499,21 +495,21 @@ rsh' shiftee shifter = do
   shiftUpper <- T.cppCond cond trueShiftUpper falseShiftUpper
 
   -- Do the actual shifting
-  min <- do
+  _min <- do
     shifteeNeg <- T.cppLt (lower shiftee) zero
     trueMin <- T.cppShiftRight (lower shiftee) shiftLower
     falseMin <- T.cppShiftRight (lower shiftee) shiftUpper
     T.cppCond shifteeNeg trueMin falseMin
 
-  max <- do
+  _max <- do
     shifteeNeg <- T.cppGte (upper shiftee) zero
     trueMax <- T.cppShiftRight (upper shiftee) shiftLower
     falseMax <- T.cppShiftRight (upper shiftee) shiftUpper
     T.cppCond shifteeNeg trueMax falseMax
 
   result <- resultRange T.Signed "result"
-  T.vassign (lower result) min
-  T.vassign (upper result) max
+  T.vassign (lower result) _min
+  T.vassign (upper result) _max
   return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1079
@@ -735,7 +731,6 @@ sign :: Range -> T.Verif Range
 sign op = do
   one <- T.num 1
   negOne <- T.num (-1)
-  zero <- T.num 0
 
   -- Max(Min(op->lower_, 1), -1)
   low <- T.cppMin (lower op) one >>= T.cppMax negOne

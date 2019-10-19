@@ -1,5 +1,4 @@
 module Utils where
-import           BenchUtils
 import           Control.Monad (forM_, unless)
 import qualified Data.Map      as M
 import qualified DSL.DSL       as D

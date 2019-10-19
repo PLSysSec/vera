@@ -1,29 +1,15 @@
-module IonMonkey.Objects ( Range
-                         , Range(..)
-                         -- * Getters for fields of the range
-                         , lower
-                         , upper
-                         , hasInt32LowerBound
-                         , hasInt32UpperBound
-                         , canBeNegativeZero
-                         , canHaveFractionalPart
-                         , maxExponent
-                         , rangeName
+module IonMonkey.Objects ( Range(..)
                          -- * Making ranges and operands
                          , inputRange
                          , resultRange
                          , operandWithRange
                          ) where
-import           Control.Monad              (unless, when)
-import           Control.Monad.State.Strict (liftIO)
-import           Data.List                  (intersperse, isInfixOf)
-import qualified Data.Map.Strict            as M
-import           Data.Maybe                 (catMaybes)
-import qualified DSL.DSL                    as D
-import           DSL.Typed                  as T
-import qualified DSL.Z3Wrapper              as D
+import           Control.Monad         (when)
+import qualified DSL.DSL               as D
+import           DSL.Typed             as T
 import           IonMonkey.Helpers
 import           IonMonkey.ObjectTypes
+import           Prelude               hiding (exp)
 
 inputRange :: Type -> String -> D.Verif Range
 inputRange ty operandName = do
@@ -50,7 +36,7 @@ inputRange ty operandName = do
   hasLowerBound <- T.newInputVar T.Bool hasLowerBoundName
   hasUpperBound <- T.newInputVar T.Bool hasUpperBoundName
   infOrNan      <- T.newInputVar T.Bool infOrNanName
-  negZero       <- T.newInputVar T.Bool negZeroName
+  _negZero       <- T.newInputVar T.Bool negZeroName
   fractPart     <- T.newInputVar T.Bool fractPartName
   exp           <- T.newInputVar T.Unsigned16 expName
 
@@ -62,7 +48,7 @@ inputRange ty operandName = do
     T.vassign hasLowerBound t
     T.vassign hasUpperBound t
     T.vassign infOrNan f
-    T.vassign negZero f
+    T.vassign _negZero f
     T.vassign fractPart f
     T.unum16 0 >>= T.vassign exp
 
@@ -75,7 +61,7 @@ inputRange ty operandName = do
     T.cppOr lowerIsMin hasLowerBound >>= T.vassert
     T.cppOr upperIsMax hasUpperBound >>= T.vassert
 
-  return $ Range operandName lowerNode upperNode hasLowerBound hasUpperBound negZero fractPart exp
+  return $ Range operandName lowerNode upperNode hasLowerBound hasUpperBound _negZero fractPart exp
 
 resultRange :: Type -> String -> D.Verif Range
 resultRange ty operandName = do
@@ -91,18 +77,16 @@ resultRange ty operandName = do
   -- Make the flags
   let hasLowerBoundName = operandName ++ "_hasLowerBound"
       hasUpperBoundName = operandName ++ "_hasUpperBound"
-      infOrNanName      = operandName ++ "_infOrNan"
       negZeroName       = operandName ++ "_negZero"
       fractPartName     = operandName ++ "_hasFract"
       expName           = operandName ++ "_exp"
   hasLowerBound <- T.newResultVar T.Bool hasLowerBoundName
   hasUpperBound <- T.newResultVar T.Bool hasUpperBoundName
-  infOrNan      <- T.newResultVar T.Bool infOrNanName
-  negZero       <- T.newResultVar T.Bool negZeroName
+  _negZero       <- T.newResultVar T.Bool negZeroName
   fractPart     <- T.newResultVar T.Bool fractPartName
   exp           <- T.newResultVar T.Unsigned16 expName
 
-  return $ Range operandName lowerNode upperNode hasLowerBound hasUpperBound negZero fractPart exp
+  return $ Range operandName lowerNode upperNode hasLowerBound hasUpperBound _negZero fractPart exp
 
 -- | Make a new operand with name 'name' of sort 'sort' that is in the range
 --'range'---ie is greater than the range's lower and less than the range's upper
@@ -132,9 +116,9 @@ operandWithRange name ty range = do
 
     -- If the range doesn't say can-be-neg-zero, it can't be neg zero
     cantBeNegZero <- T.cppNot $ canBeNegativeZero range
-    isNeg <- T.isNeg op
-    isZero <- T.isZero op
-    isNegZero <- T.cppAnd isNeg isZero
+    _isNeg <- T.isNeg op
+    _isZero <- T.isZero op
+    isNegZero <- T.cppAnd _isNeg _isZero
     T.cppXor cantBeNegZero isNegZero >>= T.vassert
 
     -- If it can be outside of a standard int range, the flag should indicate so

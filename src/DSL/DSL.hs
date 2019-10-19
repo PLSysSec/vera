@@ -48,7 +48,6 @@ module DSL.DSL ( i64
                , SMTResult(..)
                , isSat
                , isUnsat
-               , example
                , getVars
                , runVerif
                , evalVerif
@@ -61,16 +60,14 @@ import           Control.Monad.State.Strict
 import           Data.Binary.IEEE754
 import           Data.Bits
 import           Data.Char                  (digitToInt)
-import           Data.List                  (isInfixOf)
 import           Data.List                  (foldl')
 import           Data.List.Split
 import qualified Data.Map.Strict            as M
 import           Data.Maybe                 (catMaybes)
 import           DSL.Z3Wrapper
 import qualified DSL.Z3Wrapper              as Z3
-import           Prelude                    hiding (exponent, map, max, min,
-                                             not)
-import           Text.Printf
+import           Prelude                    hiding (exp, exponent, map, max,
+                                             min, not)
 import qualified Z3.Monad                   as Z
 
 {-|
@@ -119,7 +116,7 @@ emptyVerifState = VerifState { vars = M.empty
 runVerif :: Maybe Integer -- ^ Optional timeout
          -> Verif a       -- ^ Verification computation
          -> IO (a, VerifState)
-runVerif mTimeout (Verif act) =
+runVerif _mTimeout (Verif act) =
   Z.evalZ3 $ runStateT act emptyVerifState
 
 evalVerif :: Maybe Integer -> Verif a -> IO a
@@ -145,8 +142,8 @@ runSolver = do
 
 getIntModel :: String -> IO (M.Map String Double)
 getIntModel str = do
-  let lines = splitOn "\n" str
-  vars <- forM lines $ \line -> case splitOn "->" line of
+  let modelLines = splitOn "\n" str
+  vs <- forM modelLines $ \line -> case splitOn "->" line of
             [var, strVal] -> do
               let maybeHexVal = drop 2 strVal
                   val = case maybeHexVal of
@@ -173,7 +170,7 @@ getIntModel str = do
                    Just v  -> Just (init var, v)
                    Nothing -> Nothing
             _ -> return Nothing
-  return $ M.fromList $ catMaybes vars
+  return $ M.fromList $ catMaybes vs
   where
     -- https://stackoverflow.com/questions/5921573/convert-a-string-representing-a-binary-number-to-a-base-10-string-haskell
     toDec :: String -> Integer

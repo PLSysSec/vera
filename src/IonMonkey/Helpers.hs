@@ -19,11 +19,11 @@ module IonMonkey.Helpers ( setRange
                          , countLeadingZeroes32
                          , countTrailingZeroes32
                          ) where
-import           Control.Monad              (when)
-import           Control.Monad.State.Strict
-import qualified DSL.DSL                    as D
-import qualified DSL.Typed                  as T
+import           Control.Monad         (when)
+import qualified DSL.DSL               as D
+import qualified DSL.Typed             as T
 import           IonMonkey.ObjectTypes
+import           Prelude               hiding (exp, max, min)
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#370
 -- https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#621
@@ -144,39 +144,23 @@ noInt32UpperBound = do
 jsValIntMin :: D.Verif T.VNode
 jsValIntMin = T.num 0x80000000
 
-jsValIntMin64 :: D.Verif T.VNode
-jsValIntMin64 = T.num64 (-2147483648)
-
 -- | https://searchfox.org/mozilla-central/source/js/public/Value.h#36
 -- #define JSVAL_INT_MAX ((int32_t)0x7fffffff)
 jsValIntMax :: D.Verif T.VNode
 jsValIntMax = T.num 0x7fffffff
-
-jsValIntMax64 :: D.Verif T.VNode
-jsValIntMax64 = T.num64 2147483647
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#136
 -- static const uint16_t MaxFiniteExponent = mozilla::FloatingPoint<double>::kExponentBias;
 maxFiniteExponent :: D.Verif T.VNode
 maxFiniteExponent = T.unum16 1023
 
--- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#123
---  static const uint16_t MaxInt32Exponent = 31;
-maxInt32Exponent :: D.Verif T.VNode
-maxInt32Exponent = T.unum16 31
-
--- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#127
--- static const uint16_t MaxUInt32Exponent = 31;
-maxUInt32Exponent :: D.Verif T.VNode
-maxUInt32Exponent = T.unum16 31
-
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#141
 -- static const uint16_t IncludesInfinity = MaxFiniteExponent + 1;
 includesInfinity :: D.Verif T.VNode
 includesInfinity = do
   one <- T.unum16 1
-  maxExponent <- maxFiniteExponent
-  T.cppAdd one maxExponent
+  maxExp <- maxFiniteExponent
+  T.cppAdd one maxExp
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#515
 canBeNan :: Range -> D.Verif T.VNode
@@ -336,7 +320,6 @@ instance CountLeadingZeroes32 T.VNode where
       -- x |= x >> 4;
       -- x |= x >> 8;
       -- x |= x >> 16;
-    numBits <- T.num 32
     one <- T.num 1
     two <- T.num 2
     four <- T.num 4

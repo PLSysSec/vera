@@ -1,17 +1,14 @@
 module DSL where
 import           BenchUtils
-import           Control.Monad.State.Strict (liftIO)
-import qualified Data.Map                   as Map
-import           DSL.DSL                    (fpCeil, fpFloor)
-import qualified DSL.DSL                    as D
-import qualified DSL.Typed                  as T
-import qualified DSL.Z3Wrapper              as Ops
+import qualified Data.Map          as Map
+import           DSL.DSL           (fpCeil, fpFloor)
+import qualified DSL.DSL           as D
+import qualified DSL.Typed         as T
+import qualified DSL.Z3Wrapper     as Ops
 import           IonMonkey.Objects
-import           IonMonkey.Operations
-import           Prelude                    hiding (and, not)
-import           Test.Tasty.HUnit
+import           Prelude           hiding (abs, and, not)
 import           Utils
-import qualified Z3.Monad                   as M
+import qualified Z3.Monad          as M
 
 dslTests :: BenchTest
 dslTests = benchTestGroup "DSL" [ addTest
@@ -84,7 +81,7 @@ incrTest = benchTestCase "incr" $ do
     D.assign result added
     r <- D.runSolver
     M.pop 1
-    D.runSolver
+    _ <- D.runSolver
     return r
 
   satTest r
@@ -95,7 +92,7 @@ incrTest2 = benchTestCase "incr2" $ do
 
   r <- D.evalVerif Nothing $ do
     M.push
-    leftRange <- inputRange T.Signed "left start range"
+    _leftRange <- inputRange T.Signed "left start range"
     M.pop 1
 
     D.runSolver
@@ -143,12 +140,6 @@ fpTest = benchTestCase "fp" $ do
     D.doubv "nan" >>= D.assign nan
     D.doubv "neginf" >>= D.assign inf
     D.doubv "posinf" >>= D.assign inf2
-
-    rna <- M.mkFpRna
-    rne <- M.mkFpRne
-    rtn <- M.mkFpRtn
-    rtp <- M.mkFpRtp
-    rtz <- M.mkFpRtz
 
     isInf <- D.isInf z
     D.i1v "zeroNotInf" >>= D.assign isInf

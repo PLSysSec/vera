@@ -2,7 +2,7 @@ module IonMonkey where
 import           BenchUtils
 import           Control.Monad.State.Strict (liftIO)
 import qualified DSL.Typed                  as T
-import           IonMonkey.Objects
+import           IonMonkey.Objects          hiding (resultRange)
 import           IonMonkey.Operations
 import           IonMonkey.Verify
 import           Prelude                    hiding (abs, and, floor, max, min,
@@ -60,7 +60,7 @@ slowFpAdd = benchTestCase "slow fp add" $ do
     left <- operandWithRange "left" T.Double leftRange
     right <- operandWithRange "right" T.Double rightRange
     result <- T.jsAdd left right
-    error "Too slow to finish"
+    _ <- error "Too slow to finish"
     verifyInt32Bounds result resultRange
 
   Verified @=? r
@@ -76,7 +76,7 @@ slowFpMul = benchTestCase "slow fp mul" $ do
     left <- operandWithRange "left" T.Double leftRange
     right <- operandWithRange "right" T.Double rightRange
     result <- T.jsMul left right
-    error "Too slow to finish"
+    _ <- error "Too slow to finish"
     verifyInt32Bounds result resultRange
 
   Verified @=? r
@@ -95,7 +95,7 @@ slowFpSub = benchTestCase "slow fp add" $ do
     left <- operandWithRange "left" T.Double leftRange
     right <- operandWithRange "right" T.Double rightRange
     result <- T.jsSub left right
-    error "Too slow to finish"
+    _ <- error "Too slow to finish"
     verifyInt32Bounds result resultRange
 
   Verified @=? r
@@ -189,12 +189,11 @@ mulTest = benchTestCase "mul" $ do
     left <- operandWithRange "left" T.Signed leftRange
     right <- operandWithRange "right" T.Signed rightRange
     result <- T.jsMul left right
-    error "Too slow to finish"
+    _ <- error "Too slow to finish"
     c1 <- verifyLowerBound result resultRange
     c2 <- verifyUpperBound result resultRange
     return (c1, c2)
 
-  error "Too slow to finish"
   Verified @=? c1
   Verified @=? c2
 
@@ -595,13 +594,13 @@ fpAbsTest :: BenchTest
 fpAbsTest = benchTestCase "fpabs" $ do
   (c0, c1, c2, c3, c4, c5) <- T.evalVerif Nothing $ do
 
-    inputRange <- inputRange T.Double "left start range"
-    resultRange <- abs inputRange
+    startRange <- inputRange T.Double "left start range"
+    resultRange <- abs startRange
     c0 <- verifyConsistent
     c1 <- verifySaneRange resultRange
     c2 <- verifyDefinedResult resultRange
 
-    input <- operandWithRange "input" T.Double inputRange
+    input <- operandWithRange "input" T.Double startRange
     result <- T.jsAbs input
     c3 <- verifyInt32Bounds result resultRange
     c4 <- verifyInfNan result resultRange
@@ -636,13 +635,13 @@ fpSignTest :: BenchTest
 fpSignTest = benchTestCase "fpsign" $ do
   (c0, c1, c2, c3, c4, c5) <- T.evalVerif Nothing $ do
 
-    inputRange <- inputRange T.Double "left start range"
-    resultRange <- sign inputRange
+    startRange <- inputRange T.Double "left start range"
+    resultRange <- sign startRange
     c0 <- verifyConsistent
     c1 <- verifySaneRange resultRange
     c2 <- verifyDefinedResult resultRange
 
-    input <- operandWithRange "input" T.Double inputRange
+    input <- operandWithRange "input" T.Double startRange
     result <- T.jsSign input
     c3 <- verifyInt32Bounds result resultRange
     c4 <- verifyInfNan result resultRange
@@ -677,13 +676,13 @@ fpFloorTest :: BenchTest
 fpFloorTest = benchTestCase "fpfloor" $ do
   (c0, c1, c2, c3, c4, c5) <- T.evalVerif Nothing $ do
 
-    inputRange <- inputRange T.Double "left start range"
-    resultRange <- floor inputRange
+    startRange <- inputRange T.Double "left start range"
+    resultRange <- floor startRange
     c0 <- verifyConsistent
     c1 <- verifySaneRange resultRange
     c2 <- verifyDefinedResult resultRange
 
-    input <- operandWithRange "input" T.Double inputRange
+    input <- operandWithRange "input" T.Double startRange
     result <- T.jsFloor input
     c3 <- verifyInt32Bounds result resultRange
     c4 <- verifyInfNan result resultRange
@@ -719,13 +718,13 @@ fpCeilTest = benchTestCase "fpceil" $ do
 
   (c0, c1, c2, c3, c4, c5) <- T.evalVerif Nothing $ do
 
-    inputRange <- inputRange T.Double "left start range"
-    resultRange <- ceil inputRange
+    startRange <- inputRange T.Double "left start range"
+    resultRange <- ceil startRange
     c0 <- verifyConsistent
     c1 <- verifySaneRange resultRange
     c2 <- verifyDefinedResult resultRange
 
-    input <- operandWithRange "input" T.Double inputRange
+    input <- operandWithRange "input" T.Double startRange
     result <- T.jsCeil input
     c3 <- verifyInt32Bounds result resultRange
     c4 <- verifyInfNan result resultRange

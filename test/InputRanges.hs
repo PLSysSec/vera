@@ -1,13 +1,9 @@
 module InputRanges (inputTests) where
 import           BenchUtils
-import           Control.Monad.State.Strict (liftIO)
-import qualified Data.Map                   as M
-import qualified DSL.Typed                  as T
+import qualified DSL.Typed         as T
 import           IonMonkey.Helpers
 import           IonMonkey.Objects
-import           IonMonkey.Operations
-import           Prelude                    hiding (and, not)
-import           Test.Tasty.HUnit
+import           Prelude           hiding (and, exp, not)
 import           Utils
 
 inputTests :: BenchTest

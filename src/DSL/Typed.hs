@@ -35,7 +35,6 @@ module DSL.Typed ( vassert
                  -- * Types 
                  , VNode(..)
                  , Type(..)
-                 , vtype
                  -- * Min/Max constants 
                  , intMax
                  , intMin
@@ -100,10 +99,9 @@ module DSL.Typed ( vassert
                  , D.isSat
                  , D.isUnsat
                  ) where
-import           Control.Monad.State.Strict (liftIO, unless, when)
+import           Control.Monad.State.Strict (unless, when)
 import qualified DSL.DSL                    as D
-import qualified DSL.Z3Wrapper              as D
-import           Prelude                    hiding (compare)
+import           Prelude                    hiding (compare, exp)
 
 {-|
 
@@ -273,7 +271,6 @@ newInputVar ty name = do
            Signed8    -> D.i8v name
            Unsigned8  -> D.i8v name 
            Double     -> D.doubv name 
-           _          -> error "Not yet supported"
   undef <- D.i1c 0
   return $ VNode undef var ty
 
@@ -290,7 +287,6 @@ newResultVar Unsigned16 = uint16
 newResultVar Signed8    = int8
 newResultVar Unsigned8  = uint8
 newResultVar Double     = fp
-newResultVar _          = error "No more"
 
 
 -- | Make a new node whose undef flag may be set, based on the parents of the node
@@ -317,7 +313,6 @@ named name act = do
   n <- act
   D.named name $ vnode n
   return n
-
 
 vassert :: VNode -> D.Verif ()
 vassert = D.assert . vnode
@@ -465,8 +460,8 @@ negZero = do
 
 nan :: D.Verif VNode                 
 nan = do
-  nan <- D.nan
-  newDefinedNode nan Double
+  _nan <- D.nan
+  newDefinedNode _nan Double
 
 isInf :: VNode -> D.Verif VNode                 
 isInf n = do
@@ -655,9 +650,9 @@ jsMin node1 node2 = do
     leftIsNan <- D.isNan $ vnode node1
     rightIsNan <- D.isNan $ vnode node2
     eitherIsNan <- D.or leftIsNan rightIsNan 
-    nan <- D.nan
+    _nan <- D.nan
     -- Return Nan or the result
-    nanOrResult <- D.cond eitherIsNan nan result
+    nanOrResult <- D.cond eitherIsNan _nan result
     newDefinedNode nanOrResult $ vtype node1  
 
 -- | https://es5.github.io/#x15.8.2.11
@@ -679,8 +674,8 @@ jsMax node1 node2 = do
     leftIsNan <- D.isNan $ vnode node1
     rightIsNan <- D.isNan $ vnode node2
     eitherIsNan <- D.or leftIsNan rightIsNan 
-    nan <- D.nan
-    nanOrResult <- D.cond eitherIsNan nan result
+    _nan <- D.nan
+    nanOrResult <- D.cond eitherIsNan _nan result
     newDefinedNode nanOrResult $ vtype node1    
                  
 -- | https://es5.github.io/#x15.8.2.1
@@ -693,20 +688,20 @@ jsAbs op = do
   if is32Bits $ vtype op
   then do
     _0 <- D.i32c 0
-    isNeg <- D.slt (vnode op) _0
+    _isNeg <- D.slt (vnode op) _0
     negOp <- D.neg (vnode op)
-    result <- D.cond isNeg negOp (vnode op)
+    result <- D.cond _isNeg negOp (vnode op)
     resultVar <- D.i32v "jsAbsResult"
     D.assign result resultVar
     newDefinedNode result $ vtype op
   else do 
-    isNan <- D.isNan $ vnode op
-    nan <- D.nan
+    _isNan <- D.isNan $ vnode op
+    _nan <- D.nan
     result <- do
-      isNeg <- D.isNeg $ vnode op
+      _isNeg <- D.isNeg $ vnode op
       negOp <- D.fpNeg $ vnode op
-      D.cond isNeg negOp $ vnode op
-    nanOrResult <- D.cond isNan nan result
+      D.cond _isNeg negOp $ vnode op
+    nanOrResult <- D.cond _isNan _nan result
     resultVar <- D.doubv "jsAbsResult"
     D.assign nanOrResult resultVar  
     newDefinedNode nanOrResult $ vtype op
@@ -746,11 +741,11 @@ jsSign op =
     _0 <- D.i32c 0
     _1 <- D.i32c 1
     _n1 <- D.i32c (-1)
-    isNeg <- D.slt (vnode op) _0
-    result' <- D.cond isNeg _n1 _1
+    _isNeg <- D.slt (vnode op) _0
+    result' <- D.cond _isNeg _n1 _1
     -- if it's zero, return zero
-    isZero <- D.iseq (vnode op) _0
-    result <- D.cond isZero _0 result'
+    _isZero <- D.iseq (vnode op) _0
+    result <- D.cond _isZero _0 result'
     -- make a variable 
     resultVar <- D.i32v "jsSign"
     D.assign result resultVar
@@ -758,14 +753,14 @@ jsSign op =
   else do
     one <- D.double 1
     minusOne <- D.double (-1)
-    isPos <- D.isPos $ vnode op
-    result' <- D.cond isPos one minusOne
+    _isPos <- D.isPos $ vnode op
+    result' <- D.cond _isPos one minusOne
     -- if its pos zero return pos zero, neg zero return neg zero
-    isZero <- D.isZero $ vnode op
-    posZero <- D.fpzero True
-    negZero <- D.fpzero False
-    correctZero <- D.cond isPos posZero negZero
-    result <- D.cond isZero correctZero result'
+    _isZero <- D.isZero $ vnode op
+    _posZero <- D.fpzero True
+    _negZero <- D.fpzero False
+    correctZero <- D.cond _isPos _posZero _negZero
+    result <- D.cond _isZero correctZero result'
     -- make a variable
     resultVar <- D.doubv "jsSign"
     D.assign result resultVar
@@ -794,7 +789,6 @@ noopWrapper left right op overflowOp opName = do
   canOverflow <- case overflowOp of
                    Nothing  -> return parentsUndef
                    Just oop -> do
-                     ct <- D.getNextCt
                      flow <- oop (isSigned $ vtype left) (vnode left) (vnode right)
                      D.or parentsUndef flow 
   result <- op (vnode left) (vnode right)
@@ -1044,12 +1038,13 @@ instance CppShiftRight VNode VNode where
 
 DEFINETEROPCLASS(CppCon, cppCond)
 instance CppCon VNode VNode VNode where
-  cppCond cond true false = do
+  cppCond cond trueBr falseBr = do
     unless (vtype cond == Bool) $ error "Conditional must be a boolean"
-    unless (vtype true == vtype false) $ error "Must have both branches of cond be same type"
-    result <- D.cond (vnode cond) (vnode true) (vnode false)
-    undef <- D.or (vundef cond) (vundef true) >>= D.or (vundef false)
-    return $ VNode undef result $ vtype true
+    unless (vtype trueBr == vtype falseBr) $
+      error "Must have both branches of cond be same type"
+    result <- D.cond (vnode cond) (vnode trueBr) (vnode falseBr)
+    undef <- D.or (vundef cond) (vundef trueBr) >>= D.or (vundef falseBr)
+    return $ VNode undef result $ vtype trueBr
 
 class CppCast n0 where
   cppCast :: n0 -> Type -> D.Verif VNode
