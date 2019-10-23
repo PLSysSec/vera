@@ -4,30 +4,53 @@ import qualified DSL.DSL        as D
 import           DSL.Typed
 import           Generate.State
 
-data Expr = Add VNode VNode
-          | Sub VNode VNode
-          | Mul VNode VNode
-          | Cast VNode Type
-          | Max VNode VNode
-          | Min VNode VNode
+data RichType = Type
+              | Class String
+              deriving (Eq, Ord, Show)
+
+data Leaf = VNode
+          | Member String
+          | Field String
+
+data Expr = Add RichType Expr Expr
+          | Sub RichType Expr Expr
+          | Mul RichType Expr Expr
+          | Cast RichType Expr Expr
+          | Max RichType Expr Expr
+          | Min RichType Expr Expr
+          | GetField RichType Expr Expr
           -- ^ Operators
-          | Lt VNode VNode
-          | Lte VNode VNode
-          | Gt VNode VNode
-          | Gte VNode VNode
+          | Lt RichType Expr Expr
+          | Lte RichType Expr Expr
+          | Gt RichType Expr Expr
+          | Gte RichType Expr Expr
+          | Eq RichType Expr Expr
           -- ^ Comparisons
-          | And VNode VNode
-          | Or VNode VNode
-          | Xor VNode VNode
-          | LShift VNode VNode
-          | RShift VNode VNode
+          | And RichType Expr Expr
+          | Or RichType Expr Expr
+          | Xor RichType Expr Expr
+          | LShift RichType Expr Expr
+          | RShift RichType Expr Expr
           -- ^ Bitwise operators
-          | Abs VNode
-          | Not VNode
-          | Neg VNode
+          | Abs RichType Expr
+          | Not RichType Expr
+          | Neg RichType Expr
+          | Leaf
           -- ^ Unary operators
           deriving (Eq, Ord, Show)
 
+data Stmt = Assign VNode Expr
+          | If VNode [Stmt] (Maybe [Stmt])
+          | Return VNode
+          | Call RichType String [Expr]
+          deriving (Eq, Ord, Show)
+
+data FieldDef = FieldDef RichType String
+data MemberDef = MemberDef Function
+data ClassDef = ClassDef [FieldDef] [MemberDef]
+
+data Function = Function String RichType [RichType]
+data Program = Program [Function] [ClassDef]
 
 
 _elif = undefined
