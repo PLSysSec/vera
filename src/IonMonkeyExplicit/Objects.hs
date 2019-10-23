@@ -1,15 +1,15 @@
-module IonMonkey.Objects ( Range(..)
-                         -- * Making ranges and operands
-                         , inputRange
-                         , resultRange
-                         , operandWithRange
-                         ) where
-import           Control.Monad         (when)
-import qualified DSL.DSL               as D
-import           DSL.Typed             as T
-import           IonMonkey.Helpers
-import           IonMonkey.ObjectTypes
-import           Prelude               hiding (exp)
+module IonMonkeyExplicit.Objects ( Range(..)
+                                 -- * Making ranges and operands
+                                 , inputRange
+                                 , resultRange
+                                 , operandWithRange
+                                 ) where
+import           Control.Monad                 (when)
+import qualified DSL.DSL                       as D
+import           DSL.Typed                     as T
+import           IonMonkeyExplicit.Helpers
+import           IonMonkeyExplicit.ObjectTypes
+import           Prelude                       hiding (exp)
 
 inputRange :: Type -> String -> D.Verif Range
 inputRange ty operandName = do

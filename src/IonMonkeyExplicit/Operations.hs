@@ -1,29 +1,29 @@
-module IonMonkey.Operations ( add
-                            , sub
-                            , and
-                            , or
-                            , xor
-                            , not
-                            , mul
-                            , lsh
-                            , rsh
-                            , ursh
-                            , lsh'
-                            , rsh'
-                            , ursh'
-                            , abs
-                            , min
-                            , max
-                            , floor
-                            , ceil
-                            , sign
-                            , nanToZero
-                            ) where
-import qualified DSL.Typed         as T
-import           IonMonkey.Helpers
-import           IonMonkey.Objects
-import           Prelude           hiding (abs, and, exp, floor, max, min, not,
-                                    or)
+module IonMonkeyExplicit.Operations ( add
+                                    , sub
+                                    , and
+                                    , or
+                                    , xor
+                                    , not
+                                    , mul
+                                    , lsh
+                                    , rsh
+                                    , ursh
+                                    , lsh'
+                                    , rsh'
+                                    , ursh'
+                                    , abs
+                                    , min
+                                    , max
+                                    , floor
+                                    , ceil
+                                    , sign
+                                    , nanToZero
+                                    ) where
+import qualified DSL.Typed                 as T
+import           IonMonkeyExplicit.Helpers
+import           IonMonkeyExplicit.Objects
+import           Prelude                   hiding (abs, and, exp, floor, max,
+                                            min, not, or)
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#744
 add :: Range -> Range -> T.Verif Range

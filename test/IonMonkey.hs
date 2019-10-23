@@ -1,12 +1,12 @@
 module IonMonkey where
 import           BenchUtils
-import           Control.Monad.State.Strict (liftIO)
-import qualified DSL.Typed                  as T
-import           IonMonkey.Objects          hiding (resultRange)
-import           IonMonkey.Operations
-import           IonMonkey.Verify
-import           Prelude                    hiding (abs, and, floor, max, min,
-                                             not, or)
+import           Control.Monad.State.Strict   (liftIO)
+import qualified DSL.Typed                    as T
+import           IonMonkeyExplicit.Objects    hiding (resultRange)
+import           IonMonkeyExplicit.Operations
+import           IonMonkeyExplicit.Verify
+import           Prelude                      hiding (abs, and, floor, max, min,
+                                               not, or)
 import           Test.Tasty.HUnit
 
 ionMonkeyTests :: BenchTest

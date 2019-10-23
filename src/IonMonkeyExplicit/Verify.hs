@@ -1,11 +1,11 @@
-module IonMonkey.Verify where
-import           Data.List         (isInfixOf)
-import qualified Data.Map.Strict   as M
-import           Data.Maybe        (catMaybes)
-import qualified DSL.DSL           as D
-import           DSL.Typed         as T
-import           IonMonkey.Helpers
-import           IonMonkey.Objects
+module IonMonkeyExplicit.Verify where
+import           Data.List                 (isInfixOf)
+import qualified Data.Map.Strict           as M
+import           Data.Maybe                (catMaybes)
+import qualified DSL.DSL                   as D
+import           DSL.Typed                 as T
+import           IonMonkeyExplicit.Helpers
+import           IonMonkeyExplicit.Objects
 
 data VerifResult = Verified
                  | UnsatImpl

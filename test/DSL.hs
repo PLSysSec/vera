@@ -1,14 +1,14 @@
 module DSL where
 import           BenchUtils
-import qualified Data.Map          as Map
-import           DSL.DSL           (fpCeil, fpFloor)
-import qualified DSL.DSL           as D
-import qualified DSL.Typed         as T
-import qualified DSL.Z3Wrapper     as Ops
-import           IonMonkey.Objects
-import           Prelude           hiding (abs, and, not)
+import qualified Data.Map                  as Map
+import           DSL.DSL                   (fpCeil, fpFloor)
+import qualified DSL.DSL                   as D
+import qualified DSL.Typed                 as T
+import qualified DSL.Z3Wrapper             as Ops
+import           IonMonkeyExplicit.Objects
+import           Prelude                   hiding (abs, and, not)
 import           Utils
-import qualified Z3.Monad          as M
+import qualified Z3.Monad                  as M
 
 dslTests :: BenchTest
 dslTests = benchTestGroup "DSL" [ addTest

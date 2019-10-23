@@ -1,29 +1,29 @@
 {-# LANGUAGE FlexibleInstances #-}
-module IonMonkey.Helpers ( setRange
-                         , setLowerInit'
-                         , noInt32LowerBound
-                         , noInt32UpperBound
-                         , isFiniteNonNegative
-                         , canBeFiniteNonNegative
-                         , isFiniteNegative
-                         , maxFiniteExponent
-                         , includesInfinityAndNan
-                         , exponentImpliedByInt32Bounds
-                         , missingAnyInt32Bounds
-                         , includesInfinity
-                         , canHaveSignBitSet
-                         , canBeZero
-                         , canBeInfiniteOrNan
-                         , numBits
-                         , canBeNan
-                         , countLeadingZeroes32
-                         , countTrailingZeroes32
-                         ) where
-import           Control.Monad         (when)
-import qualified DSL.DSL               as D
-import qualified DSL.Typed             as T
-import           IonMonkey.ObjectTypes
-import           Prelude               hiding (exp, max, min)
+module IonMonkeyExplicit.Helpers ( setRange
+                                 , setLowerInit'
+                                 , noInt32LowerBound
+                                 , noInt32UpperBound
+                                 , isFiniteNonNegative
+                                 , canBeFiniteNonNegative
+                                 , isFiniteNegative
+                                 , maxFiniteExponent
+                                 , includesInfinityAndNan
+                                 , exponentImpliedByInt32Bounds
+                                 , missingAnyInt32Bounds
+                                 , includesInfinity
+                                 , canHaveSignBitSet
+                                 , canBeZero
+                                 , canBeInfiniteOrNan
+                                 , numBits
+                                 , canBeNan
+                                 , countLeadingZeroes32
+                                 , countTrailingZeroes32
+                                 ) where
+import           Control.Monad                 (when)
+import qualified DSL.DSL                       as D
+import qualified DSL.Typed                     as T
+import           IonMonkeyExplicit.ObjectTypes
+import           Prelude                       hiding (exp, max, min)
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#370
 -- https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#621

@@ -1,4 +1,4 @@
-module IonMonkey.ObjectTypes (Range(..)) where
+module IonMonkeyExplicit.ObjectTypes (Range(..)) where
 import           DSL.Typed as T
 
 -- | IonMonkey's range object

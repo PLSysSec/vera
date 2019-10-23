@@ -1,9 +1,9 @@
 module InputRanges (inputTests) where
 import           BenchUtils
-import qualified DSL.Typed         as T
-import           IonMonkey.Helpers
-import           IonMonkey.Objects
-import           Prelude           hiding (and, exp, not)
+import qualified DSL.Typed                 as T
+import           IonMonkeyExplicit.Helpers
+import           IonMonkeyExplicit.Objects
+import           Prelude                   hiding (and, exp, not)
 import           Utils
 
 inputTests :: BenchTest
