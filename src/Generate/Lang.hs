@@ -29,11 +29,13 @@ binOp e1' e2' constructor opName = do
 
 -- Statements
 
-if_ :: Codegen Expr
-    -> Codegen [Stmt]
-    -> Codegen (Maybe [Stmt])
-    -> Codegen Stmt
+-- |
+if_ :: Codegen Expr -- ^ Condition
+    -> Codegen [Stmt] -- ^ True branch
+    -> Codegen (Maybe [Stmt]) -- ^ Possible false branch
+    -> Codegen Stmt -- ^ Resulting if statement
 if_ cond ifBr elseBr = error ""
+
 
 -- | Assign a variable to a an expression.
 -- Right now it does not support assignment to struct members, but it will have to
@@ -72,5 +74,10 @@ var = error ""
 
 test :: Codegen Expr
 test = (number Signed 5) .+. (number Signed 6) .+. (number Signed 6) .+. (number Signed 81)
+
+--
+-- Helpers
+--
+
 
 
