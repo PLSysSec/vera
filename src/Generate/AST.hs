@@ -8,9 +8,10 @@ data RichType = Normal Type
               | Class String
               deriving (Eq, Ord, Show)
 
-data Leaf = VNode
+data Leaf = Simple String VNode
           | Member String
           | Field String
+          deriving (Eq, Ord, Show)
 
 data Expr = Add { ty    :: RichType
                 , left  :: Expr
@@ -95,7 +96,9 @@ data Expr = Add { ty    :: RichType
           -- ^ Unary operators
           deriving (Eq, Ord, Show)
 
-data Stmt = Assign VNode Expr
+data Stmt = Assign { rhs :: Leaf
+                   , lhs :: Expr
+                   }
           | If Expr [Stmt] (Maybe [Stmt])
           | Return VNode
           | Call RichType String [Expr]

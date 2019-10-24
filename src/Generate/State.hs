@@ -2,6 +2,7 @@
 module Generate.State where
 import           Control.Monad.Reader
 import           Control.Monad.State.Strict
+import qualified Data.Map                   as M
 import           DSL.DSL
 import qualified Z3.Monad                   as Z
 
@@ -9,6 +10,7 @@ data CodegenState = CodegenState { clases  :: Int
                                  , methods :: Int
                                  , fields  :: Int
                                  , ccode   :: Int
+                                 , vers    :: M.Map String Int
                                  }
 
 newtype Codegen a = Codegen (StateT CodegenState Verif a)
