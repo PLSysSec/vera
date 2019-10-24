@@ -56,7 +56,7 @@ assign lhs' rhs' = do
           let newVer = ver + 1
           put $ s0 { vers = M.insert name newVer versions }
           return newVer
-      newVar <- newResultVar vtype $ name ++ "_" ++ show version
+      newVar <- liftVerif $ newResultVar vtype $ name ++ "_" ++ show version
       error ""
     _ -> error "Cannot assign to a non-variable"
 
