@@ -48,7 +48,7 @@ assign lhs' rhs' = do
   case lhs of
     Simple (V var) -> do
       newVar <- nextVer var
-      let newLhs = VV newVar var
+      let newLhs = Simple $ VV newVar var
       return $ Assign newLhs rhs
     _ -> error "Cannot assign to a non-variable"
 

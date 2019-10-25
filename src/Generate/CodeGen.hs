@@ -170,3 +170,14 @@ genExprSMT expr =
     Simple (VV vnode _) -> return vnode
     _ -> error "Malformed leaf node"
 
+genStmtSMT :: Stmt
+           -> Codegen ()
+genStmtSMT stmt =
+  case stmt of
+    Assign lhs rhs -> do
+      lhsSym <- genExprSMT lhs
+      rhsSym <- genExprSMT rhs
+      liftVerif $ T.vassign lhsSym rhsSym
+    _ -> error ""
+
+

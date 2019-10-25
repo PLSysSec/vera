@@ -97,7 +97,7 @@ data Expr = Add { ty    :: RichType
           -- ^ Unary operators
           deriving (Eq, Ord, Show)
 
-data Stmt = Assign { rhs :: Leaf
+data Stmt = Assign { rhs :: Expr
                    , lhs :: Expr
                    }
           | If Expr [Stmt] (Maybe [Stmt])
