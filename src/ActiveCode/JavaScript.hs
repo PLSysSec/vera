@@ -40,15 +40,15 @@ data JSOp = JSAdd
 
 bop2code :: JSOp -> (Double -> Double -> String)
 bop2code op = \x y -> case op of
-  JSAdd  -> show x ++ "+" ++ show y
-  JSSub  -> show x ++ "-" ++ show y
-  JSAnd  -> show x ++ "&" ++ show y
-  JSOr   -> show x ++ "|" ++ show y
-  JSXor  -> show x ++ "^" ++ show y
-  JSMul  -> show x ++ "*" ++ show y
-  JSShl  -> show x ++ "<<" ++ show y
-  JSShr  -> show x ++ ">>" ++ show y
-  JSUshr -> show x ++ ">>>" ++ show y
+  JSAdd  -> "(" ++ show x ++ ")" ++ "+"   ++ "(" ++ show y ++ ")"
+  JSSub  -> "(" ++ show x ++ ")" ++ "-"   ++ "(" ++ show y ++ ")"
+  JSAnd  -> "(" ++ show x ++ ")" ++ "&"   ++ "(" ++ show y ++ ")"
+  JSOr   -> "(" ++ show x ++ ")" ++ "|"   ++ "(" ++ show y ++ ")"
+  JSXor  -> "(" ++ show x ++ ")" ++ "^"   ++ "(" ++ show y ++ ")"
+  JSMul  -> "(" ++ show x ++ ")" ++ "*"   ++ "(" ++ show y ++ ")"
+  JSShl  -> "(" ++ show x ++ ")" ++ "<<"  ++ "(" ++ show y ++ ")"
+  JSShr  -> "(" ++ show x ++ ")" ++ ">>"  ++ "(" ++ show y ++ ")"
+  JSUshr -> "(" ++ show x ++ ")" ++ ">>>" ++ "(" ++ show y ++ ")"
   JSMin  -> "Math.min(" ++ show x ++ "," ++ show y ++ ")"
   JSMax  -> "Math.max(" ++ show x ++ "," ++ show y ++ ")"
   _      -> error "BUG: called bop2code with unary op"
