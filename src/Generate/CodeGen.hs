@@ -47,6 +47,75 @@ genExprSMT expr =
     Add _ left right -> do
       leftSym <- genExprSMT left
       rightSym <- genExprSMT right
-      error ""
-    _ -> error ""
+      liftVerif $ T.cppAdd leftSym rightSym
+    Sub _ left right -> do
+      leftSym <- genExprSMT left
+      rightSym <- genExprSMT right
+      liftVerif $ T.cppSub leftSym rightSym
+    Mul _ left right -> do
+      leftSym <- genExprSMT left
+      rightSym <- genExprSMT right
+      liftVerif $ T.cppMul leftSym rightSym
+    Cast ty expr -> do
+      exprSym <- genExprSMT expr
+      liftVerif $ T.cppCast exprSym $ ntype ty
+    Max _ left right -> do
+      leftSym <- genExprSMT left
+      rightSym <- genExprSMT right
+      liftVerif $ T.cppMax leftSym rightSym
+    Min _ left right -> do
+      leftSym <- genExprSMT left
+      rightSym <- genExprSMT right
+      liftVerif $ T.cppMin leftSym rightSym
+    Lt _ left right -> do
+      leftSym <- genExprSMT left
+      rightSym <- genExprSMT right
+      liftVerif $ T.cppLt leftSym rightSym
+    Lte _ left right -> do
+      leftSym <- genExprSMT left
+      rightSym <- genExprSMT right
+      liftVerif $ T.cppLte leftSym rightSym
+    Gt _ left right -> do
+      leftSym <- genExprSMT left
+      rightSym <- genExprSMT right
+      liftVerif $ T.cppGt leftSym rightSym
+    Gte _ left right -> do
+      leftSym <- genExprSMT left
+      rightSym <- genExprSMT right
+      liftVerif $ T.cppGte leftSym rightSym
+    Eq _ left right -> do
+      leftSym <- genExprSMT left
+      rightSym <- genExprSMT right
+      liftVerif $ T.cppEq leftSym rightSym
+    And _ left right -> do
+      leftSym <- genExprSMT left
+      rightSym <- genExprSMT right
+      liftVerif $ T.cppAnd leftSym rightSym
+    Or _ left right -> do
+      leftSym <- genExprSMT left
+      rightSym <- genExprSMT right
+      liftVerif $ T.cppOr leftSym rightSym
+    Xor _ left right -> do
+      leftSym <- genExprSMT left
+      rightSym <- genExprSMT right
+      liftVerif $ T.cppXor leftSym rightSym
+    LShift _ left right -> do
+      leftSym <- genExprSMT left
+      rightSym <- genExprSMT right
+      liftVerif $ T.cppShiftLeft leftSym rightSym
+    RShift _ left right -> do
+      leftSym <- genExprSMT left
+      rightSym <- genExprSMT right
+      liftVerif $ T.cppShiftRight leftSym rightSym
+    Abs _ expr -> do
+      exprSym <- genExprSMT expr
+      liftVerif $ T.cppAbs exprSym
+    Not _ expr -> do
+      exprSym <- genExprSMT expr
+      liftVerif $ T.cppNot exprSym
+    Neg _ expr -> do
+      exprSym <- genExprSMT expr
+      liftVerif $ T.cppNeg exprSym
+    Simple (VV vnode _) -> return vnode
+    _ -> error "Malformed leaf node"
 

@@ -73,6 +73,12 @@ test = [ declare Signed "lhs"
        , (v "lhs") `assign` ((number Signed 5) .+. (v "var"))
        ]
 
+test2 :: Codegen ()
+test2 = do
+  forM_ test $ \line -> do
+    result <- line
+    return ()
+
 --
 -- Helpers
 --

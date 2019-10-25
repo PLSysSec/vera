@@ -4,7 +4,7 @@ import qualified DSL.DSL        as D
 import           DSL.Typed
 import           Generate.State
 
-data RichType = Normal Type
+data RichType = Normal { ntype :: Type }
               | Class String
               deriving (Eq, Ord, Show)
 
