@@ -13,8 +13,8 @@ binOp :: Codegen Expr
       -> String
       -> Codegen Expr
 binOp e1' e2' constructor opName = do
-  e1 <- e1'
-  e2 <- e2'
+  e1 <- e1' >>= normExpr
+  e2 <- e2' >>= normExpr
   unless (ty e1 == ty e2) $ error $ unwords ["Typecheck failure:", opName]
   return $ constructor (ty e1) e1 e2
 
@@ -39,14 +39,14 @@ if_ cond ifBr elseBr = error ""
 
 -- | Assign a variable to a an expression.
 -- Right now it does not support assignment to struct members, but it will have to
-assign :: Codegen Leaf
+assign :: Codegen Expr
        -> Codegen Expr
        -> Codegen Stmt
 assign lhs' rhs' = do
   lhs <- lhs'
   rhs <- rhs'
   case lhs of
-    V var -> do
+    Simple (V var) -> do
       newVar <- nextVer var
       let newLhs = VV newVar var
       return $ Assign newLhs rhs
@@ -56,18 +56,30 @@ assign lhs' rhs' = do
 -- Numbers and variables
 --
 
-declare :: [(Type, Variable)] -> Codegen [Stmt]
-declare vars = error ""
+declare :: Type -> Variable -> Codegen Stmt
+declare ty var = do
+  void $ newVar ty var
+  return $ Decl var ty
 
 number :: Type -> Integer -> Codegen Expr
 number ty num = error ""
 
-test :: Codegen Expr
-test = (number Signed 5) .+. (number Signed 6) .+. (number Signed 6) .+. (number Signed 81)
+v :: Variable -> Codegen Expr
+v var = return $ Simple $ V var
+
+test :: [Codegen Stmt]
+test = [ declare Signed "lhs"
+       , declare Signed "var"
+       , (v "lhs") `assign` ((number Signed 5) .+. (v "var"))
+       ]
 
 --
 -- Helpers
 --
+
+normExpr :: Expr -> Codegen Expr
+normExpr (Simple leaf) = rhsVar leaf >>= return . Simple
+normExpr e             = return e
 
 rhsVar :: Leaf -> Codegen Leaf
 rhsVar (V var) = do

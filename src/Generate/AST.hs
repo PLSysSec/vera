@@ -93,7 +93,7 @@ data Expr = Add { ty    :: RichType
           | Neg { ty   :: RichType
                 , expr :: Expr
                 }
-          | Leaf
+          | Simple Leaf
           -- ^ Unary operators
           deriving (Eq, Ord, Show)
 
