@@ -1,5 +1,7 @@
 module Generate.CodeGen where
 import           Control.Monad.State.Strict
+import qualified Data.Map                   as M
+import           Data.Maybe
 import qualified DSL.Typed                  as T
 import           Generate.AST
 import           Generate.State
@@ -178,6 +180,33 @@ genStmtSMT stmt =
       lhsSym <- genExprSMT lhs
       rhsSym <- genExprSMT rhs
       liftVerif $ T.vassign lhsSym rhsSym
-    _ -> error ""
+    If cond ifBr mElseBr prevVers -> do
+      condSym <- genExprSMT cond
+      let verMap = M.fromList prevVers
+      void $ foldM (translateStmt condSym) verMap ifBr
+      notCond <- liftVerif $ T.cppNot condSym
+      void $ foldM (translateStmt notCond) verMap $ if isJust mElseBr
+                                                    then fromJust mElseBr
+                                                    else []
+    _ -> error "Unsupported statement right now"
+  where
+    translateStmt :: T.VNode
+                  -> M.Map Variable Version
+                  -> Stmt
+                  -> Codegen (M.Map Variable Version)
+    translateStmt cond prevVers stmt =
+      case stmt of
+        Assign (Simple (VV vnode var ver)) rhs -> do
+          let prevVer = prevVers M.! var
+              newVers = M.insert var ver prevVers
+          trueBr <- genExprSMT rhs
+          falseBr <- varVer var prevVer
+          conditional <- liftVerif $ T.cppCond cond trueBr falseBr
+          liftVerif $ T.vassign vnode conditional
+          return newVers
+        Assign{} -> error "Malformed assignment in if statememt"
+        s -> genStmtSMT s >> return prevVers
+
+
 
 
