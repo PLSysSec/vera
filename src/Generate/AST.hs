@@ -10,6 +10,7 @@ data RichType = Normal { ntype :: Type }
 
 data Leaf = V Variable
           | VV VNode Variable Version
+          | N Type VNode
           | Member String
           | Field String
           deriving (Eq, Ord, Show)

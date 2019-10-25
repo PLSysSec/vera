@@ -28,6 +28,36 @@ binOp e1' e2' constructor opName = do
 (.*.) :: Codegen Expr -> Codegen Expr -> Codegen Expr
 (.*.) e1 e2 = binOp e1 e2 Mul "mul"
 
+(.<.) :: Codegen Expr -> Codegen Expr -> Codegen Expr
+(.<.) e1 e2 = binOp e1 e2 Lt "lt"
+
+(.<=.) :: Codegen Expr -> Codegen Expr -> Codegen Expr
+(.<=.) e1 e2 = binOp e1 e2 Lte "lte"
+
+(.>.) :: Codegen Expr -> Codegen Expr -> Codegen Expr
+(.>.) e1 e2 = binOp e1 e2 Gt "gt"
+
+(.=>.) :: Codegen Expr -> Codegen Expr -> Codegen Expr
+(.=>.) e1 e2 = binOp e1 e2 Gt "gte"
+
+(.==.) :: Codegen Expr -> Codegen Expr -> Codegen Expr
+(.==.) e1 e2 = binOp e1 e2 Eq "eq"
+
+(.&.) :: Codegen Expr -> Codegen Expr -> Codegen Expr
+(.&.) e1 e2 = binOp e1 e2 And "and"
+
+(.|.) :: Codegen Expr -> Codegen Expr -> Codegen Expr
+(.|.) e1 e2 = binOp e1 e2 Or "or"
+
+(.^.) :: Codegen Expr -> Codegen Expr -> Codegen Expr
+(.^.) e1 e2 = binOp e1 e2 Xor "xor"
+
+(.<<.) :: Codegen Expr -> Codegen Expr -> Codegen Expr
+(.<<.) e1 e2 = binOp e1 e2 LShift "lshift"
+
+(.>>.) :: Codegen Expr -> Codegen Expr -> Codegen Expr
+(.>>.) e1 e2 = binOp e1 e2 RShift "rshift"
+
 -- Statements
 
 -- |
@@ -69,7 +99,11 @@ declare ty var = do
   return $ Decl var ty
 
 number :: Type -> Integer -> Codegen Expr
-number ty num = error ""
+number ty n = do
+  node <- case ty of
+            Signed -> liftVerif $ num n
+            _      -> error ""
+  return $ Simple $ N Signed node
 
 v :: Variable -> Codegen Expr
 v var = return $ Simple $ V var

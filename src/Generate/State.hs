@@ -9,11 +9,12 @@ import qualified Z3.Monad                   as Z
 
 type Variable = String
 
-data CodegenState = CodegenState { clases :: Int
-                                 , vars   :: M.Map String [VNode]
-                                 }
+data CodegenState = CodegenState { vars :: M.Map String [VNode] }
 
 type Version = Int
+
+emptyCodegenState :: CodegenState
+emptyCodegenState = CodegenState M.empty
 
 -- | Make (and return) a new variable
 newVar :: Type -> Variable -> Codegen VNode
@@ -70,3 +71,17 @@ liftVerif = Codegen . lift
 instance Z.MonadZ3 Codegen where
     getSolver = Codegen $ lift $ Z.getSolver
     getContext = Codegen $ lift $ Z.getContext
+
+runCodegen :: Maybe Integer -- ^ Optional timeout
+           -> Codegen a       -- ^ Codegen computation
+           -> IO (a, CodegenState)
+runCodegen mTimeout (Codegen act) = evalVerif mTimeout $ runStateT act emptyCodegenState
+
+evalCodegen :: Maybe Integer -> Codegen a -> IO a
+evalCodegen mt act = fst <$> runCodegen mt act
+
+execCodegen :: Maybe Integer -> Codegen a -> IO CodegenState
+execCodegen mt act = snd <$> runCodegen mt act
+
+runSolverOnSMT :: Codegen SMTResult
+runSolverOnSMT = liftVerif runSolver

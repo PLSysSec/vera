@@ -170,6 +170,7 @@ genExprSMT expr =
       exprSym <- genExprSMT expr
       liftVerif $ T.cppNeg exprSym
     Simple (VV vnode _ _) -> return vnode
+    Simple (N _ vnode) -> return vnode
     _ -> error "Malformed leaf node"
 
 genStmtSMT :: Stmt
@@ -188,6 +189,7 @@ genStmtSMT stmt =
       void $ foldM (translateStmt notCond) verMap $ if isJust mElseBr
                                                     then fromJust mElseBr
                                                     else []
+    Decl{} -> return ()
     _ -> error "Unsupported statement right now"
   where
     translateStmt :: T.VNode
@@ -207,6 +209,7 @@ genStmtSMT stmt =
         Assign{} -> error "Malformed assignment in if statememt"
         s -> genStmtSMT s >> return prevVers
 
-
+genBodySMT :: [Codegen Stmt] -> Codegen ()
+genBodySMT stmts = forM_ stmts $ \stmt -> stmt >>= genStmtSMT
 
 
