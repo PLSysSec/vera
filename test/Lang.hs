@@ -10,6 +10,7 @@ import           Utils
 langTests :: BenchTest
 langTests = benchTestGroup "Lang" [ declTest
                                   , ifTest
+                                  , callTest
                                   ]
 
 declTest :: BenchTest
@@ -59,5 +60,24 @@ ifTest = benchTestCase "if" $ do
                          , ("z_1", 20)
                          ]
 
+callTest :: BenchTest
+callTest = benchTestCase "call" $ do
 
+  r <- evalCodegen Nothing $ do
 
+    let args = [("x", Signed), ("y", Signed)]
+        body = [ declare Signed "ret"
+               , (v "ret") `assign` (v "x" .+. v "y")
+               , returnFrom "fun" (v "ret")
+               ]
+    genFunctionSMT $ define "fun" Signed args body
+    genBodySMT [ declare Signed "result"
+               , (v "result") `assign` call "fun" [number Signed 5, number Signed 10]
+               ]
+
+    runSolverOnSMT
+  vtest r $ Map.fromList [ ("x_0", 5)
+                         , ("x_1", 7)
+                         , ("x_2", 9)
+                         , ("y_0", 10)
+                         ]

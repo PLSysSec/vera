@@ -95,6 +95,13 @@ assign lhs' rhs' = do
       return $ Assign newLhs rhs
     _ -> error "Cannot assign to a non-variable"
 
+returnFrom :: String
+           -> Codegen Expr
+           -> Codegen Stmt
+returnFrom str expr' = do
+  expr <- expr'
+  return $ Return str expr
+
 --
 -- Functions
 --
@@ -102,13 +109,13 @@ assign lhs' rhs' = do
 define :: String
        -> Type
        -> [(Variable, Type)]
-       -> Codegen [Stmt]
+       -> [Codegen Stmt]
        -> Codegen Function
 define fnName returnType args body' = do
   argSyms <- forM args $ \(var, ty) -> do
      void $ declare ty var
      v var >>= normExpr >>= return . verboseNode . leaf
-  body <- body'
+  body <- forM body' $ \line -> line
   let func = Function fnName returnType argSyms  body
   addFunction fnName func
   return func

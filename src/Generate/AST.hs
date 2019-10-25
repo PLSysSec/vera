@@ -107,7 +107,7 @@ data Expr = Add { ty    :: RichType
 data Stmt = Assign Expr Expr
           | If Expr [Stmt] [Stmt]
           | Decl Variable Type
-          | Return VNode
+          | Return String Expr
           deriving (Eq, Ord, Show)
 
 data FieldDef = FieldDef RichType String

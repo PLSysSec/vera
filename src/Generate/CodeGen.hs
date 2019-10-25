@@ -197,6 +197,10 @@ genStmtSMT stmt =
       notCond <- liftVerif $ T.cppNot condSym
       mapM_ (translateStmt notCond) elseBr
     Decl{} -> return ()
+    Return fnName expr -> do
+      rv <- getReturnValue fnName
+      exprSym <- genExprSMT expr
+      liftVerif $ T.vassign rv exprSym
     _ -> error "Unsupported statement right now"
   where
     translateStmt :: T.VNode
@@ -216,4 +220,8 @@ genStmtSMT stmt =
 genBodySMT :: [Codegen Stmt] -> Codegen ()
 genBodySMT stmts = forM_ stmts $ \stmt -> stmt >>= genStmtSMT
 
+genFunctionSMT :: Codegen Function -> Codegen ()
+genFunctionSMT f' = do
+  f <- f'
+  mapM_ genStmtSMT $ funBody f
 
