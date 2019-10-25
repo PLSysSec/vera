@@ -45,32 +45,22 @@ assign :: Codegen Leaf
 assign lhs' rhs' = do
   lhs <- lhs'
   rhs <- rhs'
-  -- SSA the LHS
   case lhs of
-    Simple name (VNode undef vnode vtype) -> do
-      s0 <- get
-      let versions = vers s0
-      version <- case M.lookup name versions of
-        Nothing  -> do
-          put $ s0 { vers = M.insert name 0 versions }
-          return 0
-        Just ver -> do
-          let newVer = ver + 1
-          put $ s0 { vers = M.insert name newVer versions }
-          return newVer
-      newVar <- liftVerif $ newResultVar vtype $ name ++ "_" ++ show version
-      error ""
+    V var -> do
+      newVar <- nextVer var
+      let newLhs = VV newVar var
+      return $ Assign newLhs rhs
     _ -> error "Cannot assign to a non-variable"
 
-      error ""
-
+--
 -- Numbers and variables
+--
+
+declare :: [(Type, Variable)] -> Codegen [Stmt]
+declare vars = error ""
 
 number :: Type -> Integer -> Codegen Expr
 number ty num = error ""
-
-var :: Type -> String -> Codegen Expr
-var = error ""
 
 test :: Codegen Expr
 test = (number Signed 5) .+. (number Signed 6) .+. (number Signed 6) .+. (number Signed 81)
@@ -79,5 +69,9 @@ test = (number Signed 5) .+. (number Signed 6) .+. (number Signed 6) .+. (number
 -- Helpers
 --
 
-
+rhsVar :: Leaf -> Codegen Leaf
+rhsVar (V var) = do
+  node <- curVar var
+  return $ VV node var
+rhsVar _ = error "Cannot make rhs variable of non-variable type"
 

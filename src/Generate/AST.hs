@@ -8,7 +8,8 @@ data RichType = Normal Type
               | Class String
               deriving (Eq, Ord, Show)
 
-data Leaf = Simple String VNode
+data Leaf = V Variable
+          | VV VNode Variable
           | Member String
           | Field String
           deriving (Eq, Ord, Show)
@@ -100,6 +101,7 @@ data Stmt = Assign { rhs :: Leaf
                    , lhs :: Expr
                    }
           | If Expr [Stmt] (Maybe [Stmt])
+          | Decl Variable Type
           | Return VNode
           | Call RichType String [Expr]
           deriving (Eq, Ord, Show)
