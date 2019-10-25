@@ -72,6 +72,20 @@ if_ cond' ifBr' elseBr' = do
             else return []
   return $ If cond ifBr elseBr
 
+-- Functions
+
+define :: String
+       -> Type
+       -> [(Variable, Type)]
+       -> Codegen [Stmt]
+       -> Codegen Function
+define fnName returnType args body' = do
+  forM_ args $ \(var, ty) -> void $ declare ty var
+  body <- body'
+  let func = Function fnName returnType (map snd args) body
+  addFunction fnName func
+  return func
+
 -- | Assign a variable to a an expression.
 -- Right now it does not support assignment to struct members, but it will have to
 assign :: Codegen Expr

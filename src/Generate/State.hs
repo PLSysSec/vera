@@ -5,18 +5,27 @@ import           Control.Monad.State.Strict
 import qualified Data.Map                   as M
 import           DSL.DSL                    hiding (vars)
 import           DSL.Typed
+import           Generate.AST
 import qualified Z3.Monad                   as Z
-
-type Variable = String
 
 data CodegenState = CodegenState { vars :: M.Map String [VNode]
                                  , tys  :: M.Map String Type
+                                 , funs :: M.Map String Function
                                  }
 
-type Version = Int
 
 emptyCodegenState :: CodegenState
-emptyCodegenState = CodegenState M.empty M.empty
+emptyCodegenState = CodegenState M.empty M.empty M.empty
+
+addFunction :: String
+            -> Function
+            -> Codegen ()
+addFunction str func = do
+  s0 <- get
+  let allFuns = funs s0
+  case M.lookup str allFuns of
+    Just _  -> error $ unwords $ ["Already defined", str]
+    Nothing -> put $ s0 { funs = M.insert str func allFuns}
 
 -- | Make (and return) a new variable
 newVar :: Type -> Variable -> Codegen ()

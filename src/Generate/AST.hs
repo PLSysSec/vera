@@ -1,8 +1,10 @@
 module Generate.AST where
-import           Control.Monad  (unless)
-import qualified DSL.DSL        as D
+import           Control.Monad (unless)
+import qualified DSL.DSL       as D
 import           DSL.Typed
-import           Generate.State
+
+type Version = Int
+type Variable = String
 
 data RichType = Normal { ntype :: Type }
               | Class String
@@ -109,6 +111,11 @@ data FieldDef = FieldDef RichType String
 data MemberDef = MemberDef Function
 data ClassDef = ClassDef [FieldDef] [MemberDef]
 
-data Function = Function String RichType [RichType]
+data Function = Function { funName :: String
+                         , funType :: Type
+                         , funArgs :: [Type]
+                         , funBody :: [Stmt]
+                         }
+
 data Program = Program [Function] [ClassDef]
 
