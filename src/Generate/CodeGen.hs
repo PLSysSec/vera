@@ -39,6 +39,57 @@ genExprCpp expr =
       tyCpp <- genType ty
       exprCpp <- genExprCpp expr
       return $ unwords $ ["(", tyCpp, ")", "(", exprCpp, ")"]
+    Max{} -> error "Do not know how to generate max"
+    Min{} -> error "Do not know how to generate min"
+    GetField{} -> error "Do not know how to generate get field"
+    Lt _ left right -> do
+      leftCpp <- genExprCpp left
+      rightCpp <- genExprCpp right
+      return $ unwords $ [leftCpp, "<", rightCpp]
+    Lte _ left right -> do
+      leftCpp <- genExprCpp left
+      rightCpp <- genExprCpp right
+      return $ unwords $ [leftCpp, "<=", rightCpp]
+    Gt _ left right -> do
+      leftCpp <- genExprCpp left
+      rightCpp <- genExprCpp right
+      return $ unwords $ [leftCpp, ">", rightCpp]
+    Gte _ left right -> do
+      leftCpp <- genExprCpp left
+      rightCpp <- genExprCpp right
+      return $ unwords $ [leftCpp, "=>", rightCpp]
+    Eq _ left right -> do
+      leftCpp <- genExprCpp left
+      rightCpp <- genExprCpp right
+      return $ unwords $ [leftCpp, "==", rightCpp]
+    And _ left right -> do
+      leftCpp <- genExprCpp left
+      rightCpp <- genExprCpp right
+      return $ unwords $ ["(", leftCpp, "&", rightCpp, ")"]
+    Or _ left right -> do
+      leftCpp <- genExprCpp left
+      rightCpp <- genExprCpp right
+      return $ unwords $ ["(", leftCpp, "|", rightCpp, ")"]
+    Xor _ left right -> do
+      leftCpp <- genExprCpp left
+      rightCpp <- genExprCpp right
+      return $ unwords $ ["(", leftCpp, "^", rightCpp, ")"]
+    LShift _ left right -> do
+      leftCpp <- genExprCpp left
+      rightCpp <- genExprCpp right
+      return $ unwords $ ["(", leftCpp, "<<", rightCpp, ")"]
+    RShift _ left right -> do
+      leftCpp <- genExprCpp left
+      rightCpp <- genExprCpp right
+      return $ unwords $ ["(", leftCpp, ">>", rightCpp, ")"]
+    Abs{} -> error "Don't know how to generate abs"
+    Not _ expr -> do
+      exprSym <- genExprCpp expr
+      return $ unwords $ ["!", exprSym]
+    Neg _ expr -> do
+      exprSym <- genExprCpp expr
+      return $ unwords $ ["-", exprSym]
+    _ -> error "Do not support"
 
 genExprSMT :: Expr
            -> Codegen T.VNode
