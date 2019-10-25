@@ -181,31 +181,27 @@ genStmtSMT stmt =
       lhsSym <- genExprSMT lhs
       rhsSym <- genExprSMT rhs
       liftVerif $ T.vassign lhsSym rhsSym
-    If cond ifBr elseBr prevVers -> do
+    If cond ifBr elseBr -> do
       condSym <- genExprSMT cond
-      let verMap = M.fromList prevVers
-      void $ foldM (translateStmt condSym) verMap ifBr
+      mapM_ (translateStmt condSym) ifBr
       notCond <- liftVerif $ T.cppNot condSym
-      void $ foldM (translateStmt notCond) verMap elseBr
+      mapM_ (translateStmt notCond) elseBr
     Decl{} -> return ()
     _ -> error "Unsupported statement right now"
   where
     translateStmt :: T.VNode
-                  -> M.Map Variable Version
                   -> Stmt
-                  -> Codegen (M.Map Variable Version)
-    translateStmt cond prevVers stmt =
+                  -> Codegen ()
+    translateStmt cond stmt =
       case stmt of
         Assign (Simple (VV vnode var ver)) rhs -> do
-          let prevVer = prevVers M.! var
-              newVers = M.insert var ver prevVers
+          let prevVer = ver - 1
           trueBr <- genExprSMT rhs
           falseBr <- varVer var prevVer
           conditional <- liftVerif $ T.cppCond cond trueBr falseBr
           liftVerif $ T.vassign vnode conditional
-          return newVers
         Assign{} -> error "Malformed assignment in if statememt"
-        s -> genStmtSMT s >> return prevVers
+        _ -> return ()
 
 genBodySMT :: [Codegen Stmt] -> Codegen ()
 genBodySMT stmts = forM_ stmts $ \stmt -> stmt >>= genStmtSMT

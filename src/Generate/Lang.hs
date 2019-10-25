@@ -70,9 +70,7 @@ if_ cond' ifBr' elseBr' = do
   elseBr <- if isJust elseBr'
             then forM (fromJust elseBr') $ \line -> line
             else return []
-  -- Figure out the prior versions of every variable in the statements,
-  -- make sure nothing is defined for the first time in an if statment
-  return $ If cond ifBr elseBr $ getPrevVersions $ ifBr ++ elseBr
+  return $ If cond ifBr elseBr
 
 -- | Assign a variable to a an expression.
 -- Right now it does not support assignment to struct members, but it will have to
@@ -134,14 +132,3 @@ rhsVar (V var) = do
   return $ VV node var ver
 rhsVar n@N{} = return n
 rhsVar _ = error "Cannot make rhs variable of non-variable type"
-
-getPrevVersions :: [Stmt] -> [(Variable, Version)]
-getPrevVersions stmts = M.toList $ M.fromList $ reverse $ catMaybes $ map getLHS stmts
-  where getLHS stmt = case stmt of
-                        Assign (Simple (VV _ var ver)) _ ->
-                          if ver == 0
-                          then error "Cannot define variable in branch of if stmt"
-                          else Just (var, ver - 1)
-                        Assign{}                         -> error "Malformed assignment node"
-                        _                                -> Nothing
-

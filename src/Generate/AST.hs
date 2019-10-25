@@ -99,7 +99,7 @@ data Expr = Add { ty    :: RichType
           deriving (Eq, Ord, Show)
 
 data Stmt = Assign Expr Expr
-          | If Expr [Stmt] [Stmt] [(Variable, Version)]
+          | If Expr [Stmt] [Stmt]
           | Decl Variable Type
           | Return VNode
           | Call RichType String [Expr]

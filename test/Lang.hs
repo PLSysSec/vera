@@ -41,13 +41,14 @@ ifTest = benchTestCase "if" $ do
                 , declare Signed "y"
                 , (v "x") `assign` (number Signed 5)
                 , (v "y") `assign` (number Signed 10)
-                , if_ ((v "y") .<. (number Signed 11)) [v "x" `assign` (number Signed 8)] Nothing
+                , if_ ((v "y") .<. (number Signed 11)) [v "x" `assign` (number Signed 8)] (Just [v "x" `assign` (number Signed 12)])
                 ]
     genBodySMT decls
     runSolverOnSMT
   vtest r $ Map.fromList [ ("x_0", 5)
                          , ("y_0", 10)
                          , ("x_1", 8)
+                         , ("x_2", 8)
                          ]
 
 
