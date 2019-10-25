@@ -39,16 +39,24 @@ ifTest = benchTestCase "if" $ do
 
     let decls = [ declare Signed "x"
                 , declare Signed "y"
+                , declare Signed "z"
                 , (v "x") `assign` (number Signed 5)
                 , (v "y") `assign` (number Signed 10)
-                , if_ ((v "y") .<. (number Signed 11)) [v "x" `assign` (number Signed 8)] (Just [v "x" `assign` (number Signed 12)])
+                , (v "z") `assign` (number Signed 20)
+                , if_ ((v "y") .<. (number Signed 11)) [ v "x" `assign` (number Signed 8)
+                                                       , v "x" `assign` (number Signed 20)
+                                                       ] (Just [v "x" `assign` (number Signed 12)])
+                , if_ ((v "x") .<. (number Signed 4)) [ v "z" `assign` (number Signed 0) ] Nothing
                 ]
     genBodySMT decls
     runSolverOnSMT
   vtest r $ Map.fromList [ ("x_0", 5)
                          , ("y_0", 10)
                          , ("x_1", 8)
-                         , ("x_2", 8)
+                         , ("x_2", 20)
+                         , ("x_3", 20)
+                         , ("z_0", 20)
+                         , ("z_1", 20)
                          ]
 
 
