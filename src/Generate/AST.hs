@@ -9,7 +9,7 @@ data RichType = Normal { ntype :: Type }
               deriving (Eq, Ord, Show)
 
 data Leaf = V Variable
-          | VV VNode Variable
+          | VV VNode Variable Version
           | Member String
           | Field String
           deriving (Eq, Ord, Show)
@@ -97,10 +97,8 @@ data Expr = Add { ty    :: RichType
           -- ^ Unary operators
           deriving (Eq, Ord, Show)
 
-data Stmt = Assign { rhs :: Expr
-                   , lhs :: Expr
-                   }
-          | If Expr [Stmt] (Maybe [Stmt])
+data Stmt = Assign Expr Expr
+          | If Expr [Stmt] (Maybe [Stmt]) [(Variable, Version)]
           | Decl Variable Type
           | Return VNode
           | Call RichType String [Expr]

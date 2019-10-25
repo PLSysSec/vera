@@ -167,7 +167,7 @@ genExprSMT expr =
     Neg _ expr -> do
       exprSym <- genExprSMT expr
       liftVerif $ T.cppNeg exprSym
-    Simple (VV vnode _) -> return vnode
+    Simple (VV vnode _ _) -> return vnode
     _ -> error "Malformed leaf node"
 
 genStmtSMT :: Stmt

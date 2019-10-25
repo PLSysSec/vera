@@ -13,6 +13,8 @@ data CodegenState = CodegenState { clases :: Int
                                  , vars   :: M.Map String [VNode]
                                  }
 
+type Version = Int
+
 -- | Make (and return) a new variable
 newVar :: Type -> Variable -> Codegen VNode
 newVar ty var = do
@@ -24,8 +26,14 @@ newVar ty var = do
   return newVar
 
 -- | Get the most recent version of a variable
-curVar :: Variable -> Codegen VNode
-curVar var = varVer var 0
+curVar :: Variable -> Codegen (VNode, Version)
+curVar var = do
+  allVars <- vars `liftM` get
+  case M.lookup var allVars of
+    Nothing -> error $ unwords [var, "has not been declared"]
+    Just vs -> if null vs
+               then error $ unwords [var, "has no versions at all"]
+               else return $ (head vs, length vs - 1)
 
 -- | Get the ver version of a variable
 varVer :: Variable -> Int -> Codegen VNode
@@ -34,11 +42,11 @@ varVer var ver = do
   case M.lookup var allVars of
     Nothing -> error $ unwords [var, "has not been declared"]
     Just vs -> if length vs > ver
-               then return $ vs !! ver
+               then return $ (reverse vs) !! ver
                else error $ unwords [var, "has no version", show ver]
 
 -- | Get an increased version of the variable
-nextVer :: Variable -> Codegen VNode
+nextVer :: Variable -> Codegen (VNode, Version)
 nextVer var = do
   s0 <- get
   let allVars = vars s0
@@ -51,7 +59,7 @@ nextVer var = do
                      ver = length vs
                  newVar <- liftVerif $ newResultVar ty $ var ++ "_" ++ show ver
                  put $ s0 { vars = M.insert var (newVar:vs) allVars }
-                 return newVar
+                 return (newVar, ver)
 
 newtype Codegen a = Codegen (StateT CodegenState Verif a)
     deriving (Functor, Applicative, Monad, MonadState CodegenState, MonadIO)
