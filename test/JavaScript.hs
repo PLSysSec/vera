@@ -1,5 +1,7 @@
 module JavaScript (jsTests) where
 import           BenchUtils
+import           Data.Int
+import           Data.Word
 import qualified Data.Map   as M
 import           DSL.DSL    as D
 import qualified DSL.Typed  as T
@@ -15,13 +17,13 @@ jsTests = benchTestGroup "JavaScript tests" [
     benchTestGroup "Arithmetic binary ops" [ jsBinOpTest JSAdd
                                            , jsBinOpTest JSSub
                                            , jsBinOpTest JSMul ]
-  , benchTestGroup "Bitwise ops" [ jsBinOpTest JSAnd
-                                 , jsBinOpTest JSOr
-                                 , jsBinOpTest JSXor
-                                 , jsBinOpTest JSShl
-                                 , jsBinOpTest JSShr
-                                 , jsBinOpTest JSUshr
-                                 , jsUniOpTest JSNot ]
+ ,  benchTestGroup "Bitwise ops" [ jsBitI32Test JSAnd
+                                 , jsBitI32Test JSOr
+                                 , jsBitI32Test JSXor
+                                 , jsBitI32Test JSShl
+                                 , jsShrTest
+                                 , jsUshrTest
+                                 , jsNotTest ]
   , benchTestGroup "Unary ops" [ jsBinOpTest JSMin
                                , jsBinOpTest JSMax
                                , jsUniOpTest JSAbs
@@ -29,6 +31,68 @@ jsTests = benchTestGroup "JavaScript tests" [
                                , jsUniOpTest JSCeil
                                , jsUniOpTest JSSign  ]
   ]
+
+jsBitI32Test bop = benchTestProperty ("QuickCheck " ++ show bop) jsT
+  where jsT :: Int32 -> Word32 -> Q.Property
+        jsT x y = Q.monadicIO $ do
+          jsRes <- Q.run $ js bop (x, y)
+          (T.SolverSat vars) <- Q.run $ T.evalVerif Nothing $ do
+              xv <- T.named "x" $ T.num $ toInteger x
+              yv <- T.named "y" $ T.unum $ toInteger y
+              smtRes <- T.named "smtRes" $ (jsBinOpToFunc bop) xv yv
+              jsResV <- T.named "jsRes" $ T.num $ toInteger (jsRes :: Int32)
+              ok <- D.iseq (T.vnode smtRes) (T.vnode jsResV)
+              D.named "ok" ok
+              T.runSolver
+          let (Just ok) = M.lookup "ok" vars
+          Q.assert $ ok == 1
+
+jsShrTest = benchTestProperty ("QuickCheck " ++ show bop) jsT
+  where jsT :: Int32 -> Word32 -> Q.Property
+        jsT x y = Q.monadicIO $ do
+          jsRes <- Q.run $ js bop (x, y)
+          (T.SolverSat vars) <- Q.run $ T.evalVerif Nothing $ do
+              xv <- T.named "x" $ T.num $ toInteger x
+              yv <- T.named "y" $ T.unum $ toInteger y
+              smtRes <- T.named "smtRes" $ (jsBinOpToFunc bop) xv yv
+              jsResV <- T.named "jsRes" $ T.num $ toInteger (jsRes :: Int32)
+              ok <- D.iseq (T.vnode smtRes) (T.vnode jsResV)
+              D.named "ok" ok
+              T.runSolver
+          let (Just ok) = M.lookup "ok" vars
+          Q.assert $ ok == 1
+        bop = JSShr
+
+jsUshrTest = benchTestProperty ("QuickCheck " ++ show bop) jsT
+  where jsT :: Word32 -> Word32 -> Q.Property
+        jsT x y = Q.monadicIO $ do
+          jsRes <- Q.run $ js bop (x, y)
+          (T.SolverSat vars) <- Q.run $ T.evalVerif Nothing $ do
+              xv <- T.named "x" $ T.num $ toInteger x
+              yv <- T.named "y" $ T.unum $ toInteger y
+              smtRes <- T.named "smtRes" $ (jsBinOpToFunc bop) xv yv
+              jsResV <- T.named "jsRes" $ T.num $ toInteger (jsRes :: Word32)
+              ok <- D.iseq (T.vnode smtRes) (T.vnode jsResV)
+              D.named "ok" ok
+              T.runSolver
+          let (Just ok) = M.lookup "ok" vars
+          Q.assert $ ok == 1
+        bop = JSUshr
+
+jsNotTest = benchTestProperty ("QuickCheck " ++ show uop) jsT
+  where jsT :: Int32 -> Q.Property
+        jsT x = Q.monadicIO $ do
+          jsRes <- Q.run $ js uop x
+          (T.SolverSat vars) <- Q.run $ T.evalVerif Nothing $ do
+              xv <- T.named "x" $ T.num $ toInteger x
+              smtRes <- T.named "smtRes" $ (jsUniOpToFunc uop) xv
+              jsResV <- T.named "jsRes" $ T.num $ toInteger (jsRes :: Int32)
+              ok <- D.iseq (T.vnode smtRes) (T.vnode jsResV)
+              D.named "ok" ok
+              T.runSolver
+          let (Just ok) = M.lookup "ok" vars
+          Q.assert $ ok == 1
+        uop = JSNot
 
 
 jsUniOpTest uop = benchTestProperty ("QuickCheck " ++ show uop) jsT

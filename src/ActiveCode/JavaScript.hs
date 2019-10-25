@@ -1,24 +1,40 @@
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 module ActiveCode.JavaScript (js, JSOp(..)) where
 
 import           ActiveCode.Utils
+import           Data.Int
+import           Data.Word
 import           Control.Monad
 import           System.Exit
 
-class JS a where
-  js :: JSOp -> a -> IO Double
+class JS a b where
+  js :: JSOp -> a -> IO b
 
-instance JS (Double, Double) where
-  js op (x, y) = do
+instance JS (Double, Double) Double where
+  js = jsBin
+instance JS (Int32, Word32) Int32 where
+  js = jsBin
+instance JS (Word32, Word32) Word32 where
+  js = jsBin
+instance JS Double Double where
+  js = jsUni
+instance JS Int32 Int32 where
+  js = jsUni
+
+jsBin :: (Show a, Show b, Read c) => JSOp -> (a, b) -> IO c
+jsBin op (x, y) = do
     (code,out) <- readCommand "node" [] $ "console.log(" ++ bop2code op x y ++ ")"
     unless (code == ExitSuccess) $ fail "failed"
     readIO out
 
-instance JS Double where
-  js op x = do
+jsUni :: (Show a, Read b) => JSOp -> a -> IO b
+jsUni op x = do
     (code,out) <- readCommand "node" [] $ "console.log(" ++ uop2code op x ++ ")"
     unless (code == ExitSuccess) $ fail "failed"
     readIO out
+
+
 
 data JSOp = JSAdd
           | JSSub
@@ -38,7 +54,7 @@ data JSOp = JSAdd
           | JSSign
           deriving (Eq, Show)
 
-bop2code :: JSOp -> (Double -> Double -> String)
+bop2code :: (Show a, Show b) => JSOp -> (a -> b -> String)
 bop2code op = \x y -> case op of
   JSAdd  -> "(" ++ show x ++ ")" ++ "+"   ++ "(" ++ show y ++ ")"
   JSSub  -> "(" ++ show x ++ ")" ++ "-"   ++ "(" ++ show y ++ ")"
@@ -58,7 +74,7 @@ bop2code op = \x y -> case op of
   
 
 
-uop2code :: JSOp -> (Double -> String)
+uop2code :: Show a => JSOp -> (a -> String)
 uop2code op = \x -> case op of
   JSNot   -> "~" ++ show x
   JSAbs   -> "Math.abs("   ++ show x ++ ")"
