@@ -1,5 +1,6 @@
 import           BenchUtils
 import           Cpp
+import           JavaScript
 import           DSL
 import           Helpers
 import           InputRanges
@@ -15,6 +16,6 @@ allTests = [ionMonkeyTests
            , helpersTests
            , inputTests
            , cppTests
+           , jsTests
            , dslTests
            ]
-
