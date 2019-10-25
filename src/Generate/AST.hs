@@ -11,7 +11,10 @@ data RichType = Normal { ntype :: Type }
               deriving (Eq, Ord, Show)
 
 data Leaf = V Variable
-          | VV VNode Variable Version
+          | VV { verboseNode :: VNode
+               , varName     :: Variable
+               , vver        :: Version
+               }
           | N VNode
           | Member String
           | Field String
@@ -97,7 +100,7 @@ data Expr = Add { ty    :: RichType
                 , expr :: Expr
                 }
           | Call String Type [Expr]
-          | Simple Leaf
+          | Simple { leaf :: Leaf }
           -- ^ Unary operators
           deriving (Eq, Ord, Show)
 
@@ -113,7 +116,7 @@ data ClassDef = ClassDef [FieldDef] [MemberDef]
 
 data Function = Function { funName :: String
                          , funType :: Type
-                         , funArgs :: [Type]
+                         , funArgs :: [VNode]
                          , funBody :: [Stmt]
                          }
 

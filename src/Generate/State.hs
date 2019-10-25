@@ -8,14 +8,15 @@ import           DSL.Typed
 import           Generate.AST
 import qualified Z3.Monad                   as Z
 
-data CodegenState = CodegenState { vars :: M.Map String [VNode]
-                                 , tys  :: M.Map String Type
-                                 , funs :: M.Map String Function
+data CodegenState = CodegenState { vars    :: M.Map String [VNode]
+                                 , tys     :: M.Map String Type
+                                 , funs    :: M.Map String Function
+                                 , retVals :: M.Map String VNode
                                  }
 
 
 emptyCodegenState :: CodegenState
-emptyCodegenState = CodegenState M.empty M.empty M.empty
+emptyCodegenState = CodegenState M.empty M.empty M.empty M.empty
 
 addFunction :: String
             -> Function
@@ -25,15 +26,31 @@ addFunction str func = do
   let allFuns = funs s0
   case M.lookup str allFuns of
     Just _  -> error $ unwords $ ["Already defined", str]
-    Nothing -> put $ s0 { funs = M.insert str func allFuns}
+    Nothing -> do
+      returnVal <- liftVerif $ newResultVar (funType func) $ str ++ "_return"
+      put $ s0 { funs = M.insert str func allFuns
+               , retVals = M.insert str returnVal $ retVals s0
+               }
 
 getFunctionType :: String
                 -> Codegen Type
-getFunctionType str = do
-  s0 <-get
+getFunctionType str = getFunction str >>= return . funType
+
+getFunction :: String
+            -> Codegen Function
+getFunction str = do
+  s0 <- get
   case M.lookup str $ funs s0 of
     Nothing  -> error $ unwords $ ["Undefined function", str]
-    Just fun -> return $ funType fun
+    Just fun -> return fun
+
+getReturnValue :: String
+               -> Codegen VNode
+getReturnValue str = do
+  s0 <- get
+  case M.lookup str $ retVals s0 of
+    Nothing -> error $ unwords $ ["Undefined function", str]
+    Just v  -> return v
 
 -- | Make (and return) a new variable
 newVar :: Type -> Variable -> Codegen ()

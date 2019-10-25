@@ -105,9 +105,11 @@ define :: String
        -> Codegen [Stmt]
        -> Codegen Function
 define fnName returnType args body' = do
-  forM_ args $ \(var, ty) -> void $ declare ty var
+  argSyms <- forM args $ \(var, ty) -> do
+     void $ declare ty var
+     v var >>= normExpr >>= return . verboseNode . leaf
   body <- body'
-  let func = Function fnName returnType (map snd args) body
+  let func = Function fnName returnType argSyms  body
   addFunction fnName func
   return func
 

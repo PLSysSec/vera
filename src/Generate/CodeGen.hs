@@ -171,6 +171,16 @@ genExprSMT expr =
       liftVerif $ T.cppNeg exprSym
     Simple (VV vnode _ _) -> return vnode
     Simple (N vnode) -> return vnode
+    Call name ty args -> do
+      function <- getFunction name
+      argSyms <- mapM genExprSMT args
+      let formalArgSyms = funArgs function
+      unless (length argSyms == length formalArgSyms) $
+        error $ unwords ["Incorrect number of arguments to", name]
+      -- Assign the arguments to the formal arguments
+      forM_ (zip argSyms formalArgSyms) $ \(a, f) -> liftVerif $ T.vassign a f
+      -- Return the return value for the function
+      getReturnValue name
     _ -> error "Malformed leaf node"
 
 genStmtSMT :: Stmt
