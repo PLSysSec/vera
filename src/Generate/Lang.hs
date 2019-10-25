@@ -57,6 +57,14 @@ binOp e1' e2' constructor opName = do
 (.>>.) :: Codegen Expr -> Codegen Expr -> Codegen Expr
 (.>>.) e1 e2 = binOp e1 e2 RShift "rshift"
 
+call :: String
+     -> [Codegen Expr]
+     -> Codegen Expr
+call name args' = do
+  ty <- getFunctionType name
+  args <- forM args' $ \arg -> arg
+  return $ Call name ty args
+
 -- Statements
 
 -- |
@@ -72,20 +80,6 @@ if_ cond' ifBr' elseBr' = do
             else return []
   return $ If cond ifBr elseBr
 
--- Functions
-
-define :: String
-       -> Type
-       -> [(Variable, Type)]
-       -> Codegen [Stmt]
-       -> Codegen Function
-define fnName returnType args body' = do
-  forM_ args $ \(var, ty) -> void $ declare ty var
-  body <- body'
-  let func = Function fnName returnType (map snd args) body
-  addFunction fnName func
-  return func
-
 -- | Assign a variable to a an expression.
 -- Right now it does not support assignment to struct members, but it will have to
 assign :: Codegen Expr
@@ -100,6 +94,22 @@ assign lhs' rhs' = do
       let newLhs = Simple $ VV newVar var newVer
       return $ Assign newLhs rhs
     _ -> error "Cannot assign to a non-variable"
+
+--
+-- Functions
+--
+
+define :: String
+       -> Type
+       -> [(Variable, Type)]
+       -> Codegen [Stmt]
+       -> Codegen Function
+define fnName returnType args body' = do
+  forM_ args $ \(var, ty) -> void $ declare ty var
+  body <- body'
+  let func = Function fnName returnType (map snd args) body
+  addFunction fnName func
+  return func
 
 --
 -- Numbers and variables

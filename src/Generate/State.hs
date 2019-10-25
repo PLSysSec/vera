@@ -27,6 +27,14 @@ addFunction str func = do
     Just _  -> error $ unwords $ ["Already defined", str]
     Nothing -> put $ s0 { funs = M.insert str func allFuns}
 
+getFunctionType :: String
+                -> Codegen Type
+getFunctionType str = do
+  s0 <-get
+  case M.lookup str $ funs s0 of
+    Nothing  -> error $ unwords $ ["Undefined function", str]
+    Just fun -> return $ funType fun
+
 -- | Make (and return) a new variable
 newVar :: Type -> Variable -> Codegen ()
 newVar ty var = do

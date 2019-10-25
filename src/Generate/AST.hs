@@ -96,6 +96,7 @@ data Expr = Add { ty    :: RichType
           | Neg { ty   :: RichType
                 , expr :: Expr
                 }
+          | Call String Type [Expr]
           | Simple Leaf
           -- ^ Unary operators
           deriving (Eq, Ord, Show)
@@ -104,7 +105,6 @@ data Stmt = Assign Expr Expr
           | If Expr [Stmt] [Stmt]
           | Decl Variable Type
           | Return VNode
-          | Call RichType String [Expr]
           deriving (Eq, Ord, Show)
 
 data FieldDef = FieldDef RichType String
