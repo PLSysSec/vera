@@ -170,7 +170,7 @@ genExprSMT expr =
       exprSym <- genExprSMT expr
       liftVerif $ T.cppNeg exprSym
     Simple (VV vnode _ _) -> return vnode
-    Simple (N _ vnode) -> return vnode
+    Simple (N vnode) -> return vnode
     _ -> error "Malformed leaf node"
 
 genStmtSMT :: Stmt
@@ -181,14 +181,12 @@ genStmtSMT stmt =
       lhsSym <- genExprSMT lhs
       rhsSym <- genExprSMT rhs
       liftVerif $ T.vassign lhsSym rhsSym
-    If cond ifBr mElseBr prevVers -> do
+    If cond ifBr elseBr prevVers -> do
       condSym <- genExprSMT cond
       let verMap = M.fromList prevVers
       void $ foldM (translateStmt condSym) verMap ifBr
       notCond <- liftVerif $ T.cppNot condSym
-      void $ foldM (translateStmt notCond) verMap $ if isJust mElseBr
-                                                    then fromJust mElseBr
-                                                    else []
+      void $ foldM (translateStmt notCond) verMap elseBr
     Decl{} -> return ()
     _ -> error "Unsupported statement right now"
   where

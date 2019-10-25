@@ -9,22 +9,24 @@ import qualified Z3.Monad                   as Z
 
 type Variable = String
 
-data CodegenState = CodegenState { vars :: M.Map String [VNode] }
+data CodegenState = CodegenState { vars :: M.Map String [VNode]
+                                 , tys  :: M.Map String Type
+                                 }
 
 type Version = Int
 
 emptyCodegenState :: CodegenState
-emptyCodegenState = CodegenState M.empty
+emptyCodegenState = CodegenState M.empty M.empty
 
 -- | Make (and return) a new variable
-newVar :: Type -> Variable -> Codegen VNode
+newVar :: Type -> Variable -> Codegen ()
 newVar ty var = do
   s0 <- get
   let allVars = vars s0
   when (M.member var allVars) $ error $ unwords ["Variable", var, "already declared"]
-  newVar <- liftVerif $ newResultVar ty $ var ++ "_0"
-  put $ s0 { vars = M.insert var [newVar] allVars }
-  return newVar
+  put $ s0 { vars = M.insert var [] allVars
+           , tys = M.insert var ty $ tys s0
+           }
 
 -- | Get the most recent version of a variable
 curVar :: Variable -> Codegen (VNode, Version)
@@ -32,9 +34,10 @@ curVar var = do
   allVars <- vars `liftM` get
   case M.lookup var allVars of
     Nothing -> error $ unwords [var, "has not been declared"]
-    Just vs -> if null vs
-               then error $ unwords [var, "has no versions at all"]
-               else return $ (head vs, length vs - 1)
+    Just vs -> do
+      if null vs
+      then error $ unwords [var, "has no versions at all"]
+      else return $ (head vs, length vs - 1)
 
 -- | Get the ver version of a variable
 varVer :: Variable -> Int -> Codegen VNode
@@ -54,7 +57,11 @@ nextVer var = do
   case M.lookup var allVars of
     Nothing -> error $ unwords [var, "has not been declared"]
     Just vs -> if null vs
-               then error $ unwords ["Malformed version info for", var]
+               then do
+                 let ty = tys s0 M.! var
+                 newVar <- liftVerif $ newResultVar ty $ var ++ "_0"
+                 put $ s0 { vars = M.insert var (newVar:vs) allVars }
+                 return (newVar, 0)
                else do
                  let ty = vtype $ head vs
                      ver = length vs

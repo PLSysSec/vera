@@ -16,8 +16,7 @@ binOp :: Codegen Expr
 binOp e1' e2' constructor opName = do
   e1 <- e1' >>= normExpr
   e2 <- e2' >>= normExpr
-  unless (ty e1 == ty e2) $ error $ unwords ["Typecheck failure:", opName]
-  return $ constructor (ty e1) e1 e2
+  return $ constructor (Normal Signed) e1 e2
 
 (.+.) :: Codegen Expr -> Codegen Expr -> Codegen Expr
 (.+.) e1 e2 = binOp e1 e2 Add "add"
@@ -62,17 +61,18 @@ binOp e1' e2' constructor opName = do
 
 -- |
 if_ :: Codegen Expr -- ^ Condition
-    -> Codegen [Stmt] -- ^ True branch
-    -> Codegen (Maybe [Stmt]) -- ^ Possible false branch
+    -> [Codegen Stmt] -- ^ True branch
+    -> Maybe ([Codegen Stmt]) -- ^ Possible false branch
     -> Codegen Stmt -- ^ Resulting if statement
 if_ cond' ifBr' elseBr' = do
   cond <- cond'
-  ifBr <- ifBr'
-  elseBr <- elseBr'
+  ifBr <- forM ifBr' $ \line -> line
+  elseBr <- if isJust elseBr'
+            then forM (fromJust elseBr') $ \line -> line
+            else return []
   -- Figure out the prior versions of every variable in the statements,
   -- make sure nothing is defined for the first time in an if statment
-  let ifStmts = ifBr ++ if isJust elseBr then fromJust elseBr else []
-  return $ If cond ifBr elseBr $ getPrevVersions ifStmts
+  return $ If cond ifBr elseBr $ getPrevVersions $ ifBr ++ elseBr
 
 -- | Assign a variable to a an expression.
 -- Right now it does not support assignment to struct members, but it will have to
@@ -103,7 +103,7 @@ number ty n = do
   node <- case ty of
             Signed -> liftVerif $ num n
             _      -> error ""
-  return $ Simple $ N Signed node
+  return $ Simple $ N node
 
 v :: Variable -> Codegen Expr
 v var = return $ Simple $ V var
@@ -132,6 +132,7 @@ rhsVar :: Leaf -> Codegen Leaf
 rhsVar (V var) = do
   (node, ver) <- curVar var
   return $ VV node var ver
+rhsVar n@N{} = return n
 rhsVar _ = error "Cannot make rhs variable of non-variable type"
 
 getPrevVersions :: [Stmt] -> [(Variable, Version)]
