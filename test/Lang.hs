@@ -11,6 +11,7 @@ langTests :: BenchTest
 langTests = benchTestGroup "Lang" [ declTest
                                   , ifTest
                                   , callTest
+                                  , returnTest
                                   ]
 
 declTest :: BenchTest
@@ -80,4 +81,20 @@ callTest = benchTestCase "call" $ do
     runSolverOnSMT
   vtest r $ Map.fromList [ ("result_0", 15)
                          , ("result2_0", 6)
+                         ]
+
+returnTest :: BenchTest
+returnTest = benchTestCase "return" $ do
+
+  r <- evalCodegen Nothing $ do
+
+    let args = [("x", Signed)]
+        body = [ if_ ((v "x") .<. (number Signed 4)) [ returnFrom "fun" (number Signed 4) ] (Just [ returnFrom "fun" (number Signed 8) ])
+               ]
+    genFunctionSMT $ define "fun" Signed args body
+    genBodySMT [ declare Signed "result"
+               , (v "result") `assign` call "fun" [number Signed 3]
+               ]
+    runSolverOnSMT
+  vtest r $ Map.fromList [ ("result_0", 4)
                          ]

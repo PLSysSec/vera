@@ -223,6 +223,15 @@ genStmtSMT stmt =
           conditional <- liftVerif $ T.cppCond cond trueBr falseBr
           liftVerif $ T.vassign vnode conditional
         Assign{} -> error "Malformed assignment in if statememt"
+        Return fnname expr -> do
+          rv <- getRv fnname
+          case rv of
+            Just v -> do
+              exprSym <- genExprSMT expr
+              conditionFalse <- liftVerif $ T.cppNot cond
+              vIsExpr <- liftVerif $ T.cppEq v exprSym
+              liftVerif $ T.cppOr conditionFalse vIsExpr >>= T.vassert
+            _ -> return ()
         _ -> return ()
 
 genBodySMT :: [Codegen Stmt] -> Codegen ()
