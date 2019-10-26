@@ -99,7 +99,7 @@ returnFrom :: String
            -> Codegen Expr
            -> Codegen Stmt
 returnFrom str expr' = do
-  expr <- expr'
+  expr <- expr' >>= normExpr
   return $ Return str expr
 
 --
@@ -114,7 +114,7 @@ define :: String
 define fnName returnType args body' = do
   argSyms <- forM args $ \(var, ty) -> do
      void $ declare ty var
-     v var >>= normExpr >>= return . verboseNode . leaf
+     nextVer var >>= return . fst
   body <- forM body' $ \line -> line
   let func = Function fnName returnType argSyms  body
   addFunction fnName func

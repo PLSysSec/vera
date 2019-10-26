@@ -76,8 +76,4 @@ callTest = benchTestCase "call" $ do
                ]
 
     runSolverOnSMT
-  vtest r $ Map.fromList [ ("x_0", 5)
-                         , ("x_1", 7)
-                         , ("x_2", 9)
-                         , ("y_0", 10)
-                         ]
+  vtest r $ Map.fromList [ ("result_0", 15) ]

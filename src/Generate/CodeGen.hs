@@ -181,7 +181,7 @@ genExprSMT expr =
       forM_ (zip argSyms formalArgSyms) $ \(a, f) -> liftVerif $ T.vassign a f
       -- Return the return value for the function
       getReturnValue name
-    _ -> error "Malformed leaf node"
+    node -> error $ unwords ["Malformed leaf node", show node]
 
 genStmtSMT :: Stmt
            -> Codegen ()
