@@ -8,59 +8,77 @@ import           DSL.Typed
 import           Generate.AST
 import qualified Z3.Monad                   as Z
 
-data CodegenState = CodegenState { vars    :: M.Map String [VNode]
-                                 , tys     :: M.Map String Type
-                                 , funs    :: M.Map String Function
-                                 , retVals :: M.Map String VNode
+data CodegenState = CodegenState { vars        :: M.Map String [VNode]
+                                 , tys         :: M.Map String Type
+                                 , funBodies   :: M.Map String [Codegen Stmt]
+                                 , funTypes    :: M.Map String Type
+                                 , funRetVals  :: M.Map String [VNode]
+                                 , funArgTypes :: M.Map String [(String, Type)]
                                  }
 
 
 emptyCodegenState :: CodegenState
-emptyCodegenState = CodegenState M.empty M.empty M.empty M.empty
+emptyCodegenState = CodegenState M.empty M.empty M.empty M.empty M.empty M.empty
 
 addFunction :: String
-            -> Function
+            -> [Codegen Stmt]
+            -> Type
+            -> [(String, Type)]
             -> Codegen ()
-addFunction str func = do
+addFunction name body retType argTypes = do
   s0 <- get
-  let allFuns = funs s0
-  case M.lookup str allFuns of
-    Just _  -> error $ unwords $ ["Already defined", str]
+  let bodies = funBodies s0
+  case M.lookup name bodies of
+    Just _  -> error $ unwords $ ["Already defined", name]
     Nothing -> do
-      returnVal <- liftVerif $ newResultVar (funType func) $ str ++ "_return"
-      put $ s0 { funs = M.insert str func allFuns
-               , retVals = M.insert str returnVal $ retVals s0
+      put $ s0 { funBodies = M.insert name body bodies
+               , funTypes = M.insert name retType $ funTypes s0
+               , funArgTypes = M.insert name argTypes $ funArgTypes s0
                }
 
-getFunctionType :: String
-                -> Codegen Type
-getFunctionType str = getFunction str >>= return . funType
+getFunctionType :: String -> Codegen Type
+getFunctionType name = do
+  (_,_,ty,_) <- getFunction name
+  return ty
 
 getFunction :: String
-            -> Codegen Function
-getFunction str = do
+            -> Codegen ([Codegen Stmt], [(String, Type)], Type, VNode)
+getFunction name = do
   s0 <- get
-  case M.lookup str $ funs s0 of
-    Nothing  -> error $ unwords $ ["Undefined function", str]
-    Just fun -> return fun
+  let body = case M.lookup name $ funBodies s0 of
+               Just bod -> bod
+               Nothing -> error $ unwords ["No function body defined for", name]
+      args = case M.lookup name $ funArgTypes s0 of
+               Just as -> as
+               Nothing -> error $ unwords ["No args listed for", name]
+      rett = case M.lookup name $ funTypes s0 of
+               Just rt -> rt
+               Nothing -> error $ unwords ["No return value for", name]
+      rvs = case M.lookup name $ funRetVals s0 of
+              Nothing   -> []
+              Just rvs' -> rvs'
+  rv <- liftVerif $ newResultVar rett (name ++ "_return_" ++ show (length rvs))
+  put $ s0 { funRetVals = M.insert name (rv:rvs) $ funRetVals s0 }
+  return (body, args, rett, rv)
 
-getReturnValue :: String
-               -> Codegen VNode
-getReturnValue str = do
-  s0 <- get
-  case M.lookup str $ retVals s0 of
-    Nothing -> error $ unwords $ ["Undefined function", str]
-    Just v  -> return v
+getRv :: String
+      -> Codegen (Maybe VNode)
+getRv name = do
+  rvs <- funRetVals `liftM` get
+  case M.lookup name rvs of
+    Just vs -> return $ Just $ head vs
+    Nothing -> return Nothing
 
 -- | Make (and return) a new variable
 newVar :: Type -> Variable -> Codegen ()
 newVar ty var = do
   s0 <- get
   let allVars = vars s0
-  when (M.member var allVars) $ error $ unwords ["Variable", var, "already declared"]
-  put $ s0 { vars = M.insert var [] allVars
-           , tys = M.insert var ty $ tys s0
-           }
+  if M.member var allVars
+  then return ()
+  else put $ s0 { vars = M.insert var [] allVars
+                , tys = M.insert var ty $ tys s0
+                }
 
 -- | Get the most recent version of a variable
 curVar :: Variable -> Codegen (VNode, Version)

@@ -116,7 +116,7 @@ data ClassDef = ClassDef [FieldDef] [MemberDef]
 
 data Function = Function { funName :: String
                          , funType :: Type
-                         , funArgs :: [VNode]
+                         , funArgs :: [(Variable, Type)]
                          , funBody :: [Stmt]
                          }
 

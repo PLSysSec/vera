@@ -112,13 +112,13 @@ define :: String
        -> [Codegen Stmt]
        -> Codegen Function
 define fnName returnType args body' = do
-  argSyms <- forM args $ \(var, ty) -> do
-     void $ declare ty var
-     nextVer var >>= return . fst
+  forM_ args $ \(var, ty) -> do
+    -- Declare the arguments, then make a new var so that they exist
+    void $ declare ty var
+    void $ nextVer var
+  addFunction fnName body' returnType args
   body <- forM body' $ \line -> line
-  let func = Function fnName returnType argSyms  body
-  addFunction fnName func
-  return func
+  return $ Function fnName returnType args body
 
 --
 -- Numbers and variables

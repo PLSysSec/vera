@@ -171,16 +171,17 @@ genExprSMT expr =
       liftVerif $ T.cppNeg exprSym
     Simple (VV vnode _ _) -> return vnode
     Simple (N vnode) -> return vnode
-    Call name ty args -> do
-      function <- getFunction name
-      argSyms <- mapM genExprSMT args
-      let formalArgSyms = funArgs function
+    Call name ty as -> do
+      (body, args, ty, rv) <- getFunction name
+      formalArgSyms <- forM args $ \(arg, _) -> nextVer arg >>= return . fst
+      argSyms <- mapM genExprSMT as
+      genBodySMT body
       unless (length argSyms == length formalArgSyms) $
         error $ unwords ["Incorrect number of arguments to", name]
       -- Assign the arguments to the formal arguments
       forM_ (zip argSyms formalArgSyms) $ \(a, f) -> liftVerif $ T.vassign a f
-      -- Return the return value for the function
-      getReturnValue name
+      -- Return some bogus return value for the moment
+      return rv
     node -> error $ unwords ["Malformed leaf node", show node]
 
 genStmtSMT :: Stmt
@@ -197,10 +198,17 @@ genStmtSMT stmt =
       notCond <- liftVerif $ T.cppNot condSym
       mapM_ (translateStmt notCond) elseBr
     Decl{} -> return ()
-    Return fnName expr -> do
-      rv <- getReturnValue fnName
-      exprSym <- genExprSMT expr
-      liftVerif $ T.vassign rv exprSym
+    Return fnname expr -> do
+      rv <- getRv fnname
+      case rv of
+        -- There is a return value, which means we are re-generating the code
+        -- for a function call. Therefore, we need to set the expression to equal
+        -- The new return value
+        Just v -> do
+          exprSym <- genExprSMT expr
+          liftVerif $ T.vassign v exprSym
+        -- This is a function definition, so it doesn't matter
+        Nothing -> return ()
     _ -> error "Unsupported statement right now"
   where
     translateStmt :: T.VNode
