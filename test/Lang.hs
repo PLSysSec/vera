@@ -95,6 +95,10 @@ returnTest = benchTestCase "return" $ do
     genBodySMT [ declare Signed "result"
                , (v "result") `assign` call "fun" [number Signed 3]
                ]
+    genBodySMT [ declare Signed "result2"
+               , (v "result2") `assign` call "fun" [number Signed 5]
+               ]
     runSolverOnSMT
   vtest r $ Map.fromList [ ("result_0", 4)
+                         , ("result2_0", 8)
                          ]
