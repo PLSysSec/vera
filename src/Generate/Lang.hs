@@ -57,6 +57,18 @@ binOp e1' e2' constructor opName = do
 (.>>.) :: Codegen Expr -> Codegen Expr -> Codegen Expr
 (.>>.) e1 e2 = binOp e1 e2 RShift "rshift"
 
+(.->.) :: Codegen Expr -> Codegen Expr -> Codegen Expr
+(.->.) e1' e2' = do
+  e1 <- e1'
+  let name = case e1 of
+               Simple (ClassObj cname) -> cname
+               _                       -> error "No nested classes"
+  e2 <- e2'
+  let fieldName = case e2 of
+                    Simple (Field name) -> name
+                    _                   -> error "No nested field names"
+  return $ GetField (Class name) name fieldName
+
 call :: String
      -> [Codegen Expr]
      -> Codegen Expr
@@ -93,7 +105,7 @@ assign lhs' rhs' = do
       (newVar, newVer) <- nextVer var
       let newLhs = Simple $ VV newVar var newVer
       return $ Assign newLhs rhs
-    _ -> error "Cannot assign to a non-variable"
+    _ -> error "Cannot assign to a class field or other non-simple variable"
 
 returnFrom :: String
            -> Codegen Expr
@@ -103,8 +115,16 @@ returnFrom str expr' = do
   return $ Return str expr
 
 --
--- Functions
+-- Functions, programs, and class definitions
 --
+
+class_ :: String
+       -> [(String, Type)]
+       -> Codegen ClassDef
+class_ name fields = do
+  addClass name fields
+  let fs = map (\(f, t) -> FieldDef t f)  fields
+  return $ ClassDef fs
 
 define :: String
        -> Type

@@ -14,11 +14,40 @@ data CodegenState = CodegenState { vars        :: M.Map String [VNode]
                                  , funTypes    :: M.Map String Type
                                  , funRetVals  :: M.Map String [VNode]
                                  , funArgTypes :: M.Map String [(String, Type)]
+                                 , classFields :: M.Map String (M.Map String Type)
+                                 , classVars   :: M.Map String [M.Map String VNode]
                                  }
 
 
 emptyCodegenState :: CodegenState
-emptyCodegenState = CodegenState M.empty M.empty M.empty M.empty M.empty M.empty
+emptyCodegenState = CodegenState M.empty M.empty M.empty M.empty M.empty M.empty M.empty M.empty
+
+addClass :: String
+         -> [(String, Type)]
+         -> Codegen ()
+addClass className fields = do
+  s0 <- get
+  put $ s0 { classFields = M.insert className (M.fromList fields) $ classFields s0 }
+
+-- newClassVar :: String
+--             -> String
+--             -> Codegen ()
+-- newClassVar varName className = do
+--   s0 <- get
+--   case M.lookup className $ classFields s0 of
+--     Nothing -> error ["Type", className, "undefined"]
+--     Just fields -> case M.lookup varName classVars of
+
+getField :: String
+         -> String
+         -> Codegen VNode
+getField varName fieldName = do
+  s0 <- get
+  case M.lookup varName $ classVars s0 of
+    Nothing -> error $ unwords ["Variable", varName, "undeclared"]
+    Just cv -> case M.lookup fieldName $ head cv of
+                 Nothing -> error $ unwords ["Variable", varName, "has no field", fieldName]
+                 Just field -> return field
 
 addFunction :: String
             -> [Codegen Stmt]

@@ -175,6 +175,7 @@ genExprSMT expr =
       (body, args, ty, rv) <- getFunction name
       formalArgSyms <- forM args $ \(arg, _) -> nextVer arg >>= return . fst
       argSyms <- mapM genExprSMT as
+      -- This will re-version all the variables and generate SMT for them
       genBodySMT body
       unless (length argSyms == length formalArgSyms) $
         error $ unwords ["Incorrect number of arguments to", name]
@@ -182,6 +183,7 @@ genExprSMT expr =
       forM_ (zip argSyms formalArgSyms) $ \(a, f) -> liftVerif $ T.vassign a f
       -- Return some bogus return value for the moment
       return rv
+    GetField _ className fieldName -> getField className fieldName
     node -> error $ unwords ["Malformed leaf node", show node]
 
 genStmtSMT :: Stmt

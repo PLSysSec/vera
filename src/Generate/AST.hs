@@ -15,9 +15,11 @@ data Leaf = V Variable
                , varName     :: Variable
                , vver        :: Version
                }
+          | ClassVar Variable String
           | N VNode
           | Member String
           | Field String
+          | ClassObj String
           deriving (Eq, Ord, Show)
 
 data Expr = Add { ty    :: RichType
@@ -43,10 +45,7 @@ data Expr = Add { ty    :: RichType
                 , left  :: Expr
                 , right :: Expr
                 }
-          | GetField { ty    :: RichType
-                     , left  :: Expr
-                     , right :: Expr
-                     }
+          | GetField RichType String String
           -- ^ Operators
           | Lt { ty    :: RichType
                , left  :: Expr
@@ -110,9 +109,9 @@ data Stmt = Assign Expr Expr
           | Return String Expr
           deriving (Eq, Ord, Show)
 
-data FieldDef = FieldDef RichType String
-data MemberDef = MemberDef Function
-data ClassDef = ClassDef [FieldDef] [MemberDef]
+data FieldDef = FieldDef Type String
+
+data ClassDef = ClassDef [FieldDef]
 
 data Function = Function { funName :: String
                          , funType :: Type
