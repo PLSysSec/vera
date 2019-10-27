@@ -53,6 +53,29 @@ newVar ty str = do
            , tys = M.insert str ty allTys
            }
 
+varType :: VarName -> Codegen STy
+varType str = do
+  allTys <- tys `liftM` get
+  case M.lookup str allTys of
+    Nothing -> error $ unwords $ ["Undefined var", str]
+    Just ty -> return ty
+
+curVersion :: String -> Codegen Int
+curVersion str = do
+  s0 <- get
+  case M.lookup str $ vars s0 of
+    Nothing -> error $ unwords ["Undeclared variable", str]
+    Just v  -> return v
+
+nextVersion :: String -> Codegen Int
+nextVersion str = do
+  s0 <- get
+  case M.lookup str $ vars s0 of
+    Nothing -> error $ unwords ["Undeclared variable", str]
+    Just v  -> do
+      put $ s0 { vars = M.insert str (v + 1) $ vars s0 }
+      return v
+
 -- data CodegenState = CodegenState { vars        :: M.Map String [VNode]
 --                                  , tys         :: M.Map String Type
 --                                  , funBodies   :: M.Map String [Codegen Stmt]

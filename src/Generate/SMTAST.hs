@@ -10,9 +10,15 @@ data STy = PrimType Type
          | Class ClassName
          deriving (Eq, Ord, Show)
 
-data SVar = UnknownVersion STy VarName
-          | KnownVersion STy VarName Version
+data SVar = SVar { varTy      :: STy
+                 , varName    :: VarName
+                 , varVersion :: Version
+                 }
          deriving (Eq, Ord, Show)
+
+isPrimType :: SVar -> Bool
+isPrimType (SVar PrimType{} _ _) = True
+isPrimType _                     = False
 
 data SNum = SNum Type Int
           deriving (Eq, Ord, Show)

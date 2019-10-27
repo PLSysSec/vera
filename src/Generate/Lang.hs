@@ -11,7 +11,24 @@ import           Generate.State
 declare :: STy -> VarName -> Codegen SStmt
 declare ty var = do
   newVar ty var
-  return $ Decl $ KnownVersion ty var 0
+  return $ Decl $ SVar ty var 0
+
+v :: VarName -> Codegen SVar
+v name = do
+  ty <- varType name
+  ver <- curVersion name
+  return $ SVar ty name ver
+
+assign :: Codegen SVar
+       -> Codegen SExpr
+       -> Codegen SStmt
+assign svar' sexpr' = do
+  svar <- svar'
+  sexpr <- sexpr'
+  unless (isPrimType svar) $ error "Cannot assign to struct field"
+  let toReturn = Assign svar sexpr
+  nextVersion (varName svar)
+  return toReturn
 
 
 
