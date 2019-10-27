@@ -9,7 +9,9 @@ import           Generate.SMTAST
 import qualified Z3.Monad                   as Z
 
 data CodegenState = CodegenState { vars :: M.Map VarName Version
-                                 , tys  :: M.Map VarName STy
+                                 , tys  :: M.Map VarName Type
+                                 -- * For codegen
+                                 , syms :: M.Map SVar VNode
                                  }
 
 
@@ -21,7 +23,7 @@ instance Z.MonadZ3 Codegen where
     getContext = Codegen $ lift $ Z.getContext
 
 emptyCodegenState :: CodegenState
-emptyCodegenState = CodegenState M.empty M.empty
+emptyCodegenState = CodegenState M.empty M.empty M.empty
 
 liftVerif :: Verif a -> Codegen a
 liftVerif = Codegen . lift
@@ -44,7 +46,19 @@ runSolverOnSMT = liftVerif runSolver
 -- Making new variables and versions
 --
 
-newVar :: STy -> String -> Codegen ()
+getVar :: SVar -> Codegen VNode
+getVar var = do
+  s0 <- get
+  let allSyms = syms s0
+  case M.lookup var allSyms of
+    Just sym -> return sym
+    Nothing -> do
+      let name = (varName var) ++ "_" ++ (show $ varVersion var)
+      sym <- liftVerif $ newResultVar (varTy var) name
+      put $ s0 { syms = M.insert var sym allSyms }
+      return sym
+
+newVar :: Type -> String -> Codegen ()
 newVar ty str = do
   s0 <- get
   let allVars = vars s0
@@ -53,7 +67,7 @@ newVar ty str = do
            , tys = M.insert str ty allTys
            }
 
-varType :: VarName -> Codegen STy
+varType :: VarName -> Codegen Type
 varType str = do
   allTys <- tys `liftM` get
   case M.lookup str allTys of

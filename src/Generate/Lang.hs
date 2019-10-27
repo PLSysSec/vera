@@ -9,15 +9,25 @@ import           Generate.SMTAST
 import           Generate.State
 
 declare :: STy -> VarName -> Codegen SStmt
-declare ty var = do
+declare (PrimType ty) var = do
   newVar ty var
   return $ Decl $ SVar ty var 0
+declare _ _ = error "Class type is not set up yet"
 
 v :: VarName -> Codegen SVar
 v name = do
   ty <- varType name
   ver <- curVersion name
   return $ SVar ty name ver
+
+ve :: VarName -> Codegen SExpr
+ve name = v name >>= return . VarExpr
+
+n :: Type -> Int -> Codegen SNum
+n ty num = return $ SNum ty num
+
+ne :: Type -> Int -> Codegen SExpr
+ne ty num = n ty num >>= return . NumExpr
 
 assign :: Codegen SVar
        -> Codegen SExpr
@@ -30,7 +40,15 @@ assign svar' sexpr' = do
   nextVersion (varName svar)
   return toReturn
 
-
+if_ :: Codegen SExpr
+    -> [Codegen SStmt]
+    -> [Codegen SStmt]
+    -> Codegen SStmt
+if_ cond' ifBr' elseBr' = do
+  cond <- cond'
+  ifBr <- forM ifBr' $ \line -> line
+  elseBr <- forM elseBr' $ \line -> line
+  return $ If cond ifBr elseBr
 
 
 

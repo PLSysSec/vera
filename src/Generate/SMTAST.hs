@@ -10,24 +10,25 @@ data STy = PrimType Type
          | Class ClassName
          deriving (Eq, Ord, Show)
 
-data SVar = SVar { varTy      :: STy
+data SVar = SVar { varTy      :: Type
                  , varName    :: VarName
                  , varVersion :: Version
                  }
+          | ClassField
          deriving (Eq, Ord, Show)
 
 isPrimType :: SVar -> Bool
-isPrimType (SVar PrimType{} _ _) = True
-isPrimType _                     = False
+isPrimType SVar{} = True
+isPrimType _      = False
 
 data SNum = SNum Type Int
           deriving (Eq, Ord, Show)
 
 data SExpr = VarExpr SVar
            | NumExpr SNum
-           | GetField SVar FieldName
            deriving (Eq, Ord, Show)
 
 data SStmt = Decl SVar
            | Assign SVar SExpr
+           | If SExpr [SStmt] [SStmt]
            deriving (Eq, Ord, Show)
