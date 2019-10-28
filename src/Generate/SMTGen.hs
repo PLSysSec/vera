@@ -13,8 +13,9 @@ genExprSMT :: SExpr
            -> Codegen T.VNode
 genExprSMT expr =
   case expr of
-    VarExpr svar -> genVarSMT svar
-    _            -> error "Not done"
+    VarExpr svar           -> genVarSMT svar
+    GetField var fieldName -> error ""
+    _                      -> error "Not done"
 
 genStmtSMT :: SStmt
            -> Codegen ()
@@ -31,6 +32,7 @@ genStmtSMT stmt =
       notCond <- liftVerif $ T.cppNot condSym
       mapM_ (rewriteConditional notCond) falseBr
   where
+    -- Guard each assignment with the given condition
     rewriteConditional :: T.VNode -> SStmt -> Codegen ()
     rewriteConditional cond stmt =
       case stmt of

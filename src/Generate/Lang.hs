@@ -8,11 +8,19 @@ import           DSL.Typed
 import           Generate.SMTAST
 import           Generate.State
 
-declare :: STy -> VarName -> Codegen SStmt
-declare (PrimType ty) var = do
-  newVar ty var
-  return $ Decl $ SVar ty var 0
-declare _ _ = error "Class type is not set up yet"
+--
+-- Top-level declarations and definitions
+--
+
+class_ :: ClassName -> [(FieldName, Type)] -> Codegen ClassDef
+class_ name fields = do
+  let fieldMap = M.fromList fields
+  addClass name fieldMap
+  return $ ClassDef name fieldMap
+
+--
+-- Variables and numbers
+--
 
 v :: VarName -> Codegen SVar
 v name = do
@@ -28,6 +36,26 @@ n ty num = return $ SNum ty num
 
 ne :: Type -> Int -> Codegen SExpr
 ne ty num = n ty num >>= return . NumExpr
+
+--
+-- Operators
+--
+
+(.->.) :: SVar -> FieldName -> Codegen SExpr
+(.->.) var fieldname = do
+  when (isPrimType var) $
+    error $ unwords ["Cannot get field of primitived typed", varName var]
+  return $ GetField var fieldname
+
+--
+-- Statements
+--
+
+declare :: STy -> VarName -> Codegen SStmt
+declare ty var = do
+  newVar ty var
+  return $ Decl $ SVar ty var 0
+declare _ _ = error "Class type is not set up yet"
 
 assign :: Codegen SVar
        -> Codegen SExpr

@@ -8,10 +8,11 @@ import           DSL.Typed
 import           Generate.SMTAST
 import qualified Z3.Monad                   as Z
 
-data CodegenState = CodegenState { vars :: M.Map VarName Version
-                                 , tys  :: M.Map VarName Type
-                                 -- * For codegen
-                                 , syms :: M.Map SVar VNode
+data CodegenState = CodegenState { vars      :: M.Map VarName Version
+                                 , tys       :: M.Map VarName STy
+                                 , classes   :: M.Map ClassName (M.Map FieldName Type)
+                                 , syms      :: M.Map SVar VNode
+                                 , fieldSyms :: M.Map SVar (M.Map FieldName VNode)
                                  }
 
 
@@ -23,7 +24,7 @@ instance Z.MonadZ3 Codegen where
     getContext = Codegen $ lift $ Z.getContext
 
 emptyCodegenState :: CodegenState
-emptyCodegenState = CodegenState M.empty M.empty M.empty
+emptyCodegenState = CodegenState M.empty M.empty M.empty M.empty M.empty
 
 liftVerif :: Verif a -> Codegen a
 liftVerif = Codegen . lift
@@ -46,19 +47,67 @@ runSolverOnSMT = liftVerif runSolver
 -- Making new variables and versions
 --
 
+addClass :: ClassName -> M.Map FieldName Type -> Codegen ()
+addClass className fields = do
+  s0 <- get
+  case M.lookup className $ classes s0 of
+    Nothing -> put $ s0 { classes = M.insert className fields $ classes s0 }
+    _       -> error $ unwords $ ["Class", className, "already declared"]
+
+getField :: SVar -> FieldName -> Codegen VNode
+getField var fieldName = do
+  when (isPrimType var) $
+    error $ unwords $ ["Cannot get field of primitive type variable", varName var]
+  s0 <- get
+  let allClasses = classes s0
+      allFields = fieldSyms s0
+  case M.lookup var allFields of
+    -- We've already made a map of fields for this version of the class variable
+    Just fields -> case M.lookup fieldName fields of
+                     -- The field was already created (and therefore used somewhere).
+                     -- Just return it
+                     Just field -> return field
+                     -- The field has never been used before for this version of the var.
+                     -- Create a new variable to represent it and add it to the map
+                     Nothing    -> do
+                       field <- makeField allClasses
+                       let newFields = M.insert fieldName field fields
+                       put $ s0 { fieldSyms = M.insert var newFields $ fieldSyms s0 }
+                       return field
+    -- We need to make a map of fields to represent this version of the class variable
+    Nothing -> do
+      field <- makeField allClasses
+      let newFields = M.fromList [(fieldName, field)]
+      put $ s0 { fieldSyms = M.insert var newFields $ fieldSyms s0 }
+      return field
+  where
+   makeField allClasses = do
+     let cName = className $ varTy var
+     case M.lookup cName allClasses of
+       Nothing -> error $ unwords ["Class", cName, "not declared"]
+       Just fields ->
+         case M.lookup fieldName fields of
+           Nothing -> error $ unwords ["Class", cName, "has no field", fieldName]
+           Just ty -> do
+             let name = varName var ++ "_" ++ fieldName ++ "_" ++ show (varVersion var)
+             liftVerif $ newResultVar ty name
+
+
 getVar :: SVar -> Codegen VNode
 getVar var = do
+  unless (isPrimType var) $
+    error $ unwords $ ["Cannot make symbolic class variable", varName var]
   s0 <- get
   let allSyms = syms s0
   case M.lookup var allSyms of
     Just sym -> return sym
     Nothing -> do
       let name = (varName var) ++ "_" ++ (show $ varVersion var)
-      sym <- liftVerif $ newResultVar (varTy var) name
+      sym <- liftVerif $ newResultVar (primTy $ varTy var) name
       put $ s0 { syms = M.insert var sym allSyms }
       return sym
 
-newVar :: Type -> String -> Codegen ()
+newVar :: STy -> String -> Codegen ()
 newVar ty str = do
   s0 <- get
   let allVars = vars s0
@@ -67,7 +116,7 @@ newVar ty str = do
            , tys = M.insert str ty allTys
            }
 
-varType :: VarName -> Codegen Type
+varType :: VarName -> Codegen STy
 varType str = do
   allTys <- tys `liftM` get
   case M.lookup str allTys of
