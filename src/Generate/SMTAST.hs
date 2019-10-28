@@ -19,8 +19,9 @@ data SVar = SVar { varTy      :: STy
          deriving (Eq, Ord, Show)
 
 isPrimType :: SVar -> Bool
-isPrimType SVar{} = True
-isPrimType _      = False
+isPrimType var = case varTy var of
+                   PrimType{} -> True
+                   _          -> False
 
 data SNum = SNum { numTy  :: Type
                  , numVal :: Integer
@@ -37,6 +38,7 @@ data SExpr = VarExpr SVar
 
 data SStmt = Decl SVar
            | Assign SVar SExpr
+           | AssignField SExpr SExpr
            | If SExpr [SStmt] [SStmt]
            | Return SExpr
            deriving (Eq, Ord, Show)

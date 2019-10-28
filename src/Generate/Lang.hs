@@ -76,9 +76,11 @@ call name args' = do
   right <- right'
   return $ Lt left right
 
-(.->.) :: SVar -> FieldName -> Codegen SExpr
-(.->.) var fieldname = do
-  when (isPrimType var) $
+(.->.) :: Codegen SVar -> FieldName -> Codegen SExpr
+(.->.) var' fieldname = do
+  var <- var'
+  when (isPrimType var) $ do
+    liftIO $ print var
     error $ unwords ["Cannot get field of primitived typed", varName var]
   return $ GetField var fieldname
 
@@ -101,6 +103,19 @@ assign svar' sexpr' = do
   unless (isPrimType svar) $ error "Cannot assign to struct field"
   newVar <- nextVar (varName svar)
   return $ Assign newVar sexpr
+
+fieldAssign :: Codegen SExpr
+            -> Codegen SExpr
+            -> Codegen SStmt
+fieldAssign left' right' = do
+  left <- left'
+  right <- right'
+  case left of
+    GetField svar field -> do
+      newVar <- nextVar (varName svar)
+      return $ AssignField (GetField newVar field) right
+    _              -> error "Malformed field assignment"
+
 
 if_ :: Codegen SExpr
     -> [Codegen SStmt]

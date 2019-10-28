@@ -67,6 +67,10 @@ genStmtSMT mRetVal stmt =
       varSMT <- genVarSMT var
       exprSMT <- genExprSMT expr
       liftVerif $ T.vassign varSMT exprSMT
+    AssignField field expr -> do
+      fieldSym <- genExprSMT field
+      exprSym <- genExprSMT expr
+      liftVerif $ T.vassign fieldSym exprSym
     If cond trueBr falseBr -> do
       condSym <- genExprSMT cond
       mapM_ (rewriteConditional condSym) trueBr

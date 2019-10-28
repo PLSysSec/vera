@@ -109,28 +109,54 @@ getField var fieldName = do
                      -- The field has never been used before for this version of the var.
                      -- Create a new variable to represent it and add it to the map
                      Nothing    -> do
-                       field <- makeField allClasses
+                       field <- makeField var fieldName
                        let newFields = M.insert fieldName field fields
                        put $ s0 { fieldSyms = M.insert var newFields $ fieldSyms s0 }
                        return field
     -- We need to make a map of fields to represent this version of the class variable
     Nothing -> do
-      field <- makeField allClasses
-      let newFields = M.fromList [(fieldName, field)]
-      put $ s0 { fieldSyms = M.insert var newFields $ fieldSyms s0 }
+      -- If there was a previous version of this variable, we need to save the state
+      -- from that guy before destroying this one variable. The reason we can overwrite
+      -- this is that we know we must be in assignment if we have gotten to this case.
+      field <- makeField var fieldName
+      let defaultFields = M.fromList [(fieldName, field)]
+          newFields = if varVersion var > 1
+                      then let prevVar = SVar (varTy var) (varName var) (varVersion var - 1)
+                           in case M.lookup prevVar allFields of
+                                Just oldFields -> M.insert fieldName field oldFields
+                                Nothing        -> defaultFields
+                      else defaultFields
+      put $ s0 { fieldSyms = M.insert var newFields allFields }
       return field
-  where
-   makeField allClasses = do
-     let cName = className $ varTy var
-     case M.lookup cName allClasses of
-       Nothing -> error $ unwords ["Class", cName, "not declared"]
-       Just fields ->
-         case M.lookup fieldName fields of
-           Nothing -> error $ unwords ["Class", cName, "has no field", fieldName]
-           Just ty -> do
-             let name = varName var ++ "_" ++ fieldName ++ "_" ++ show (varVersion var)
-             liftVerif $ newResultVar ty name
 
+makeField :: SVar -> FieldName -> Codegen VNode
+makeField var fieldName = do
+  s0 <- get
+  let allClasses = classes s0
+      cName = className $ varTy var
+  case M.lookup cName allClasses of
+    Nothing -> error $ unwords ["Class", cName, "not declared"]
+    Just fields ->
+      case M.lookup fieldName fields of
+        Nothing -> error $ unwords ["Class", cName, "has no field", fieldName]
+        Just ty -> do
+          let name = varName var ++ "_" ++ fieldName ++ "_" ++ show (varVersion var)
+          liftVerif $ newResultVar ty name
+
+getFreshFieldInNextVersion :: SVar -> String -> Codegen VNode
+getFreshFieldInNextVersion prevVar fieldName = do
+  nextVar <- nextVar (varName prevVar)
+  if varVersion prevVar == 0
+  then getField nextVar fieldName
+  else do
+    s0 <- get
+    case M.lookup prevVar $ fieldSyms s0 of
+      Nothing     -> getField nextVar fieldName
+      Just fields -> do
+         newField <- makeField nextVar fieldName
+         let newFields = M.insert fieldName newField fields
+         put $ s0 { fieldSyms = M.insert nextVar newFields $ fieldSyms s0 }
+         return newField
 
 getVar :: SVar -> Codegen VNode
 getVar var = do
@@ -192,6 +218,7 @@ nextVersion str = do
       let nextVer = v + 1
       put $ s0 { vars = M.insert str nextVer $ vars s0 }
       return nextVer
+
 
 -- data CodegenState = CodegenState { vars        :: M.Map String [VNode]
 --                                  , tys         :: M.Map String Type

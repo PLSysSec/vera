@@ -9,6 +9,7 @@ import           Utils
 
 langTests :: BenchTest
 langTests = benchTestGroup "Lang" [ declTest
+                                  , classTest
                                   , ifTest
                                   , callTest
                                   , returnTest
@@ -33,6 +34,29 @@ declTest = benchTestCase "decl" $ do
                          , ("x_3", 9)
                          , ("y_1", 10)
                          ]
+
+classTest :: BenchTest
+classTest = benchTestCase "class" $ do
+  r <- evalCodegen Nothing $ do
+
+    class_ "myclass" [ ("myint", Signed)
+                     , ("ruined", Signed)
+                     , ("mybool", Bool)
+                     ]
+    let decls = [ declare (c "myclass") "x"
+                , declare (t Signed) "num"
+                , ((v "x") .->. "myint")  `fieldAssign` (ne Signed 5)
+                , ((v "x") .->. "ruined") `fieldAssign` (ne Signed 6)
+                , ((v "x") .->. "myint")  `fieldAssign` (ne Signed 7)
+                ]
+    genBodySMT decls
+    runSolverOnSMT
+
+  vtest r $ Map.fromList [ ("x_myint_1", 5)
+                         , ("x_ruined_2", 6)
+                         , ("x_myint_3", 7)
+                         ]
+
 
 ifTest :: BenchTest
 ifTest = benchTestCase "if" $ do
