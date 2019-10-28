@@ -14,7 +14,7 @@ genExprSMT :: SExpr
 genExprSMT expr =
   case expr of
     VarExpr svar           -> genVarSMT svar
-    GetField var fieldName -> error ""
+    GetField var fieldName -> getField var fieldName
     _                      -> error "Not done"
 
 genStmtSMT :: SStmt
