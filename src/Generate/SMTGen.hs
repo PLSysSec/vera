@@ -16,6 +16,7 @@ genExprSMT expr =
     VarExpr svar           -> genVarSMT svar
     GetField var fieldName -> getField var fieldName
     Call name args         -> do
+      -- This will not account for class arguments
       argSyms <- mapM genExprSMT args
       formalArgSyms <- getFormalArgs name >>= mapM getVar
       lazyBodyStmts <- getBody name
@@ -49,6 +50,11 @@ genStmtSMT mRetVal stmt =
       mapM_ (rewriteConditional condSym) trueBr
       notCond <- liftVerif $ T.cppNot condSym
       mapM_ (rewriteConditional notCond) falseBr
+    Return expr -> case mRetVal of
+      Nothing -> return ()
+      Just rval -> do
+        exprSym <- genExprSMT expr
+        liftVerif $ T.vassign rval exprSym
   where
     -- Guard each assignment with the given condition
     rewriteConditional :: T.VNode -> SStmt -> Codegen ()
@@ -61,6 +67,15 @@ genStmtSMT mRetVal stmt =
           falseBr <- genVarSMT prevVar
           conditional <- liftVerif $ T.cppCond cond trueBr falseBr
           liftVerif $ T.vassign curVar conditional
+        Return expr ->
+          case mRetVal of
+            -- We aren't in a function call, so we don't need to do anything
+            Nothing -> return ()
+            Just rval -> do
+              exprSym <- genExprSMT expr
+              conditionalFalse <- liftVerif $ T.cppNot cond
+              rvalIsExpr <- liftVerif $ T.cppEq rval exprSym
+              liftVerif $ T.cppOr conditionalFalse rvalIsExpr >>= T.vassert
         _ -> genStmtSMT mRetVal stmt
 
 

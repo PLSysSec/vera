@@ -34,6 +34,7 @@ data SExpr = VarExpr SVar
 data SStmt = Decl SVar
            | Assign SVar SExpr
            | If SExpr [SStmt] [SStmt]
+           | Return SExpr
            deriving (Eq, Ord, Show)
 
 data ClassDef = ClassDef ClassName (M.Map FieldName Type)
