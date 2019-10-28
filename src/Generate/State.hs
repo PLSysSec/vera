@@ -11,10 +11,19 @@ import qualified Z3.Monad                   as Z
 data CodegenState = CodegenState { vars      :: M.Map VarName Version
                                  , tys       :: M.Map VarName STy
                                  , classes   :: M.Map ClassName (M.Map FieldName Type)
+                                 -- * For code generation
                                  , syms      :: M.Map SVar VNode
                                  , fieldSyms :: M.Map SVar (M.Map FieldName VNode)
+                                 , functions :: M.Map FunctionName LazyFunction
                                  }
 
+-- | A function action that we can demonadify at will.
+-- When we use it, it will automatically version all the variables in
+-- the function, as well as creating a new return value to the function
+data LazyFunction = LazyFunction { formalArgs   :: [VarName]
+                                 , functionBody :: [Codegen SStmt]
+                                 , returnVal    :: VarName
+                                 }
 
 newtype Codegen a = Codegen (StateT CodegenState Verif a)
     deriving (Functor, Applicative, Monad, MonadState CodegenState, MonadIO)
@@ -24,7 +33,7 @@ instance Z.MonadZ3 Codegen where
     getContext = Codegen $ lift $ Z.getContext
 
 emptyCodegenState :: CodegenState
-emptyCodegenState = CodegenState M.empty M.empty M.empty M.empty M.empty
+emptyCodegenState = CodegenState M.empty M.empty M.empty M.empty M.empty M.empty
 
 liftVerif :: Verif a -> Codegen a
 liftVerif = Codegen . lift
@@ -46,6 +55,15 @@ runSolverOnSMT = liftVerif runSolver
 --
 -- Making new variables and versions
 --
+
+addFunction :: FunctionName -> [VarName] -> VarName -> [Codegen SStmt] -> Codegen ()
+addFunction funName funArgs retVal body = do
+  s0 <- get
+  case M.lookup funName $ functions s0 of
+    Just fun -> error $ unwords ["Already defined function", funName]
+    Nothing  -> do
+      let fun = LazyFunction funArgs body retVal
+      put $ s0 { functions = M.insert funName fun $ functions s0 }
 
 addClass :: ClassName -> M.Map FieldName Type -> Codegen ()
 addClass className fields = do

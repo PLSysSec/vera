@@ -6,9 +6,10 @@ type Version = Int
 type VarName = String
 type FieldName = String
 type ClassName = String
+type FunctionName = String
 
 data STy = PrimType { primTy :: Type }
-         | Class { className :: ClassName }
+         | Class    { className :: ClassName }
          deriving (Eq, Ord, Show)
 
 data SVar = SVar { varTy      :: STy
@@ -27,6 +28,7 @@ data SNum = SNum Type Int
 data SExpr = VarExpr SVar
            | NumExpr SNum
            | GetField SVar FieldName
+           | Call FunctionName [SExpr]
            deriving (Eq, Ord, Show)
 
 data SStmt = Decl SVar
@@ -35,3 +37,4 @@ data SStmt = Decl SVar
            deriving (Eq, Ord, Show)
 
 data ClassDef = ClassDef ClassName (M.Map FieldName Type)
+

@@ -12,6 +12,19 @@ import           Generate.State
 -- Top-level declarations and definitions
 --
 
+define_ :: FunctionName
+        -> STy
+        -> [(VarName, STy)]
+        -> [Codegen SStmt]
+        -> Codegen ()
+define_ funName funTy funArgs body = do
+  -- Declare all the argument variables and the return value
+  forM_ funArgs $ \(name, ty) -> newVar ty name
+  let retValName = funName ++ "_return_val"
+  newVar funTy retValName
+  -- Save the relevant information in the state so we can call it later
+  addFunction funName (map fst funArgs) retValName body
+
 class_ :: ClassName -> [(FieldName, Type)] -> Codegen ClassDef
 class_ name fields = do
   let fieldMap = M.fromList fields
