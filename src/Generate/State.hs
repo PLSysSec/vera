@@ -65,6 +65,27 @@ addFunction funName funArgs retVal body = do
       let fun = LazyFunction funArgs body retVal
       put $ s0 { functions = M.insert funName fun $ functions s0 }
 
+getFormalArgs :: FunctionName -> Codegen [SVar]
+getFormalArgs funName = do
+  s0 <- get
+  case M.lookup funName $ functions s0 of
+    Just (LazyFunction args _ _) -> forM args curVar
+    Nothing  -> error $ unwords ["Function", funName, "undefined so has no formal args"]
+
+getReturnVal :: FunctionName -> Codegen SVar
+getReturnVal funName = do
+  s0 <- get
+  case M.lookup funName $ functions s0 of
+    Just (LazyFunction _ _ rv) -> curVar rv
+    Nothing -> error $ unwords ["Function", funName, "undefined so has no return value"]
+
+getBody :: FunctionName -> Codegen [Codegen SStmt]
+getBody funName = do
+  s0 <- get
+  case M.lookup funName $ functions s0 of
+    Just (LazyFunction _ body _) -> return body
+    Nothing -> error $ unwords ["Function", funName, "undefined so has no body"]
+
 addClass :: ClassName -> M.Map FieldName Type -> Codegen ()
 addClass className fields = do
   s0 <- get
@@ -147,6 +168,12 @@ curVersion str = do
   case M.lookup str $ vars s0 of
     Nothing -> error $ unwords ["Undeclared variable", str]
     Just v  -> return v
+
+curVar :: String -> Codegen SVar
+curVar str = do
+  ty <- varType str
+  ver <- curVersion str
+  return $ SVar ty str ver
 
 nextVersion :: String -> Codegen Int
 nextVersion str = do

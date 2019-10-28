@@ -15,11 +15,29 @@ genExprSMT expr =
   case expr of
     VarExpr svar           -> genVarSMT svar
     GetField var fieldName -> getField var fieldName
+    Call name args         -> do
+      argSyms <- mapM genExprSMT args
+      formalArgSyms <- getFormalArgs name >>= mapM getVar
+      lazyBodyStmts <- getBody name
+      retValSym <- getReturnVal name >>= getVar
+      unless (length argSyms == length formalArgSyms) $
+        error $ unwords ["Improper number of arguments to", name]
+      -- Set the arguments equal to the formal arguments
+      forM_ (zip argSyms formalArgSyms) $ \(a, f) -> liftVerif $ T.vassign a f
+      -- Execute the function. This will re-version all the variables in the function
+      -- Then, generate SMT for the function (and provide the function with the return
+      -- value, so it can properly assign return statements)
+      forM_ lazyBodyStmts $ \line' -> do
+                              line <- line' -- Version everything
+                              genStmtSMT (Just retValSym) line  -- SMT including ret val
+      return retValSym
     _                      -> error "Not done"
 
-genStmtSMT :: SStmt
+genStmtSMT :: Maybe T.VNode -- ^ Return value, if we're generating code
+                            -- for the body of a function call
+           -> SStmt         -- ^ The statement to translate to SMT
            -> Codegen ()
-genStmtSMT stmt =
+genStmtSMT mRetVal stmt =
   case stmt of
     Decl var -> return () -- Declaration is just important for variable tracking
     Assign var expr -> do
@@ -43,6 +61,6 @@ genStmtSMT stmt =
           falseBr <- genVarSMT prevVar
           conditional <- liftVerif $ T.cppCond cond trueBr falseBr
           liftVerif $ T.vassign curVar conditional
-        _ -> genStmtSMT stmt
+        _ -> genStmtSMT mRetVal stmt
 
 
