@@ -5,13 +5,42 @@ import qualified DSL.Typed                  as T
 import           Generate.SMTAST
 import           Generate.State
 
-genSVarSMT :: SVar
+genVarSMT :: SVar
            -> Codegen T.VNode
-genSVarSMT var = getVar var
+genVarSMT var = getVar var
 
 genExprSMT :: SExpr
            -> Codegen T.VNode
 genExprSMT expr =
   case expr of
-    VarExpr svar -> genSVarSMT svar
+    VarExpr svar -> genVarSMT svar
     _            -> error "Not done"
+
+genStmtSMT :: SStmt
+           -> Codegen ()
+genStmtSMT stmt =
+  case stmt of
+    Decl var -> return () -- Declaration is just important for variable tracking
+    Assign var expr -> do
+      varSMT <- genVarSMT var
+      exprSMT <- genExprSMT expr
+      liftVerif $ T.vassign varSMT exprSMT
+    If cond trueBr falseBr -> do
+      condSym <- genExprSMT cond
+      mapM_ (rewriteConditional condSym) trueBr
+      notCond <- liftVerif $ T.cppNot condSym
+      mapM_ (rewriteConditional notCond) falseBr
+  where
+    rewriteConditional :: T.VNode -> SStmt -> Codegen ()
+    rewriteConditional cond stmt =
+      case stmt of
+        Assign var expr -> do
+          curVar <- genVarSMT var
+          let prevVar = SVar (varTy var) (varName var) (varVersion var - 1)
+          trueBr <- genExprSMT expr
+          falseBr <- genVarSMT prevVar
+          conditional <- liftVerif $ T.cppCond cond trueBr falseBr
+          liftVerif $ T.vassign curVar conditional
+        _ -> genStmtSMT stmt
+
+
