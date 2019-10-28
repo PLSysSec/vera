@@ -25,11 +25,8 @@ define_ funName funTy funArgs body = do
   -- Save the relevant information in the state so we can call it later
   addFunction funName (map fst funArgs) retValName body
 
-class_ :: ClassName -> [(FieldName, Type)] -> Codegen ClassDef
-class_ name fields = do
-  let fieldMap = M.fromList fields
-  addClass name fieldMap
-  return $ ClassDef name fieldMap
+class_ :: ClassName -> [(FieldName, Type)] -> Codegen ()
+class_ name fields = addClass name $ M.fromList fields
 
 --
 -- Variables and numbers

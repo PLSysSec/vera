@@ -37,5 +37,4 @@ data SStmt = Decl SVar
            | Return SExpr
            deriving (Eq, Ord, Show)
 
-data ClassDef = ClassDef ClassName (M.Map FieldName Type)
 
