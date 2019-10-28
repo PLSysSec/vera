@@ -69,7 +69,7 @@ getFormalArgs :: FunctionName -> Codegen [SVar]
 getFormalArgs funName = do
   s0 <- get
   case M.lookup funName $ functions s0 of
-    Just (LazyFunction args _ _) -> forM args curVar
+    Just (LazyFunction args _ _) -> forM args nextVar
     Nothing  -> error $ unwords ["Function", funName, "undefined so has no formal args"]
 
 getReturnVal :: FunctionName -> Codegen SVar
@@ -175,14 +175,21 @@ curVar str = do
   ver <- curVersion str
   return $ SVar ty str ver
 
+nextVar :: String -> Codegen SVar
+nextVar str = do
+  var <- curVar str
+  nextVer <- nextVersion str
+  return $ SVar (varTy var) (varName var) nextVer
+
 nextVersion :: String -> Codegen Int
 nextVersion str = do
   s0 <- get
   case M.lookup str $ vars s0 of
     Nothing -> error $ unwords ["Undeclared variable", str]
     Just v  -> do
-      put $ s0 { vars = M.insert str (v + 1) $ vars s0 }
-      return v
+      let nextVer = v + 1
+      put $ s0 { vars = M.insert str nextVer $ vars s0 }
+      return nextVer
 
 -- data CodegenState = CodegenState { vars        :: M.Map String [VNode]
 --                                  , tys         :: M.Map String Type

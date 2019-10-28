@@ -12,12 +12,12 @@ import           Generate.State
 -- Top-level declarations and definitions
 --
 
-define_ :: FunctionName
-        -> STy
-        -> [(VarName, STy)]
-        -> [Codegen SStmt]
-        -> Codegen ()
-define_ funName funTy funArgs body = do
+define :: FunctionName
+       -> STy
+       -> [(VarName, STy)]
+       -> [Codegen SStmt]
+       -> Codegen ()
+define funName funTy funArgs body = do
   -- Declare all the argument variables and the return value
   forM_ funArgs $ \(name, ty) -> newVar ty name
   let retValName = funName ++ "_return_val"
@@ -32,6 +32,12 @@ class_ name fields = addClass name $ M.fromList fields
 -- Variables and numbers
 --
 
+t :: Type -> STy
+t = PrimType
+
+c :: String -> STy
+c = Class
+
 v :: VarName -> Codegen SVar
 v name = do
   ty <- varType name
@@ -41,15 +47,34 @@ v name = do
 ve :: VarName -> Codegen SExpr
 ve name = v name >>= return . VarExpr
 
-n :: Type -> Int -> Codegen SNum
+n :: Type -> Integer -> Codegen SNum
 n ty num = return $ SNum ty num
 
-ne :: Type -> Int -> Codegen SExpr
+ne :: Type -> Integer -> Codegen SExpr
 ne ty num = n ty num >>= return . NumExpr
 
 --
 -- Operators
 --
+
+call :: String
+     -> [Codegen SExpr]
+     -> Codegen SExpr
+call name args' = do
+  args <- forM args' $ \arg -> arg
+  return $ Call name args
+
+(.+.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+(.+.) left' right' = do
+  left <- left'
+  right <- right'
+  return $ Add left right
+
+(.<.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+(.<.) left' right' = do
+  left <- left'
+  right <- right'
+  return $ Lt left right
 
 (.->.) :: SVar -> FieldName -> Codegen SExpr
 (.->.) var fieldname = do
@@ -74,9 +99,8 @@ assign svar' sexpr' = do
   svar <- svar'
   sexpr <- sexpr'
   unless (isPrimType svar) $ error "Cannot assign to struct field"
-  let toReturn = Assign svar sexpr
-  nextVersion (varName svar)
-  return toReturn
+  newVar <- nextVar (varName svar)
+  return $ Assign newVar sexpr
 
 if_ :: Codegen SExpr
     -> [Codegen SStmt]
@@ -88,9 +112,11 @@ if_ cond' ifBr' elseBr' = do
   elseBr <- forM elseBr' $ \line -> line
   return $ If cond ifBr elseBr
 
-
-
-
+return_ :: Codegen SExpr
+        -> Codegen SStmt
+return_ expr' = do
+  expr <- expr'
+  return $ Return expr
 
 -- binOp :: Codegen Expr
 --       -> Codegen Expr

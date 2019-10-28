@@ -22,11 +22,15 @@ isPrimType :: SVar -> Bool
 isPrimType SVar{} = True
 isPrimType _      = False
 
-data SNum = SNum Type Int
+data SNum = SNum { numTy  :: Type
+                 , numVal :: Integer
+                 }
           deriving (Eq, Ord, Show)
 
 data SExpr = VarExpr SVar
            | NumExpr SNum
+           | Lt SExpr SExpr
+           | Add SExpr SExpr
            | GetField SVar FieldName
            | Call FunctionName [SExpr]
            deriving (Eq, Ord, Show)

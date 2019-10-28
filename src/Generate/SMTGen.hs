@@ -9,11 +9,33 @@ genVarSMT :: SVar
            -> Codegen T.VNode
 genVarSMT var = getVar var
 
+genNumSMT :: SNum
+          -> Codegen T.VNode
+genNumSMT snum = do
+  let val = numVal snum
+  liftVerif $ case numTy snum of
+    T.Signed16   -> T.num16 val
+    T.Unsigned16 -> T.unum16 val
+    T.Signed     -> T.num val
+    T.Unsigned   -> T.unum val
+    T.Signed64   -> T.num64 val
+    T.Unsigned64 -> T.unum64 val
+    _            -> error "Float not supported"
+
 genExprSMT :: SExpr
            -> Codegen T.VNode
 genExprSMT expr =
   case expr of
     VarExpr svar           -> genVarSMT svar
+    NumExpr snum           -> genNumSMT snum
+    Add left right         -> do
+      leftSym <- genExprSMT left
+      rightSym <- genExprSMT right
+      liftVerif $ T.cppAdd leftSym rightSym
+    Lt left right          -> do
+      leftSym <- genExprSMT left
+      rightSym <- genExprSMT right
+      liftVerif $ T.cppLt leftSym rightSym
     GetField var fieldName -> getField var fieldName
     Call name args         -> do
       -- This will not account for class arguments
@@ -78,4 +100,6 @@ genStmtSMT mRetVal stmt =
               liftVerif $ T.cppOr conditionalFalse rvalIsExpr >>= T.vassert
         _ -> genStmtSMT mRetVal stmt
 
+genBodySMT :: [Codegen SStmt] -> Codegen ()
+genBodySMT body = forM_ body $ \line -> line >>= \l -> genStmtSMT Nothing l
 
