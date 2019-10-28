@@ -76,7 +76,7 @@ getReturnVal :: FunctionName -> Codegen SVar
 getReturnVal funName = do
   s0 <- get
   case M.lookup funName $ functions s0 of
-    Just (LazyFunction _ _ rv) -> curVar rv
+    Just (LazyFunction _ _ rv) -> nextVar rv
     Nothing -> error $ unwords ["Function", funName, "undefined so has no return value"]
 
 getBody :: FunctionName -> Codegen [Codegen SStmt]
@@ -151,9 +151,11 @@ newVar ty str = do
   s0 <- get
   let allVars = vars s0
       allTys = tys s0
-  put $ s0 { vars = M.insert str 0 allVars
-           , tys = M.insert str ty allTys
-           }
+  case M.lookup str allVars of
+    Just{} -> return ()
+    Nothing -> put $ s0 { vars = M.insert str 0 allVars
+                        , tys = M.insert str ty allTys
+                        }
 
 varType :: VarName -> Codegen STy
 varType str = do

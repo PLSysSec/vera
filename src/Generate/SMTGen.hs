@@ -51,7 +51,7 @@ genExprSMT expr =
       -- Then, generate SMT for the function (and provide the function with the return
       -- value, so it can properly assign return statements)
       forM_ lazyBodyStmts $ \line' -> do
-                              line <- line' -- Version everything
+                              line <- line' -- Re-version everything
                               genStmtSMT (Just retValSym) line  -- SMT including ret val
       return retValSym
     _                      -> error "Not done"

@@ -74,12 +74,12 @@ callTest = benchTestCase "call" $ do
     genBodySMT [ declare (t Signed) "result"
                , (v "result") `assign` call "fun" [ne Signed 5, ne Signed 10]
                ]
-    -- genBodySMT [ declare (t Signed) "result2"
-    --            , (v "result2") `assign` call "fun" [ne Signed 2, ne Signed 4]
-    --            ]
+    genBodySMT [ declare (t Signed) "result2"
+               , (v "result2") `assign` call "fun" [ne Signed 2, ne Signed 4]
+               ]
     runSolverOnSMT
   vtest r $ Map.fromList [ ("result_1", 15)
---                         , ("result2_1", 6)
+                         , ("result2_1", 6)
                          ]
 
 -- returnTest :: BenchTest
