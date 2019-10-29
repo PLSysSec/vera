@@ -77,14 +77,11 @@ call name args' = do
   right <- right'
   return $ Lt left right
 
-(.->.) :: Codegen SVar -> FieldName -> Codegen SExpr
-(.->.) var' fieldname = do
-  var <- var'
-  when (isPrimType var) $ do
-    liftIO $ print var
-    error $ unwords ["Cannot get field of primitived typed", varName var]
-  let name = varName var ++ "_" ++ fieldname
-  curVar name >>= return . VarExpr
+(.->.) :: Codegen SExpr -> FieldName -> Codegen SExpr
+(.->.) ve' fieldname = do
+  ve <- ve'
+  unless (isClassExpr ve) $ error $ unwords ["Cannot get field of non class", show ve]
+  return $ GetField ve fieldname
 
 --
 -- Statements
@@ -98,28 +95,17 @@ declare ty var = do
   else Decl $ SVar (primTy ty) var 0
 declare _ _ = error "Class type is not set up yet"
 
-assign :: Codegen SVar
+assign :: Codegen SExpr
        -> Codegen SExpr
        -> Codegen SStmt
 assign svar' sexpr' = do
   svar <- svar'
   sexpr <- sexpr'
-  unless (isPrimType svar) $ error "Cannot assign to struct field"
-  newVar <- nextVar (varName svar)
-  return $ Assign newVar sexpr
-
-fieldAssign :: Codegen SExpr
-            -> Codegen SExpr
-            -> Codegen SStmt
-fieldAssign left' right' = do
-  left <- left'
-  right <- right'
-  case left of
-    VarExpr svar -> do
-      newVar <- nextVar (varName svar)
-      return $ Assign newVar right
-    _              -> error "Malformed field assignment"
-
+  unless (isClassExpr svar || isPrimVarExpr svar) $ error "Cannot assign to non-variable"
+  when (isClassExpr svar) $ unless (isClassExpr sexpr) $
+    error "Cannot assign class to non-class"
+  newVar <- nextVar (varName $ exprVar svar)
+  return $ Assign (VarExpr newVar) sexpr
 
 if_ :: Codegen SExpr
     -> [Codegen SStmt]

@@ -48,15 +48,19 @@ data SExpr = VarExpr { exprVar :: SVar }
            | Lt SExpr SExpr
            | Add SExpr SExpr
            | Call FunctionName [SExpr]
+           | GetField SExpr String
            deriving (Eq, Ord, Show)
 
 isClassExpr :: SExpr -> Bool
 isClassExpr (VarExpr v) = not $ isPrimType v
 isClassExpr _           = False
 
+isPrimVarExpr :: SExpr -> Bool
+isPrimVarExpr (VarExpr v) = isPrimType v
+isPrimVarExpr _           = False
+
 data SStmt = Decl SVar
-           | Assign SVar SExpr
-           | AssignField SExpr SExpr
+           | Assign SExpr SExpr
            | If SExpr [SStmt] [SStmt]
            | Return SExpr
            deriving (Eq, Ord, Show)

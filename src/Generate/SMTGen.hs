@@ -70,13 +70,9 @@ genStmtSMT mRetVal stmt =
   case stmt of
     Decl var -> return () -- Declaration is just important for variable tracking
     Assign var expr -> do
-      varSMT <- genVarSMT var
+      varSMT <- genExprSMT var
       exprSMT <- genExprSMT expr
       liftVerif $ T.vassign varSMT exprSMT
-    AssignField field expr -> do
-      fieldSym <- genExprSMT field
-      exprSym <- genExprSMT expr
-      liftVerif $ T.vassign fieldSym exprSym
     If cond trueBr falseBr -> do
       condSym <- genExprSMT cond
       mapM_ (rewriteConditional condSym) trueBr
@@ -92,22 +88,22 @@ genStmtSMT mRetVal stmt =
     rewriteConditional :: T.VNode -> SStmt -> Codegen ()
     rewriteConditional cond stmt =
       case stmt of
-        Assign var expr -> do
-          curVar <- genVarSMT var
-          let prevVar = SVar (varTy var) (varName var) (varVersion var - 1)
-          trueBr <- genExprSMT expr
-          falseBr <- genVarSMT prevVar
-          conditional <- liftVerif $ T.cppCond cond trueBr falseBr
-          liftVerif $ T.vassign curVar conditional
-        Return expr ->
-          case mRetVal of
-            -- We aren't in a function call, so we don't need to do anything
-            Nothing -> return ()
-            Just rval -> do
-              exprSym <- genExprSMT expr
-              conditionalFalse <- liftVerif $ T.cppNot cond
-              rvalIsExpr <- liftVerif $ T.cppEq rval exprSym
-              liftVerif $ T.cppOr conditionalFalse rvalIsExpr >>= T.vassert
+        -- Assign var expr -> do
+        --   curVar <- genVarSMT var
+        --   let prevVar = SVar (varTy var) (varName var) (varVersion var - 1)
+        --   trueBr <- genExprSMT expr
+        --   falseBr <- genVarSMT prevVar
+        --   conditional <- liftVerif $ T.cppCond cond trueBr falseBr
+        --   liftVerif $ T.vassign curVar conditional
+        -- Return expr ->
+        --   case mRetVal of
+        --     -- We aren't in a function call, so we don't need to do anything
+        --     Nothing -> return ()
+        --     Just rval -> do
+        --       exprSym <- genExprSMT expr
+        --       conditionalFalse <- liftVerif $ T.cppNot cond
+        --       rvalIsExpr <- liftVerif $ T.cppEq rval exprSym
+        --       liftVerif $ T.cppOr conditionalFalse rvalIsExpr >>= T.vassert
         _ -> genStmtSMT mRetVal stmt
 
 genBodySMT :: [Codegen SStmt] -> Codegen ()
