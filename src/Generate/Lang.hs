@@ -43,9 +43,7 @@ v name = do
   ty <- varType name
   if isClass ty
   then return $ CVar (className ty) name
-  else do
-    ver <- curVersion name
-    return $ SVar (primTy ty) name ver
+  else curVar name
 
 ve :: VarName -> Codegen SExpr
 ve name = v name >>= return . VarExpr

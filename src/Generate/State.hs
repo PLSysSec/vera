@@ -162,7 +162,7 @@ newVar ty str = do
                             }
 
 --
---
+-- Variables
 --
 
 varType :: VarName -> Codegen STy
@@ -172,21 +172,16 @@ varType str = do
     Just ty -> return ty
     Nothing -> error $ unwords $ ["Undeclared variable:", str]
 
-curVersion :: String -> Codegen Int
-curVersion str = do
-  s0 <- get
-  case M.lookup str $ vars s0 of
-    Nothing -> error $ unwords ["Undeclared variable", str]
-    Just v  -> return v
-
 curVar :: String -> Codegen SVar
 curVar str = do
   ty <- varType str
   if isClass ty
   then return $ CVar (className ty) str
   else do
-    ver <- curVersion str
-    return $ SVar (primTy ty) str ver
+    s0 <- get
+    case M.lookup str $ vars s0 of
+      Nothing  -> error $ unwords ["Undeclared variable", str]
+      Just ver -> return $ SVar (primTy ty) str ver
 
 nextVar :: String -> Codegen SVar
 nextVar str = do
