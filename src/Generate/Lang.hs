@@ -12,12 +12,22 @@ import           Generate.State
 -- Top-level declarations and definitions
 --
 
-define :: FunctionName
-       -> STy
-       -> [(VarName, STy)]
-       -> [Codegen SStmt]
+data FunctionDef = Function { fName :: FunctionName
+                            , fTy   :: STy
+                            , fArgs :: [(VarName, STy)]
+                            , fBody :: [Codegen SStmt]
+                            }
+
+data ClassDef = ClassDef ClassName [(FieldName, Type)] [FunctionDef]
+
+define :: FunctionDef
        -> Codegen ()
-define funName funTy funArgs body = do
+define f = define' f Nothing
+
+define' :: FunctionDef
+        -> Maybe ClassName
+        -> Codegen ()
+define' (Function funName funTy funArgs body) _ = do
   -- Declare all the argument variables and the return value
   forM_ funArgs $ \(name, ty) -> newVar ty name
   let retValName = funName ++ "_return_val"
@@ -25,19 +35,27 @@ define funName funTy funArgs body = do
   -- Save the relevant information in the state so we can call it later
   addFunction funName (map fst funArgs) retValName body
 
-class_ :: ClassName -> [(FieldName, Type)] -> Codegen ()
-class_ name fields = addClass name $ M.fromList fields
+class_ :: ClassDef -> Codegen ()
+class_ (ClassDef name fields functions) = do
+  liftIO $ putStrLn $ unwords ["Defining class:", name]
+  addClass name $ M.fromList fields
+  forM_ functions $ \(Function funName funTy funArgs body) -> do
+    let newName = name ++ "_" ++ funName
+    define' (Function newName funTy funArgs body) Nothing
 
 --
 -- Variables and numbers
 --
 
+-- | Make a primitive type
 t :: Type -> STy
 t = PrimType
 
+-- | Make a class type
 c :: String -> STy
 c = Class
 
+-- | Get a declared variable
 v :: VarName -> Codegen SExpr
 v name = do
   ty <- varType name
@@ -45,8 +63,13 @@ v name = do
   then return $ VarExpr $ CVar (className ty) name
   else curVar name >>= return . VarExpr
 
+-- | Get a number
 n :: Type -> Integer -> Codegen SExpr
 n ty num = return $ NumExpr $ SNum ty num
+
+-- | Get field from field name in a class method
+f :: FieldName -> Codegen SExpr
+f name = return $ FieldExpr name
 
 --
 -- Operators
@@ -76,6 +99,14 @@ call name args' = do
   ve <- ve'
   unless (isClassExpr ve) $ error $ unwords ["Cannot get field of non class", show ve]
   getField (exprVar ve) fieldname >>= return . VarExpr
+
+method :: Codegen SExpr -> FunctionName -> [Codegen SExpr] -> Codegen SExpr
+method ve' funName args' = do
+  ve <- ve'
+  args <- forM args' $ \arg -> arg
+  unless (isClassExpr ve) $ error $ unwords ["Cannot get method of non class", show ve]
+  let fullFunName = (varClass $ exprVar ve) ++ "_" ++ funName
+  return $ Call fullFunName (ve:args)
 
 --
 -- Statements

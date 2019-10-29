@@ -61,7 +61,11 @@ runSolverOnSMT = liftVerif runSolver
 
 -- | Make a new LazyFunction. Anytime we invoke it, it will re-version all of the
 -- variables within the function body automatically
-addFunction :: FunctionName -> [VarName] -> VarName -> [Codegen SStmt] -> Codegen ()
+addFunction :: FunctionName
+            -> [VarName]
+            -> VarName
+            -> [Codegen SStmt]
+            -> Codegen ()
 addFunction funName funArgs retVal body = do
   s0 <- get
   case M.lookup funName $ functions s0 of

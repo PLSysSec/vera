@@ -57,12 +57,14 @@ genExprSMT expr =
       -- Set the arguments equal to the formal arguments
       forM_ (zip (concat argSyms) (concat formalArgSyms)) $
         \(a, f) -> liftVerif $ T.vassign a f
+
       -- Execute the function. This will re-version all the variables in the function
       -- Then, generate SMT for the function (and provide the function with the return
       -- value, so it can properly assign return statements)
       forM_ lazyBodyStmts $ \line' -> do
                               line <- line' -- Re-version everything
                               genStmtSMT (Just retValSym) line  -- SMT including ret val
+
       return retValSym
     _                      -> error "Not done"
   where

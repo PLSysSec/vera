@@ -8,12 +8,13 @@ import           Generate.State
 import           Utils
 
 langTests :: BenchTest
-langTests = benchTestGroup "Lang" [ declTest
-                                  , classTest
-                                  , ifTest
-                                  , callTest
-                                  , returnTest
-                                  , classArgTest
+langTests = benchTestGroup "Lang" [ -- declTest
+                                  -- , classTest
+                                  -- , ifTest
+                                  -- , callTest
+                                  -- , returnTest
+                                  -- , classArgTest
+                                   classMethodTest
                                   ]
 
 declTest :: BenchTest
@@ -40,10 +41,10 @@ classTest :: BenchTest
 classTest = benchTestCase "class" $ do
   r <- evalCodegen Nothing $ do
 
-    class_ "myclass" [ ("myint", Signed)
-                     , ("ruined", Signed)
-                     , ("mybool", Bool)
-                     ]
+    class_ $ ClassDef "myclass" [ ("myint", Signed)
+                                , ("ruined", Signed)
+                                , ("mybool", Bool)
+                                ] []
     let decls = [ declare (c "myclass") "x"
                 , declare (t Signed) "num"
                 , ((v "x") .->. "myint")  `assign` (n Signed 5)
@@ -95,7 +96,7 @@ callTest = benchTestCase "call" $ do
                , (v "ret") `assign` (v "x" .+. v "y")
                , return_ (v "ret")
                ]
-    define "fun" (t Signed) args body
+    define $ Function "fun" (t Signed) args body
     genBodySMT [ declare (t Signed) "result"
                , (v "result") `assign` call "fun" [n Signed 5, n Signed 10]
                ]
@@ -116,7 +117,7 @@ returnTest = benchTestCase "return" $ do
         body = [ if_ ((v "x") .<. (n Signed 4))
                  [ return_ (n Signed 4) ] [return_ (n Signed 8)]
                ]
-    define "fun" (t Signed) args body
+    define $ Function "fun" (t Signed) args body
 
     genBodySMT [ declare (t Signed) "result"
                , (v "result") `assign` call "fun" [n Signed 3]
@@ -134,13 +135,13 @@ classArgTest = benchTestCase "class arg" $ do
 
   r <- evalCodegen Nothing $ do
 
-    class_ "myclass" [ ("myint", Signed) ]
+    class_ $ ClassDef "myclass" [ ("myint", Signed) ] []
 
     let args = [("x", c "myclass")]
         body = [ if_ ((v "x" .->. "myint") .<. (n Signed 1))
                  [ return_ (n Signed 1) ] [return_ (n Signed 5)]
                ]
-    define "fun" (t Signed) args body
+    define $ Function "fun" (t Signed) args body
 
     genBodySMT [ declare (t Signed) "result"
                , declare (c "myclass") "a1"
@@ -152,6 +153,35 @@ classArgTest = benchTestCase "class arg" $ do
                , (v "a2") .->. "myint" `assign` (n Signed 5)
                , (v "result2") `assign` call "fun" [v "a2"]
                ]
+    runSolverOnSMT
+  vtest r $ Map.fromList [ ("result_1", 1)
+                         , ("result2_1", 5)
+                         ]
+
+classMethodTest :: BenchTest
+classMethodTest = benchTestCase "class method" $ do
+
+  r <- evalCodegen Nothing $ do
+
+    let body = [ if_ ((f "myint") .<. (n Signed 1))
+               [ return_ (n Signed 1) ] [return_ (n Signed 5)]
+               ]
+        func = Function "fun" (t Signed) [] body
+
+    class_ $ ClassDef "myclass" [ ("myint", Signed) ] [func]
+
+    genBodySMT [ declare (t Signed) "result"
+               , declare (c "myclass") "a1"
+               , (v "a1") .->. "myint" `assign` (n Signed 0)
+               , (v "result") `assign` (method (v "a1") "fun" [])
+               ]
+
+    genBodySMT [ declare (t Signed) "result2"
+               , declare (c "myclass") "a2"
+               , (v "a2") .->. "myint" `assign` (n Signed 1)
+               , (v "result2") `assign` (method (v "a2") "fun" [])
+               ]
+
     runSolverOnSMT
   vtest r $ Map.fromList [ ("result_1", 1)
                          , ("result2_1", 5)
