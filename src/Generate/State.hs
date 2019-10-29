@@ -105,6 +105,11 @@ addClass className fields = do
     Nothing -> put $ s0 { classes = M.insert className fields $ classes s0 }
     _       -> error $ unwords $ ["Class", className, "already declared"]
 
+getField :: SVar -> FieldName -> Codegen SVar
+getField var field = do
+  let fieldName = (varName var) ++ "_" ++ field
+  curVar fieldName
+
 getFields :: ClassName -> Codegen (M.Map FieldName Type)
 getFields name = do
   s0 <- get
@@ -112,15 +117,12 @@ getFields name = do
     Nothing     -> error $ unwords ["Class", name, "undeclared"]
     Just fields -> return fields
 
-getVarOrFields :: SVar -> Codegen [VNode]
-getVarOrFields var = case var of
-                       CVar c _ -> do
-                         fieldTys <- getFields c
-                         forM (M.toList fieldTys) $ \(name, _) ->
-                           curVar (varName var ++ "_" ++ name) >>= getVar
-                       _       -> do
-                         node <- getVar var
-                         return [node]
+getFieldVars :: SVar -> Codegen [SVar]
+getFieldVars var = do
+  when (isPrimType var) $ error $
+    unwords ["Cannot get fields from primitive type", varName var]
+  fields <- getFields $ varClass var
+  forM (M.keys fields) $ \fieldname -> curVar $ (varName var) ++ "_" ++ fieldname
 
 --
 -- Variables

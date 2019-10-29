@@ -48,7 +48,6 @@ data SExpr = VarExpr { exprVar :: SVar }
            | Lt SExpr SExpr
            | Add SExpr SExpr
            | Call FunctionName [SExpr]
-           | GetField SExpr String
            deriving (Eq, Ord, Show)
 
 isClassExpr :: SExpr -> Bool

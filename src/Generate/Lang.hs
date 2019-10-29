@@ -38,21 +38,15 @@ t = PrimType
 c :: String -> STy
 c = Class
 
-v :: VarName -> Codegen SVar
+v :: VarName -> Codegen SExpr
 v name = do
   ty <- varType name
   if isClass ty
-  then return $ CVar (className ty) name
-  else curVar name
+  then return $ VarExpr $ CVar (className ty) name
+  else curVar name >>= return . VarExpr
 
-ve :: VarName -> Codegen SExpr
-ve name = v name >>= return . VarExpr
-
-n :: Type -> Integer -> Codegen SNum
-n ty num = return $ SNum ty num
-
-ne :: Type -> Integer -> Codegen SExpr
-ne ty num = n ty num >>= return . NumExpr
+n :: Type -> Integer -> Codegen SExpr
+n ty num = return $ NumExpr $ SNum ty num
 
 --
 -- Operators
@@ -81,7 +75,7 @@ call name args' = do
 (.->.) ve' fieldname = do
   ve <- ve'
   unless (isClassExpr ve) $ error $ unwords ["Cannot get field of non class", show ve]
-  return $ GetField ve fieldname
+  getField (exprVar ve) fieldname >>= return . VarExpr
 
 --
 -- Statements

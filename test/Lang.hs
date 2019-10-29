@@ -23,10 +23,10 @@ declTest = benchTestCase "decl" $ do
 
     let decls = [ declare (t Signed) "x"
                 , declare (t Signed) "y"
-                , (v "x") `assign` (ne Signed 5)
-                , (v "x") `assign` (ne Signed 7)
-                , (v "y") `assign` (ne Signed 10)
-                , (v "x") `assign` (ne Signed 9)
+                , (v "x") `assign` (n Signed 5)
+                , (v "x") `assign` (n Signed 7)
+                , (v "y") `assign` (n Signed 10)
+                , (v "x") `assign` (n Signed 9)
                 ]
     genBodySMT decls
     runSolverOnSMT
@@ -46,9 +46,9 @@ classTest = benchTestCase "class" $ do
                      ]
     let decls = [ declare (c "myclass") "x"
                 , declare (t Signed) "num"
-                , ((v "x") .->. "myint")  `fieldAssign` (ne Signed 5)
-                , ((v "x") .->. "ruined") `fieldAssign` (ne Signed 6)
-                , ((v "x") .->. "myint")  `fieldAssign` (ne Signed 7)
+                , ((v "x") .->. "myint")  `assign` (n Signed 5)
+                , ((v "x") .->. "ruined") `assign` (n Signed 6)
+                , ((v "x") .->. "myint")  `assign` (n Signed 7)
                 ]
     genBodySMT decls
     runSolverOnSMT
@@ -67,13 +67,13 @@ ifTest = benchTestCase "if" $ do
     let decls = [ declare (t Signed) "x"
                 , declare (t Signed) "y"
                 , declare (t Signed) "z"
-                , (v "x") `assign` (ne Signed 5)
-                , (v "y") `assign` (ne Signed 10)
-                , (v "z") `assign` (ne Signed 20)
-                , if_ ((ve "y") .<. (ne Signed 11)) [ v "x" `assign` (ne Signed 8)
-                                                    , v "x" `assign` (ne Signed 20)
-                                                    ] [v "x" `assign` (ne Signed 12)]
-                , if_ ((ve "x") .<. (ne Signed 4)) [ v "z" `assign` (ne Signed 0) ] []
+                , (v "x") `assign` (n Signed 5)
+                , (v "y") `assign` (n Signed 10)
+                , (v "z") `assign` (n Signed 20)
+                , if_ ((v "y") .<. (n Signed 11)) [ v "x" `assign` (n Signed 8)
+                                                  , v "x" `assign` (n Signed 20)
+                                                  ] [v "x" `assign` (n Signed 12)]
+                , if_ ((v "x") .<. (n Signed 4)) [ v "z" `assign` (n Signed 0) ] []
                 ]
     genBodySMT decls
     runSolverOnSMT
@@ -92,15 +92,15 @@ callTest = benchTestCase "call" $ do
 
     let args = [("x", t Signed), ("y", t Signed)]
         body = [ declare (t Signed) "ret"
-               , (v "ret") `assign` (ve "x" .+. ve "y")
-               , return_ (ve "ret")
+               , (v "ret") `assign` (v "x" .+. v "y")
+               , return_ (v "ret")
                ]
     define "fun" (t Signed) args body
     genBodySMT [ declare (t Signed) "result"
-               , (v "result") `assign` call "fun" [ne Signed 5, ne Signed 10]
+               , (v "result") `assign` call "fun" [n Signed 5, n Signed 10]
                ]
     genBodySMT [ declare (t Signed) "result2"
-               , (v "result2") `assign` call "fun" [ne Signed 2, ne Signed 4]
+               , (v "result2") `assign` call "fun" [n Signed 2, n Signed 4]
                ]
     runSolverOnSMT
   vtest r $ Map.fromList [ ("result_1", 15)
@@ -113,16 +113,16 @@ returnTest = benchTestCase "return" $ do
   r <- evalCodegen Nothing $ do
 
     let args = [("x", t Signed)]
-        body = [ if_ ((ve "x") .<. (ne Signed 4))
-                 [ return_ (ne Signed 4) ] [return_ (ne Signed 8)]
+        body = [ if_ ((v "x") .<. (n Signed 4))
+                 [ return_ (n Signed 4) ] [return_ (n Signed 8)]
                ]
     define "fun" (t Signed) args body
 
     genBodySMT [ declare (t Signed) "result"
-               , (v "result") `assign` call "fun" [ne Signed 3]
+               , (v "result") `assign` call "fun" [n Signed 3]
                ]
     genBodySMT [ declare (t Signed) "result2"
-               , (v "result2") `assign` call "fun" [ne Signed 5]
+               , (v "result2") `assign` call "fun" [n Signed 5]
                ]
     runSolverOnSMT
   vtest r $ Map.fromList [ ("result_1", 4)
@@ -137,20 +137,20 @@ classArgTest = benchTestCase "class arg" $ do
     class_ "myclass" [ ("myint", Signed) ]
 
     let args = [("x", c "myclass")]
-        body = [ if_ ((v "x" .->. "myint") .<. (ne Signed 1))
-                 [ return_ (ne Signed 1) ] [return_ (ne Signed 5)]
+        body = [ if_ ((v "x" .->. "myint") .<. (n Signed 1))
+                 [ return_ (n Signed 1) ] [return_ (n Signed 5)]
                ]
     define "fun" (t Signed) args body
 
     genBodySMT [ declare (t Signed) "result"
                , declare (c "myclass") "a1"
-               , (v "a1") .->. "myint" `fieldAssign` (ne Signed 0)
-               , (v "result") `assign` call "fun" [ve "a1"]
+               , (v "a1") .->. "myint" `assign` (n Signed 0)
+               , (v "result") `assign` call "fun" [v "a1"]
                ]
     genBodySMT [ declare (t Signed) "result2"
                , declare (c "myclass") "a2"
-               , (v "a2") .->. "myint" `fieldAssign` (ne Signed 5)
-               , (v "result2") `assign` call "fun" [ve "a2"]
+               , (v "a2") .->. "myint" `assign` (n Signed 5)
+               , (v "result2") `assign` call "fun" [v "a2"]
                ]
     runSolverOnSMT
   vtest r $ Map.fromList [ ("result_1", 1)

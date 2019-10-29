@@ -37,22 +37,25 @@ genExprSMT expr =
       rightSym <- genExprSMT right
       liftVerif $ T.cppLt leftSym rightSym
     Call name args         -> do
-      -- First, set the arguments equal to the formal arguments
-      -- Or, in the case of class variables, set all fields equal
+
       argSyms <- forM args $ \arg -> do
         if isClassExpr arg
-        then getVarOrFields $ exprVar arg
-        else do
-          smt <- genExprSMT arg
-          return [smt]
-      formalArgSyms <- getFormalArgs name >>= mapM getVarOrFields >>= return . concat
+        then getFieldVars (exprVar arg) >>= mapM genVarSMT
+        else genExprSMT arg >>= return . listOf
+
+      formalArgSyms <- do
+        fas <- getFormalArgs name
+        forM fas $ \fa -> if isPrimType fa
+                          then genVarSMT fa >>= return . listOf
+                          else getFieldVars fa >>= mapM genVarSMT
 
       lazyBodyStmts <- getBody name
       retValSym <- getReturnVal name >>= getVar
       unless (length argSyms == length formalArgSyms) $
         error $ unwords ["Improper number of arguments to", name]
       -- Set the arguments equal to the formal arguments
-      forM_ (zip (concat argSyms) formalArgSyms) $ \(a, f) -> liftVerif $ T.vassign a f
+      forM_ (zip (concat argSyms) (concat formalArgSyms)) $
+        \(a, f) -> liftVerif $ T.vassign a f
       -- Execute the function. This will re-version all the variables in the function
       -- Then, generate SMT for the function (and provide the function with the return
       -- value, so it can properly assign return statements)
@@ -61,6 +64,7 @@ genExprSMT expr =
                               genStmtSMT (Just retValSym) line  -- SMT including ret val
       return retValSym
     _                      -> error "Not done"
+  where
 
 genStmtSMT :: Maybe T.VNode -- ^ Return value, if we're generating code
                             -- for the body of a function call
@@ -84,28 +88,39 @@ genStmtSMT mRetVal stmt =
         exprSym <- genExprSMT expr
         liftVerif $ T.vassign rval exprSym
   where
+    rewriteAssign :: T.VNode -> SVar -> SExpr -> Codegen ()
+    rewriteAssign cond var expr = do
+      when (varVersion var <= 1) $
+        error $ unwords $ ["Cannot initially define var in if-stmt:", varName var]
+      curVar <- genVarSMT var
+      let prevVar = SVar (varTy var) (varName var) (varVersion var - 1)
+      trueBr <- genExprSMT expr
+      falseBr <- genVarSMT prevVar
+      conditional <- liftVerif $ T.cppCond cond trueBr falseBr
+      liftVerif $ T.vassign curVar conditional
     -- Guard each assignment with the given condition
     rewriteConditional :: T.VNode -> SStmt -> Codegen ()
     rewriteConditional cond stmt =
       case stmt of
-        -- Assign var expr -> do
-        --   curVar <- genVarSMT var
-        --   let prevVar = SVar (varTy var) (varName var) (varVersion var - 1)
-        --   trueBr <- genExprSMT expr
-        --   falseBr <- genVarSMT prevVar
-        --   conditional <- liftVerif $ T.cppCond cond trueBr falseBr
-        --   liftVerif $ T.vassign curVar conditional
-        -- Return expr ->
-        --   case mRetVal of
-        --     -- We aren't in a function call, so we don't need to do anything
-        --     Nothing -> return ()
-        --     Just rval -> do
-        --       exprSym <- genExprSMT expr
-        --       conditionalFalse <- liftVerif $ T.cppNot cond
-        --       rvalIsExpr <- liftVerif $ T.cppEq rval exprSym
-        --       liftVerif $ T.cppOr conditionalFalse rvalIsExpr >>= T.vassert
+        Assign (VarExpr var) expr ->
+          if isPrimType var
+          then rewriteAssign cond var expr
+          else do
+            fieldVars <- getFieldVars var
+            forM_ fieldVars $ \var -> rewriteAssign cond var expr
+        Return expr ->
+          case mRetVal of
+            -- We aren't in a function call, so we don't need to do anything
+            Nothing -> return ()
+            Just rval -> do
+              exprSym <- genExprSMT expr
+              conditionalFalse <- liftVerif $ T.cppNot cond
+              rvalIsExpr <- liftVerif $ T.cppEq rval exprSym
+              liftVerif $ T.cppOr conditionalFalse rvalIsExpr >>= T.vassert
         _ -> genStmtSMT mRetVal stmt
 
 genBodySMT :: [Codegen SStmt] -> Codegen ()
 genBodySMT body = forM_ body $ \line -> line >>= \l -> genStmtSMT Nothing l
 
+listOf :: a -> [a]
+listOf x = [x]
