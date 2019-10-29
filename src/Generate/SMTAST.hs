@@ -12,19 +12,31 @@ data STy = PrimType { primTy :: Type }
          | Class    { className :: ClassName }
          deriving (Eq, Ord, Show)
 
-data SVar = SVar { varTy      :: STy
+isClass :: STy -> Bool
+isClass Class{} = True
+isClass _       = False
+
+data SVar = SVar { varTy      :: Type
                  , varName    :: VarName
                  , varVersion :: Version
                  }
+          | CVar { varClass :: ClassName
+                 , varName  :: VarName
+                 }
          deriving (Eq, Ord, Show)
+
+isPrimType :: SVar -> Bool
+isPrimType SVar{} = True
+isPrimType _      = False
+
+-- Class var is an option, it just come with class name and no version
+-- let assign be expr -> expr now
+-- get rid of assign field. assign will break things down by field
+-- change the state map bakc to just types?
 
 setVersion :: SVar -> Int -> SVar
 setVersion (SVar ty name _) ver = SVar ty name ver
-
-isPrimType :: SVar -> Bool
-isPrimType var = case varTy var of
-                   PrimType{} -> True
-                   _          -> False
+setVersion cv _                 = cv
 
 data SNum = SNum { numTy  :: Type
                  , numVal :: Integer
@@ -39,8 +51,8 @@ data SExpr = VarExpr { exprVar :: SVar }
            deriving (Eq, Ord, Show)
 
 isClassExpr :: SExpr -> Bool
-isClassExpr (VarExpr var) = not $ isPrimType var
-isClassExpr _             = False
+isClassExpr (VarExpr v) = not $ isPrimType v
+isClassExpr _           = False
 
 data SStmt = Decl SVar
            | Assign SVar SExpr
