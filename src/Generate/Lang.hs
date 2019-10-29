@@ -82,7 +82,8 @@ call name args' = do
   when (isPrimType var) $ do
     liftIO $ print var
     error $ unwords ["Cannot get field of primitived typed", varName var]
-  return $ GetField var fieldname
+  let name = varName var ++ "_" ++ fieldname
+  curVar name >>= return . VarExpr
 
 --
 -- Statements
@@ -111,9 +112,9 @@ fieldAssign left' right' = do
   left <- left'
   right <- right'
   case left of
-    GetField svar field -> do
+    VarExpr svar -> do
       newVar <- nextVar (varName svar)
-      return $ AssignField (GetField newVar field) right
+      return $ Assign newVar right
     _              -> error "Malformed field assignment"
 
 

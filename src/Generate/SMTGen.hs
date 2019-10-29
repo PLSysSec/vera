@@ -36,18 +36,23 @@ genExprSMT expr =
       leftSym <- genExprSMT left
       rightSym <- genExprSMT right
       liftVerif $ T.cppLt leftSym rightSym
-    GetField var fieldName -> getField var fieldName
     Call name args         -> do
       -- First, set the arguments equal to the formal arguments
       -- Or, in the case of class variables, set all fields equal
-      argSyms <- mapM genExprSMT args
-      formalArgSyms <- getFormalArgs name >>= mapM getVar
+      argSyms <- forM args $ \arg -> do
+        if isClassExpr arg
+        then getVarOrFields $ exprVar arg
+        else do
+          smt <- genExprSMT arg
+          return [smt]
+      formalArgSyms <- getFormalArgs name >>= mapM getVarOrFields >>= return . concat
+
       lazyBodyStmts <- getBody name
       retValSym <- getReturnVal name >>= getVar
       unless (length argSyms == length formalArgSyms) $
         error $ unwords ["Improper number of arguments to", name]
       -- Set the arguments equal to the formal arguments
-      forM_ (zip argSyms formalArgSyms) $ \(a, f) -> liftVerif $ T.vassign a f
+      forM_ (zip (concat argSyms) formalArgSyms) $ \(a, f) -> liftVerif $ T.vassign a f
       -- Execute the function. This will re-version all the variables in the function
       -- Then, generate SMT for the function (and provide the function with the return
       -- value, so it can properly assign return statements)

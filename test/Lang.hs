@@ -54,8 +54,8 @@ classTest = benchTestCase "class" $ do
     runSolverOnSMT
 
   vtest r $ Map.fromList [ ("x_myint_1", 5)
-                         , ("x_ruined_2", 6)
-                         , ("x_myint_3", 7)
+                         , ("x_ruined_1", 6)
+                         , ("x_myint_2", 7)
                          ]
 
 
@@ -134,9 +134,7 @@ classArgTest = benchTestCase "class arg" $ do
 
   r <- evalCodegen Nothing $ do
 
-    class_ "myclass" [ ("myint", Signed)
-                     , ("mybool", Bool)
-                     ]
+    class_ "myclass" [ ("myint", Signed) ]
 
     let args = [("x", c "myclass")]
         body = [ if_ ((v "x" .->. "myint") .<. (ne Signed 1))

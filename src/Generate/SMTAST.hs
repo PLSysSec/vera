@@ -18,6 +18,9 @@ data SVar = SVar { varTy      :: STy
                  }
          deriving (Eq, Ord, Show)
 
+setVersion :: SVar -> Int -> SVar
+setVersion (SVar ty name _) ver = SVar ty name ver
+
 isPrimType :: SVar -> Bool
 isPrimType var = case varTy var of
                    PrimType{} -> True
@@ -28,13 +31,16 @@ data SNum = SNum { numTy  :: Type
                  }
           deriving (Eq, Ord, Show)
 
-data SExpr = VarExpr SVar
+data SExpr = VarExpr { exprVar :: SVar }
            | NumExpr SNum
            | Lt SExpr SExpr
            | Add SExpr SExpr
-           | GetField SVar FieldName
            | Call FunctionName [SExpr]
            deriving (Eq, Ord, Show)
+
+isClassExpr :: SExpr -> Bool
+isClassExpr (VarExpr var) = not $ isPrimType var
+isClassExpr _             = False
 
 data SStmt = Decl SVar
            | Assign SVar SExpr
@@ -42,5 +48,6 @@ data SStmt = Decl SVar
            | If SExpr [SStmt] [SStmt]
            | Return SExpr
            deriving (Eq, Ord, Show)
+
 
 

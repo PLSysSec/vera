@@ -13,7 +13,6 @@ data CodegenState = CodegenState { vars      :: M.Map VarName Version
                                  , classes   :: M.Map ClassName (M.Map FieldName Type)
                                  -- * For code generation
                                  , syms      :: M.Map SVar VNode
-                                 , fieldSyms :: M.Map SVar (M.Map FieldName VNode)
                                  , functions :: M.Map FunctionName LazyFunction
                                  }
 
@@ -33,7 +32,7 @@ instance Z.MonadZ3 Codegen where
     getContext = Codegen $ lift $ Z.getContext
 
 emptyCodegenState :: CodegenState
-emptyCodegenState = CodegenState M.empty M.empty M.empty M.empty M.empty M.empty
+emptyCodegenState = CodegenState M.empty M.empty M.empty M.empty M.empty
 
 liftVerif :: Verif a -> Codegen a
 liftVerif = Codegen . lift
@@ -93,55 +92,22 @@ addClass className fields = do
     Nothing -> put $ s0 { classes = M.insert className fields $ classes s0 }
     _       -> error $ unwords $ ["Class", className, "already declared"]
 
-getField :: SVar -> FieldName -> Codegen VNode
-getField var fieldName = do
-  when (isPrimType var) $
-    error $ unwords $ ["Cannot get field of primitive type variable", varName var]
+getFields :: ClassName -> Codegen (M.Map FieldName Type)
+getFields name = do
   s0 <- get
-  let allClasses = classes s0
-      allFields = fieldSyms s0
-  case M.lookup var allFields of
-    -- We've already made a map of fields for this version of the class variable
-    Just fields -> case M.lookup fieldName fields of
-                     -- The field was already created (and therefore used somewhere).
-                     -- Just return it
-                     Just field -> return field
-                     -- The field has never been used before for this version of the var.
-                     -- Create a new variable to represent it and add it to the map
-                     Nothing    -> do
-                       field <- makeField var fieldName
-                       let newFields = M.insert fieldName field fields
-                       put $ s0 { fieldSyms = M.insert var newFields $ fieldSyms s0 }
-                       return field
-    -- We need to make a map of fields to represent this version of the class variable
-    Nothing -> do
-      -- If there was a previous version of this variable, we need to save the state
-      -- from that guy before destroying this one variable. The reason we can overwrite
-      -- this is that we know we must be in assignment if we have gotten to this case.
-      field <- makeField var fieldName
-      let defaultFields = M.fromList [(fieldName, field)]
-          newFields = if varVersion var > 1
-                      then let prevVar = SVar (varTy var) (varName var) (varVersion var - 1)
-                           in case M.lookup prevVar allFields of
-                                Just oldFields -> M.insert fieldName field oldFields
-                                Nothing        -> defaultFields
-                      else defaultFields
-      put $ s0 { fieldSyms = M.insert var newFields allFields }
-      return field
+  case M.lookup name $ classes s0 of
+    Nothing     -> error $ unwords ["Class", name, "undeclared"]
+    Just fields -> return fields
 
-makeField :: SVar -> FieldName -> Codegen VNode
-makeField var fieldName = do
-  s0 <- get
-  let allClasses = classes s0
-      cName = className $ varTy var
-  case M.lookup cName allClasses of
-    Nothing -> error $ unwords ["Class", cName, "not declared"]
-    Just fields ->
-      case M.lookup fieldName fields of
-        Nothing -> error $ unwords ["Class", cName, "has no field", fieldName]
-        Just ty -> do
-          let name = varName var ++ "_" ++ fieldName ++ "_" ++ show (varVersion var)
-          liftVerif $ newResultVar ty name
+getVarOrFields :: SVar -> Codegen [VNode]
+getVarOrFields var = case varTy var of
+                       Class c -> do
+                         fieldTys <- getFields c
+                         forM (M.toList fieldTys) $ \(name, _) ->
+                           curVar (varName var ++ "_" ++ name) >>= getVar
+                       _       -> do
+                         node <- getVar var
+                         return [node]
 
 getVar :: SVar -> Codegen VNode
 getVar var = do
@@ -159,14 +125,24 @@ getVar var = do
 
 newVar :: STy -> String -> Codegen ()
 newVar ty str = do
-  s0 <- get
-  let allVars = vars s0
-      allTys = tys s0
-  case M.lookup str allVars of
-    Just{} -> return ()
-    Nothing -> put $ s0 { vars = M.insert str 0 allVars
-                        , tys = M.insert str ty allTys
-                        }
+  varsToMake <- case ty of
+    PrimType pt -> return [(str, PrimType pt)]
+    Class c     -> do
+      fields <- getFields c
+      fvs <- forM (M.toList fields) $ \(name, ty) -> return (str ++ "_" ++ name, PrimType ty)
+      return $ (str, ty):fvs
+  forM_ varsToMake $ \(v, t) -> addVar v t
+  where
+    addVar :: VarName -> STy -> Codegen ()
+    addVar var ty = do
+      s0 <- get
+      let allVars = vars s0
+          allTys = tys s0
+      case M.lookup var allVars of
+        Just{} -> return ()
+        Nothing -> put $ s0 { vars = M.insert var 0 allVars
+                            , tys = M.insert var ty allTys
+                            }
 
 varType :: VarName -> Codegen STy
 varType str = do
@@ -192,32 +168,29 @@ nextVar :: String -> Codegen SVar
 nextVar str = do
   var <- curVar str
   nextVer <- nextVersion str
-  return $ SVar (varTy var) (varName var) nextVer
+  return $ setVersion var nextVer
 
 nextVersion :: String -> Codegen Int
 nextVersion str = do
-  s0 <- get
-  case M.lookup str $ vars s0 of
-    Nothing -> error $ unwords ["Undeclared variable", str]
-    Just v  -> do
-      let nextVer = v + 1
-      put $ s0 { vars = M.insert str nextVer $ vars s0 }
-      return nextVer
+  ty <- varType str
+  case ty of
+    Class c -> do
+      fields <- getFields c
+      forM_ (M.toList fields) $ \(name, _) -> updateVersion $ str ++ "_" ++ name
+      updateVersion str
+    _       -> updateVersion str
+  where
+    updateVersion :: String -> Codegen Int
+    updateVersion str = do
+      s0 <- get
+      case M.lookup str $ vars s0 of
+        Nothing -> error $ unwords ["Undeclared variable", str]
+        Just v  -> do
+          let nextVer = v + 1
+          put $ s0 { vars = M.insert str nextVer $ vars s0 }
+          return nextVer
 
 
--- data CodegenState = CodegenState { vars        :: M.Map String [VNode]
---                                  , tys         :: M.Map String Type
---                                  , funBodies   :: M.Map String [Codegen Stmt]
---                                  , funTypes    :: M.Map String Type
---                                  , funRetVals  :: M.Map String [VNode]
---                                  , funArgTypes :: M.Map String [(String, Type)]
---                                  , classFields :: M.Map String (M.Map String Type)
---                                  , classVars   :: M.Map String [M.Map String VNode]
---                                  }
-
-
--- emptyCodegenState :: CodegenState
--- emptyCodegenState = CodegenState M.empty M.empty M.empty M.empty M.empty M.empty M.empty M.empty
 
 -- addClass :: String
 --          -> [(String, Type)]
