@@ -49,8 +49,9 @@ genExprSMT expr =
                           then genVarSMT fa >>= return . listOf
                           else getFieldVars fa >>= mapM genVarSMT
 
-      lazyBodyStmts <- getBody name
       retValSym <- getReturnVal name >>= getVar
+
+      lazyBodyStmts <- getBody name
       unless (length argSyms == length formalArgSyms) $
         error $ unwords ["Improper number of arguments to", name]
       -- Set the arguments equal to the formal arguments
