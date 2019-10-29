@@ -38,7 +38,8 @@ genExprSMT expr =
       liftVerif $ T.cppLt leftSym rightSym
     GetField var fieldName -> getField var fieldName
     Call name args         -> do
-      -- This will not account for class arguments
+      -- First, set the arguments equal to the formal arguments
+      -- Or, in the case of class variables, set all fields equal
       argSyms <- mapM genExprSMT args
       formalArgSyms <- getFormalArgs name >>= mapM getVar
       lazyBodyStmts <- getBody name

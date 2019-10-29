@@ -143,21 +143,6 @@ makeField var fieldName = do
           let name = varName var ++ "_" ++ fieldName ++ "_" ++ show (varVersion var)
           liftVerif $ newResultVar ty name
 
-getFreshFieldInNextVersion :: SVar -> String -> Codegen VNode
-getFreshFieldInNextVersion prevVar fieldName = do
-  nextVar <- nextVar (varName prevVar)
-  if varVersion prevVar == 0
-  then getField nextVar fieldName
-  else do
-    s0 <- get
-    case M.lookup prevVar $ fieldSyms s0 of
-      Nothing     -> getField nextVar fieldName
-      Just fields -> do
-         newField <- makeField nextVar fieldName
-         let newFields = M.insert fieldName newField fields
-         put $ s0 { fieldSyms = M.insert nextVar newFields $ fieldSyms s0 }
-         return newField
-
 getVar :: SVar -> Codegen VNode
 getVar var = do
   unless (isPrimType var) $
