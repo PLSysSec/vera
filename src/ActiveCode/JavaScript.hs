@@ -25,13 +25,13 @@ instance JS Int32 Int32 where
 jsBin :: (Show a, Show b, Read c) => JSOp -> (a, b) -> IO c
 jsBin op (x, y) = do
     (code,out) <- readCommand "node" [] $ "console.log(" ++ bop2code op x y ++ ")"
-    unless (code == ExitSuccess) $ fail "failed"
+    unless (code == ExitSuccess) $ fail out
     readIO out
 
 jsUni :: (Show a, Read b) => JSOp -> a -> IO b
 jsUni op x = do
     (code,out) <- readCommand "node" [] $ "console.log(" ++ uop2code op x ++ ")"
-    unless (code == ExitSuccess) $ fail "failed"
+    unless (code == ExitSuccess) $ fail out
     readIO out
 
 
