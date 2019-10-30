@@ -23,7 +23,7 @@ data CodegenState = CodegenState { vars      :: M.Map VarName Version
 -- the function, as well as creating a new return value to the function
 data LazyFunction = LazyFunction { formalArgs   :: [VarName]
                                  , functionBody :: [Codegen SStmt]
-                                 , returnVal    :: VarName
+                                 , returnVal    :: [VarName]
                                  }
 
 newtype Codegen a = Codegen (StateT CodegenState Verif a)
@@ -97,15 +97,15 @@ clearRetVal = do
 -- variables within the function body automatically
 addFunction :: FunctionName
             -> [VarName]
-            -> VarName
+            -> [VarName]
             -> [Codegen SStmt]
             -> Codegen ()
-addFunction funName funArgs retVal body = do
+addFunction funName funArgs retVals body = do
   s0 <- get
   case M.lookup funName $ functions s0 of
     Just fun -> error $ unwords ["Already defined function", funName]
     Nothing  -> do
-      let fun = LazyFunction funArgs body retVal
+      let fun = LazyFunction funArgs body retVals
       put $ s0 { functions = M.insert funName fun $ functions s0 }
 
 -- | Return the formal arguments to a function
@@ -117,11 +117,11 @@ getFormalArgs funName = do
     Nothing  -> error $ unwords ["Function", funName, "undefined so has no formal args"]
 
 -- | Return the variable representing a function's return value
-getReturnVal :: FunctionName -> Codegen SVar
+getReturnVal :: FunctionName -> Codegen [SVar]
 getReturnVal funName = do
   s0 <- get
   case M.lookup funName $ functions s0 of
-    Just (LazyFunction _ _ rv) -> nextVar rv
+    Just (LazyFunction _ _ rv) -> forM rv nextVar
     Nothing -> error $ unwords ["Function", funName, "undefined so has no return value"]
 
 -- | Return the body of a function

@@ -65,8 +65,8 @@ genExprSMT expr =
       let newClassVar = exprVar $ head args
       setClassVar newClassVar
 
-      retValSym <- getReturnVal name >>= getVar
-      setReturnValue [retValSym]
+      retValSyms <- getReturnVal name >>= mapM getVar
+      setReturnValue retValSyms
 
       -- Execute the function. This will re-version all the variables in the function
       -- Then, generate SMT for the function (and provide the function with the return
@@ -79,7 +79,8 @@ genExprSMT expr =
 
       clearClassVar
       clearRetVal
-      return retValSym
+      -- By convention, we return the first return value
+      return $ head retValSyms
     _                      -> error "Not done"
   where
 

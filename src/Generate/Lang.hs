@@ -27,8 +27,14 @@ define (Function funName funTy funArgs body) = do
   forM_ funArgs $ \(name, ty) -> newVar ty name
   let retValName = funName ++ "_return_val"
   newVar funTy retValName
+  rvs <- if isClass funTy
+         then do
+           retVal <- curVar retValName
+           fields <- getFieldVars retVal
+           return $ map varName fields
+         else return [retValName]
   -- Save the relevant information in the state so we can call it later
-  addFunction funName (map fst funArgs) retValName body
+  addFunction funName (map fst funArgs) rvs body
 
 class_ :: ClassDef -> Codegen ()
 class_ (ClassDef name fields functions) = do
