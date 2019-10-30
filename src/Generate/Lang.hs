@@ -83,17 +83,71 @@ call name args' = do
   args <- forM args' $ \arg -> arg
   return $ Call name args
 
-(.+.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
-(.+.) left' right' = do
+binOp :: Codegen SExpr -> Codegen SExpr -> (SExpr -> SExpr -> SExpr) -> Codegen SExpr
+binOp left' right' op = do
   left <- left'
   right <- right'
-  return $ Add left right
+  return $ op left right
+
+-- we have this for when we add type checking
+unaryOp :: Codegen SExpr -> (SExpr -> SExpr) -> Codegen SExpr
+unaryOp ex' op = do
+  ex <- ex'
+  return $ op ex
+
+(.~.) :: Codegen SExpr -> Codegen SExpr
+(.~.) ex = unaryOp ex Neg
+
+(.!.) :: Codegen SExpr -> Codegen SExpr
+(.!.) ex = unaryOp ex Not
+
+abs_ :: Codegen SExpr -> Codegen SExpr
+abs_ ex = unaryOp ex Abs
+
+(.==.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+(.==.) left right = binOp left right Eq
+
+(.&&.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+(.&&.) left right = binOp left right And
+
+(.+.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+(.+.) left right = binOp left right Add
+
+(.-.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+(.-.) left right = binOp left right Sub
+
+(.*.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+(.*.) left right = binOp left right Mul
+
+(.||.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+(.||.) left right = binOp left right Or
+
+(.^.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+(.^.) left right = binOp left right XOr
+
+min_ :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+min_ left right = binOp left right Min
+
+max_ :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+max_ left right = binOp left right Max
+
+(.>.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+(.>.) left right = binOp left right Gt
+
+(.=>.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+(.=>.) left right = binOp left right Gte
 
 (.<.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
-(.<.) left' right' = do
-  left <- left'
-  right <- right'
-  return $ Lt left right
+(.<.) left right = binOp left right Lt
+
+(.<=.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+(.<=.) left right = binOp left right Lte
+
+(.<<.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+(.<<.) left right = binOp left right Shl
+
+(.>>.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+(.>>.) left right = binOp left right Shr
 
 (.->.) :: Codegen SExpr -> FieldName -> Codegen SExpr
 (.->.) ve' fieldname = do
