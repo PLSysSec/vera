@@ -95,11 +95,11 @@ unaryOp ex' op = do
   ex <- ex'
   return $ op ex
 
-(.~.) :: Codegen SExpr -> Codegen SExpr
-(.~.) ex = unaryOp ex Neg
+neg_ :: Codegen SExpr -> Codegen SExpr
+neg_ ex = unaryOp ex Neg
 
-(.!.) :: Codegen SExpr -> Codegen SExpr
-(.!.) ex = unaryOp ex Not
+not_ :: Codegen SExpr -> Codegen SExpr
+not_ ex = unaryOp ex Not
 
 abs_ :: Codegen SExpr -> Codegen SExpr
 abs_ ex = unaryOp ex Abs

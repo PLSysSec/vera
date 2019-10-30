@@ -45,7 +45,14 @@ xor = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#955
 not :: FunctionDef
-not = undefined
+not = let args = [ ("op", c "range") ]
+          body = [ declare (c "range") "result_range"
+                 , (v "result_range") .->. "lower" `assign` (neg_ $ (v "op") .->. "upper")
+                 , (v "result_range") .->. "upper" `assign` (neg_ $ (v "op") .->. "lower")
+                 , return_ $ v "result_range"
+                 ]
+      in Function "not" (c "range") args body
+
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#960
 mul :: FunctionDef
