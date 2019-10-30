@@ -16,6 +16,7 @@ langTests = benchTestGroup "Lang" [ declTest
                                   , classArgTest
                                   , classMethodTest
                                   , returnClassTest
+                                  , assignClassTest
                                   ]
 
 declTest :: BenchTest
@@ -212,4 +213,26 @@ returnClassTest = benchTestCase "return class" $ do
     runSolverOnSMT
   vtest r $ Map.fromList [ ("test_myint_1", 1)
                          , ("test_myotherint_1", 2)
+                         ]
+
+assignClassTest :: BenchTest
+assignClassTest = benchTestCase "assign class" $ do
+
+  r <- evalCodegen Nothing $ do
+
+    class_ $ ClassDef "myclass" [ ("myint", Signed)
+                                , ("myotherint", Signed)
+                                ] []
+
+
+    genBodySMT [ declare (c "myclass") "start"
+               , declare (c "myclass") "end"
+               , (v "start") .->. "myint" `assign` (n Signed 1)
+               , (v "start") .->. "myotherint" `assign` (n Signed 2)
+               , (v "end") `assign` (v "start")
+               ]
+
+    runSolverOnSMT
+  vtest r $ Map.fromList [ ("end_myint_1", 1)
+                         , ("end_myotherint_1", 2)
                          ]

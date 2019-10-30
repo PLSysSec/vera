@@ -109,7 +109,13 @@ genStmtSMT stmt =
             error $ unwords ["Wrong return type for function in assignment to", varName var]
           forM_ (zip fields rvs) $ \(f, rv) -> liftVerif $ T.vassign f rv
         -- Assign each field of the RHS struct to the LHS struct
-        VarExpr v | isClassType v -> error "var"
+        VarExpr v | isClassType v -> do
+          fields1 <- getFieldVars var >>= mapM getVar
+          fields2 <- getFieldVars v >>= mapM getVar
+          unless (length fields1 == length fields2) $
+            error $ unwords ["Type error in assignment to", varName var]
+          forM_ (zip fields1 fields2) $ \(f, r) -> liftVerif $ T.vassign f r
+        _ -> error $ unwords $ ["Malformed assignment to", varName var]
     Assign var expr -> do
       varSMT <- genExprSMT var
       exprSMT <- genExprSMT expr
