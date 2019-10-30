@@ -186,3 +186,25 @@ classMethodTest = benchTestCase "class method" $ do
   vtest r $ Map.fromList [ ("result_1", 1)
                          , ("result2_1", 5)
                          ]
+
+returnClassTest :: BenchTest
+returnClassTest = benchTestCase "return class" $ do
+
+  r <- evalCodegen Nothing $ do
+
+    let args = [("x", t Signed)]
+        body = [ if_ ((v "x") .<. (n Signed 4))
+                 [ return_ (n Signed 4) ] [return_ (n Signed 8)]
+               ]
+    define $ Function "fun" (t Signed) args body
+
+    genBodySMT [ declare (t Signed) "result"
+               , (v "result") `assign` call "fun" [n Signed 3]
+               ]
+    genBodySMT [ declare (t Signed) "result2"
+               , (v "result2") `assign` call "fun" [n Signed 5]
+               ]
+    runSolverOnSMT
+  vtest r $ Map.fromList [ ("result_1", 4)
+                         , ("result2_1", 8)
+                         ]

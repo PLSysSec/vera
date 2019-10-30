@@ -77,6 +77,22 @@ clearClassVar = do
   let classVars = curClassVar s0
   put $ s0 { curClassVar = if null classVars then classVars else tail classVars }
 
+setReturnValue :: [VNode] -> Codegen ()
+setReturnValue rvs = do
+  s0 <- get
+  put $ s0 { retVals = rvs:retVals s0 }
+
+getReturnValue :: Codegen [VNode]
+getReturnValue = do
+  rvs <- retVals `liftM` get
+  return $ if null rvs then [] else head rvs
+
+clearRetVal :: Codegen ()
+clearRetVal = do
+  s0 <- get
+  let rvs = retVals s0
+  put $ s0 { retVals = if null rvs then [] else tail rvs }
+
 -- | Make a new LazyFunction. Anytime we invoke it, it will re-version all of the
 -- variables within the function body automatically
 addFunction :: FunctionName

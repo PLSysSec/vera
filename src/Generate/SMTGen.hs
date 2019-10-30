@@ -54,35 +54,37 @@ genExprSMT expr =
                           then genVarSMT fa >>= return . listOf
                           else getFieldVars fa >>= mapM genVarSMT
 
-      retValSym <- getReturnVal name >>= getVar
-
-      lazyBodyStmts <- getBody name
       unless (length argSyms == length formalArgSyms) $
         error $ unwords ["Improper number of arguments to", name]
       -- Set the arguments equal to the formal arguments
       forM_ (zip (concat argSyms) (concat formalArgSyms)) $
         \(a, f) -> liftVerif $ T.vassign a f
 
+      lazyBodyStmts <- getBody name
+
       let newClassVar = exprVar $ head args
       setClassVar newClassVar
+
+      retValSym <- getReturnVal name >>= getVar
+      setReturnValue [retValSym]
 
       -- Execute the function. This will re-version all the variables in the function
       -- Then, generate SMT for the function (and provide the function with the return
       -- value, so it can properly assign return statements)
       forM_ lazyBodyStmts $ \line' -> do
-                              line <- line' -- Re-version everything
-                              genStmtSMT (Just retValSym) line  -- SMT including ret val
+                              line <- line'    -- Re-version everything
+                              genStmtSMT line  -- SMT the line. The line has access to the
+                                               -- the function's return value and possible
+                                               -- class var via the underlying monad
 
       clearClassVar
+      clearRetVal
       return retValSym
     _                      -> error "Not done"
   where
 
-genStmtSMT :: Maybe T.VNode -- ^ Return value, if we're generating code
-                            -- for the body of a function call
-           -> SStmt         -- ^ The statement to translate to SMT
-           -> Codegen ()
-genStmtSMT mRetVal stmt =
+genStmtSMT :: SStmt -> Codegen ()
+genStmtSMT stmt =
   case stmt of
     Decl var -> return () -- Declaration is just important for variable tracking
     Assign var expr -> do
@@ -94,11 +96,13 @@ genStmtSMT mRetVal stmt =
       mapM_ (rewriteConditional condSym) trueBr
       notCond <- liftVerif $ T.cppNot condSym
       mapM_ (rewriteConditional notCond) falseBr
-    Return expr -> case mRetVal of
-      Nothing -> return ()
-      Just rval -> do
-        exprSym <- genExprSMT expr
-        liftVerif $ T.vassign rval exprSym
+    Return expr -> do
+      rv <- getReturnValue
+      case rv of
+        [] -> return ()
+        [rval] -> do
+          exprSym <- genExprSMT expr
+          liftVerif $ T.vassign rval exprSym
   where
     rewriteAssign :: T.VNode -> SVar -> SExpr -> Codegen ()
     rewriteAssign cond var expr = do
@@ -120,19 +124,19 @@ genStmtSMT mRetVal stmt =
           else do
             fieldVars <- getFieldVars var
             forM_ fieldVars $ \var -> rewriteAssign cond var expr
-        Return expr ->
-          case mRetVal of
-            -- We aren't in a function call, so we don't need to do anything
-            Nothing -> return ()
-            Just rval -> do
+        Return expr -> do
+          rv <- getReturnValue
+          case rv of
+            [] -> return ()
+            [rval] -> do
               exprSym <- genExprSMT expr
               conditionalFalse <- liftVerif $ T.cppNot cond
               rvalIsExpr <- liftVerif $ T.cppEq rval exprSym
               liftVerif $ T.cppOr conditionalFalse rvalIsExpr >>= T.vassert
-        _ -> genStmtSMT mRetVal stmt
+        _ -> genStmtSMT stmt
 
 genBodySMT :: [Codegen SStmt] -> Codegen ()
-genBodySMT body = forM_ body $ \line -> line >>= \l -> genStmtSMT Nothing l
+genBodySMT body = forM_ body $ \line -> line >>= genStmtSMT
 
 listOf :: a -> [a]
 listOf x = [x]
