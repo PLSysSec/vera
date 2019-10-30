@@ -25,15 +25,15 @@ define :: FunctionDef
 define f = define' f Nothing
 
 define' :: FunctionDef
-        -> Maybe ClassName
+        -> Maybe SVar
         -> Codegen ()
-define' (Function funName funTy funArgs body) _ = do
+define' (Function funName funTy funArgs body) svar = do
   -- Declare all the argument variables and the return value
   forM_ funArgs $ \(name, ty) -> newVar ty name
   let retValName = funName ++ "_return_val"
   newVar funTy retValName
   -- Save the relevant information in the state so we can call it later
-  addFunction funName (map fst funArgs) retValName body
+  addFunction funName (map fst funArgs) retValName body svar
 
 class_ :: ClassDef -> Codegen ()
 class_ (ClassDef name fields functions) = do

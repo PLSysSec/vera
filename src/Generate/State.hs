@@ -11,7 +11,9 @@ import qualified Z3.Monad                   as Z
 data CodegenState = CodegenState { vars      :: M.Map VarName Version
                                  , tys       :: M.Map VarName STy
                                  , classes   :: M.Map ClassName (M.Map FieldName Type)
+                                 , curClassVar  :: [SVar]
                                  -- * For code generation
+                                 , retVals   :: [[VNode]]
                                  , syms      :: M.Map SVar VNode
                                  , functions :: M.Map FunctionName LazyFunction
                                  }
@@ -22,6 +24,7 @@ data CodegenState = CodegenState { vars      :: M.Map VarName Version
 data LazyFunction = LazyFunction { formalArgs   :: [VarName]
                                  , functionBody :: [Codegen SStmt]
                                  , returnVal    :: VarName
+                                 , classVar     :: Maybe SVar
                                  }
 
 newtype Codegen a = Codegen (StateT CodegenState Verif a)
@@ -36,7 +39,7 @@ instance Z.MonadZ3 Codegen where
 --
 
 emptyCodegenState :: CodegenState
-emptyCodegenState = CodegenState M.empty M.empty M.empty M.empty M.empty
+emptyCodegenState = CodegenState M.empty M.empty M.empty [] [] M.empty M.empty
 
 liftVerif :: Verif a -> Codegen a
 liftVerif = Codegen . lift
@@ -65,13 +68,14 @@ addFunction :: FunctionName
             -> [VarName]
             -> VarName
             -> [Codegen SStmt]
+            -> Maybe SVar
             -> Codegen ()
-addFunction funName funArgs retVal body = do
+addFunction funName funArgs retVal body mSvar = do
   s0 <- get
   case M.lookup funName $ functions s0 of
     Just fun -> error $ unwords ["Already defined function", funName]
     Nothing  -> do
-      let fun = LazyFunction funArgs body retVal
+      let fun = LazyFunction funArgs body retVal mSvar
       put $ s0 { functions = M.insert funName fun $ functions s0 }
 
 -- | Return the formal arguments to a function
@@ -79,7 +83,7 @@ getFormalArgs :: FunctionName -> Codegen [SVar]
 getFormalArgs funName = do
   s0 <- get
   case M.lookup funName $ functions s0 of
-    Just (LazyFunction args _ _) -> forM args nextVar
+    Just (LazyFunction args _ _ _) -> forM args nextVar
     Nothing  -> error $ unwords ["Function", funName, "undefined so has no formal args"]
 
 -- | Return the variable representing a function's return value
@@ -87,7 +91,7 @@ getReturnVal :: FunctionName -> Codegen SVar
 getReturnVal funName = do
   s0 <- get
   case M.lookup funName $ functions s0 of
-    Just (LazyFunction _ _ rv) -> nextVar rv
+    Just (LazyFunction _ _ rv _) -> nextVar rv
     Nothing -> error $ unwords ["Function", funName, "undefined so has no return value"]
 
 -- | Return the body of a function
@@ -95,7 +99,7 @@ getBody :: FunctionName -> Codegen [Codegen SStmt]
 getBody funName = do
   s0 <- get
   case M.lookup funName $ functions s0 of
-    Just (LazyFunction _ body _) -> return body
+    Just (LazyFunction _ body _ _) -> return body
     Nothing -> error $ unwords ["Function", funName, "undefined so has no body"]
 
 --
