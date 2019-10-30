@@ -8,13 +8,13 @@ import           Generate.State
 import           Utils
 
 langTests :: BenchTest
-langTests = benchTestGroup "Lang" [ -- declTest
-                                  -- , classTest
-                                  -- , ifTest
-                                  -- , callTest
-                                  -- , returnTest
-                                  -- , classArgTest
-                                   classMethodTest
+langTests = benchTestGroup "Lang" [ declTest
+                                  , classTest
+                                  , ifTest
+                                  , callTest
+                                  , returnTest
+                                  , classArgTest
+                                  , classMethodTest
                                   ]
 
 declTest :: BenchTest

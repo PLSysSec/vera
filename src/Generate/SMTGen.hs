@@ -28,6 +28,11 @@ genExprSMT expr =
   case expr of
     VarExpr svar           -> genVarSMT svar
     NumExpr snum           -> genNumSMT snum
+    FieldExpr fieldName    -> do
+      cv <- getClassVar
+      case cv of
+        Nothing  -> error "Cannot do plain field access outside of class method"
+        Just var -> getField var fieldName >>= getVar
     Add left right         -> do
       leftSym <- genExprSMT left
       rightSym <- genExprSMT right
@@ -58,6 +63,9 @@ genExprSMT expr =
       forM_ (zip (concat argSyms) (concat formalArgSyms)) $
         \(a, f) -> liftVerif $ T.vassign a f
 
+      let newClassVar = exprVar $ head args
+      setClassVar newClassVar
+
       -- Execute the function. This will re-version all the variables in the function
       -- Then, generate SMT for the function (and provide the function with the return
       -- value, so it can properly assign return statements)
@@ -65,6 +73,7 @@ genExprSMT expr =
                               line <- line' -- Re-version everything
                               genStmtSMT (Just retValSym) line  -- SMT including ret val
 
+      clearClassVar
       return retValSym
     _                      -> error "Not done"
   where

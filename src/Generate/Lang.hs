@@ -22,26 +22,21 @@ data ClassDef = ClassDef ClassName [(FieldName, Type)] [FunctionDef]
 
 define :: FunctionDef
        -> Codegen ()
-define f = define' f Nothing
-
-define' :: FunctionDef
-        -> Maybe SVar
-        -> Codegen ()
-define' (Function funName funTy funArgs body) svar = do
+define (Function funName funTy funArgs body) = do
   -- Declare all the argument variables and the return value
   forM_ funArgs $ \(name, ty) -> newVar ty name
   let retValName = funName ++ "_return_val"
   newVar funTy retValName
   -- Save the relevant information in the state so we can call it later
-  addFunction funName (map fst funArgs) retValName body svar
+  addFunction funName (map fst funArgs) retValName body
 
 class_ :: ClassDef -> Codegen ()
 class_ (ClassDef name fields functions) = do
-  liftIO $ putStrLn $ unwords ["Defining class:", name]
   addClass name $ M.fromList fields
   forM_ functions $ \(Function funName funTy funArgs body) -> do
     let newName = name ++ "_" ++ funName
-    define' (Function newName funTy funArgs body) Nothing
+        classArg = (newName ++ "_arg", Class name)
+    define $ Function newName funTy (classArg:funArgs) body
 
 --
 -- Variables and numbers
