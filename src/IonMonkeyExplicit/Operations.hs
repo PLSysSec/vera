@@ -214,7 +214,6 @@ or _lhs _rhs = do
   return result
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#893
-
 xor :: Range -> Range -> T.Verif Range
 xor _lhs _rhs = do
   result <- resultRange T.Signed "result"
