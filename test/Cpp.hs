@@ -5,16 +5,29 @@ import           DSL.DSL    as D
 import qualified DSL.Typed  as T
 import           Prelude    hiding (and, max, min, not, pi)
 import           Utils
+import           ActiveCode.Cpp
+import qualified Test.QuickCheck.Monadic      as Q
+import qualified Test.Tasty.QuickCheck        as Q
 
 cppTests :: BenchTest
-cppTests = benchTestGroup "C++ tests" [ cppMinTest
-                                      , cppMaxTest
-                                      , cppCmpTest
-                                      , cppShlTest
-                                      , cppShrTest
-                                      , fpTest
-                                      , cppOverflowTest
-                                      ]
+cppTests = benchTestGroup "C++ tests" [ 
+  -- benchTestGroup "Unit tests" [ cppMinTest
+  --                             , cppMaxTest
+  --                             , cppCmpTest
+  --                             , cppShlTest
+  --                             , cppShrTest
+  --                             , fpTest
+  --                             , cppOverflowTest
+  --                             ],
+  benchTestGroup "QuickCheck tests" [ 
+    benchTestGroup "Arithmetic binary ops" [ cppBinOpTest CppAdd
+                                           , cppBinOpTest CppSub
+                                           , cppBinOpTest CppMul
+                                           , cppBinOpTest CppMin
+                                           , cppBinOpTest CppMax
+                                           ]
+                                    ]
+  ]
 
 trueBit :: Double
 trueBit = 1
@@ -303,3 +316,30 @@ fpTest = benchTestCase "fp test" $ do
     T.runSolver
 
   vtest r $ M.fromList []
+
+
+
+cppBinOpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
+  where cppT :: Double -> Double -> Q.Property
+        cppT x y = Q.monadicIO $ do
+          cppRes <- Q.run $ cppBin bop (x, y)
+          (T.SolverSat vars) <- Q.run $ T.evalVerif Nothing $ do
+              xv <- T.fpnum x
+              yv <- T.fpnum y
+              T.named "result" $ (cppBinOpToFunc bop) xv yv
+              T.runSolver
+          let (Just smtRes) = M.lookup "result" vars
+          Q.assert $ smtRes == cppRes
+
+cppBinOpToFunc :: CppOp -> (T.VNode -> T.VNode -> D.Verif T.VNode)
+cppBinOpToFunc op = case op of
+  CppAdd  -> T.cppAdd
+  CppSub  -> T.cppSub
+  CppMul  -> T.cppMul
+  CppAnd  -> T.cppAnd
+  CppOr   -> T.cppOr
+  CppXor  -> T.cppXor
+  CppShl  -> T.cppShiftLeft
+  CppShr  -> T.cppShiftRight
+  CppMin  -> T.cppMin
+  CppMax  -> T.cppMax

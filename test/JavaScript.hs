@@ -16,7 +16,9 @@ jsTests :: BenchTest
 jsTests = benchTestGroup "JavaScript tests" [
     benchTestGroup "Arithmetic binary ops" [ jsBinOpTest JSAdd
                                            , jsBinOpTest JSSub
-                                           , jsBinOpTest JSMul ]
+                                           , jsBinOpTest JSMul
+                                           , jsBinOpTest JSMin
+                                           , jsBinOpTest JSMax ]
  ,  benchTestGroup "Bitwise ops" [ jsBitI32Test JSAnd
                                  , jsBitI32Test JSOr
                                  , jsBitI32Test JSXor
@@ -24,9 +26,7 @@ jsTests = benchTestGroup "JavaScript tests" [
                                  , jsShrTest
                                  , jsUshrTest
                                  , jsNotTest ]
-  , benchTestGroup "Unary ops" [ jsBinOpTest JSMin
-                               , jsBinOpTest JSMax
-                               , jsUniOpTest JSAbs
+  , benchTestGroup "Unary ops" [ jsUniOpTest JSAbs
                                , jsUniOpTest JSFloor
                                , jsUniOpTest JSCeil
                                , jsUniOpTest JSSign  ]

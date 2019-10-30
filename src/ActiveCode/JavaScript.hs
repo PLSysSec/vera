@@ -69,11 +69,6 @@ bop2code op = \x y -> case op of
   JSMax  -> "Math.max(" ++ show x ++ "," ++ show y ++ ")"
   _      -> error "BUG: called bop2code with unary op"
   
-  
-  
-  
-
-
 uop2code :: Show a => JSOp -> (a -> String)
 uop2code op = \x -> case op of
   JSNot   -> "~" ++ show x
