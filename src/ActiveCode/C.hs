@@ -1,7 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module ActiveCode.C (c,cpp) where
-
-import qualified Data.ByteString.Lazy.Char8 as L8
+module ActiveCode.C {-(cpp, CPPOp(..)) -}where
 
 import           ActiveCode.Utils
 import           Control.Exception
@@ -9,31 +7,31 @@ import           Control.Monad
 
 import           System.FilePath
 import           System.Posix.Temp
-import           System.Process
+import           System.Directory (removeFile)
 import           System.Exit
-import           System.IO (hClose)
+import           System.IO
 
-import qualified Data.Text as T
-import qualified Data.Text.IO as T
-
-c :: L8.ByteString -> IO ()
-c = clang "clang" ".c"
-
-cpp :: L8.ByteString -> IO ()
-cpp = clang "clang++" ".cpp"
-
-clang :: String -> String -> L8.ByteString -> IO ()
-clang cc ext src = do
-  fp <- bracket (mkstemps "/tmp/activeC" ext)
+cpp :: String -> IO ()
+cpp mainBody = do
+  fp <- bracket (mkstemps "/tmp/activeC" ".cpp")
                 (hClose . snd)
-                (\(f,h) -> L8.hPut h src >> return (dropExtension f))
-  let rpl = T.replace (T.pack $ fp++ext) "<user-input>" 
+                (\(f,h) -> hPutStr h src >> return (dropExtension f))
+
   -- compile
-  (ccode,cout') <- readCommand cc ["-o",fp,fp++ext] ""
-  let cout = rpl $ T.pack cout'
-  unless (ccode == ExitSuccess) $ T.putStr cout >> exitWith ccode
+  (ccode,cout) <- readCommand cc ["-o", fp, fp ++ ".cpp"] ""
+  removeFile $ fp ++ ".cpp"
+  unless (ccode == ExitSuccess) $ fail cout
   -- run
-  (code,out') <- readCommand fp [] ""
-  let out = rpl $ T.pack out'
-  T.putStr out
-  exitWith code
+  (code,out) <- readCommand fp [] ""
+  removeFile fp
+  unless (ccode == ExitSuccess) $ fail cout
+  unless (code == ExitSuccess) $ fail out
+  putStrLn out
+
+    where cc = "cc"
+          src = unlines [ "#include <stdio.h>"
+                        , "#include <stdint.h>"
+                        , "int main(int argc, char *argv[]) {"
+                        , mainBody
+                        , "return 0;"
+                        , "}" ]

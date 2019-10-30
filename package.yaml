@@ -33,6 +33,7 @@ library:
   - split >= 0.2.3.3
   - data-binary-ieee754
   - filepath
+  - directory
   - process
   - bytestring
   - text
