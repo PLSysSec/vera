@@ -48,8 +48,24 @@ data SNum = SNum { numTy  :: Type
 
 data SExpr = VarExpr { exprVar :: SVar }
            | NumExpr SNum
-           | Lt SExpr SExpr
+           | Neg SExpr
+           | Not SExpr
+           | Abs SExpr
+           | Eq SExpr SExpr
+           | And SExpr SExpr
            | Add SExpr SExpr
+           | Sub SExpr SExpr
+           | Mul SExpr SExpr
+           | Or SExpr SExpr
+           | XOr SExpr SExpr
+           | Min SExpr SExpr
+           | Max SExpr SExpr
+           | Gt SExpr SExpr
+           | Gte SExpr SExpr
+           | Lt SExpr SExpr
+           | Lte SExpr SExpr
+           | Shl SExpr SExpr
+           | Shr SExpr SExpr
            | Call FunctionName [SExpr]
            | FieldExpr FieldName
            deriving (Eq, Ord, Show)

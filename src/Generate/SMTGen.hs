@@ -68,6 +68,15 @@ genCallSMT expr =
 
     _ -> error "Cannot generate call SMT for non-call node"
 
+genBinOpSMT :: SExpr
+            -> SExpr
+            -> (T.VNode -> T.VNode -> T.Verif T.VNode)
+            -> Codegen T.VNode
+genBinOpSMT e1 e2 op = do
+  v1 <- genExprSMT e1
+  v2 <- genExprSMT e2
+  liftVerif $ op v1 v2
+
 genExprSMT :: SExpr
            -> Codegen T.VNode
 genExprSMT expr =
@@ -79,14 +88,28 @@ genExprSMT expr =
       case cv of
         Nothing  -> error "Cannot do plain field access outside of class method"
         Just var -> getField var fieldName >>= getVar
-    Add left right         -> do
-      leftSym <- genExprSMT left
-      rightSym <- genExprSMT right
-      liftVerif $ T.cppAdd leftSym rightSym
-    Lt left right          -> do
-      leftSym <- genExprSMT left
-      rightSym <- genExprSMT right
-      liftVerif $ T.cppLt leftSym rightSym
+
+    -- Unary operators
+    Neg e -> genExprSMT e >>= liftVerif . T.cppNeg
+    Not e -> genExprSMT e >>= liftVerif . T.cppNot
+    Abs e -> genExprSMT e >>= liftVerif . T.cppAbs
+    -- Binary
+    Eq left right  -> genBinOpSMT left right T.cppEq
+    And left right -> genBinOpSMT left right T.cppAnd
+    Add left right -> genBinOpSMT left right T.cppAdd
+    Sub left right -> genBinOpSMT left right T.cppSub
+    Mul left right -> genBinOpSMT left right T.cppMul
+    Or left right  -> genBinOpSMT left right T.cppOr
+    XOr left right -> genBinOpSMT left right T.cppXor
+    Min left right -> genBinOpSMT left right T.cppMin
+    Max left right -> genBinOpSMT left right T.cppMax
+    Gt left right  -> genBinOpSMT left right T.cppGt
+    Gte left right -> genBinOpSMT left right T.cppGte
+    Lt left right  -> genBinOpSMT left right T.cppLt
+    Lte left right -> genBinOpSMT left right T.cppLte
+    Shl left right -> genBinOpSMT left right T.cppShiftLeft
+    Shr left right -> genBinOpSMT left right T.cppShiftRight
+
     Call{}         -> do
       result <- genCallSMT expr
       case result of
