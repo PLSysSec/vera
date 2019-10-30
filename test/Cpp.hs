@@ -11,22 +11,24 @@ import qualified Test.Tasty.QuickCheck        as Q
 
 cppTests :: BenchTest
 cppTests = benchTestGroup "C++ tests" [ 
-  -- benchTestGroup "Unit tests" [ cppMinTest
-  --                             , cppMaxTest
-  --                             , cppCmpTest
-  --                             , cppShlTest
-  --                             , cppShrTest
-  --                             , fpTest
-  --                             , cppOverflowTest
-  --                             ],
-  benchTestGroup "QuickCheck tests" [ 
-    benchTestGroup "Arithmetic binary ops" [ cppBinOpTest CppAdd
-                                           , cppBinOpTest CppSub
-                                           , cppBinOpTest CppMul
-                                           , cppBinOpTest CppMin
-                                           , cppBinOpTest CppMax
-                                           ]
-                                    ]
+  benchTestGroup "Unit tests" [ cppMinTest
+                              , cppMaxTest
+                              , cppCmpTest
+                              , cppShlTest
+                              , cppShrTest
+                              , fpTest
+                              , cppOverflowTest
+                              ],
+  benchTestGroup "QuickCheck tests on doubles" [
+      benchTestGroup "Arithmetic binary ops" [ cppBinDoubleOpTest CppAdd
+                                            , cppBinDoubleOpTest CppSub
+                                            , cppBinDoubleOpTest CppMul
+                                            , cppBinDoubleOpTest CppMin
+                                            , cppBinDoubleOpTest CppMax
+                                            ]
+    , benchTestGroup "Unary ops" [ cppUniDoubleOpTest CppAbs
+                                 , cppUniDoubleOpTest CppNeg ]
+    ]
   ]
 
 trueBit :: Double
@@ -319,7 +321,7 @@ fpTest = benchTestCase "fp test" $ do
 
 
 
-cppBinOpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
+cppBinDoubleOpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
   where cppT :: Double -> Double -> Q.Property
         cppT x y = Q.monadicIO $ do
           cppRes <- Q.run $ cppBin bop (x, y)
@@ -330,6 +332,18 @@ cppBinOpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
               T.runSolver
           let (Just smtRes) = M.lookup "result" vars
           Q.assert $ smtRes == cppRes
+
+cppUniDoubleOpTest uop = benchTestProperty ("QuickCheck " ++ show uop) cppT
+  where cppT :: Double -> Q.Property
+        cppT x = Q.monadicIO $ do
+          cppRes <- Q.run $ cppUni uop x
+          (T.SolverSat vars) <- Q.run $ T.evalVerif Nothing $ do
+              xv <- T.fpnum x
+              T.named "result" $ (cppUniOpToFunc uop) xv
+              T.runSolver
+          let (Just smtRes) = M.lookup "result" vars
+          Q.assert $ smtRes == cppRes
+
 
 cppBinOpToFunc :: CppOp -> (T.VNode -> T.VNode -> D.Verif T.VNode)
 cppBinOpToFunc op = case op of
@@ -343,3 +357,10 @@ cppBinOpToFunc op = case op of
   CppShr  -> T.cppShiftRight
   CppMin  -> T.cppMin
   CppMax  -> T.cppMax
+
+
+cppUniOpToFunc :: CppOp -> (T.VNode -> D.Verif T.VNode)
+cppUniOpToFunc op = case op of
+  CppAbs  -> T.cppAbs
+  CppNeg  -> T.cppNeg
+  CppNot  -> T.cppNot

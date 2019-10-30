@@ -204,11 +204,14 @@ data Type = Unsigned
           deriving (Eq, Ord, Show)
 
 -- | Is the type signed?
+-- XXX(for the paepr) We forgot to define isSigned Double = true, which led to
+-- incorect cppAbs implementation; QC found this
 isSigned :: Type -> Bool
 isSigned Signed   = True
 isSigned Signed64 = True
 isSigned Signed16 = True
 isSigned Signed8  = True
+isSigned Double   = True
 isSigned _        = False
 
 -- | Is the unsigned?
