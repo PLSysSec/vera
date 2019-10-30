@@ -15,6 +15,7 @@ langTests = benchTestGroup "Lang" [ declTest
                                   , returnTest
                                   , classArgTest
                                   , classMethodTest
+                                  , returnClassTest
                                   ]
 
 declTest :: BenchTest
@@ -192,19 +193,23 @@ returnClassTest = benchTestCase "return class" $ do
 
   r <- evalCodegen Nothing $ do
 
-    let args = [("x", t Signed)]
-        body = [ if_ ((v "x") .<. (n Signed 4))
-                 [ return_ (n Signed 4) ] [return_ (n Signed 8)]
-               ]
-    define $ Function "fun" (t Signed) args body
+    class_ $ ClassDef "myclass" [ ("myint", Signed)
+                                , ("myotherint", Signed)
+                                ] []
 
-    genBodySMT [ declare (t Signed) "result"
-               , (v "result") `assign` call "fun" [n Signed 3]
+    let args = []
+        body = [ declare (c "myclass") "result"
+               , (v "result") .->. "myint" `assign` (n Signed 1)
+               , (v "result") .->. "myotherint" `assign` (n Signed 2)
+               , return_ (v "result")
                ]
-    genBodySMT [ declare (t Signed) "result2"
-               , (v "result2") `assign` call "fun" [n Signed 5]
+    define $ Function "fun" (c "myclass") args body
+
+    genBodySMT [ declare (c "myclass") "test"
+               , (v "test") `assign` call "fun" []
                ]
+
     runSolverOnSMT
-  vtest r $ Map.fromList [ ("result_1", 4)
-                         , ("result2_1", 8)
+  vtest r $ Map.fromList [ ("test_myint_1", 1)
+                         , ("test_myotherint_1", 2)
                          ]

@@ -22,25 +22,10 @@ genNumSMT snum = do
     T.Unsigned64 -> T.unum64 val
     _            -> error "Float not supported"
 
-genExprSMT :: SExpr
-           -> Codegen T.VNode
-genExprSMT expr =
+genCallSMT :: SExpr
+           -> Codegen [T.VNode]
+genCallSMT expr =
   case expr of
-    VarExpr svar           -> genVarSMT svar
-    NumExpr snum           -> genNumSMT snum
-    FieldExpr fieldName    -> do
-      cv <- getClassVar
-      case cv of
-        Nothing  -> error "Cannot do plain field access outside of class method"
-        Just var -> getField var fieldName >>= getVar
-    Add left right         -> do
-      leftSym <- genExprSMT left
-      rightSym <- genExprSMT right
-      liftVerif $ T.cppAdd leftSym rightSym
-    Lt left right          -> do
-      leftSym <- genExprSMT left
-      rightSym <- genExprSMT right
-      liftVerif $ T.cppLt leftSym rightSym
     Call name args         -> do
 
       argSyms <- forM args $ \arg -> do
@@ -79,15 +64,52 @@ genExprSMT expr =
 
       clearClassVar
       clearRetVal
-      -- By convention, we return the first return value
-      return $ head retValSyms
-    _                      -> error "Not done"
-  where
+      return retValSyms
+
+    _ -> error "Cannot generate call SMT for non-call node"
+
+genExprSMT :: SExpr
+           -> Codegen T.VNode
+genExprSMT expr =
+  case expr of
+    VarExpr svar           -> genVarSMT svar
+    NumExpr snum           -> genNumSMT snum
+    FieldExpr fieldName    -> do
+      cv <- getClassVar
+      case cv of
+        Nothing  -> error "Cannot do plain field access outside of class method"
+        Just var -> getField var fieldName >>= getVar
+    Add left right         -> do
+      leftSym <- genExprSMT left
+      rightSym <- genExprSMT right
+      liftVerif $ T.cppAdd leftSym rightSym
+    Lt left right          -> do
+      leftSym <- genExprSMT left
+      rightSym <- genExprSMT right
+      liftVerif $ T.cppLt leftSym rightSym
+    Call{}         -> do
+      result <- genCallSMT expr
+      case result of
+        [rval] -> return rval
+        _      -> error "Cannot return a class variable for use in greater expression"
 
 genStmtSMT :: SStmt -> Codegen ()
 genStmtSMT stmt =
   case stmt of
     Decl var -> return () -- Declaration is just important for variable tracking
+    -- We are assigning to a class
+    -- In this case, the RHS must either be another class or a call
+    Assign (VarExpr var) expr | isClassType var ->
+      case expr of
+        -- Assign each field of the LHS struct to each return value
+        Call{}    -> do
+          rvs <- genCallSMT expr
+          fields <- getFieldVars var >>= mapM getVar
+          unless (length rvs == length fields) $
+            error $ unwords ["Wrong return type for function in assignment to", varName var]
+          forM_ (zip fields rvs) $ \(f, rv) -> liftVerif $ T.vassign f rv
+        -- Assign each field of the RHS struct to the LHS struct
+        VarExpr v | isClassType v -> error "var"
     Assign var expr -> do
       varSMT <- genExprSMT var
       exprSMT <- genExprSMT expr
@@ -104,6 +126,12 @@ genStmtSMT stmt =
         [rval] -> do
           exprSym <- genExprSMT expr
           liftVerif $ T.vassign rval exprSym
+        rvals -> do
+          unless (isClassExpr expr) $ error "Cannot assign to non-class function"
+          fields <- getFieldVars (exprVar expr) >>= mapM getVar
+          unless (length fields == length rvals) $
+            error "Cannot assign variables of different types"
+          forM_ (zip fields rvals) $ \(f, r) -> liftVerif $ T.vassign f r
   where
     rewriteAssign :: T.VNode -> SVar -> SExpr -> Codegen ()
     rewriteAssign cond var expr = do

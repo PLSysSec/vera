@@ -128,7 +128,7 @@ assign svar' sexpr' = do
   svar <- svar'
   sexpr <- sexpr'
   unless (isClassExpr svar || isPrimVarExpr svar) $ error "Cannot assign to non-variable"
-  when (isClassExpr svar) $ unless (isClassExpr sexpr) $
+  when (isClassExpr svar) $ unless (isClassExpr sexpr || isCallExpr sexpr) $
     error "Cannot assign class to non-class"
   newVar <- nextVar (varName $ exprVar svar)
   return $ Assign (VarExpr newVar) sexpr

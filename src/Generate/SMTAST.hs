@@ -29,6 +29,9 @@ isPrimType :: SVar -> Bool
 isPrimType SVar{} = True
 isPrimType _      = False
 
+isClassType :: SVar -> Bool
+isClassType = not . isPrimType
+
 -- Class var is an option, it just come with class name and no version
 -- let assign be expr -> expr now
 -- get rid of assign field. assign will break things down by field
@@ -50,6 +53,10 @@ data SExpr = VarExpr { exprVar :: SVar }
            | Call FunctionName [SExpr]
            | FieldExpr FieldName
            deriving (Eq, Ord, Show)
+
+isCallExpr :: SExpr -> Bool
+isCallExpr Call{} = True
+isCallExpr _      = False
 
 isClassExpr :: SExpr -> Bool
 isClassExpr (VarExpr v) = not $ isPrimType v
