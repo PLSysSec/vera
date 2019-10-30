@@ -5,183 +5,146 @@ import qualified Data.Map                   as M
 import           Data.Maybe                 (catMaybes, fromJust, isJust)
 import qualified DSL.DSL                    as D
 import           DSL.Typed
-import           Generate.AST
+import           Generate.SMTAST
 import           Generate.State
 
-binOp :: Codegen Expr
-      -> Codegen Expr
-      -> (RichType -> Expr -> Expr -> Expr)
-      -> String
-      -> Codegen Expr
-binOp e1' e2' constructor opName = do
-  e1 <- e1' >>= normExpr
-  e2 <- e2' >>= normExpr
-  return $ constructor (Normal Signed) e1 e2
+--
+-- Top-level declarations and definitions
+--
 
-(.+.) :: Codegen Expr -> Codegen Expr -> Codegen Expr
-(.+.) e1 e2 = binOp e1 e2 Add "add"
+data FunctionDef = Function { fName :: FunctionName
+                            , fTy   :: STy
+                            , fArgs :: [(VarName, STy)]
+                            , fBody :: [Codegen SStmt]
+                            }
 
-(.-.) :: Codegen Expr -> Codegen Expr -> Codegen Expr
-(.-.) e1 e2 = binOp e1 e2 Sub "sub"
+data ClassDef = ClassDef ClassName [(FieldName, Type)] [FunctionDef]
 
-(.*.) :: Codegen Expr -> Codegen Expr -> Codegen Expr
-(.*.) e1 e2 = binOp e1 e2 Mul "mul"
+define :: FunctionDef
+       -> Codegen ()
+define (Function funName funTy funArgs body) = do
+  -- Declare all the argument variables and the return value
+  forM_ funArgs $ \(name, ty) -> newVar ty name
+  let retValName = funName ++ "_return_val"
+  newVar funTy retValName
+  rvs <- if isClass funTy
+         then do
+           retVal <- curVar retValName
+           fields <- getFieldVars retVal
+           return $ map varName fields
+         else return [retValName]
+  -- Save the relevant information in the state so we can call it later
+  addFunction funName (map fst funArgs) rvs body
 
-(.<.) :: Codegen Expr -> Codegen Expr -> Codegen Expr
-(.<.) e1 e2 = binOp e1 e2 Lt "lt"
+class_ :: ClassDef -> Codegen ()
+class_ (ClassDef name fields functions) = do
+  addClass name $ M.fromList fields
+  forM_ functions $ \(Function funName funTy funArgs body) -> do
+    let newName = name ++ "_" ++ funName
+        classArg = (newName ++ "_arg", Class name)
+    define $ Function newName funTy (classArg:funArgs) body
 
-(.<=.) :: Codegen Expr -> Codegen Expr -> Codegen Expr
-(.<=.) e1 e2 = binOp e1 e2 Lte "lte"
+--
+-- Variables and numbers
+--
 
-(.>.) :: Codegen Expr -> Codegen Expr -> Codegen Expr
-(.>.) e1 e2 = binOp e1 e2 Gt "gt"
+-- | Make a primitive type
+t :: Type -> STy
+t = PrimType
 
-(.=>.) :: Codegen Expr -> Codegen Expr -> Codegen Expr
-(.=>.) e1 e2 = binOp e1 e2 Gt "gte"
+-- | Make a class type
+c :: String -> STy
+c = Class
 
-(.==.) :: Codegen Expr -> Codegen Expr -> Codegen Expr
-(.==.) e1 e2 = binOp e1 e2 Eq "eq"
+-- | Get a declared variable
+v :: VarName -> Codegen SExpr
+v name = do
+  ty <- varType name
+  if isClass ty
+  then return $ VarExpr $ CVar (className ty) name
+  else curVar name >>= return . VarExpr
 
-(.&.) :: Codegen Expr -> Codegen Expr -> Codegen Expr
-(.&.) e1 e2 = binOp e1 e2 And "and"
+-- | Get a number
+n :: Type -> Integer -> Codegen SExpr
+n ty num = return $ NumExpr $ SNum ty num
 
-(.|.) :: Codegen Expr -> Codegen Expr -> Codegen Expr
-(.|.) e1 e2 = binOp e1 e2 Or "or"
+-- | Get field from field name in a class method
+f :: FieldName -> Codegen SExpr
+f name = return $ FieldExpr name
 
-(.^.) :: Codegen Expr -> Codegen Expr -> Codegen Expr
-(.^.) e1 e2 = binOp e1 e2 Xor "xor"
-
-(.<<.) :: Codegen Expr -> Codegen Expr -> Codegen Expr
-(.<<.) e1 e2 = binOp e1 e2 LShift "lshift"
-
-(.>>.) :: Codegen Expr -> Codegen Expr -> Codegen Expr
-(.>>.) e1 e2 = binOp e1 e2 RShift "rshift"
-
-(.->.) :: Codegen Expr -> Codegen Expr -> Codegen Expr
-(.->.) e1' e2' = do
-  e1 <- e1'
-  let name = case e1 of
-               Simple (ClassObj cname) -> cname
-               _                       -> error "No nested classes"
-  e2 <- e2'
-  let fieldName = case e2 of
-                    Simple (Field name) -> name
-                    _                   -> error "No nested field names"
-  return $ GetField (Class name) name fieldName
+--
+-- Operators
+--
 
 call :: String
-     -> [Codegen Expr]
-     -> Codegen Expr
+     -> [Codegen SExpr]
+     -> Codegen SExpr
 call name args' = do
-  ty <- getFunctionType name
   args <- forM args' $ \arg -> arg
-  return $ Call name ty args
+  return $ Call name args
 
+(.+.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+(.+.) left' right' = do
+  left <- left'
+  right <- right'
+  return $ Add left right
+
+(.<.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+(.<.) left' right' = do
+  left <- left'
+  right <- right'
+  return $ Lt left right
+
+(.->.) :: Codegen SExpr -> FieldName -> Codegen SExpr
+(.->.) ve' fieldname = do
+  ve <- ve'
+  unless (isClassExpr ve) $ error $ unwords ["Cannot get field of non class", show ve]
+  getField (exprVar ve) fieldname >>= return . VarExpr
+
+method :: Codegen SExpr -> FunctionName -> [Codegen SExpr] -> Codegen SExpr
+method ve' funName args' = do
+  ve <- ve'
+  args <- forM args' $ \arg -> arg
+  unless (isClassExpr ve) $ error $ unwords ["Cannot get method of non class", show ve]
+  let fullFunName = (varClass $ exprVar ve) ++ "_" ++ funName
+  return $ Call fullFunName (ve:args)
+
+--
 -- Statements
+--
 
--- |
-if_ :: Codegen Expr -- ^ Condition
-    -> [Codegen Stmt] -- ^ True branch
-    -> Maybe ([Codegen Stmt]) -- ^ Possible false branch
-    -> Codegen Stmt -- ^ Resulting if statement
+declare :: STy -> VarName -> Codegen SStmt
+declare ty var = do
+  newVar ty var
+  return $ if isClass ty
+  then Decl $ CVar (className ty) var
+  else Decl $ SVar (primTy ty) var 0
+declare _ _ = error "Class type is not set up yet"
+
+assign :: Codegen SExpr
+       -> Codegen SExpr
+       -> Codegen SStmt
+assign svar' sexpr' = do
+  svar <- svar'
+  sexpr <- sexpr'
+  unless (isClassExpr svar || isPrimVarExpr svar) $ error "Cannot assign to non-variable"
+  when (isClassExpr svar) $ unless (isClassExpr sexpr) $
+    error "Cannot assign class to non-class"
+  newVar <- nextVar (varName $ exprVar svar)
+  return $ Assign (VarExpr newVar) sexpr
+
+if_ :: Codegen SExpr
+    -> [Codegen SStmt]
+    -> [Codegen SStmt]
+    -> Codegen SStmt
 if_ cond' ifBr' elseBr' = do
   cond <- cond'
   ifBr <- forM ifBr' $ \line -> line
-  elseBr <- if isJust elseBr'
-            then forM (fromJust elseBr') $ \line -> line
-            else return []
+  elseBr <- forM elseBr' $ \line -> line
   return $ If cond ifBr elseBr
 
--- | Assign a variable to a an expression.
--- Right now it does not support assignment to struct members, but it will have to
-assign :: Codegen Expr
-       -> Codegen Expr
-       -> Codegen Stmt
-assign lhs' rhs' = do
-  lhs <- lhs'
-  rhs <- rhs'
-  case lhs of
-    Simple (V var) -> do
-      (newVar, newVer) <- nextVer var
-      let newLhs = Simple $ VV newVar var newVer
-      return $ Assign newLhs rhs
-    _ -> error "Cannot assign to a class field or other non-simple variable"
-
-returnFrom :: String
-           -> Codegen Expr
-           -> Codegen Stmt
-returnFrom str expr' = do
-  expr <- expr' >>= normExpr
-  return $ Return str expr
-
---
--- Functions, programs, and class definitions
---
-
-class_ :: String
-       -> [(String, Type)]
-       -> Codegen ClassDef
-class_ name fields = do
-  addClass name fields
-  let fs = map (\(f, t) -> FieldDef t f)  fields
-  return $ ClassDef fs
-
-define :: String
-       -> Type
-       -> [(Variable, Type)]
-       -> [Codegen Stmt]
-       -> Codegen Function
-define fnName returnType args body' = do
-  forM_ args $ \(var, ty) -> do
-    -- Declare the arguments, then make a new var so that they exist
-    void $ declare ty var
-    void $ nextVer var
-  addFunction fnName body' returnType args
-  body <- forM body' $ \line -> line
-  return $ Function fnName returnType args body
-
---
--- Numbers and variables
---
-
-declare :: Type -> Variable -> Codegen Stmt
-declare ty var = do
-  void $ newVar ty var
-  return $ Decl var ty
-
-number :: Type -> Integer -> Codegen Expr
-number ty n = do
-  node <- case ty of
-            Signed -> liftVerif $ num n
-            _      -> error ""
-  return $ Simple $ N node
-
-v :: Variable -> Codegen Expr
-v var = return $ Simple $ V var
-
-test :: [Codegen Stmt]
-test = [ declare Signed "lhs"
-       , declare Signed "var"
-       , (v "lhs") `assign` ((number Signed 5) .+. (v "var"))
-       ]
-
-test2 :: Codegen ()
-test2 = do
-  forM_ test $ \line -> do
-    result <- line
-    return ()
-
---
--- Helpers
---
-
-normExpr :: Expr -> Codegen Expr
-normExpr (Simple leaf) = rhsVar leaf >>= return . Simple
-normExpr e             = return e
-
-rhsVar :: Leaf -> Codegen Leaf
-rhsVar (V var) = do
-  (node, ver) <- curVar var
-  return $ VV node var ver
-rhsVar n@N{} = return n
-rhsVar _ = error "Cannot make rhs variable of non-variable type"
+return_ :: Codegen SExpr
+        -> Codegen SStmt
+return_ expr' = do
+  expr <- expr'
+  return $ Return expr
