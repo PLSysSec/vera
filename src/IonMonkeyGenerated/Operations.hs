@@ -56,8 +56,8 @@ xor = undefined
 not :: FunctionDef
 not = let args = [ ("op", c "range") ]
           body = [ declare (c "range") "result_range"
-                 , (v "result_range") .->. "lower" `assign` (neg_ $ (v "op") .->. "upper")
-                 , (v "result_range") .->. "upper" `assign` (neg_ $ (v "op") .->. "lower")
+                 , (v "result_range") .->. "lower" `assign` (not_ $ (v "op") .->. "upper")
+                 , (v "result_range") .->. "upper" `assign` (not_ $ (v "op") .->. "lower")
                  , return_ $ v "result_range"
                  ]
       in Function "not" (c "range") args body

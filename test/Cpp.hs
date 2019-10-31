@@ -1,18 +1,18 @@
 module Cpp (cppTests) where
+import           ActiveCode.Cpp
 import           BenchUtils
 import           Data.Int
+import qualified Data.Map                as M
 import           Data.Word
-import qualified Data.Map   as M
-import           DSL.DSL    as D
-import qualified DSL.Typed  as T
-import           Prelude    hiding (and, max, min, not, pi)
+import           DSL.DSL                 as D
+import qualified DSL.Typed               as T
+import           Prelude                 hiding (and, max, min, not, pi)
+import qualified Test.QuickCheck.Monadic as Q
+import qualified Test.Tasty.QuickCheck   as Q
 import           Utils
-import           ActiveCode.Cpp
-import qualified Test.QuickCheck.Monadic      as Q
-import qualified Test.Tasty.QuickCheck        as Q
 
 cppTests :: BenchTest
-cppTests = benchTestGroup "C++ tests" [ 
+cppTests = benchTestGroup "C++ tests" [
   benchTestGroup "Unit tests" [ cppMinTest
                               , cppMaxTest
                               , cppCmpTest
@@ -20,7 +20,7 @@ cppTests = benchTestGroup "C++ tests" [
                               , cppShrTest
                               , fpTest
                               , cppOverflowTest
-                              ],
+                              ]
   , benchTestGroup "QuickCheck tests on doubles" [
       benchTestGroup "Arithmetic binary ops" [ cppBinDoubleOpTest CppAdd
                                              , cppBinDoubleOpTest CppSub
@@ -708,24 +708,24 @@ cppUniW8OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
 
 cppBinOpToFunc :: CppOp -> (T.VNode -> T.VNode -> D.Verif T.VNode)
 cppBinOpToFunc op = case op of
-  CppAdd  -> T.cppAdd
-  CppSub  -> T.cppSub
-  CppMul  -> T.cppMul
-  CppAnd  -> T.cppAnd
-  CppOr   -> T.cppOr
-  CppXor  -> T.cppXor
-  CppShl  -> T.cppShiftLeft
-  CppShr  -> T.cppShiftRight
-  CppMin  -> T.cppMin
-  CppMax  -> T.cppMax
-  CppGt   -> T.cppGt
-  CppGte  -> T.cppGte
-  CppLt   -> T.cppLt
-  CppLte  -> T.cppLte
+  CppAdd -> T.cppAdd
+  CppSub -> T.cppSub
+  CppMul -> T.cppMul
+  CppAnd -> T.cppAnd
+  CppOr  -> T.cppOr
+  CppXor -> T.cppXor
+  CppShl -> T.cppShiftLeft
+  CppShr -> T.cppShiftRight
+  CppMin -> T.cppMin
+  CppMax -> T.cppMax
+  CppGt  -> T.cppGt
+  CppGte -> T.cppGte
+  CppLt  -> T.cppLt
+  CppLte -> T.cppLte
 
 
 cppUniOpToFunc :: CppOp -> (T.VNode -> D.Verif T.VNode)
 cppUniOpToFunc op = case op of
-  CppAbs  -> T.cppAbs
-  CppNeg  -> T.cppNeg
-  CppNot  -> T.cppNot
+  CppAbs -> T.cppAbs
+  CppNeg -> T.cppNeg
+  CppNot -> T.cppNot
