@@ -6,6 +6,8 @@ import           ActiveCode.Utils
 import           Control.Exception
 import           Control.Monad
 import           Data.Binary.IEEE754
+import           Data.Int
+import           Data.Word
 
 import           System.FilePath
 import           System.Posix.Temp
@@ -148,6 +150,140 @@ instance Cpp Double Double where
                        ]
     return $ wordToDouble $ fromInteger i
 
+instance Cpp Double Bool where
+   cppBin op (x, y) = do
+    cpp $ unlines [ "double x = " ++ show x ++ ";"
+                  , "double y = " ++ show y ++ ";"
+                  , "printf( (" ++ op2code op ++ ") ? \"True\" : \"False\");"
+                  ]
+   cppUni = error "BUG cppUni is not a comparison operator"
+
+
+instance Cpp Int32 Int32 where
+   cppBin op (x, y) = do
+    cpp $ unlines [ "int32_t x = " ++ show x ++ ";"
+                  , "int32_t y = " ++ show y ++ ";"
+                  , "int32_t result = " ++ op2code op ++ ";"
+                  , "printf(\"%d\", result);"
+                  ]
+   cppUni op x = do
+    cpp $ unlines [ "int32_t x = " ++ show x ++ ";"
+                  , "int32_t result = " ++ op2code op ++ ";"
+                  , "printf(\"%d\", result);"
+                  ]
+
+instance Cpp Int32 Bool where
+   cppBin op (x, y) = do
+    cpp $ unlines [ "int32_t x = " ++ show x ++ ";"
+                  , "int32_t y = " ++ show y ++ ";"
+                  , "printf( (" ++ op2code op ++ ") ? \"True\" : \"False\");"
+                  ]
+   cppUni = error "BUG cppUni is not a comparison operator"
+
+instance Cpp Int16 Int16 where
+   cppBin op (x, y) = do
+    cpp $ unlines [ "int16_t x = " ++ show x ++ ";"
+                  , "int16_t y = " ++ show y ++ ";"
+                  , "int16_t result = " ++ op2code op ++ ";"
+                  , "printf(\"%d\", result);"
+                  ]
+   cppUni op x = do
+    cpp $ unlines [ "int16_t x = " ++ show x ++ ";"
+                  , "int16_t result = " ++ op2code op ++ ";"
+                  , "printf(\"%d\", result);"
+                  ]
+
+instance Cpp Int16 Bool where
+   cppBin op (x, y) = do
+    cpp $ unlines [ "int16_t x = " ++ show x ++ ";"
+                  , "int16_t y = " ++ show y ++ ";"
+                  , "printf( (" ++ op2code op ++ ") ? \"True\" : \"False\");"
+                  ]
+   cppUni = error "BUG cppUni is not a comparison operator"
+
+instance Cpp Int8 Int8 where
+   cppBin op (x, y) = do
+    cpp $ unlines [ "int8_t x = " ++ show x ++ ";"
+                  , "int8_t y = " ++ show y ++ ";"
+                  , "int8_t result = " ++ op2code op ++ ";"
+                  , "printf(\"%d\", result);"
+                  ]
+   cppUni op x = do
+    cpp $ unlines [ "int8_t x = " ++ show x ++ ";"
+                  , "int8_t result = " ++ op2code op ++ ";"
+                  , "printf(\"%d\", result);"
+                  ]
+
+instance Cpp Int8 Bool where
+   cppBin op (x, y) = do
+    cpp $ unlines [ "int8_t x = " ++ show x ++ ";"
+                  , "int8_t y = " ++ show y ++ ";"
+                  , "printf( (" ++ op2code op ++ ") ? \"True\" : \"False\");"
+                  ]
+   cppUni = error "BUG cppUni is not a comparison operator"
+
+instance Cpp Word32 Word32 where
+   cppBin op (x, y) = do
+    cpp $ unlines [ "uint32_t x = " ++ show x ++ ";"
+                  , "uint32_t y = " ++ show y ++ ";"
+                  , "uint32_t result = " ++ op2code op ++ ";"
+                  , "printf(\"%u\", result);"
+                  ]
+   cppUni op x = do
+    cpp $ unlines [ "uint32_t x = " ++ show x ++ ";"
+                  , "uint32_t result = " ++ op2code op ++ ";"
+                  , "printf(\"%u\", result);"
+                  ]
+
+instance Cpp Word32 Bool where
+   cppBin op (x, y) = do
+    cpp $ unlines [ "uint32_t x = " ++ show x ++ ";"
+                  , "uint32_t y = " ++ show y ++ ";"
+                  , "printf( (" ++ op2code op ++ ") ? \"True\" : \"False\");"
+                  ]
+   cppUni = error "BUG cppUni is not a comparison operator"
+
+instance Cpp Word16 Word16 where
+   cppBin op (x, y) = do
+    cpp $ unlines [ "uint16_t x = " ++ show x ++ ";"
+                  , "uint16_t y = " ++ show y ++ ";"
+                  , "uint16_t result = " ++ op2code op ++ ";"
+                  , "printf(\"%u\", result);"
+                  ]
+   cppUni op x = do
+    cpp $ unlines [ "uint16_t x = " ++ show x ++ ";"
+                  , "uint16_t result = " ++ op2code op ++ ";"
+                  , "printf(\"%d\", result);"
+                  ]
+
+instance Cpp Word16 Bool where
+   cppBin op (x, y) = do
+    cpp $ unlines [ "uint16_t x = " ++ show x ++ ";"
+                  , "uint16_t y = " ++ show y ++ ";"
+                  , "printf( (" ++ op2code op ++ ") ? \"True\" : \"False\");"
+                  ]
+   cppUni = error "BUG cppUni is not a comparison operator"
+
+instance Cpp Word8 Word8 where
+   cppBin op (x, y) = do
+    cpp $ unlines [ "uint8_t x = " ++ show x ++ ";"
+                  , "uint8_t y = " ++ show y ++ ";"
+                  , "uint8_t result = " ++ op2code op ++ ";"
+                  , "printf(\"%u\", result);"
+                  ]
+   cppUni op x = do
+    cpp $ unlines [ "uint8_t x = " ++ show x ++ ";"
+                  , "uint8_t result = " ++ op2code op ++ ";"
+                  , "printf(\"%u\", result);"
+                  ]
+
+instance Cpp Word8 Bool where
+   cppBin op (x, y) = do
+    cpp $ unlines [ "uint8_t x = " ++ show x ++ ";"
+                  , "uint8_t y = " ++ show y ++ ";"
+                  , "printf( (" ++ op2code op ++ ") ? \"True\" : \"False\");"
+                  ]
+   cppUni = error "BUG cppUni is not a comparison operator"
 
 
 data CppOp = CppAdd
@@ -172,7 +308,7 @@ data CppOp = CppAdd
            | CppLt
            | CppLte
            --
-           | CppCast
+           -- | CppCast
            deriving (Eq, Show)
 
 op2code :: CppOp -> String
@@ -194,4 +330,3 @@ op2code op = case op of
   CppNeg   -> "(-x)"
   CppNot   -> "(~x)"
   CppAbs   -> "Abs(x)"
-  _      -> error "BUG: called op2code with bad op"

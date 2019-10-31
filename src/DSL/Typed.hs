@@ -30,6 +30,8 @@ module DSL.Typed ( vassert
                  , unum64
                  , num16
                  , unum16
+                 , num8
+                 , unum8
                  , fpnum
                  , named
                  -- * Types 
@@ -415,6 +417,12 @@ unum16 val = makeNum val D.i16c Unsigned16
 
 num16 :: Integer -> D.Verif VNode
 num16 val = makeNum val D.i16c Signed16
+
+num8 :: Integer -> D.Verif VNode
+num8 val = makeNum val D.i8c Signed8
+
+unum8 :: Integer -> D.Verif VNode
+unum8 val = makeNum val D.i8c Unsigned8
 
 fpnum :: Double -> D.Verif VNode
 fpnum val = do
