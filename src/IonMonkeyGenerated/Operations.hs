@@ -98,11 +98,25 @@ mul = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#999
 lsh :: FunctionDef
-lsh = undefined
+lsh = let args = [ ("lhs", c "range")
+                 , ("c", t Signed)
+                 ]
+      in error ""
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1016
 rsh :: FunctionDef
-rsh = undefined
+rsh =
+  let args = [ ("lhs", c "range")
+             , ("c", t Signed)
+             ]
+      body = [ declare (t Signed) "shift"
+             , v "shift" `assign` (v "c" .&&. n Signed 31)
+             , return_ $ call "newInt32Range" [ (v "lhs" .->. "lower") .>>. v "shift"
+                                              , (v "lhs" .->. "upper") .>>. v "shift"
+                                              ]
+             ]
+  in Function "rsh" (c "range") args body
+
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1023
 ursh :: FunctionDef

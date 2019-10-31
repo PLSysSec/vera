@@ -19,6 +19,7 @@ genIonMonkeyTests :: BenchTest
 genIonMonkeyTests = benchTestGroup "Generated IonMonkey code test"
                     [ notTest
                     , andTest
+                    , rshTest
                     ]
 
 notTest :: BenchTest
@@ -54,6 +55,26 @@ andTest = benchTestCase "and" $ do
                 , (v "left_range") `assign` (call "newIn32InputRange" [])
                 , (v "right_range") `assign` (call "newIn32InputRange" [])
                 , (v "result_range") `assign` call "and" [v "left_range", v "right_range"]
+                , assign (v "dummy") $ call "verifySaneRange" [v "result_range"]
+                ]
+    genBodySMT verif
+    runSolverOnSMT
+  r @=? SolverUnsat
+
+rshTest :: BenchTest
+rshTest = benchTestCase "rsh" $ do
+  r <- evalCodegen Nothing $ do
+    class_ range
+    define newInt32InputRange
+    define newInt32Range
+    define rsh
+    define verifySaneRange
+    let verif = [ declare (c "range") "left_range"
+                , declare (t Signed) "right_range"
+                , declare (c "range") "result_range"
+                , declare (t Signed) "dummy"
+                , (v "left_range") `assign` (call "newIn32InputRange" [])
+                , (v "result_range") `assign` call "rsh" [v "left_range", v "right_range"]
                 , assign (v "dummy") $ call "verifySaneRange" [v "result_range"]
                 ]
     genBodySMT verif
