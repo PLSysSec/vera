@@ -84,6 +84,7 @@ isPrimVarExpr _           = False
 
 data SStmt = Decl SVar
            | Assign SExpr SExpr
+           | Assert SExpr
            | If SExpr [SStmt] [SStmt]
            | Return SExpr
            deriving (Eq, Ord, Show)

@@ -20,6 +20,7 @@ genNumSMT snum = do
     T.Unsigned   -> T.unum val
     T.Signed64   -> T.num64 val
     T.Unsigned64 -> T.unum64 val
+    T.Bool       -> if val == 1 then T.true else T.false
     _            -> error "Float not supported"
 
 genCallSMT :: SExpr
@@ -120,6 +121,7 @@ genStmtSMT :: SStmt -> Codegen ()
 genStmtSMT stmt =
   case stmt of
     Decl var -> return () -- Declaration is just important for variable tracking
+    Assert e -> genExprSMT e >>= liftVerif . T.vassert
     -- We are assigning to a class
     -- In this case, the RHS must either be another class or a call
     Assign (VarExpr var) expr | isClassType var ->

@@ -202,3 +202,9 @@ return_ :: Codegen SExpr
 return_ expr' = do
   expr <- expr'
   return $ Return expr
+
+assert_ :: Codegen SExpr
+        -> Codegen SStmt
+assert_ expr' = do
+  expr <- expr'
+  return $ Assert expr

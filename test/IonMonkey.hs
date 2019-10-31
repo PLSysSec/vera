@@ -1,4 +1,4 @@
-module IonMonkey where
+module IonMonkey (ionMonkeyTests) where
 import           BenchUtils
 import           Control.Monad.State.Strict   (liftIO)
 import qualified DSL.Typed                    as T

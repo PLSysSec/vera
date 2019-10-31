@@ -19,9 +19,11 @@ module IonMonkeyGenerated.Operations ( add
                                      , sign
                                      ) where
 import           Control.Monad
+import           DSL.Typed                  (Type (..))
 import           Generate.Lang
-import           Prelude       hiding (abs, and, floor, max, min, not, or)
-
+import           IonMonkeyGenerated.Helpers
+import           Prelude                    hiding (abs, and, floor, max, min,
+                                             not, or)
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#744
 add :: FunctionDef
@@ -33,7 +35,14 @@ sub = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#805
 and :: FunctionDef
-and = undefined
+and = let args = [ ("lhs", c "range")
+                 , ("rhs", c "range")
+                 ]
+          body = [ if_
+                   (((v "lhs" .->. "lower") .<. (n Signed 0)) .&&. ((v "rhs" .->. "lower") .<. (n Signed 0)))
+                   [] []
+                 ]
+      in error ""
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#834
 or :: FunctionDef
@@ -52,7 +61,6 @@ not = let args = [ ("op", c "range") ]
                  , return_ $ v "result_range"
                  ]
       in Function "not" (c "range") args body
-
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#960
 mul :: FunctionDef
