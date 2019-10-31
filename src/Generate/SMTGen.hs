@@ -185,6 +185,12 @@ genStmtSMT stmt =
     rewriteConditional :: T.VNode -> SStmt -> Codegen ()
     rewriteConditional cond stmt =
       case stmt of
+        If cond2 trueBr falseBr -> do
+          condSMT <- genExprSMT cond2
+          bothConds <- liftVerif $ T.cppAnd cond condSMT
+          mapM_ (rewriteConditional bothConds) trueBr
+          notBothConds <- liftVerif $ T.cppNot bothConds
+          mapM_ (rewriteConditional notBothConds) falseBr
         Assign (VarExpr var) expr ->
           if isPrimType var
           then rewriteAssign cond var expr

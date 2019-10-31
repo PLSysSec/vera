@@ -77,6 +77,10 @@ ifTest = benchTestCase "if" $ do
                                                   , v "x" `assign` (n Signed 20)
                                                   ] [v "x" `assign` (n Signed 12)]
                 , if_ ((v "x") .<. (n Signed 4)) [ v "z" `assign` (n Signed 0) ] []
+                , if_ ((v "x") .==. (n Signed 20))
+                    [if_ (v "y" .==. n Signed 20) [v "x" `assign` (n Signed 0)] [] ] []
+                , if_ ((v "x") .==. (n Signed 20))
+                    [if_ (v "z" .==. n Signed 20) [v "x" `assign` (n Signed 0)] [] ] []
                 ]
     genBodySMT decls
     runSolverOnSMT
@@ -86,6 +90,9 @@ ifTest = benchTestCase "if" $ do
                          , ("x_2", 8)
                          , ("x_3", 20)
                          , ("z_2", 20)
+                         , ("x_4", 20)
+                         , ("x_5", 20)
+                         , ("x_6", 0)
                          ]
 
 callTest :: BenchTest

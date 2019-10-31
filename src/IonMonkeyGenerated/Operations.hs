@@ -33,6 +33,7 @@ add = undefined
 sub :: FunctionDef
 sub = undefined
 
+-- One try
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#805
 and :: FunctionDef
 and =
@@ -57,11 +58,30 @@ and =
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#834
 or :: FunctionDef
 or = undefined
+  -- let args = [ ("lhs", c "range")
+  --            , ("rhs", c "range")
+  --            ]
+  --     body = [ if_ ((v "lhs" .->. "lower") .==. (v "lhs" .->. "upper"))
+  --              [ if_ ((v "lhs" .->. "lower") .==. (n Signed 0))
+  --                [return_ $ v "rhs"] []
+  --              , if_ ((v "lhs" .->. "lower") == (n Signed -1))
+  --                [return_ $ v "lhs"] []
+  --              ] []
+  --            , if_ ((v "rhs" .->. "lower") .==. (v "rhs" .->. "upper"))
+  --              [ if_ ((v "rhs" .->. "lower") .==. (n Signed 0))
+  --                [return_ $ v "lhs"] []
+  --              , if_ ((v "rhs" .->. "lower") .==. (n Signed -1))
+  --                [return_ $ v "rhs"] []
+  --              ]
+
+  --            ]
+
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#893
 xor :: FunctionDef
 xor = undefined
 
+-- Two trys (neg -> not)
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#955
 not :: FunctionDef
 not = let args = [ ("op", c "range") ]
