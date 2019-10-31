@@ -158,8 +158,10 @@ genStmtSMT stmt =
           exprSym <- genExprSMT expr
           liftVerif $ T.vassign rval exprSym
         rvals -> do
-          unless (isClassExpr expr) $ error "Cannot assign to non-class function"
-          fields <- getFieldVars (exprVar expr) >>= mapM getVar
+          fields <- case expr of
+                      _ | isClassExpr expr -> getFieldVars (exprVar expr) >>= mapM getVar
+                      _ | isCallExpr expr -> genCallSMT expr
+                      _ -> error $ unwords ["Malfored return expression", show expr]
           unless (length fields == length rvals) $
             error "Cannot assign variables of different types"
           forM_ (zip fields rvals) $ \(f, r) -> liftVerif $ T.vassign f r
@@ -174,6 +176,11 @@ genStmtSMT stmt =
       falseBr <- genVarSMT prevVar
       conditional <- liftVerif $ T.cppCond cond trueBr falseBr
       liftVerif $ T.vassign curVar conditional
+    rewriteReturn :: T.VNode -> T.VNode -> T.VNode -> Codegen ()
+    rewriteReturn cond retVal exprVal = do
+      conditionalFalse <- liftVerif $ T.cppNot cond
+      rvalIsExpr <- liftVerif $ T.cppEq retVal exprVal
+      liftVerif $ T.cppOr conditionalFalse rvalIsExpr >>= T.vassert
     -- Guard each assignment with the given condition
     rewriteConditional :: T.VNode -> SStmt -> Codegen ()
     rewriteConditional cond stmt =
@@ -190,9 +197,15 @@ genStmtSMT stmt =
             [] -> return ()
             [rval] -> do
               exprSym <- genExprSMT expr
-              conditionalFalse <- liftVerif $ T.cppNot cond
-              rvalIsExpr <- liftVerif $ T.cppEq rval exprSym
-              liftVerif $ T.cppOr conditionalFalse rvalIsExpr >>= T.vassert
+              rewriteReturn cond rval exprSym
+            rvals -> do
+              fields <- case expr of
+                          _ | isClassExpr expr -> getFieldVars (exprVar expr) >>= mapM getVar
+                          _ | isCallExpr expr -> genCallSMT expr
+                          _ -> error $ unwords ["Malfored return expression", show expr]
+              unless (length fields == length rvals) $
+                error "Cannot assign variables of different types"
+              forM_ (zip fields rvals) $ \(f, r) -> rewriteReturn cond f r
         _ -> genStmtSMT stmt
 
 genBodySMT :: [Codegen SStmt] -> Codegen ()

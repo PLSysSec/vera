@@ -35,14 +35,24 @@ sub = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#805
 and :: FunctionDef
-and = let args = [ ("lhs", c "range")
-                 , ("rhs", c "range")
-                 ]
-          body = [ if_
-                   (((v "lhs" .->. "lower") .<. (n Signed 0)) .&&. ((v "rhs" .->. "lower") .<. (n Signed 0)))
-                   [] []
-                 ]
-      in error ""
+and =
+  let args = [ ("lhs", c "range")
+             , ("rhs", c "range")
+             ]
+      body = [ if_
+               (((v "lhs" .->. "lower") .<. (n Signed 0)) .&&. ((v "rhs" .->. "lower") .<. (n Signed 0)))
+               [return_ $ call "newInt32Range" [ int32min
+                                              , max_ (v "lhs" .->. "upper") (v "rhs" .->. "upper")
+                                              ] ] []
+             , declare (t Signed) "lower_"
+             , declare (t Signed) "upper_"
+             , (v "lower_") `assign` (n Signed 0)
+             , (v "upper_") `assign` min_ (v "lhs" .->. "upper") (v "rhs" .->. "upper")
+             , if_ ((v "lhs" .->. "lower") .<. (n Signed 0)) [v "upper_" `assign` (v "rhs" .->. "upper")] []
+             , if_ ((v "rhs" .->. "lower") .<. (n Signed 0)) [v "upper_" `assign` (v "lhs" .->. "upper")] []
+             , return_ $ call "newInt32Range" [v "lower_", v "upper_"]
+             ]
+      in Function "and" (c "range") args body
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#834
 or :: FunctionDef

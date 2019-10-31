@@ -1,6 +1,8 @@
 module IonMonkeyGenerated.Helpers where
-import           DSL.Typed     (Type (..))
+import           DSL.Typed       (Type (..))
 import           Generate.Lang
+import           Generate.SMTAST
+import           Generate.State
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#394
 newInt32Range :: FunctionDef
@@ -14,3 +16,5 @@ newInt32Range = let args = [ ("lower_bound", t Signed)
                            ]
                 in Function "newInt32Range" (c "range") args body
 
+int32min :: Codegen SExpr
+int32min = n Signed (-2147483648)

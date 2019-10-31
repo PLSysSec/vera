@@ -17,7 +17,9 @@ import           Test.Tasty.HUnit
 
 genIonMonkeyTests :: BenchTest
 genIonMonkeyTests = benchTestGroup "Generated IonMonkey code test"
-                    [ notTest ]
+                    [ notTest
+                    , andTest
+                    ]
 
 notTest :: BenchTest
 notTest = benchTestCase "not" $ do
@@ -31,6 +33,27 @@ notTest = benchTestCase "not" $ do
                 , declare (t Signed) "dummy"
                 , (v "not_range") `assign` (call "newIn32InputRange" [])
                 , (v "result_range") `assign` call "not" [v "not_range"]
+                , assign (v "dummy") $ call "verifySaneRange" [v "result_range"]
+                ]
+    genBodySMT verif
+    runSolverOnSMT
+  r @=? SolverUnsat
+
+andTest :: BenchTest
+andTest = benchTestCase "and" $ do
+  r <- evalCodegen Nothing $ do
+    class_ range
+    define newInt32InputRange
+    define newInt32Range
+    define and
+    define verifySaneRange
+    let verif = [ declare (c "range") "left_range"
+                , declare (c "range") "right_range"
+                , declare (c "range") "result_range"
+                , declare (t Signed) "dummy"
+                , (v "left_range") `assign` (call "newIn32InputRange" [])
+                , (v "right_range") `assign` (call "newIn32InputRange" [])
+                , (v "result_range") `assign` call "and" [v "left_range", v "right_range"]
                 , assign (v "dummy") $ call "verifySaneRange" [v "result_range"]
                 ]
     genBodySMT verif
