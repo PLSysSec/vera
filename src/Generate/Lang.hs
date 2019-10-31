@@ -76,6 +76,13 @@ f name = return $ FieldExpr name
 -- Operators
 --
 
+cast :: Codegen SExpr
+     -> Type
+     -> Codegen SExpr
+cast expr' ty = do
+  expr <- expr'
+  return $ Cast expr ty
+
 call :: String
      -> [Codegen SExpr]
      -> Codegen SExpr

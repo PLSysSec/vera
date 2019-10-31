@@ -84,6 +84,9 @@ genExprSMT expr =
   case expr of
     VarExpr svar           -> genVarSMT svar
     NumExpr snum           -> genNumSMT snum
+    Cast expr ty           -> do
+      exprSMT <- genExprSMT expr
+      liftVerif $ T.cppCast exprSMT ty
     FieldExpr fieldName    -> do
       cv <- getClassVar
       case cv of
