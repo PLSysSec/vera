@@ -63,8 +63,8 @@ cppTests = benchTestGroup "C++ tests" [
                                       , cppCmpI16OpTest CppLt
                                       , cppCmpI16OpTest CppLte
                                       ],
-      benchTestGroup "Unary ops" [ cppUniI16OpTest CppAbs
-                                 , cppUniI16OpTest CppNeg ]
+      benchTestGroup "Unary ops" [ -- cppUniI16OpTest CppAbs
+                                   cppUniI16OpTest CppNeg ]
     ],
   benchTestGroup "QuickCheck tests on int8s" [
       benchTestGroup "Arithmetic binary ops" [ cppBinI8OpTest CppAdd
@@ -93,8 +93,8 @@ cppTests = benchTestGroup "C++ tests" [
                                       , cppCmpW32OpTest CppLt
                                       , cppCmpW32OpTest CppLte
                                       ],
-      benchTestGroup "Unary ops" [ cppUniW32OpTest CppAbs
-                                 , cppUniW32OpTest CppNeg ]
+      benchTestGroup "Unary ops" [ --cppUniW32OpTest CppAbs
+                                   cppUniW32OpTest CppNeg ]
     ],
   benchTestGroup "QuickCheck tests on uint16s" [
       benchTestGroup "Arithmetic binary ops" [ cppBinW16OpTest CppAdd
@@ -108,8 +108,8 @@ cppTests = benchTestGroup "C++ tests" [
                                       , cppCmpW16OpTest CppLt
                                       , cppCmpW16OpTest CppLte
                                       ],
-      benchTestGroup "Unary ops" [ cppUniW16OpTest CppAbs
-                                 , cppUniW16OpTest CppNeg ]
+      benchTestGroup "Unary ops" [ --cppUniW16OpTest CppAbs
+                                   cppUniW16OpTest CppNeg ]
     ],
   benchTestGroup "QuickCheck tests on uint8s" [
       benchTestGroup "Arithmetic binary ops" [ cppBinW8OpTest CppAdd
@@ -584,10 +584,10 @@ cppBinW32OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
         cppT x y = Q.monadicIO $ do
           cppRes <- Q.run $ cppBin bop (x, y)
           (T.SolverSat vars) <- Q.run $ T.evalVerif Nothing $ do
-              xv <- T.named "x" $ T.num $ toInteger x
-              yv <- T.named "y" $ T.num $ toInteger y
+              xv <- T.named "x" $ T.unum $ toInteger x
+              yv <- T.named "y" $ T.unum $ toInteger y
               smtRes <- T.named "smtRes" $ (cppBinOpToFunc bop) xv yv
-              cppResV <- T.named "cppRes" $ T.num $ toInteger (cppRes :: Word32)
+              cppResV <- T.named "cppRes" $ T.unum $ toInteger (cppRes :: Word32)
               ok <- D.iseq (T.vnode smtRes) (T.vnode cppResV)
               D.named "ok" ok
               T.runSolver
@@ -599,8 +599,8 @@ cppCmpW32OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
         cppT x y = Q.monadicIO $ do
           cppRes <- Q.run $ cppBin bop (x, y)
           (T.SolverSat vars) <- Q.run $ T.evalVerif Nothing $ do
-              xv <- T.num $ toInteger x
-              yv <- T.num $ toInteger y
+              xv <- T.unum $ toInteger x
+              yv <- T.unum $ toInteger y
               T.named "result" $ (cppBinOpToFunc bop) xv yv
               T.runSolver
           let (Just smtRes) = M.lookup "result" vars
@@ -612,9 +612,9 @@ cppUniW32OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
         cppT x y = Q.monadicIO $ do
           cppRes <- Q.run $ cppBin bop (x, y)
           (T.SolverSat vars) <- Q.run $ T.evalVerif Nothing $ do
-              xv <- T.named "x" $ T.num $ toInteger x
+              xv <- T.named "x" $ T.unum $ toInteger x
               smtRes <- T.named "smtRes" $ (cppUniOpToFunc bop) xv
-              cppResV <- T.named "cppRes" $ T.num $ toInteger (cppRes :: Word32)
+              cppResV <- T.named "cppRes" $ T.unum $ toInteger (cppRes :: Word32)
               ok <- D.iseq (T.vnode smtRes) (T.vnode cppResV)
               D.named "ok" ok
               T.runSolver
