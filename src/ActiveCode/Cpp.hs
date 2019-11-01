@@ -23,11 +23,11 @@ cpp mainBody = do
 
   -- compile
   (ccode,cout) <- readCommand cc ["-o", fp, fp ++ ".cpp"] ""
-  -- removeFile $ fp ++ ".cpp"
+  removeFile $ fp ++ ".cpp"
   unless (ccode == ExitSuccess) $ fail cout
   -- run
   (code,out) <- readCommand fp [] ""
-  -- removeFile fp
+  removeFile fp
   unless (code == ExitSuccess) $ fail out
   readIO out
 
