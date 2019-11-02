@@ -84,6 +84,11 @@ genExprSMT expr =
   case expr of
     VarExpr svar           -> genVarSMT svar
     NumExpr snum           -> genNumSMT snum
+    Tern c b1 b2 -> do
+      cSym <- genExprSMT c
+      b1Sym <- genExprSMT b1
+      b2Sym <- genExprSMT b2
+      liftVerif $ T.cppCond cSym b1Sym b2Sym
     Cast expr ty           -> do
       exprSMT <- genExprSMT expr
       liftVerif $ T.cppCast exprSMT ty

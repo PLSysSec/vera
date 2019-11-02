@@ -98,10 +98,15 @@ mul = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#999
 lsh :: FunctionDef
-lsh = let args = [ ("lhs", c "range")
-                 , ("c", t Signed)
-                 ]
-      in error ""
+lsh = undefined
+  -- let args = [ ("lhs", c "range")
+  --            , ("c", t Signed)
+  --            ]
+  --     body = [ declare (t Signed) "shift"
+  --            , if ( (cast ((cast Unsigned (v "lhs" .->. "lower") .<<. v "shift" .<<. (n Unsigned 1) .>>. v "shift" .>>. (n Unsigned 1)) Signed) .&&.
+  --                  (cast (cast Unsigned (v) Signed)
+  --                 ) [] []
+  --            ]
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1016
 rsh :: FunctionDef
@@ -120,7 +125,14 @@ rsh =
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1023
 ursh :: FunctionDef
-ursh = undefined
+ursh =
+  let args = [ ("lhs", c "range")
+             , ("c", t Signed)
+             ]
+      body = [ declare (t Signed) "shift"
+             , v "shift" `assign` (v "c" .&&. n Signed 31)
+             ]
+  in error ""
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1042
 lsh' :: FunctionDef
@@ -128,7 +140,37 @@ lsh' = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1048
 rsh' :: FunctionDef
-rsh' = undefined
+rsh' =
+  let args = [ ("lhs", c "range")
+             , ("rhs", c "range")
+             ]
+      body = [ declare (t Signed) "shiftLower"
+             , declare (t Signed) "shiftUpper"
+             , v "shiftLower" `assign` (v "rhs" .->. "lower")
+             , v "shiftUpper" `assign` (v "rhs" .->. "upper")
+             , if_ (((cast (v "shiftUpper") Signed64) .-. (cast (v "shiftLower") Signed64)) .<. (n Signed64 31))
+               [ v "shiftLower" `assign` (n Signed 0)
+               , v "shiftUpper" `assign` (n Signed 31)
+               ]
+               [ v "shiftLower" `assign` ((v "shiftLower") .&&. (n Signed 31))
+               , v "shiftUpper" `assign` ((v "shiftUpper") .&&. (n Signed 31))
+               , if_ (v "shiftLower" .<. v "shiftUpper")
+                 [ v "shiftLower" `assign` (n Signed 0)
+                 , v "shiftUpper" `assign` (n Signed 31)
+                 ] []
+               ]
+               , declare (t Signed) "lhsLower"
+               , declare (t Signed) "min"
+               , declare (t Signed) "lhsUpper"
+               , declare (t Signed) "max"
+               , v "lhsLower" `assign` (v "lhs" .->. "lower")
+               , v "min" `assign` tern_ (v "lhsLower" .<. (n Signed 0)) (v "lhsLower" .>>. v "shiftLower") (v "lhsLower" .>>. v "shiftUpper")
+               , v "lhsUpper" `assign` (v "lhs" .->. "upper")
+               , v "max" `assign` tern_ (v "lhsUpper" .=>. (n Signed 0)) (v "lhsUpper" .>>. v "shiftLower") (v "lhsUpper" .>>. v "shiftUpper")
+               , return_ $ call "newInt32Range" [v "min", v "max"]
+             ]
+  in Function "rsh'" (c "range") args body
+
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1079
 ursh' :: FunctionDef

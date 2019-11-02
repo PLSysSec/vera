@@ -102,6 +102,13 @@ unaryOp ex' op = do
   ex <- ex'
   return $ op ex
 
+tern_ :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+tern_ c' b1' b2' = do
+  c <- c'
+  b1 <- b1'
+  b2 <- b2'
+  return $ Tern c b1 b2
+
 neg_ :: Codegen SExpr -> Codegen SExpr
 neg_ ex = unaryOp ex Neg
 
