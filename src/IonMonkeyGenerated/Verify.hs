@@ -2,7 +2,7 @@ module IonMonkeyGenerated.Verify where
 import           Data.List     (isInfixOf)
 import qualified Data.Map      as M
 import           Data.Maybe    (catMaybes)
-import           DSL.Typed     (Type (..))
+import           DSL.Typed     (SMTResult (..), Type (..))
 import           Generate.Lang
 
 verifySaneRange :: FunctionDef
@@ -11,9 +11,23 @@ verifySaneRange =
       body = [ assert_ $ (v "result_range") .->. "hasInt32LowerBound"
              , assert_ $ (v "result_range") .->. "hasInt32UpperBound"
              , assert_ $ ((v "result_range") .->. "lower") .>. ((v "result_range") .->. "upper")
-             , return_ $ n Signed 0
+             , expect_ SolverUnsat
              ]
   in Function "verifySaneRange" (t Signed) args body
+
+verifyLower :: FunctionDef
+verifyLower = undefined
+
+
+intInRange :: FunctionDef
+intInRange =
+  let args = [ ("result_range", c "range")]
+      body = [ declare (t Signed) "result"
+             , assert_ $ (v "result") .=>. ((v "result_range") .->. "lower")
+             , assert_ $ (v "result") .<=. ((v "result_range") .->. "upper")
+             , return_ $ v "result"
+             ]
+  in Function "intInRange" (t Signed) args body
 
 -- Copypasted
 

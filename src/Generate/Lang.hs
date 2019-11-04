@@ -32,7 +32,7 @@ define (Function funName funTy funArgs body) = do
            retVal <- curVar retValName
            fields <- getFieldVars retVal
            return $ map varName fields
-         else return [retValName]
+         else return $ if isVoid funTy then [] else [retValName]
   -- Save the relevant information in the state so we can call it later
   addFunction funName (map fst funArgs) rvs body
 
@@ -89,6 +89,13 @@ call :: String
 call name args' = do
   args <- forM args' $ \arg -> arg
   return $ Call name args
+
+vcall :: String
+      -> [Codegen SExpr]
+      -> Codegen SStmt
+vcall name args' = do
+  args <- forM args' $ \arg -> arg
+  return $ VoidCall name args
 
 binOp :: Codegen SExpr -> Codegen SExpr -> (SExpr -> SExpr -> SExpr) -> Codegen SExpr
 binOp left' right' op = do

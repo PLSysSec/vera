@@ -137,6 +137,7 @@ genStmtSMT stmt =
     Push -> D.push
     Pop -> D.pop
     Assert e -> genExprSMT e >>= liftVerif . T.vassert
+    VoidCall name expr -> void $ genCallSMT $ Call name expr
     Decl var -> return () -- Declaration is just important for variable tracking
     -- We are assigning to a class
     -- In this case, the RHS must either be another class or a call
