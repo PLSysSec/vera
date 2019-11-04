@@ -1,10 +1,39 @@
 module IonMonkeyGenerated.Verify where
-import           Data.List       (isInfixOf)
-import qualified Data.Map        as M
-import           Data.Maybe      (catMaybes)
-import           DSL.Typed       (SMTResult (..), Type (..))
+import           Control.Monad              (forM_)
+import           Data.List                  (isInfixOf)
+import qualified Data.Map                   as M
+import           Data.Maybe                 (catMaybes)
+import           DSL.Typed                  (SMTResult (..), Type (..))
 import           Generate.Lang
 import           Generate.SMTAST
+import           Generate.SMTGen
+import           Generate.State
+import           IonMonkeyGenerated.Objects
+
+-- Call these to just do all the checks
+verifyFunction :: String
+               -> [FunctionDef]
+               -> Codegen SMTResult
+verifyFunction fnName fns = do
+  class_ range
+  define newInt32InputRange
+  define verifySaneRange
+  define verifyLower
+  define verifyUpper
+  forM_ fns define
+  let verif = [ declare (c "range") "left_range"
+              , declare (c "range") "right_range"
+              , declare (c "range") "result_range"
+              , (v "left_range") `assign` (call "newIn32InputRange" [])
+              , (v "right_range") `assign` (call "newIn32InputRange" [])
+              , (v "result_range") `assign` call fnName [v "left_range", v "right_range"]
+                -- Verify that the result range is well formed
+              , vcall "verifySaneRange" [v "result_range"]
+                -- Actually perform the JS operation and verify that the
+                -- result is always in the computed result_range
+              ]
+  genBodySMT verif
+  runSolverOnSMT
 
 -- Setup
 
