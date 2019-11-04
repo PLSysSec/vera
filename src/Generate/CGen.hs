@@ -21,6 +21,7 @@ compileType T.Signed8 = "int8_t"
 compileType T.Double = "double"
 compileType T.Bool = "bool"
 
+-- TODO: Function definition is broken for now
 compileFunctionDef :: FunctionDef -> String
 compileFunctionDef (Function funName funTy funArgs funBody) = do
   let retString = compileSType funTy
