@@ -1,29 +1,34 @@
 module Generate.CGen where
+import Control.Monad
+import Generate.SMTAST
 import Generate.Lang
 import Data.List
+import DSL.Typed       as T
 
 compileSType :: STy -> String
 compileSType (PrimType ty) = compileType ty
-compileSType Class name = name
+compileSType (Class name) = name
 
-compileType :: Type -> String
-compileType Unsigned = "uint32_t"
-compileType Signed = "int32_t"
-compileType Unsigned64 = "uint64_t"
-compileType Signed64 = "int64_t"
-compileType Unsigned16 = "uint16_t"
-compileType Signed16 = "int16_t"
-compileType Unsigned8 = "uint8_t"
-compileType Signed8 = "int8_t"
-compileType Double = "double"
-compileType Bool = "bool"
+compileType :: T.Type -> String
+compileType T.Unsigned = "uint32_t"
+compileType T.Signed = "int32_t"
+compileType T.Unsigned64 = "uint64_t"
+compileType T.Signed64 = "int64_t"
+compileType T.Unsigned16 = "uint16_t"
+compileType T.Signed16 = "int16_t"
+compileType T.Unsigned8 = "uint8_t"
+compileType T.Signed8 = "int8_t"
+compileType T.Double = "double"
+compileType T.Bool = "bool"
 
 compileFunctionDef :: FunctionDef -> String
 compileFunctionDef (Function funName funTy funArgs funBody) = do
-  let retString = compileType funTy
-  let argStringList = forM_ funArgs $ \(name, ty) -> (compileType ty) ++ " " ++ name
+  let retString = compileSType funTy
+  let argStringList = forM_ funArgs $ \(name, ty) -> (compileSType ty) ++ " " ++ name
   let argString = intercalate ", " argStringList
   let headerString = retString ++ " " ++ funName ++ "(" ++ argString ++ ") {"
+  --letBodyStrings
+  "test"
 
 compileSStmt :: SStmt -> String
 compileSStmt Decl (SVar varTy varName _) =
@@ -60,7 +65,7 @@ compileSExpr (Neg expr) =
 compileSExpr (Not expr) =
   "!(" ++ (compileSExpr expr) ++ ")"
 
-compileSExpr (Abs SExpr) =
+compileSExpr (Abs expr) =
   "abs(" ++ (compileSExpr expr) ++ ")"
 
 compileSExpr (Eq expr1 expr2) =
