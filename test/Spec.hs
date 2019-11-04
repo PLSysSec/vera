@@ -21,5 +21,5 @@ allTests = [ -- ionMonkeyTests
            -- , cppTests
            -- , jsTests
            -- , dslTests
-           , langTests
+--           , langTests
            ]

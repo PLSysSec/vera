@@ -12,28 +12,37 @@ import           IonMonkeyGenerated.Objects
 
 -- Call these to just do all the checks
 verifyFunction :: String
+               -> (Codegen SExpr -> Codegen SExpr -> Codegen SExpr)
                -> [FunctionDef]
-               -> Codegen SMTResult
-verifyFunction fnName fns = do
+               -> Codegen ()
+verifyFunction fnName jsOp fns = do
   class_ range
   define newInt32InputRange
+  define intInRange
   define verifySaneRange
   define verifyLower
   define verifyUpper
   forM_ fns define
   let verif = [ declare (c "range") "left_range"
+              , declare (t Signed) "left"
               , declare (c "range") "right_range"
+              , declare (t Signed) "right"
               , declare (c "range") "result_range"
-              , (v "left_range") `assign` (call "newIn32InputRange" [])
-              , (v "right_range") `assign` (call "newIn32InputRange" [])
+              , declare (t Signed) "result"
+              , (v "left_range")   `assign` (call "newIn32InputRange" [])
+              , (v "right_range")  `assign` (call "newIn32InputRange" [])
               , (v "result_range") `assign` call fnName [v "left_range", v "right_range"]
                 -- Verify that the result range is well formed
               , vcall "verifySaneRange" [v "result_range"]
-                -- Actually perform the JS operation and verify that the
-                -- result is always in the computed result_range
+                -- Actually perform the JS operation
+              , (v "left")  `assign` (call "intInRange" [v "left_range"])
+              , (v "right") `assign` (call "intInRange" [v "right_range"])
+              , (v "result") `assign` (v "left" `jsOp` v "right")
+                -- Verify that the result is in the computed range
+              , vcall "verifyLower" [v "result_range", v "result"]
+              , vcall "verifyUpper" [v "result_range", v "result"]
               ]
   genBodySMT verif
-  runSolverOnSMT
 
 -- Setup
 
@@ -52,10 +61,12 @@ intInRange =
 verifySaneRange :: FunctionDef
 verifySaneRange =
   let args = [ ("result_range", c "range")]
-      body = [ assert_ $ (v "result_range") .->. "hasInt32LowerBound"
+      body = [ push_
+             , assert_ $ (v "result_range") .->. "hasInt32LowerBound"
              , assert_ $ (v "result_range") .->. "hasInt32UpperBound"
              , assert_ $ ((v "result_range") .->. "lower") .>. ((v "result_range") .->. "upper")
              , expect_ SolverUnsat
+             , pop_
              ]
   in Function "verifySaneRange" Void args body
 
@@ -64,9 +75,11 @@ verifyLower =
   let args = [ ("result_range", c "range")
              , ("result", t Signed)
              ]
-      body = [ assert_ $ (v "result_range") .->. "hasInt32LowerBound"
+      body = [ push_
+             , assert_ $ (v "result_range") .->. "hasInt32LowerBound"
              , assert_ $ ((v "result_range") .->. "lower") .>. (v "result")
              , expect_ SolverUnsat
+             , pop_
              ]
   in Function "verifyLower" Void args body
 
@@ -75,11 +88,13 @@ verifyUpper =
   let args = [ ("result_range", c "range")
              , ("result", t Signed)
              ]
-      body = [ assert_ $ (v "result_range") .->. "hasInt32UpperBound"
+      body = [ push_
+             , assert_ $ (v "result_range") .->. "hasInt32UpperBound"
              , assert_ $ ((v "result_range") .->. "upper") .<. (v "result")
              , expect_ SolverUnsat
+             , pop_
              ]
-  in Function "verifyLower" Void args body
+  in Function "verifyUpper" Void args body
 
 -- Copypasted
 
