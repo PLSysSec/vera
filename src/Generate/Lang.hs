@@ -8,10 +8,6 @@ import           DSL.Typed
 import           Generate.SMTAST
 import           Generate.State
 
---
--- Top-level declarations and definitions
---
-
 data FunctionDef = Function { fName :: FunctionName
                             , fTy   :: STy
                             , fArgs :: [(VarName, STy)]
@@ -19,6 +15,20 @@ data FunctionDef = Function { fName :: FunctionName
                             }
 
 data ClassDef = ClassDef ClassName [(FieldName, Type)] [FunctionDef]
+
+data Program = Program [FunctionDef] [ClassDef]
+
+--
+-- Top-level declarations and definitions
+--
+
+program :: [FunctionDef]
+        -> [ClassDef]
+        -> Codegen Program
+program fns classes = do
+  forM_ fns define
+  forM_ classes class_
+  return $ Program fns classes
 
 define :: FunctionDef
        -> Codegen ()

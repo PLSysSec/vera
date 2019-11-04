@@ -100,5 +100,3 @@ data SStmt = Decl SVar
            | Pop
            deriving (Eq, Ord, Show)
 
-
-
