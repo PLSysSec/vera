@@ -86,9 +86,12 @@ isPrimVarExpr _           = False
 
 data SStmt = Decl SVar
            | Assign SExpr SExpr
-           | Assert SExpr
            | If SExpr [SStmt] [SStmt]
            | Return SExpr
+           | Assert SExpr
+           | Expect SMTResult
+           | Push
+           | Pop
            deriving (Eq, Ord, Show)
 
 

@@ -217,8 +217,22 @@ return_ expr' = do
   expr <- expr'
   return $ Return expr
 
+--
+-- SMT directives
+--
+
 assert_ :: Codegen SExpr
         -> Codegen SStmt
 assert_ expr' = do
   expr <- expr'
   return $ Assert expr
+
+expect_ :: SMTResult
+        -> Codegen SStmt
+expect_ = return . Expect
+
+push_ :: Codegen SStmt
+push_ = return Push
+
+pop_ :: Codegen SStmt
+pop_ = return Pop
