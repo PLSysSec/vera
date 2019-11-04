@@ -203,8 +203,14 @@ jsMax left right = binOp left right JSMax
 (.<<.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.<<.) left right = binOp left right Shl
 
+jsLsh :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+jsLsh left right = binOp left right JSLsh
+
 (.>>.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.>>.) left right = binOp left right Shr
+
+jsRsh :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+jsRsh left right = binOp left right JSRsh
 
 (.->.) :: Codegen SExpr -> FieldName -> Codegen SExpr
 (.->.) ve' fieldname = do

@@ -78,7 +78,9 @@ data SExpr = VarExpr { exprVar :: SVar }
            | Lt SExpr SExpr
            | Lte SExpr SExpr
            | Shl SExpr SExpr
+           | JSLsh SExpr SExpr
            | Shr SExpr SExpr
+           | JSRsh SExpr SExpr
            | Tern SExpr SExpr SExpr
            | Cast SExpr Type
            | Call FunctionName [SExpr]

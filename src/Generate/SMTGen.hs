@@ -127,6 +127,8 @@ genExprSMT expr =
     JSXOr left right -> genBinOpSMT left right T.jsXor
     JSMin left right -> genBinOpSMT left right T.jsMin
     JSMax left right -> genBinOpSMT left right T.jsMax
+    JSLsh left right -> genBinOpSMT left right T.jsShl
+    JSRsh left right -> genBinOpSMT left right T.jsShr
 
     Call{}         -> do
       result <- genCallSMT expr
