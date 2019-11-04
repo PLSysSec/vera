@@ -24,32 +24,32 @@ compileType T.Bool = "bool"
 compileFunctionDef :: FunctionDef -> String
 compileFunctionDef (Function funName funTy funArgs funBody) = do
   let retString = compileSType funTy
-  let argStringList = forM_ funArgs $ \(name, ty) -> (compileSType ty) ++ " " ++ name
+  let argStringList = map (\(name, ty) -> (compileSType ty) ++ " " ++ name) funArgs
   let argString = intercalate ", " argStringList
   let headerString = retString ++ " " ++ funName ++ "(" ++ argString ++ ") {"
   --letBodyStrings
   "test"
 
-compileSStmt :: SStmt -> String
-compileSStmt Decl (SVar varTy varName _) =
-  (compileType varTy) ++ " " ++ varName
+compileSStmt :: SStmt -> [String]
+compileSStmt (Decl (SVar varTy varName _)) =
+  [(compileType varTy) ++ " " ++ varName]
 
 -- Only works if the left expression is a var?
 compileSStmt (Assign (VarExpr (SVar _ varName _ )) expr) =
-  varName ++ " = " ++ (compileSStmt expr)
+  [varName ++ " = " ++ (compileSExpr expr)]
 
 -- Possibly don't need
 compileSStmt (Assert expr) =
-  "assert(" ++ (compileSStmt expr) ++ ")"
+  ["assert(" ++ (compileSExpr expr) ++ ")"]
 
 compileSStmt (If expr thenStmts elseStmts) = do
-  let condString = "if(" ++ (compileSStmt) expr ++ ") {"
-  let thenStrings = forM_ thenStmts compileSStmt
-  let elseStrings = forM_ elseStmts compileSStmt
-  [condString] ++ thenStrings ++ elseSTrings
+  let condString = "if(" ++ (compileSExpr expr) ++ ") {"
+  let thenStrings = concat $ map compileSStmt thenStmts
+  let elseStrings = concat $ map compileSStmt elseStmts
+  [condString] ++ (thenStrings ++ elseStrings)
 
 compileSStmt (Return expr) =
-  "return " ++ (compileSExpr expr)
+  ["return " ++ (compileSExpr expr)]
 
 compileSExpr :: SExpr -> String
 compileSExpr (VarExpr (SVar _ varName _)) =
@@ -120,9 +120,9 @@ compileSExpr (Cast expr ty) =
   "(" ++ (compileType ty) ++ ")(" ++ (compileSExpr expr) ++ ")"
 
 compileSExpr (Call name exprs) = do
-  let exprStrings = forM_ exprs compileSExpr
+  let exprStrings = map compileSExpr exprs
   let argString = intercalate ", " exprStrings
-  name ++ "(" ++ exprStrings ++ ")"
+  name ++ "(" ++ argString ++ ")"
 
 compileSExpr (FieldExpr name) =
   "this." ++ name
