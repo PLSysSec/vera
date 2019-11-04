@@ -32,10 +32,9 @@ notTest = benchTestCase "not" $ do
     define verifySaneRange
     let verif = [ declare (c "range") "not_range"
                 , declare (c "range") "result_range"
-                , declare (t Signed) "dummy"
                 , (v "not_range") `assign` (call "newIn32InputRange" [])
                 , (v "result_range") `assign` call "not" [v "not_range"]
-                , assign (v "dummy") $ call "verifySaneRange" [v "result_range"]
+                , vcall "verifySaneRange" [v "result_range"]
                 ]
     genBodySMT verif
     runSolverOnSMT
@@ -52,11 +51,10 @@ andTest = benchTestCase "and" $ do
     let verif = [ declare (c "range") "left_range"
                 , declare (c "range") "right_range"
                 , declare (c "range") "result_range"
-                , declare (t Signed) "dummy"
                 , (v "left_range") `assign` (call "newIn32InputRange" [])
                 , (v "right_range") `assign` (call "newIn32InputRange" [])
                 , (v "result_range") `assign` call "and" [v "left_range", v "right_range"]
-                , assign (v "dummy") $ call "verifySaneRange" [v "result_range"]
+                , vcall "verifySaneRange" [v "result_range"]
                 ]
     genBodySMT verif
     runSolverOnSMT
@@ -73,10 +71,9 @@ rshTest = benchTestCase "rsh" $ do
     let verif = [ declare (c "range") "left_range"
                 , declare (t Signed) "right_range"
                 , declare (c "range") "result_range"
-                , declare (t Signed) "dummy"
                 , (v "left_range") `assign` (call "newIn32InputRange" [])
                 , (v "result_range") `assign` call "rsh" [v "left_range", v "right_range"]
-                , assign (v "dummy") $ call "verifySaneRange" [v "result_range"]
+                , vcall "verifySaneRange" [v "result_range"]
                 ]
     genBodySMT verif
     runSolverOnSMT
@@ -93,11 +90,10 @@ rsh'Test = benchTestCase "rsh'" $ do
     let verif = [ declare (c "range") "left_range"
                 , declare (c "range") "right_range"
                 , declare (c "range") "result_range"
-                , declare (t Signed) "dummy"
                 , (v "left_range") `assign` (call "newIn32InputRange" [])
                 , (v "right_range") `assign` (call "newIn32InputRange" [])
                 , (v "result_range") `assign` call "rsh'" [v "left_range", v "right_range"]
-                , assign (v "dummy") $ call "verifySaneRange" [v "result_range"]
+                , vcall "verifySaneRange" [v "result_range"]
                 ]
     genBodySMT verif
     runSolverOnSMT

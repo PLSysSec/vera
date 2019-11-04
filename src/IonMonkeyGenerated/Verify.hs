@@ -1,23 +1,12 @@
 module IonMonkeyGenerated.Verify where
-import           Data.List     (isInfixOf)
-import qualified Data.Map      as M
-import           Data.Maybe    (catMaybes)
-import           DSL.Typed     (SMTResult (..), Type (..))
+import           Data.List       (isInfixOf)
+import qualified Data.Map        as M
+import           Data.Maybe      (catMaybes)
+import           DSL.Typed       (SMTResult (..), Type (..))
 import           Generate.Lang
+import           Generate.SMTAST
 
-verifySaneRange :: FunctionDef
-verifySaneRange =
-  let args = [ ("result_range", c "range")]
-      body = [ assert_ $ (v "result_range") .->. "hasInt32LowerBound"
-             , assert_ $ (v "result_range") .->. "hasInt32UpperBound"
-             , assert_ $ ((v "result_range") .->. "lower") .>. ((v "result_range") .->. "upper")
-             , expect_ SolverUnsat
-             ]
-  in Function "verifySaneRange" (t Signed) args body
-
-verifyLower :: FunctionDef
-verifyLower = undefined
-
+-- Setup
 
 intInRange :: FunctionDef
 intInRange =
@@ -28,6 +17,40 @@ intInRange =
              , return_ $ v "result"
              ]
   in Function "intInRange" (t Signed) args body
+
+-- Verification
+
+verifySaneRange :: FunctionDef
+verifySaneRange =
+  let args = [ ("result_range", c "range")]
+      body = [ assert_ $ (v "result_range") .->. "hasInt32LowerBound"
+             , assert_ $ (v "result_range") .->. "hasInt32UpperBound"
+             , assert_ $ ((v "result_range") .->. "lower") .>. ((v "result_range") .->. "upper")
+             , expect_ SolverUnsat
+             ]
+  in Function "verifySaneRange" Void args body
+
+verifyLower :: FunctionDef
+verifyLower =
+  let args = [ ("result_range", c "range")
+             , ("result", t Signed)
+             ]
+      body = [ assert_ $ (v "result_range") .->. "hasInt32LowerBound"
+             , assert_ $ ((v "result_range") .->. "lower") .>. (v "result")
+             , expect_ SolverUnsat
+             ]
+  in Function "verifyLower" Void args body
+
+verifyUpper :: FunctionDef
+verifyUpper =
+  let args = [ ("result_range", c "range")
+             , ("result", t Signed)
+             ]
+      body = [ assert_ $ (v "result_range") .->. "hasInt32UpperBound"
+             , assert_ $ ((v "result_range") .->. "upper") .<. (v "result")
+             , expect_ SolverUnsat
+             ]
+  in Function "verifyLower" Void args body
 
 -- Copypasted
 
