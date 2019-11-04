@@ -1,8 +1,10 @@
 module Lang where
 import           BenchUtils
 import qualified Data.Map        as Map
+import           DSL.DSL         (SMTResult (..))
 import           DSL.Typed       (Type (..))
 import           Generate.Lang
+import           Generate.SMTAST
 import           Generate.SMTGen
 import           Generate.State
 import           Utils
@@ -17,6 +19,7 @@ langTests = benchTestGroup "Lang" [ declTest
                                   , classMethodTest
                                   , returnClassTest
                                   , assignClassTest
+                                  , voidCallTest
                                   ]
 
 declTest :: BenchTest
@@ -243,3 +246,21 @@ assignClassTest = benchTestCase "assign class" $ do
   vtest r $ Map.fromList [ ("end_myint_1", 1)
                          , ("end_myotherint_1", 2)
                          ]
+
+voidCallTest :: BenchTest
+voidCallTest = benchTestCase "void call" $ do
+
+  r <- evalCodegen Nothing $ do
+
+    let args = []
+        body = [ declare (t Signed) "result"
+               , (v "result") `assign` (n Signed 2)
+               , assert_ $ v "result" .>. (n Signed 50)
+               , expect_ SolverUnsat
+               ]
+    define $ Function "fun" Void args body
+
+    genBodySMT [ vcall "fun" [] ]
+    runSolverOnSMT
+
+  unsatTest r

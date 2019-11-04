@@ -182,13 +182,16 @@ getVar var = do
 
 newVar :: STy -> String -> Codegen ()
 newVar ty str = do
-  varsToMake <- case ty of
-    PrimType pt -> return [(str, PrimType pt)]
-    Class c     -> do
-      fields <- getFields c
-      fvs <- forM (M.toList fields) $ \(name, ty) -> return (str ++ "_" ++ name, PrimType ty)
-      return $ (str, ty):fvs
-  forM_ varsToMake $ \(v, t) -> addVar v t
+  if isVoid ty
+  then return ()
+  else do
+    varsToMake <- case ty of
+      PrimType pt -> return [(str, PrimType pt)]
+      Class c     -> do
+        fields <- getFields c
+        fvs <- forM (M.toList fields) $ \(name, ty) -> return (str ++ "_" ++ name, PrimType ty)
+        return $ (str, ty):fvs
+    forM_ varsToMake $ \(v, t) -> addVar v t
   where
     addVar :: VarName -> STy -> Codegen ()
     addVar var ty = do
