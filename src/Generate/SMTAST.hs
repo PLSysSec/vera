@@ -58,13 +58,21 @@ data SExpr = VarExpr { exprVar :: SVar }
            | Abs SExpr
            | Eq SExpr SExpr
            | And SExpr SExpr
+           | JSAnd SExpr SExpr
            | Add SExpr SExpr
+           | JSAdd SExpr SExpr
            | Sub SExpr SExpr
+           | JSSub SExpr SExpr
            | Mul SExpr SExpr
+           | JSMul SExpr SExpr
            | Or SExpr SExpr
+           | JSOr SExpr SExpr
            | XOr SExpr SExpr
+           | JSXOr SExpr SExpr
            | Min SExpr SExpr
+           | JSMin SExpr SExpr
            | Max SExpr SExpr
+           | JSMax SExpr SExpr
            | Gt SExpr SExpr
            | Gte SExpr SExpr
            | Lt SExpr SExpr

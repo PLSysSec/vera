@@ -126,6 +126,8 @@ tern_ c' b1' b2' = do
   b2 <- b2'
   return $ Tern c b1 b2
 
+
+
 neg_ :: Codegen SExpr -> Codegen SExpr
 neg_ ex = unaryOp ex Neg
 
@@ -141,26 +143,50 @@ abs_ ex = unaryOp ex Abs
 (.&&.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.&&.) left right = binOp left right And
 
+jsAnd :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+jsAnd left right = binOp left right JSAnd
+
 (.+.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.+.) left right = binOp left right Add
+
+jsAdd :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+jsAdd left right = binOp left right JSAdd
 
 (.-.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.-.) left right = binOp left right Sub
 
+jsSub :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+jsSub left right = binOp left right JSSub
+
 (.*.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.*.) left right = binOp left right Mul
+
+jsMul :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+jsMul left right = binOp left right JSMul
 
 (.||.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.||.) left right = binOp left right Or
 
+jsOr :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+jsOr left right = binOp left right JSOr
+
 (.^.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.^.) left right = binOp left right XOr
+
+jsXOr :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+jsXOr left right = binOp left right JSXOr
 
 min_ :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 min_ left right = binOp left right Min
 
+jsMin :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+jsMin left right = binOp left right JSMin
+
 max_ :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 max_ left right = binOp left right Max
+
+jsMax :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+jsMax left right = binOp left right JSMax
 
 (.>.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.>.) left right = binOp left right Gt
