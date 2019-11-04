@@ -10,11 +10,16 @@ type FunctionName = String
 
 data STy = PrimType { primTy :: Type }
          | Class    { className :: ClassName }
+         | Void
          deriving (Eq, Ord, Show)
 
 isClass :: STy -> Bool
 isClass Class{} = True
 isClass _       = False
+
+isVoid :: STy -> Bool
+isVoid Void = True
+isVoid _    = False
 
 data SVar = SVar { varTy      :: Type
                  , varName    :: VarName
@@ -66,6 +71,7 @@ data SExpr = VarExpr { exprVar :: SVar }
            | Lte SExpr SExpr
            | Shl SExpr SExpr
            | Shr SExpr SExpr
+           | Tern SExpr SExpr SExpr
            | Cast SExpr Type
            | Call FunctionName [SExpr]
            | FieldExpr FieldName
@@ -85,10 +91,12 @@ isPrimVarExpr _           = False
 
 data SStmt = Decl SVar
            | Assign SExpr SExpr
-           | Assert SExpr
            | If SExpr [SStmt] [SStmt]
+           | VoidCall FunctionName [SExpr]
            | Return SExpr
+           | Assert SExpr
+           | Expect SMTResult
+           | Push
+           | Pop
            deriving (Eq, Ord, Show)
-
-
 

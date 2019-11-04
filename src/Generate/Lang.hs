@@ -8,10 +8,6 @@ import           DSL.Typed
 import           Generate.SMTAST
 import           Generate.State
 
---
--- Top-level declarations and definitions
---
-
 data FunctionDef = Function { fName :: FunctionName
                             , fTy   :: STy
                             , fArgs :: [(VarName, STy)]
@@ -19,6 +15,20 @@ data FunctionDef = Function { fName :: FunctionName
                             }
 
 data ClassDef = ClassDef ClassName [(FieldName, Type)] [FunctionDef]
+
+data Program = Program [FunctionDef] [ClassDef]
+
+--
+-- Top-level declarations and definitions
+--
+
+program :: [FunctionDef]
+        -> [ClassDef]
+        -> Codegen Program
+program fns classes = do
+  forM_ fns define
+  forM_ classes class_
+  return $ Program fns classes
 
 define :: FunctionDef
        -> Codegen ()
@@ -32,7 +42,7 @@ define (Function funName funTy funArgs body) = do
            retVal <- curVar retValName
            fields <- getFieldVars retVal
            return $ map varName fields
-         else return [retValName]
+         else return $ if isVoid funTy then [] else [retValName]
   -- Save the relevant information in the state so we can call it later
   addFunction funName (map fst funArgs) rvs body
 
@@ -90,6 +100,13 @@ call name args' = do
   args <- forM args' $ \arg -> arg
   return $ Call name args
 
+vcall :: String
+      -> [Codegen SExpr]
+      -> Codegen SStmt
+vcall name args' = do
+  args <- forM args' $ \arg -> arg
+  return $ VoidCall name args
+
 binOp :: Codegen SExpr -> Codegen SExpr -> (SExpr -> SExpr -> SExpr) -> Codegen SExpr
 binOp left' right' op = do
   left <- left'
@@ -101,6 +118,13 @@ unaryOp :: Codegen SExpr -> (SExpr -> SExpr) -> Codegen SExpr
 unaryOp ex' op = do
   ex <- ex'
   return $ op ex
+
+tern_ :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+tern_ c' b1' b2' = do
+  c <- c'
+  b1 <- b1'
+  b2 <- b2'
+  return $ Tern c b1 b2
 
 neg_ :: Codegen SExpr -> Codegen SExpr
 neg_ ex = unaryOp ex Neg
@@ -210,8 +234,22 @@ return_ expr' = do
   expr <- expr'
   return $ Return expr
 
+--
+-- SMT directives
+--
+
 assert_ :: Codegen SExpr
         -> Codegen SStmt
 assert_ expr' = do
   expr <- expr'
   return $ Assert expr
+
+expect_ :: SMTResult
+        -> Codegen SStmt
+expect_ = return . Expect
+
+push_ :: Codegen SStmt
+push_ = return Push
+
+pop_ :: Codegen SStmt
+pop_ = return Pop

@@ -1,6 +1,7 @@
 module Generate.SMTGen where
 import           Control.Monad.State.Strict
 import qualified Data.Map                   as M
+import qualified DSL.DSL                    as D
 import qualified DSL.Typed                  as T
 import           Generate.SMTAST
 import           Generate.State
@@ -84,6 +85,11 @@ genExprSMT expr =
   case expr of
     VarExpr svar           -> genVarSMT svar
     NumExpr snum           -> genNumSMT snum
+    Tern c b1 b2 -> do
+      cSym <- genExprSMT c
+      b1Sym <- genExprSMT b1
+      b2Sym <- genExprSMT b2
+      liftVerif $ T.cppCond cSym b1Sym b2Sym
     Cast expr ty           -> do
       exprSMT <- genExprSMT expr
       liftVerif $ T.cppCast exprSMT ty
@@ -123,8 +129,16 @@ genExprSMT expr =
 genStmtSMT :: SStmt -> Codegen ()
 genStmtSMT stmt =
   case stmt of
-    Decl var -> return () -- Declaration is just important for variable tracking
+    Expect smtResult -> do
+      result <- runSolverOnSMT
+      -- we will have to fix this for sat
+      unless (smtResult == result) $
+        error $ unwords ["Verification failed with:", show result]
+    Push -> D.push
+    Pop -> D.pop
     Assert e -> genExprSMT e >>= liftVerif . T.vassert
+    VoidCall name expr -> void $ genCallSMT $ Call name expr
+    Decl var -> return () -- Declaration is just important for variable tracking
     -- We are assigning to a class
     -- In this case, the RHS must either be another class or a call
     Assign (VarExpr var) expr | isClassType var ->
