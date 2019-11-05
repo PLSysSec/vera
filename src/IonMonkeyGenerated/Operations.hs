@@ -7,7 +7,7 @@ module IonMonkeyGenerated.Operations ( add
                                      , mul
                                      , lsh -- done
                                      , rsh -- done
-                                     , ursh
+                                     , ursh -- done
                                      , lsh' -- done
                                      , rsh' -- done
                                      , ursh'
@@ -278,7 +278,15 @@ rsh' =
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1079
 ursh' :: FunctionDef
-ursh' = undefined
+ursh' =
+  let args = [ ("lhs", c "range")
+             , ("rhs", c "range")
+             ]
+      body = [return_ $ call "newUInt32Range" [ n Unsigned 0
+                                              , tern_ (call "isFiniteNonNegative" [v "lhs"]) (v "lhs" .->. "upper") uint32max
+                                              ]
+             ]
+  in Function "ursh'" (c "range") args body
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1089
 abs :: FunctionDef

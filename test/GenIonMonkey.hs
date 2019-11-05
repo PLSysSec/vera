@@ -26,6 +26,7 @@ genIonMonkeyTests = benchTestGroup "Generated IonMonkey code test"
                     , urshTest
                     , lshTest
                     , rsh'Test
+                    , ursh'Test
                     , lsh'Test
                     ]
 
@@ -59,6 +60,10 @@ lshTest = benchTestCase "lsh" $
 rsh'Test :: BenchTest
 rsh'Test = benchTestCase "rsh'" $
   evalCodegen Nothing $ verifyFunction "rsh'" jsRsh [newInt32Range, rsh']
+
+ursh'Test :: BenchTest
+ursh'Test = benchTestCase "ursh'" $
+  evalCodegen Nothing $ verifyFunction "ursh'" jsUrsh [newUInt32Range, ursh', isFiniteNonNegative]
 
 lsh'Test :: BenchTest
 lsh'Test = benchTestCase "lsh'" $
