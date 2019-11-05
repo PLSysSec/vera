@@ -22,17 +22,18 @@ int32min = n Signed (-2147483648)
 int32max :: Codegen SExpr
 int32max = n Signed 2147483647
 
+-- | http://aggregate.org/MAGIC/#Population%20Count%20(Ones%20Count)
 countOnes :: FunctionDef
 countOnes =
-  let args = [ ("y", t Signed) ]
-      body = [ v "y" .-=. ((v "y" .>>. n Signed 1) .&&. n Signed 1431655765)
-             , v "y" `assign` (((v "y" .>>. n Signed 2) .&&. n Signed 858993459) .+. (v "y" .&&. n Signed 858993459))
-             , v "y" `assign` ((v "y" .>>. n Signed 4) .&&. n Signed 252645135)
-             , v "y" .+=. (v "y" .>>. n Signed 8)
-             , v "y" .+=. (v "y" .>>. n Signed 16)
-             , return_ $ v "y" .&&. n Signed 64
+  let args = [ ("y", t Unsigned) ]
+      body = [ v "y" .-=. ((v "y" .>>. n Signed 1) .&&. n Unsigned 1431655765)
+             , v "y" `assign` (((v "y" .>>. n Unsigned 2) .&&. n Unsigned 858993459) .+. (v "y" .&&. n Unsigned 858993459))
+             , v "y" `assign` (((v "y" .>>. n Unsigned 4) .+. v "y").&&. n Unsigned 252645135)
+             , v "y" .+=. (v "y" .>>. n Unsigned 8)
+             , v "y" .+=. (v "y" .>>. n Unsigned 16)
+             , return_ $ v "y" .&&. n Unsigned 63
              ]
-  in Function "countOnes" (t Signed) args body
+  in Function "countOnes" (t Unsigned) args body
 
 countLeadingZeroes :: FunctionDef
 countLeadingZeroes =

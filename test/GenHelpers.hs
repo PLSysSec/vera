@@ -21,21 +21,21 @@ genHelpersTests = benchTestGroup "Helpers" [ onesTest
                                            ]
 
 onesTest :: BenchTest
-onesTest = benchTestCase "call" $ do
+onesTest = benchTestCase "count ones" $ do
 
   r <- evalCodegen Nothing $ do
 
     define countOnes
-    genBodySMT [ declare (t Signed) "r1"
-               , declare (t Signed) "r2"
-               , declare (t Signed) "r3"
-               , declare (t Signed) "r4"
-               , declare (t Signed) "r5"
-               , (v "r1") `assign` call "countOnes" [n Signed 1] -- 1
-               , (v "r2") `assign` call "countOnes" [n Signed 31] -- 5
-               , (v "r3") `assign` call "countOnes" [n Signed 2863311530] -- 16
-               , (v "r4") `assign` call "countOnes" [n Signed 0] -- 0
-               , (v "r5") `assign` call "countOnes" [n Signed 4294967295] -- 32
+    genBodySMT [ declare (t Unsigned) "r1"
+               , declare (t Unsigned) "r2"
+               , declare (t Unsigned) "r3"
+               , declare (t Unsigned) "r4"
+               , declare (t Unsigned) "r5"
+               , (v "r1") `assign` call "countOnes" [n Unsigned 1] -- 1
+               , (v "r2") `assign` call "countOnes" [n Unsigned 31] -- 5
+               , (v "r3") `assign` call "countOnes" [n Unsigned 2863311530] -- 16
+               , (v "r4") `assign` call "countOnes" [n Unsigned 0] -- 0
+               , (v "r5") `assign` call "countOnes" [n Unsigned 4294967295] -- 32
                ]
     runSolverOnSMT
   vtest r $ Map.fromList [ ("r1_1", 1)
