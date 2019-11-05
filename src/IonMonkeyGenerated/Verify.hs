@@ -78,11 +78,11 @@ verifyFunction fnName jsOp fns = do
 
 intInRange :: FunctionDef
 intInRange =
-  let args = [ ("result_range", c "range")]
-      body = [ declare (t Signed) "result"
-             , assert_ $ (v "result") .=>. ((v "result_range") .->. "lower")
-             , assert_ $ (v "result") .<=. ((v "result_range") .->. "upper")
-             , return_ $ v "result"
+  let args = [ ("result_range_init", c "range")]
+      body = [ declare (t Signed) "result_init"
+             , assert_ $ (v "result_init") .=>. ((v "result_range_init") .->. "lower")
+             , assert_ $ (v "result_init") .<=. ((v "result_range_init") .->. "upper")
+             , return_ $ v "result_init"
              ]
   in Function "intInRange" (t Signed) args body
 
@@ -90,11 +90,11 @@ intInRange =
 
 verifySaneRange :: FunctionDef
 verifySaneRange =
-  let args = [ ("result_range", c "range")]
+  let args = [ ("result_range_s", c "range")]
       body = [ push_
-             , assert_ $ (v "result_range") .->. "hasInt32LowerBound"
-             , assert_ $ (v "result_range") .->. "hasInt32UpperBound"
-             , assert_ $ ((v "result_range") .->. "lower") .>. ((v "result_range") .->. "upper")
+             , assert_ $ (v "result_range_s") .->. "hasInt32LowerBound"
+             , assert_ $ (v "result_range_s") .->. "hasInt32UpperBound"
+             , assert_ $ ((v "result_range_s") .->. "lower") .>. ((v "result_range_s") .->. "upper")
              , expect_ isUnsat $ \r -> showInt32Result "Failed to verify sane range" r
              , pop_
              ]
@@ -102,12 +102,12 @@ verifySaneRange =
 
 verifyLower :: FunctionDef
 verifyLower =
-  let args = [ ("result_range", c "range")
-             , ("result", t Signed)
+  let args = [ ("result_range_l", c "range")
+             , ("result_l", t Signed)
              ]
       body = [ push_
-             , assert_ $ (v "result_range") .->. "hasInt32LowerBound"
-             , assert_ $ ((v "result_range") .->. "lower") .>. (v "result")
+             , assert_ $ (v "result_range_l") .->. "hasInt32LowerBound"
+             , assert_ $ ((v "result_range_l") .->. "lower") .>. (v "result_l")
              , expect_ isUnsat $ \r -> showInt32Result "Failed to verify lower" r
              , pop_
              ]
@@ -115,12 +115,12 @@ verifyLower =
 
 verifyUpper :: FunctionDef
 verifyUpper =
-  let args = [ ("result_range", c "range")
-             , ("result", t Signed)
+  let args = [ ("result_range_u", c "range")
+             , ("result_u", t Signed)
              ]
       body = [ push_
-             , assert_ $ (v "result_range") .->. "hasInt32UpperBound"
-             , assert_ $ ((v "result_range") .->. "upper") .<. (v "result")
+             , assert_ $ (v "result_range_u") .->. "hasInt32UpperBound"
+             , assert_ $ ((v "result_range_u") .->. "upper") .<. (v "result_u")
              , expect_ isUnsat $ \r -> showInt32Result "Failed to verify upper" r
              , pop_
              ]

@@ -37,9 +37,10 @@ genCallSMT expr =
 
       formalArgSyms <- do
         fas <- getFormalArgs name
-        forM fas $ \fa -> if isPrimType fa
-                          then genVarSMT fa >>= return . listOf
-                          else getFieldVars fa >>= mapM genVarSMT
+        forM fas $ \fa ->
+          if isPrimType fa
+          then genVarSMT fa >>= return . listOf
+          else getFieldVars fa >>= mapM genVarSMT
 
       unless (length argSyms == length formalArgSyms) $
         error $ unwords ["Improper number of arguments to", name]

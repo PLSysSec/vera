@@ -20,7 +20,7 @@ genIonMonkeyTests :: BenchTest
 genIonMonkeyTests = benchTestGroup "Generated IonMonkey code test"
                     [ notTest
                     , andTest
-                    -- , rshTest
+--                    , rshTest
                     , rsh'Test
                     ]
 
