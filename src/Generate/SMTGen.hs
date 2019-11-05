@@ -141,11 +141,9 @@ genExprSMT expr =
 genStmtSMT :: SStmt -> Codegen ()
 genStmtSMT stmt =
   case stmt of
-    Expect smtResult -> do
+    Expect resultPred act -> do
       result <- runSolverOnSMT
-      -- we will have to fix this for sat
-      unless (smtResult == result) $
-        error $ unwords ["Verification failed with:", show result]
+      unless (resultPred result) $ liftIO $ act result
     Push -> D.push
     Pop -> D.pop
     Assert e -> genExprSMT e >>= liftVerif . T.vassert

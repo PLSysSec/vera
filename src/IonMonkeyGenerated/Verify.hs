@@ -3,6 +3,7 @@ import           Control.Monad              (forM_)
 import           Data.List                  (isInfixOf)
 import qualified Data.Map                   as M
 import           Data.Maybe                 (catMaybes)
+import           DSL.DSL                    (isUnsat)
 import           DSL.Typed                  (SMTResult (..), Type (..))
 import           Generate.Lang
 import           Generate.SMTAST
@@ -94,7 +95,7 @@ verifySaneRange =
              , assert_ $ (v "result_range") .->. "hasInt32LowerBound"
              , assert_ $ (v "result_range") .->. "hasInt32UpperBound"
              , assert_ $ ((v "result_range") .->. "lower") .>. ((v "result_range") .->. "upper")
-             , expect_ SolverUnsat
+             , expect_ isUnsat $ \r -> showInt32Result "Failed to verify sane range" r
              , pop_
              ]
   in Function "verifySaneRange" Void args body
@@ -107,7 +108,7 @@ verifyLower =
       body = [ push_
              , assert_ $ (v "result_range") .->. "hasInt32LowerBound"
              , assert_ $ ((v "result_range") .->. "lower") .>. (v "result")
-             , expect_ SolverUnsat
+             , expect_ isUnsat $ \r -> showInt32Result "Failed to verify lower" r
              , pop_
              ]
   in Function "verifyLower" Void args body
@@ -120,12 +121,14 @@ verifyUpper =
       body = [ push_
              , assert_ $ (v "result_range") .->. "hasInt32UpperBound"
              , assert_ $ ((v "result_range") .->. "upper") .<. (v "result")
-             , expect_ SolverUnsat
+             , expect_ isUnsat $ \r -> showInt32Result "Failed to verify upper" r
              , pop_
              ]
   in Function "verifyUpper" Void args body
 
 -- Copypasted
+
+
 
 data VerifResult = Verified
                  | UnsatImpl
@@ -177,6 +180,9 @@ getNegzList fls = catMaybes $ map (\(str, fl) ->
                          _ | "infOrNan" `isInfixOf` str       -> Nothing
                          _ -> Just $ unwords [str, ":", show (round fl :: Integer)]
                      ) $ M.toList fls
+
+showInt32Result :: String -> SMTResult -> IO ()
+showInt32Result str result = error $ str ++ (unlines $ getIntList $ example result)
 
 getIntList :: M.Map String Double -> [String]
 getIntList fls = catMaybes $ map (\(str, fl) ->

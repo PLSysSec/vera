@@ -282,9 +282,10 @@ assert_ expr' = do
   expr <- expr'
   return $ Assert expr
 
-expect_ :: SMTResult
+expect_ :: (SMTResult -> Bool)
+        -> (SMTResult -> IO ())
         -> Codegen SStmt
-expect_ = return . Expect
+expect_ result act = return $ Expect result act
 
 push_ :: Codegen SStmt
 push_ = return Push
