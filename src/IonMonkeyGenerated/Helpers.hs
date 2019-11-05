@@ -37,14 +37,14 @@ countOnes =
 
 countLeadingZeroes :: FunctionDef
 countLeadingZeroes =
-  let args = [ ("x", t Signed) ]
-      body = [ v "x" .|=. (v "x" .>>. n Signed 1)
-             , v "x" .|=. (v "x" .>>. n Signed 2)
-             , v "x" .|=. (v "x" .>>. n Signed 4)
-             , v "x" .|=. (v "x" .>>. n Signed 8)
-             , v "x" .|=. (v "x" .>>. n Signed 8)
-             , declare (t Signed) "ones"
+  let args = [ ("x", t Unsigned) ]
+      body = [ v "x" .|=. (v "x" .>>. n Unsigned 1)
+             , v "x" .|=. (v "x" .>>. n Unsigned 2)
+             , v "x" .|=. (v "x" .>>. n Unsigned 4)
+             , v "x" .|=. (v "x" .>>. n Unsigned 8)
+             , v "x" .|=. (v "x" .>>. n Unsigned 8)
+             , declare (t Unsigned) "ones"
              , v "ones" `assign` call "countOnes" [v "x"]
-             , return_ $ n Signed 32 .-. v "ones"
+             , return_ $ n Unsigned 32 .-. v "ones"
              ]
-  in Function "countLeadingZeroes" (t Signed) args body
+  in Function "countLeadingZeroes" (t Unsigned) args body

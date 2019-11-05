@@ -18,6 +18,7 @@ import           Utils
 
 genHelpersTests :: BenchTest
 genHelpersTests = benchTestGroup "Helpers" [ onesTest
+                                           , zerosTest
                                            ]
 
 onesTest :: BenchTest
@@ -46,4 +47,29 @@ onesTest = benchTestCase "count ones" $ do
                          ]
 
 
-zeroesTest = error "NYI"
+zerosTest :: BenchTest
+zerosTest = benchTestCase "count zeros" $ do
+
+  r <- evalCodegen Nothing $ do
+
+    define countOnes
+    define countLeadingZeroes
+    genBodySMT [ declare (t Unsigned) "r1"
+               , declare (t Unsigned) "r2"
+               , declare (t Unsigned) "r3"
+               , declare (t Unsigned) "r4"
+               , declare (t Unsigned) "r5"
+               , (v "r1") `assign` call "countLeadingZeroes" [n Unsigned 1] -- 31
+               , (v "r2") `assign` call "countLeadingZeroes" [n Unsigned 31] -- 27
+               , (v "r3") `assign` call "countLeadingZeroes" [n Unsigned 2863311530] -- 0
+               , (v "r4") `assign` call "countLeadingZeroes" [n Unsigned 0] -- 32
+               , (v "r5") `assign` call "countLeadingZeroes" [n Unsigned 4294967295] -- 0
+               ]
+    runSolverOnSMT
+  vtest r $ Map.fromList [ ("r1_1", 31)
+                         , ("r2_1", 27)
+                         , ("r3_1", 0)
+                         , ("r4_1", 32)
+                         , ("r5_1", 0)
+                         ]
+
