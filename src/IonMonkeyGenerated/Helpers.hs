@@ -16,6 +16,21 @@ newInt32Range = let args = [ ("lower_bound", t Signed)
                            ]
                 in Function "newInt32Range" (c "range") args body
 
+newUInt32Range :: FunctionDef
+newUInt32Range = let args = [ ("u_lower_bound", t Unsigned)
+                            , ("u_upper_bound", t Unsigned)
+                            ]
+                     body = [ declare (c "range") "rv"
+                            , declare (t Signed) "lower_u"
+                            , declare (t Signed) "upper_u"
+                            , v "lower_u" `assign` (cast (v "u_lower_boud") Signed)
+                            , v "upper_u" `assign` (cast (v "u_upper_bound") Signed)
+                            , (v "rv") .->. "lower" `assign` (v "lower_u")
+                            , (v "rv") .->. "upper" `assign` (v "upper_u")
+                            , return_ (v "rv")
+                            ]
+                 in Function "newUInt32Range" (c "range") args body
+
 int32min :: Codegen SExpr
 int32min = n Signed (-2147483648)
 

@@ -5,7 +5,7 @@ module IonMonkeyGenerated.Operations ( add
                                      , xor -- done
                                      , not -- done
                                      , mul
-                                     , lsh
+                                     , lsh -- done
                                      , rsh -- done
                                      , ursh
                                      , lsh' -- done
