@@ -22,15 +22,28 @@ int32min = n Signed (-2147483648)
 int32max :: Codegen SExpr
 int32max = n Signed 2147483647
 
+countOnes :: FunctionDef
+countOnes =
+  let args = [ ("y", t Signed) ]
+      body = [ v "y" .-=. ((v "y" .>>. n Signed 1) .&&. n Signed 1431655765)
+             , v "y" `assign` (((v "y" .>>. n Signed 2) .&&. n Signed 858993459) .+. (v "x" .&&. n Signed 858993459))
+             , v "y" `assign` ((v "y" .>>. n Signed 4) .&&. n Signed 252645135)
+             , v "y" .+=. (v "y" .>>. n Signed 8)
+             , v "y" .+=. (v "y" .>>. n Signed 16)
+             , return_ $ v "x" .&&. n Signed 63
+             ]
+  in Function "countOnes" (t Signed) args body
+
 countLeadingZeroes :: FunctionDef
 countLeadingZeroes =
-  let args = [ ("to_count", t Signed) ]
-      body = [ ]
+  let args = [ ("x", t Signed) ]
+      body = [ v "x" .|=. (v "x" .>>. n Signed 1)
+             , v "x" .|=. (v "x" .>>. n Signed 2)
+             , v "x" .|=. (v "x" .>>. n Signed 4)
+             , v "x" .|=. (v "x" .>>. n Signed 8)
+             , v "x" .|=. (v "x" .>>. n Signed 8)
+             , declare (t Signed) "ones"
+             , v "ones" `assign` call "countOnes" [v "x"]
+             , return_ $ n Signed 32 .-. v "ones"
+             ]
   in Function "countLeadingZeroes" (t Signed) args body
-        -- x |= (x >> 1);
-        -- x |= (x >> 2);
-        -- x |= (x >> 4);
-        -- x |= (x >> 8);
-        -- x |= (x >> 16);
-        -- return(WORDBITS - ones(x));
-
