@@ -40,7 +40,36 @@ verifyUnaryFunction fnName jsOp fns = do
               ]
   genBodySMT verif
 
--- Call these to just do all the checks
+verifyFunctionConstArg :: String
+                       -> (Codegen SExpr -> Codegen SExpr -> Codegen SExpr)
+                       -> [FunctionDef]
+                       -> Codegen ()
+verifyFunctionConstArg fnName jsOp fns = do
+  class_ range
+  define newInt32InputRange
+  define intInRange
+  define verifySaneRange
+  define verifyLower
+  define verifyUpper
+  forM_ fns define
+  let verif = [ declare (c "range") "left_range"
+              , declare (t Signed) "left"
+              , declare (t Signed) "right"
+              , declare (c "range") "result_range"
+              , declare (t Signed) "result"
+              , (v "left_range")   `assign` (call "newIn32InputRange" [])
+              , (v "result_range") `assign` call fnName [v "left_range", v "right"]
+                -- Verify that the result range is well formed
+              , vcall "verifySaneRange" [v "result_range"]
+                -- Actually perform the JS operation
+              , (v "left")  `assign` (call "intInRange" [v "left_range"])
+              , (v "result") `assign` (v "left" `jsOp` v "right")
+                -- Verify that the result is in the computed range
+              , vcall "verifyLower" [v "result_range", v "result"]
+              , vcall "verifyUpper" [v "result_range", v "result"]
+              ]
+  genBodySMT verif
+
 verifyFunction :: String
                -> (Codegen SExpr -> Codegen SExpr -> Codegen SExpr)
                -> [FunctionDef]
