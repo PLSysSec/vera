@@ -3,23 +3,24 @@ import Control.Monad
 import Generate.SMTAST
 import Generate.Lang
 import Data.List
-import DSL.Typed       as T
+import DSL.Typed                  as T
+import Lanugage.C.Analysis.SemRep as C
 
 compileSType :: STy -> String
 compileSType (PrimType ty) = compileType ty
 compileSType (Class name) = name
 
-compileType :: T.Type -> String
-compileType T.Unsigned = "uint32_t"
-compileType T.Signed = "int32_t"
-compileType T.Unsigned64 = "uint64_t"
-compileType T.Signed64 = "int64_t"
-compileType T.Unsigned16 = "uint16_t"
-compileType T.Signed16 = "int16_t"
-compileType T.Unsigned8 = "uint8_t"
-compileType T.Signed8 = "int8_t"
-compileType T.Double = "double"
-compileType T.Bool = "bool"
+compileType :: T.Type -> C.TypeName
+compileType T.Unsigned = C.TyIntegral C.TyUInt
+compileType T.Signed = C.TyIntegral C.Tyint
+compileType T.Unsigned64 = C.TyIntegral C.TyULong
+compileType T.Signed64 = C.TyIntegral C.TyLong
+compileType T.Unsigned16 = C.TyIntegral C.UShort
+compileType T.Signed16 = C.TyIntegral C.Short
+compileType T.Unsigned8 = C.TyIntegral C.UChar
+compileType T.Signed8 = C.TyIntegral C.SChar
+compileType T.Bool = C.TyIntegral C.TyBool
+compileType T.Double = C.FloatType C.TyDouble
 
 -- TODO: Function definition is broken for now
 compileFunctionDef :: FunctionDef -> String
