@@ -21,15 +21,27 @@ compileType T.Signed8 = "int8_t"
 compileType T.Double = "double"
 compileType T.Bool = "bool"
 
--- TODO: Function definition is broken for now
-compileFunctionDef :: FunctionDef -> String
-compileFunctionDef (Function funName funTy funArgs funBody) = do
-  let retString = compileSType funTy
-  let argStringList = map (\(name, ty) -> (compileSType ty) ++ " " ++ name) funArgs
-  let argString = intercalate ", " argStringList
-  let headerString = retString ++ " " ++ funName ++ "(" ++ argString ++ ") {"
-  --letBodyStrings
-  "test"
+compileParams :: [(VarName, STy)] -> String
+compileParams params = do
+  paramStrings = map
+    (\(name, ty) -> (compileSType ty) ++ " " ++ name)
+    params
+  intercalate ", " argStrings
+
+compileSFunction :: SFunction -> String
+compileSFunction (SFunction name ty params body) = do
+  let paramString = compileParams params
+  let headerString = (compileSType ty) ++ name ++ "(" ++ paramString ") {"
+  let bodyStrings = map compileSStmt body
+  [paramString] ++ headerString ++ ["}"]
+
+compileSClass :: SClass -> String
+compileSClass (SClass name fields methods) = do
+  headerStrings = ["class " ++ name ++ " {", "public:"]
+  memberVarStrings = map (\(name, ty) -> (compileSType ty) ++ " " ++ name
+    ++ ";")
+  methodStrings = map compileSFunction methods
+  headerStrings ++ memberVarStrings ++ methodStrings ++ "};"
 
 compileSStmt :: SStmt -> [String]
 compileSStmt (Decl (SVar varTy varName _)) =
