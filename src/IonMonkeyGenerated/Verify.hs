@@ -196,6 +196,8 @@ getIntList fls = catMaybes $ map (\(str, fl) ->
                          _ | "right_range_lower" `isInfixOf` str -> sstr str fl
                          _ | "left_range_upper" `isInfixOf` str -> sstr str fl
                          _ | "right_range_upper" `isInfixOf` str -> sstr str fl
+                         _ | "start_range_lower" `isInfixOf` str -> sstr str fl
+                         _ | "start_range_upper" `isInfixOf` str -> sstr str fl
                          _ -> Nothing
                      ) $ M.toList fls
   where
