@@ -55,7 +55,9 @@ data SExpr = VarExpr { exprVar :: SVar }
            | NumExpr SNum
            | Neg SExpr
            | Not SExpr
+           | JSNot SExpr
            | Abs SExpr
+           | JSAbs SExpr
            | Eq SExpr SExpr
            | And SExpr SExpr
            | JSAnd SExpr SExpr

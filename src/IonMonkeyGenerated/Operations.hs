@@ -1,9 +1,9 @@
 module IonMonkeyGenerated.Operations ( add
                                      , sub
-                                     , and
+                                     , and -- done
                                      , or
                                      , xor
-                                     , not
+                                     , not -- done
                                      , mul
                                      , lsh
                                      , rsh

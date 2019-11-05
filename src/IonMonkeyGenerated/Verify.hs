@@ -10,6 +10,35 @@ import           Generate.SMTGen
 import           Generate.State
 import           IonMonkeyGenerated.Objects
 
+verifyUnaryFunction :: String
+                    -> (Codegen SExpr -> Codegen SExpr)
+                    -> [FunctionDef]
+                    -> Codegen ()
+verifyUnaryFunction fnName jsOp fns = do
+  class_ range
+  define newInt32InputRange
+  define intInRange
+  define verifySaneRange
+  define verifyLower
+  define verifyUpper
+  forM_ fns define
+  let verif = [ declare (c "range") "start_range"
+              , declare (t Signed) "start"
+              , declare (c "range") "result_range"
+              , declare (t Signed) "result"
+              , (v "start_range")   `assign` (call "newIn32InputRange" [])
+              , (v "result_range") `assign` call fnName [v "start_range"]
+                -- Verify that the result range is well formed
+              , vcall "verifySaneRange" [v "result_range"]
+                -- Actually perform the JS operation
+              , (v "start")  `assign` (call "intInRange" [v "start_range"])
+              , (v "result") `assign` (jsOp $ v "start")
+                -- Verify that the result is in the computed range
+              , vcall "verifyLower" [v "result_range", v "result"]
+              , vcall "verifyUpper" [v "result_range", v "result"]
+              ]
+  genBodySMT verif
+
 -- Call these to just do all the checks
 verifyFunction :: String
                -> (Codegen SExpr -> Codegen SExpr -> Codegen SExpr)

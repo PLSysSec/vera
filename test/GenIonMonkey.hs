@@ -18,28 +18,14 @@ import           Utils
 
 genIonMonkeyTests :: BenchTest
 genIonMonkeyTests = benchTestGroup "Generated IonMonkey code test"
-                    [ -- notTest
-                     andTest
+                    [ notTest
+                    , andTest
                     -- , rshTest
                     , rsh'Test
                     ]
 
 notTest :: BenchTest
-notTest = benchTestCase "not" $ do
-  r <- evalCodegen Nothing $ do
-    class_ range
-    define newInt32InputRange
-    define not
-    define verifySaneRange
-    let verif = [ declare (c "range") "not_range"
-                , declare (c "range") "result_range"
-                , (v "not_range") `assign` (call "newIn32InputRange" [])
-                , (v "result_range") `assign` call "not" [v "not_range"]
-                , vcall "verifySaneRange" [v "result_range"]
-                ]
-    genBodySMT verif
-    runSolverOnSMT
-  SolverUnsat @=? r
+notTest = benchTestCase "not" $ evalCodegen Nothing $ verifyUnaryFunction "not" jsNot [not]
 
 andTest :: BenchTest
 andTest = benchTestCase "and" $

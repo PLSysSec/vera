@@ -134,8 +134,14 @@ neg_ ex = unaryOp ex Neg
 not_ :: Codegen SExpr -> Codegen SExpr
 not_ ex = unaryOp ex Not
 
+jsNot :: Codegen SExpr -> Codegen SExpr
+jsNot ex = unaryOp ex JSNot
+
 abs_ :: Codegen SExpr -> Codegen SExpr
 abs_ ex = unaryOp ex Abs
+
+jsAbs :: Codegen SExpr -> Codegen SExpr
+jsAbs ex = unaryOp ex JSAbs
 
 (.==.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.==.) left right = binOp left right Eq

@@ -129,6 +129,8 @@ genExprSMT expr =
     JSMax left right -> genBinOpSMT left right T.jsMax
     JSLsh left right -> genBinOpSMT left right T.jsShl
     JSRsh left right -> genBinOpSMT left right T.jsShr
+    JSAbs e          -> genExprSMT e >>= liftVerif . T.jsAbs
+    JSNot e          -> genExprSMT e >>= liftVerif . T.jsNot
 
     Call{}         -> do
       result <- genCallSMT expr
