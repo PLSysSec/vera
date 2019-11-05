@@ -18,3 +18,6 @@ newInt32Range = let args = [ ("lower_bound", t Signed)
 
 int32min :: Codegen SExpr
 int32min = n Signed (-2147483648)
+
+int32max :: Codegen SExpr
+int32max = n Signed 2147483647

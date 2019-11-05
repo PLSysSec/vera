@@ -136,7 +136,11 @@ ursh =
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1042
 lsh' :: FunctionDef
-lsh' = undefined
+lsh' = let body = [ return_ $ call "newInt32Range" [ int32min, int32max ] ]
+           args = [ ("lhs", c "range")
+                  , ("rhs", c "range")
+                  ]
+       in Function "lsh'" (c "range") args body
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1048
 rsh' :: FunctionDef
