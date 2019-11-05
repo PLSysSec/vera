@@ -23,7 +23,7 @@ newUInt32Range = let args = [ ("u_lower_bound", t Unsigned)
                      body = [ declare (c "range") "rv"
                             , declare (t Signed) "lower_u"
                             , declare (t Signed) "upper_u"
-                            , v "lower_u" `assign` (cast (v "u_lower_boud") Signed)
+                            , v "lower_u" `assign` (cast (v "u_lower_bound") Signed)
                             , v "upper_u" `assign` (cast (v "u_upper_bound") Signed)
                             , (v "rv") .->. "lower" `assign` (v "lower_u")
                             , (v "rv") .->. "upper" `assign` (v "upper_u")

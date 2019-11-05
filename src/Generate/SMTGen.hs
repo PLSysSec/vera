@@ -121,17 +121,18 @@ genExprSMT expr =
     Shl left right -> genBinOpSMT left right T.cppShiftLeft
     Shr left right -> genBinOpSMT left right T.cppShiftRight
     -- JavaScript
-    JSAnd left right -> genBinOpSMT left right T.jsAnd
-    JSSub left right -> genBinOpSMT left right T.jsSub
-    JSMul left right -> genBinOpSMT left right T.jsMul
-    JSOr  left right -> genBinOpSMT left right T.jsOr
-    JSXOr left right -> genBinOpSMT left right T.jsXor
-    JSMin left right -> genBinOpSMT left right T.jsMin
-    JSMax left right -> genBinOpSMT left right T.jsMax
-    JSLsh left right -> genBinOpSMT left right T.jsShl
-    JSRsh left right -> genBinOpSMT left right T.jsShr
-    JSAbs e          -> genExprSMT e >>= liftVerif . T.jsAbs
-    JSNot e          -> genExprSMT e >>= liftVerif . T.jsNot
+    JSAnd left right  -> genBinOpSMT left right T.jsAnd
+    JSSub left right  -> genBinOpSMT left right T.jsSub
+    JSMul left right  -> genBinOpSMT left right T.jsMul
+    JSOr  left right  -> genBinOpSMT left right T.jsOr
+    JSXOr left right  -> genBinOpSMT left right T.jsXor
+    JSMin left right  -> genBinOpSMT left right T.jsMin
+    JSMax left right  -> genBinOpSMT left right T.jsMax
+    JSLsh left right  -> genBinOpSMT left right T.jsShl
+    JSRsh left right  -> genBinOpSMT left right T.jsShr
+    JSUrsh left right -> genBinOpSMT left right T.jsUshr
+    JSAbs e           -> genExprSMT e >>= liftVerif . T.jsAbs
+    JSNot e           -> genExprSMT e >>= liftVerif . T.jsNot
 
     Call{}         -> do
       result <- genCallSMT expr

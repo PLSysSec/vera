@@ -230,6 +230,9 @@ jsLsh left right = binOp left right JSLsh
 jsRsh :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 jsRsh left right = binOp left right JSRsh
 
+jsUrsh :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+jsUrsh left right = binOp left right JSUrsh
+
 (.->.) :: Codegen SExpr -> FieldName -> Codegen SExpr
 (.->.) ve' fieldname = do
   ve <- ve'
