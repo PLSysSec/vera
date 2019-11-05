@@ -26,11 +26,11 @@ countOnes :: FunctionDef
 countOnes =
   let args = [ ("y", t Signed) ]
       body = [ v "y" .-=. ((v "y" .>>. n Signed 1) .&&. n Signed 1431655765)
-             , v "y" `assign` (((v "y" .>>. n Signed 2) .&&. n Signed 858993459) .+. (v "x" .&&. n Signed 858993459))
+             , v "y" `assign` (((v "y" .>>. n Signed 2) .&&. n Signed 858993459) .+. (v "y" .&&. n Signed 858993459))
              , v "y" `assign` ((v "y" .>>. n Signed 4) .&&. n Signed 252645135)
              , v "y" .+=. (v "y" .>>. n Signed 8)
              , v "y" .+=. (v "y" .>>. n Signed 16)
-             , return_ $ v "x" .&&. n Signed 63
+             , return_ $ v "y" .&&. n Signed 64
              ]
   in Function "countOnes" (t Signed) args body
 
