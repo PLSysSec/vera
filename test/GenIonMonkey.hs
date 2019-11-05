@@ -21,6 +21,7 @@ genIonMonkeyTests = benchTestGroup "Generated IonMonkey code test"
                     [ notTest
                     , andTest
                     , orTest
+                    , xorTest
                     , rshTest
                     , rsh'Test
                     , lsh'Test
@@ -36,6 +37,10 @@ andTest = benchTestCase "and" $
 orTest :: BenchTest
 orTest = benchTestCase "or" $
   evalCodegen Nothing $ verifyFunction "or" jsOr [newInt32Range, countOnes, countLeadingZeroes, or]
+
+xorTest :: BenchTest
+xorTest = benchTestCase "xor" $
+  evalCodegen Nothing $ verifyFunction "xor" jsXOr [newInt32Range, countOnes, countLeadingZeroes, xor]
 
 rshTest :: BenchTest
 rshTest = benchTestCase "rsh" $
