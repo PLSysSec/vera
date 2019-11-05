@@ -128,8 +128,6 @@ verifyUpper =
 
 -- Copypasted
 
-
-
 data VerifResult = Verified
                  | UnsatImpl
                  | OverlappingRange { counterexample :: M.Map String Double }
@@ -182,17 +180,26 @@ getNegzList fls = catMaybes $ map (\(str, fl) ->
                      ) $ M.toList fls
 
 showInt32Result :: String -> SMTResult -> IO ()
-showInt32Result str result = error $ str ++ (unlines $ getIntList $ example result)
+showInt32Result str result = error $ str ++ "\n" ++ (unlines $ getIntList $ example result)
 
 getIntList :: M.Map String Double -> [String]
 getIntList fls = catMaybes $ map (\(str, fl) ->
                        case str of
-                         _ | "_exp" `isInfixOf` str      -> Nothing
-                         _ | "_hasFract" `isInfixOf` str -> Nothing
-                         _ | "_negZero" `isInfixOf` str  -> Nothing
-                         _ | "infOrNan" `isInfixOf` str  -> Nothing
-                         _ -> Just $ unwords [str, ":", show (round fl :: Integer)]
+                         _ | "undef" `isInfixOf` str -> Nothing
+                         _ | "result_range_upper" `isInfixOf` str -> sstr str fl
+                         _ | "result_range_lower" `isInfixOf` str -> sstr str fl
+                         _ | "result_1" `isInfixOf` str -> sstr str fl
+                         _ | "right_1" `isInfixOf` str -> sstr str fl
+                         _ | "left_1" `isInfixOf` str -> sstr str fl
+                         _ | "start_1" `isInfixOf` str -> sstr str fl
+                         _ | "left_range_lower" `isInfixOf` str -> sstr str fl
+                         _ | "right_range_lower" `isInfixOf` str -> sstr str fl
+                         _ | "left_range_upper" `isInfixOf` str -> sstr str fl
+                         _ | "right_range_upper" `isInfixOf` str -> sstr str fl
+                         _ -> Nothing
                      ) $ M.toList fls
+  where
+    sstr str fl = Just $ unwords [str, ":", show (round fl :: Integer)]
 
 prettyCounterexampleInts :: M.Map String Double
                          -> String
