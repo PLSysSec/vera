@@ -40,6 +40,20 @@ int32max = n Signed 2147483647
 uint32max :: Codegen SExpr
 uint32max = n Signed 4294967295
 
+isFiniteNonNegative :: FunctionDef
+isFiniteNonNegative =
+  let args = [ ("fnn", c "range") ]
+      body = [ return_ $ (v "fnn" .->. "lower" .>. n Signed 0) -- finish this
+             ]
+  in Function "isFiniteNonNegative" (t Bool) args body
+
+isFiniteNegative :: FunctionDef
+isFiniteNegative =
+  let args = [ ("fn", c "range") ]
+      body = [ return_ $ (v "fn" .->. "upper" .<. n Signed 0) -- finish this
+             ]
+  in Function "isFiniteNegative" (t Bool) args body
+
 -- | http://aggregate.org/MAGIC/#Population%20Count%20(Ones%20Count)
 countOnes :: FunctionDef
 countOnes =

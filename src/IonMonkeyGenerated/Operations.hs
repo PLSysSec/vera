@@ -223,8 +223,16 @@ ursh =
              ]
       body = [ declare (t Signed) "shift"
              , v "shift" `assign` (v "c" .&&. n Signed 31)
+             , if_ ((call "isFiniteNonNegative" [v "lhs"]) .||. (call "isFiniteNegative" [v "lhs"]))
+               [ return_ $ call "newUInt32Range" [ cast ((v "lhs" .->. "lower") .>>. v "shift") Unsigned
+                                                 , cast ((v "lhs" .->. "upper") .>>. v "shift") Unsigned
+                                                 ]
+               ] []
+             , return_ $ call "newUInt32Range" [ n Unsigned 0
+                                               , uint32max .>>. v "shift"
+                                               ]
              ]
-  in error ""
+  in Function "ursh" (c "range") args body
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1042
 lsh' :: FunctionDef
