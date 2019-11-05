@@ -8,6 +8,10 @@ type FieldName = String
 type ClassName = String
 type FunctionName = String
 
+data SFunction = SFunction FunctionName STy [(VarName, STy)] [SStmt]
+--TODO: Right now all fields are assumed to be public
+data SClass = SClass ClassName [(FieldName, STy)] [SFunction]
+
 data STy = PrimType { primTy :: Type }
          | Class    { className :: ClassName }
          | Void
