@@ -2,7 +2,7 @@ module IonMonkeyGenerated.Operations ( add
                                      , sub
                                      , and -- done
                                      , or -- done
-                                     , xor
+                                     , xor -- done
                                      , not -- done
                                      , mul
                                      , lsh
@@ -184,22 +184,21 @@ mul = undefined
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#999
 lsh :: FunctionDef
-lsh = undefined
-  -- let args = [ ("lhs", c "range")
-  --            , ("c", t Signed)
-  --            ]
-  --     body = [ declare (t Signed) "shift"
-  --            , "shift" `assign` (v "c" .&&. n Signed 31)
-  --            , if_ ( ()  .==. (v "lhs" .->. "lower" )
-  --                    .&&.
-  --                    ()
-  --                  )
-  --              [return_ $ newInt32Range [ (cast (v "lhs" .->. "lower") Unsigned) .<<. shit
-  --                                       , (cast (v "lhs" .->. "upper") Unsigned) .<<. shit
-  --              ]
-  --              []
-  --            , [return_ $ newInt32Range [ int32min, int32max ] ]
-  --            ]
+lsh =
+  let args = [ ("lhs", c "range")
+             , ("c", t Signed)
+             ]
+      body = [ declare (t Signed) "shift"
+             , v "shift" `assign` (v "c" .&&. n Signed 31)
+             , if_ (((cast (((((cast (v "lhs" .->. "lower") Unsigned) .<<. v "shift")  .<<. n Signed 1) .>>. v "shift") .>>. n Signed 1) Signed) .==. ((cast (((((cast (v "lhs" .->. "upper") Unsigned) .<<. v "shift")  .<<. n Signed 1) .>>. v "shift") .>>. n Signed 1) Signed))))
+               [return_ $ call "newInt32Range" [ (cast (v "lhs" .->. "lower") Unsigned) .<<. v "shift"
+                                               , (cast (v "lhs" .->. "upper") Unsigned) .<<. v "shift"
+                                               ]
+               ] []
+             , return_ $ call "newInt32Range" [int32min, int32max]
+             ]
+  in Function "lsh" (c "range") args body
+
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1016
 rsh :: FunctionDef
