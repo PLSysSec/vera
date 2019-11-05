@@ -103,6 +103,10 @@ isPrimVarExpr _           = False
 
 data SStmt = Decl SVar
            | Assign SExpr SExpr
+           | AddEq SExpr SExpr SExpr
+           | SubEq SExpr SExpr SExpr
+           | OrEq SExpr SExpr SExpr
+           | AndEq SExpr SExpr SExpr
            | If SExpr [SStmt] [SStmt]
            | VoidCall FunctionName [SExpr]
            | Return SExpr

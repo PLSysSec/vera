@@ -139,6 +139,18 @@ genExprSMT expr =
         [rval] -> return rval
         _      -> error "Cannot return a class variable for use in greater expression"
 
+genAssignOpSMT :: SExpr
+               -> SExpr
+               -> SExpr
+               -> (T.VNode -> T.VNode -> T.Verif T.VNode)
+               -> Codegen ()
+genAssignOpSMT result one two op = do
+  lhsSMT <- genExprSMT result
+  leftSMT <- genExprSMT one
+  rightSMT <- genExprSMT two
+  tmp <- liftVerif $ op leftSMT rightSMT
+  liftVerif $ T.vassign lhsSMT tmp
+
 genStmtSMT :: SStmt -> Codegen ()
 genStmtSMT stmt =
   case stmt of
@@ -173,6 +185,12 @@ genStmtSMT stmt =
       varSMT <- genExprSMT var
       exprSMT <- genExprSMT expr
       liftVerif $ T.vassign varSMT exprSMT
+
+    AddEq result one two -> genAssignOpSMT result one two T.cppAdd
+    SubEq result one two -> genAssignOpSMT result one two T.cppSub
+    OrEq result one two  -> genAssignOpSMT result one two T.cppOr
+    AndEq result one two -> genAssignOpSMT result one two T.cppAnd
+
     If cond trueBr falseBr -> do
       condSym <- genExprSMT cond
       mapM_ (rewriteConditional condSym) trueBr

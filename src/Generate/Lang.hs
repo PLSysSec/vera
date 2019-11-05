@@ -149,17 +149,26 @@ jsAbs ex = unaryOp ex JSAbs
 (.&&.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.&&.) left right = binOp left right And
 
+(.&=.) :: Codegen SExpr -> Codegen SExpr -> Codegen SStmt
+(.&=.) left right = assignOp left right AndEq
+
 jsAnd :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 jsAnd left right = binOp left right JSAnd
 
 (.+.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.+.) left right = binOp left right Add
 
+(.+=.) :: Codegen SExpr -> Codegen SExpr -> Codegen SStmt
+(.+=.) left right = assignOp left right AddEq
+
 jsAdd :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 jsAdd left right = binOp left right JSAdd
 
 (.-.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.-.) left right = binOp left right Sub
+
+(.-=.) :: Codegen SExpr -> Codegen SExpr -> Codegen SStmt
+(.-=.) left right = assignOp left right SubEq
 
 jsSub :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 jsSub left right = binOp left right JSSub
@@ -172,6 +181,9 @@ jsMul left right = binOp left right JSMul
 
 (.||.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.||.) left right = binOp left right Or
+
+(.|=.) :: Codegen SExpr -> Codegen SExpr -> Codegen SStmt
+(.|=.) left right = assignOp left right OrEq
 
 jsOr :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 jsOr left right = binOp left right JSOr
@@ -255,6 +267,17 @@ assign svar' sexpr' = do
     error "Cannot assign class to non-class"
   newVar <- nextVar (varName $ exprVar svar)
   return $ Assign (VarExpr newVar) sexpr
+
+assignOp :: Codegen SExpr
+         -> Codegen SExpr
+         -> (SExpr -> SExpr -> SExpr -> SStmt)
+         -> Codegen SStmt
+assignOp svar' sexpr' op = do
+  svar <- svar'
+  sexpr <- sexpr'
+  unless (isPrimVarExpr svar) $ error "Cannot update-assign to a non-number-variable"
+  newVar <- nextVar (varName $ exprVar svar)
+  return $ op (VarExpr newVar) svar sexpr
 
 if_ :: Codegen SExpr
     -> [Codegen SStmt]

@@ -103,9 +103,16 @@ lsh = undefined
   --            , ("c", t Signed)
   --            ]
   --     body = [ declare (t Signed) "shift"
-  --            , if ( (cast ((cast Unsigned (v "lhs" .->. "lower") .<<. v "shift" .<<. (n Unsigned 1) .>>. v "shift" .>>. (n Unsigned 1)) Signed) .&&.
-  --                  (cast (cast Unsigned (v) Signed)
-  --                 ) [] []
+  --            , "shift" `assign` (v "c" .&&. n Signed 31)
+  --            , if_ ( ()  .==. (v "lhs" .->. "lower" )
+  --                    .&&.
+  --                    ()
+  --                  )
+  --              [return_ $ newInt32Range [ (cast (v "lhs" .->. "lower") Unsigned) .<<. shit
+  --                                       , (cast (v "lhs" .->. "upper") Unsigned) .<<. shit
+  --              ]
+  --              []
+  --            , [return_ $ newInt32Range [ int32min, int32max ] ]
   --            ]
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1016

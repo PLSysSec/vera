@@ -21,3 +21,16 @@ int32min = n Signed (-2147483648)
 
 int32max :: Codegen SExpr
 int32max = n Signed 2147483647
+
+countLeadingZeroes :: FunctionDef
+countLeadingZeroes =
+  let args = [ ("to_count", t Signed) ]
+      body = [ ]
+  in Function "countLeadingZeroes" (t Signed) args body
+        -- x |= (x >> 1);
+        -- x |= (x >> 2);
+        -- x |= (x >> 4);
+        -- x |= (x >> 8);
+        -- x |= (x >> 16);
+        -- return(WORDBITS - ones(x));
+
