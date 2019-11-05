@@ -22,6 +22,9 @@ int32min = n Signed (-2147483648)
 int32max :: Codegen SExpr
 int32max = n Signed 2147483647
 
+uint32max :: Codegen SExpr
+uint32max = n Signed 4294967295
+
 -- | http://aggregate.org/MAGIC/#Population%20Count%20(Ones%20Count)
 countOnes :: FunctionDef
 countOnes =

@@ -6,9 +6,9 @@ module IonMonkeyGenerated.Operations ( add
                                      , not -- done
                                      , mul
                                      , lsh
-                                     , rsh
+                                     , rsh -- done
                                      , ursh
-                                     , lsh'
+                                     , lsh' -- done
                                      , rsh'
                                      , ursh'
                                      , abs
@@ -57,24 +57,45 @@ and =
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#834
 or :: FunctionDef
-or = undefined
-  -- let args = [ ("lhs", c "range")
-  --            , ("rhs", c "range")
-  --            ]
-  --     body = [ if_ ((v "lhs" .->. "lower") .==. (v "lhs" .->. "upper"))
-  --              [ if_ ((v "lhs" .->. "lower") .==. (n Signed 0))
-  --                [return_ $ v "rhs"] []
-  --              , if_ ((v "lhs" .->. "lower") == (n Signed -1))
-  --                [return_ $ v "lhs"] []
-  --              ] []
-  --            , if_ ((v "rhs" .->. "lower") .==. (v "rhs" .->. "upper"))
-  --              [ if_ ((v "rhs" .->. "lower") .==. (n Signed 0))
-  --                [return_ $ v "lhs"] []
-  --              , if_ ((v "rhs" .->. "lower") .==. (n Signed -1))
-  --                [return_ $ v "rhs"] []
-  --              ]
-
-  --            ]
+or =
+  let args = [ ("lhs", c "range")
+             , ("rhs", c "range")
+             ]
+      body = [ if_ ((v "lhs" .->. "lower") .==. (v "lhs" .->. "upper"))
+               [ if_ ((v "lhs" .->. "lower") .==. (n Signed 0))
+                 [return_ $ v "rhs"] []
+               , if_ ((v "lhs" .->. "lower") .==. (n Signed (-1)))
+                 [return_ $ v "lhs"] []
+               ] []
+             , if_ ((v "rhs" .->. "lower") .==. (v "rhs" .->. "upper"))
+               [ if_ ((v "rhs" .->. "lower") .==. (n Signed 0))
+                 [return_ $ v "lhs"] []
+               , if_ ((v "rhs" .->. "lower") .==. (n Signed (-1)))
+                 [return_ $ v "rhs"] []
+               ] []
+             , declare (t Signed) "lower"
+             , declare (t Signed) "upper"
+             , v "lower" `assign` int32min
+             , v "upper" `assign` int32max
+             , if_ (((v "lhs" .->. "lower") .=>. n Signed 0) .&&. ((v "rhs" .->. "lower") .=>. n Signed 0))
+                   [ v "lower" `assign` (max_ (v "lhs" .->. "lower") (v "rhs" .->. "lower"))
+                   , v "upper" `assign` (cast (uint32max .>>. (min_ (call "countLeadingZeroes" [v "lhs" .->. "upper"]) (call "countLeadingZeroes" [v "rhs" .->. "upper"]))) Signed)
+                   ]
+                   [ declare (t Unsigned) "leadingOnes"
+                   , v "leadingOnes" `assign` n Unsigned 0
+                   , if_ (v "lhs" .->. "upper" .<. n Signed 0)
+                     [ v "leadingOnes" `assign` call "countLeadingZeroes" [not_ $ v "lhs" .->. "lower"]
+                     , v "lower" `assign` (max_ (v "lower") (not_ $ cast (uint32max .>>. v "leadingOnes") Signed))
+                     , v "upper" `assign` n Signed (-1)
+                     ] []
+                   , if_ (v "rhs" .->. "upper" .<. n Signed 0)
+                     [v "leadingOnes" `assign` call "countLeadingZeroes" [not_ $ v "rhs" .->. "lower"]
+                     , v "lower" `assign` (max_ (v "lower") (not_ $ cast (uint32max .>>. v "leadingOnes") Signed))
+                     , v "upper" `assign` n Signed (-1) ] []
+                   ]
+             , return_ $ call "newInt32Range" [v "lower", v "upper"]
+             ]
+  in Function "or" (c "range") args body
 
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#893
