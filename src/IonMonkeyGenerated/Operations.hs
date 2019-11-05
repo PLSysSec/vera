@@ -1,7 +1,7 @@
 module IonMonkeyGenerated.Operations ( add
                                      , sub
                                      , and -- done
-                                     , or
+                                     , or -- done
                                      , xor
                                      , not -- done
                                      , mul
@@ -9,7 +9,7 @@ module IonMonkeyGenerated.Operations ( add
                                      , rsh -- done
                                      , ursh
                                      , lsh' -- done
-                                     , rsh'
+                                     , rsh' -- done
                                      , ursh'
                                      , abs
                                      , min
@@ -100,7 +100,72 @@ or =
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#893
 xor :: FunctionDef
-xor = undefined
+xor =
+  let args = [ ("lhs", c "range")
+             , ("rhs", c "range")
+             ]
+      body = [ declare (t Signed) "lhsLower"
+             , declare (t Signed) "lhsUpper"
+             , declare (t Signed) "rhsLower"
+             , declare (t Signed) "rhsUpper"
+             , declare (t Bool)   "invertAfter"
+             , declare (t Signed) "tmp"
+             , declare (t Unsigned) "lhsLeadingZeroes"
+             , declare (t Unsigned) "rhsLeadingZeroes"
+             , v "lhsLeadingZeroes" `assign` n Unsigned 0
+             , v "rhsLeadingZeroes" `assign` n Unsigned 0
+             , v "lhsLower" `assign` (v "lhs" .->. "lower")
+             , v "lhsUpper" `assign` (v "lhs" .->. "upper")
+             , v "rhsLower" `assign` (v "rhs" .->. "lower")
+             , v "rhsUpper" `assign` (v "rhs" .->. "upper")
+             , v "invertAfter" `assign` n Bool 0
+             , v "tmp" `assign` n Signed 0
+             , if_ (v "lhsUpper" .<. n Signed 0)
+               [ v "lhsLower" `assign` (not_ $ v "lhsLower")
+               , v "lhsUpper" `assign` (not_ $ v "lhsUpper")
+               , v "tmp" `assign` v "lhsLower"
+               , v "lhsLower" `assign` v "lhsUpper"
+               , v "lhsUpper" `assign` v "tmp"
+               , v "invertAfter" `assign` (not_ $ v "invertAfter")
+               ] []
+             , if_ (v "rhsUpper" .<. n Signed 0)
+               [ v "rhsLower" `assign` (not_ $ v "rhsLower")
+               , v "rhsUpper" `assign` (not_ $ v "rhsUpper")
+               , v "tmp" `assign` v "rhsLower"
+               , v "rhsLower" `assign` v "rhsUpper"
+               , v "rhsUpper" `assign` v "tmp"
+               , v "invertAfter" `assign` (not_ $ v "invertAfter")
+               ] []
+             , declare (t Signed) "lower"
+             , declare (t Signed) "upper"
+             , v "lower" `assign` int32min
+             , v "upper" `assign` int32max
+             , if_ ((v "lhsLower" .==. n Signed 0) .&&. (v "lhsUpper" .==. n Signed 0))
+               [ v "upper" `assign` v "rhsUpper"
+               , v "lower" `assign` v "rhsLower"
+               ]
+               [if_ ((v "rhsLower" .==. n Signed 0) .&&. (v "rhsUpper" .==. n Signed 0))
+                [ v "upper" `assign` v "lhsUpper"
+                , v "lower" `assign` v "lhsLower"
+                ]
+                [if_ ((v "lhsLower" .=>. n Signed 0) .&&. (v "rhsLower" .=>. n Signed 0))
+                   [ v "lower" `assign` n Signed 0
+                   , v "lhsLeadingZeroes" `assign` (call "countLeadingZeroes" [v "lhsUpper"])
+                   , v "rhsLeadingZeroes" `assign` (call "countLeadingZeroes" [v "rhsUpper"])
+                   , v "upper" `assign` (min_ (v "rhsUpper" .||. (cast (uint32max .>>. v "lhsLeadingZeroes") Signed)) (v "lhsUpper" .||. (cast (uint32max .>>. v "lhsLeadingZeroes") Signed)))
+                   ] []
+                ]
+               ]
+             , if_ (v "invertAfter")
+               [ v "lower" `assign` (not_ $ v "lower")
+               , v "upper" `assign` (not_ $ v "upper")
+               , v "tmp" `assign` v "lower"
+               , v "lower" `assign` v "upper"
+               , v "upper" `assign` v "tmp"
+               ] []
+             , return_ $ call "newInt32Range" [v "lower", v "upper"]
+             ]
+  in Function "xor" (c "range") args body
 
 -- Two trys (neg -> not)
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#955
