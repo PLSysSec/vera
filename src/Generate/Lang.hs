@@ -149,6 +149,18 @@ abs_ ex = unaryOp ex Abs
 jsAbs :: Codegen SExpr -> Codegen SExpr
 jsAbs ex = unaryOp ex JSAbs
 
+isNan :: Codegen SExpr -> Codegen SExpr
+isNan op = op >>= return . IsNan
+
+isInf :: Codegen SExpr -> Codegen SExpr
+isInf op = op >>= return . IsInf
+
+isZero :: Codegen SExpr -> Codegen SExpr
+isZero op = op >>= return . IsZero
+
+isNegative :: Codegen SExpr -> Codegen SExpr
+isNegative op = op >>= return . IsNegative
+
 (.==.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.==.) left right = binOp left right Eq
 

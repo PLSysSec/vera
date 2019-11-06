@@ -136,6 +136,11 @@ genExprSMT expr =
     JSUrsh left right -> genBinOpSMT left right T.jsUshr
     JSAbs e           -> genExprSMT e >>= liftVerif . T.jsAbs
     JSNot e           -> genExprSMT e >>= liftVerif . T.jsNot
+    -- Fp
+    IsInf  e     -> genExprSMT e >>= liftVerif . T.isInf
+    IsNan  e     -> genExprSMT e >>= liftVerif . T.isNan
+    IsZero e     -> genExprSMT e >>= liftVerif . T.isZero
+    IsNegative e -> genExprSMT e >>= liftVerif . T.isNeg
 
     Call{}         -> do
       result <- genCallSMT expr

@@ -82,6 +82,10 @@ data SExpr = VarExpr { exprVar :: SVar }
            | Gte SExpr SExpr
            | Lt SExpr SExpr
            | Lte SExpr SExpr
+           | IsNan SExpr
+           | IsInf SExpr
+           | IsZero SExpr
+           | IsNegative SExpr
            | Shl SExpr SExpr
            | JSLsh SExpr SExpr
            | Shr SExpr SExpr

@@ -27,7 +27,7 @@ verifyUnaryFunction fnName jsOp fns = do
               , declare (t Signed) "start"
               , declare (c "range") "result_range"
               , declare (t Signed) "result"
-              , (v "start_range")   `assign` (call "newIn32InputRange" [])
+              , (v "start_range")   `assign` (call "newInt32InputRange" [])
               , (v "result_range") `assign` call fnName [v "start_range"]
                 -- Verify that the result range is well formed
               , vcall "verifySaneRange" [v "result_range"]
@@ -57,7 +57,7 @@ verifyFunctionConstArg fnName jsOp fns = do
               , declare (t Signed) "right"
               , declare (c "range") "result_range"
               , declare (t Signed) "result"
-              , (v "left_range")   `assign` (call "newIn32InputRange" [])
+              , (v "left_range")   `assign` (call "newInt32InputRange" [])
               , (v "result_range") `assign` call fnName [v "left_range", v "right"]
                 -- Verify that the result range is well formed
               , vcall "verifySaneRange" [v "result_range"]
@@ -88,8 +88,8 @@ verifyFunction fnName jsOp fns = do
               , declare (t Signed) "right"
               , declare (c "range") "result_range"
               , declare (t Signed) "result"
-              , (v "left_range")   `assign` (call "newIn32InputRange" [])
-              , (v "right_range")  `assign` (call "newIn32InputRange" [])
+              , (v "left_range")   `assign` (call "newInt32InputRange" [])
+              , (v "right_range")  `assign` (call "newInt32InputRange" [])
               , (v "result_range") `assign` call fnName [v "left_range", v "right_range"]
                 -- Verify that the result range is well formed
               , vcall "verifySaneRange" [v "result_range"]
@@ -114,6 +114,15 @@ intInRange =
              , return_ $ v "result_init"
              ]
   in Function "intInRange" (t Signed) args body
+
+floatInRange :: FunctionDef
+floatInRange =
+  let args = [ ("result_range_init", c "range")]
+      body = [ declare (t Signed) "result_init"
+             -- If the range doesn't include inf or nan, the op shouldnt be inf or nan
+             , return_ $ v "result_init"
+             ]
+  in Function "floatInRange" (t Signed) args body
 
 -- Verification
 
