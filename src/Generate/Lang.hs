@@ -161,6 +161,9 @@ isZero op = op >>= return . IsZero
 isNeg :: Codegen SExpr -> Codegen SExpr
 isNeg op = op >>= return . IsNegative
 
+fpExp :: Codegen SExpr -> Codegen SExpr
+fpExp op = op >>= return . GetExp
+
 (.==.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.==.) left right = binOp left right Eq
 

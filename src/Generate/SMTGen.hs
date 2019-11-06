@@ -141,6 +141,7 @@ genExprSMT expr =
     IsNan  e     -> genExprSMT e >>= liftVerif . T.isNan
     IsZero e     -> genExprSMT e >>= liftVerif . T.isZero
     IsNegative e -> genExprSMT e >>= liftVerif . T.isNeg
+    GetExp e     -> genExprSMT e >>= liftVerif . T.getFpExponent
 
     Call{}         -> do
       result <- genCallSMT expr
