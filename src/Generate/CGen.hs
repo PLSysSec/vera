@@ -30,7 +30,7 @@ compileParams params = do
 compileSFunction :: SFunction -> [String]
 compileSFunction (SFunction name ty params body) = do
   let paramString = compileParams params
-  let headerString = (compileSType ty) ++ name ++ "(" ++ paramString ++ ") {"
+  let headerString = (compileSType ty) ++ " " ++ name ++ "(" ++ paramString ++ ") {"
   let bodyStrings = concat $ map compileSStmt body
   [headerString] ++ bodyStrings ++ ["}"]
 
