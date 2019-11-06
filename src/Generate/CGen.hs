@@ -23,25 +23,22 @@ compileType T.Bool = "bool"
 
 compileParams :: [(VarName, STy)] -> String
 compileParams params = do
-  paramStrings = map
-    (\(name, ty) -> (compileSType ty) ++ " " ++ name)
-    params
-  intercalate ", " argStrings
+  let paramStrings = map (\(name, ty) -> (compileSType ty) ++ " " ++ name) params
+  intercalate ", " paramStrings
 
-compileSFunction :: SFunction -> String
+compileSFunction :: SFunction -> [String]
 compileSFunction (SFunction name ty params body) = do
   let paramString = compileParams params
-  let headerString = (compileSType ty) ++ name ++ "(" ++ paramString ") {"
-  let bodyStrings = map compileSStmt body
-  [paramString] ++ headerString ++ ["}"]
+  let headerString = (compileSType ty) ++ name ++ "(" ++ paramString ++ ") {"
+  let bodyStrings = concat $ map compileSStmt body
+  [headerString] ++ bodyStrings ++ ["}"]
 
-compileSClass :: SClass -> String
+compileSClass :: SClass -> [String]
 compileSClass (SClass name fields methods) = do
-  headerStrings = ["class " ++ name ++ " {", "public:"]
-  memberVarStrings = map (\(name, ty) -> (compileSType ty) ++ " " ++ name
-    ++ ";")
-  methodStrings = map compileSFunction methods
-  headerStrings ++ memberVarStrings ++ methodStrings ++ "};"
+  let headerStrings = ["class " ++ name ++ " {", "public:"]
+  let fieldStrings = map (\(name, ty) -> (compileSType ty) ++ " " ++ name ++ ";") fields
+  let methodStrings = concat $ map compileSFunction methods
+  headerStrings ++ fieldStrings ++ methodStrings ++ ["};"]
 
 compileSStmt :: SStmt -> [String]
 compileSStmt (Decl (SVar varTy varName _)) =
