@@ -12,9 +12,9 @@ module IonMonkeyGenerated.Operations ( add -- done
                                      , rsh' -- done
                                      , ursh' -- done
                                      , abs -- done
-                                     , min
-                                     , max
-                                     , floor
+                                     , min -- done
+                                     , max -- done
+                                     , floor -- done
                                      , ceil
                                      , sign
                                      ) where
@@ -374,11 +374,38 @@ min =
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1123
 max :: FunctionDef
-max = undefined
+max =
+  let args = [ ("lhs", c "range")
+             , ("rhs", c "range")
+             ]
+      body = [ return_ $ call "Range" [ max_ (v "lhs" .->. "lower") (v "rhs" .->. "lower")
+                                      , (v "lhs" .->. "hasInt32LowerBound") .||. (v "rhs" .->. "hasInt32UpperBound")
+                                      , max_ (v "lhs" .->. "upper") (v "rhs" .->. "upper")
+                                      , (v "lhs" .->. "hasInt32UpperBound") .&&. (v "rhs" .->. "hasInt32UpperBound")
+                                      , (v "lhs" .->. "canBeNegativeZero") .||. (v "rhs" .->. "canBeNegativeZero")
+                                      , max_ (v "lhs" .->. "maxExponent") (v "rhs" .->. "maxExponent")
+                                      ]
+             ]
+  in Function "max" (c "range") args body
 
+-- Add fractional part
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1142
 floor :: FunctionDef
-floor = undefined
+floor =
+  let args = [ ("op", c "range") ]
+      body = [ declare (c "range") "copy"
+             , v "range" `assign` v "op"
+               -- missing fract check
+             , if_ (v "op" .->. "hasInt32LowerBound")
+               [v "copy" `assign` (call "setLowerInit" [(cast (v "copy" .->. "lower") Signed64) .-. n Signed64 1]) ] []
+             , if_ (call "hasInt32Bounds" [v "copy"])
+               [(v "copy" .->. "maxExponent") `assign` (call "exponentImpliedByInt32Bounds" [v "copy"])]
+               [if_ (v "copy" .->. "maxExponent" .<. maxFiniteExponent)
+                 [v "copy" .->. "maxExponent" .+=. n Unsigned16 1] []
+               ]
+             , return_ $ v "copy"
+             ]
+  in Function "floor" (c "range") args body
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1166
 ceil :: FunctionDef
