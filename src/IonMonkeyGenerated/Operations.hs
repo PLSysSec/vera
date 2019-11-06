@@ -329,13 +329,13 @@ rsh' =
              , declare (t Signed) "shiftUpper"
              , v "shiftLower" `assign` (v "rhs" .->. "lower")
              , v "shiftUpper" `assign` (v "rhs" .->. "upper")
-             , if_ (((cast (v "shiftUpper") Signed64) .-. (cast (v "shiftLower") Signed64)) .<. (n Signed64 31))
+             , if_ (((cast (v "shiftUpper") Signed64) .-. (cast (v "shiftLower") Signed64)) .=>. (n Signed64 31))
                [ v "shiftLower" `assign` (n Signed 0)
                , v "shiftUpper" `assign` (n Signed 31)
                ]
                [ v "shiftLower" `assign` ((v "shiftLower") .&&. (n Signed 31))
                , v "shiftUpper" `assign` ((v "shiftUpper") .&&. (n Signed 31))
-               , if_ (v "shiftLower" .<. v "shiftUpper")
+               , if_ (v "shiftLower" .>. v "shiftUpper")
                  [ v "shiftLower" `assign` (n Signed 0)
                  , v "shiftUpper" `assign` (n Signed 31)
                  ] []
