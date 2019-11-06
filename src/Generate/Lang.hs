@@ -167,6 +167,9 @@ fpExp op = op >>= return . GetExp
 (.==.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.==.) left right = binOp left right Eq
 
+(.!=.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+(.!=.) left right = binOp left right NEq
+
 (.&&.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.&&.) left right = binOp left right And
 

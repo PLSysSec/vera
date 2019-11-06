@@ -1,6 +1,6 @@
-module IonMonkeyGenerated.Operations ( add
-                                     , sub
-                                     , mul
+module IonMonkeyGenerated.Operations ( add -- done
+                                     , sub -- done
+                                     , mul -- NOT DONE
                                      , and -- done
                                      , or -- done
                                      , xor -- done
@@ -34,8 +34,10 @@ add =
       body = [ declare (t Signed64) "l"
              , declare (t Signed64) "h"
              , declare (t Unsigned16) "e"
+             , v "l" `assign` ((cast (v "lhs" .->. "lower") Signed64) .+. (cast (v "rhs" .->. "lower") Signed64))
              , if_ ((not_ $ v "lhs" .->. "hasInt32LowerBound") .||. (not_ $ v "rsh" .->. "hasInt32LowerBound")) [v "l" `assign` noInt32LowerBound] []
-             , if_ ((not_ $ v "lhs" .->. "hasInt32UpperBound") .||. (not_ $ v "rsh" .->. "hasInt32UpperBound")) [v "j" `assign` noInt32UpperBound] []
+             , v "h" `assign` ((cast (v "lhs" .->. "upper") Signed64) .+. (cast (v "rhs" .->. "upper") Signed64))
+             , if_ ((not_ $ v "lhs" .->. "hasInt32UpperBound") .||. (not_ $ v "rsh" .->. "hasInt32UpperBound")) [v "h" `assign` noInt32UpperBound] []
              , v "e" `assign` (max_ (v "lhs" .->. "maxExponent") (v "rhs" .->. "maxExponent"))
              , if_ (v "e" .<. maxFiniteExponent) [v "e" .+=. n Unsigned16 1] []
              , if_ ((call "canBeInfiniteOrNan" [v "lhs"]) .&&. (call "canBeInfiniteOrNan" [v "rhs"])) [v "e" `assign` includesInfinityAndNan] []
@@ -48,7 +50,26 @@ add =
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#775
 sub :: FunctionDef
-sub = undefined
+sub =
+  let args = [ ("lhs", c "range")
+             , ("rhs", c "range")
+             ]
+      body = [ declare (t Signed64) "l"
+             , declare (t Signed64) "h"
+             , declare (t Unsigned16) "e"
+             , v "l" `assign` ((cast (v "lhs" .->. "lower") Signed64) .-. (cast (v "rhs" .->. "lower") Signed64))
+             , if_ ((not_ $ v "lhs" .->. "hasInt32LowerBound") .||. (not_ $ v "rsh" .->. "hasInt32LowerBound")) [v "l" `assign` noInt32LowerBound] []
+             , v "h" `assign` ((cast (v "lhs" .->. "upper") Signed64) .-. (cast (v "rhs" .->. "upper") Signed64))
+             , if_ ((not_ $ v "lhs" .->. "hasInt32UpperBound") .||. (not_ $ v "rsh" .->. "hasInt32UpperBound")) [v "h" `assign` noInt32UpperBound] []
+             , v "e" `assign` (max_ (v "lhs" .->. "maxExponent") (v "rhs" .->. "maxExponent"))
+             , if_ (v "e" .<. maxFiniteExponent) [v "e" .+=. n Unsigned16 1] []
+             , if_ ((call "canBeInfiniteOrNan" [v "lhs"]) .&&. (call "canBeInfiniteOrNan" [v "rhs"])) [v "e" `assign` includesInfinityAndNan] []
+             , return_ $ call "Range" [ v "l"
+                                      , v "h"
+                                      , (v "lhs" .->. "canBeNegativeZero") .&&. (v "rhs" .->. "canBeNegativeZero")
+                                      ]
+             ]
+  in Function "sub" (c "range") args body
 
 -- One try
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#805
@@ -197,7 +218,18 @@ not = let args = [ ("op", c "range") ]
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#960
 mul :: FunctionDef
-mul = undefined
+mul =
+  let args = [ ("lhs", c "range")
+             , ("rhs", c "range")
+             ]
+      body = [ declare (t Bool) "mayIncludeNegativeZero"
+             , v "mayIncludeNegativeZero" `assign` (((call "canHaveSignBitSet" [v "lhs"]) .&&. (call "canBeFiniteNonNegative" [v "rhs"])) .||. ((call "canHaveSignBitSet" [v "rhs"]) .&&. (call "canBeFiniteNonNegative" [v "lhs"])))
+             , declare (t Unsigned16) "exponent"
+             , if_ ((not_ $ call "canBeInfiniteOrNan" [v "lhs"]) .&&. (not_ $ call "canBeInfiniteOrNan" [v "rhs"]))
+               []
+               []
+             ]
+  in Function "mul" (c "range") args body
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#999
 lsh :: FunctionDef
@@ -307,7 +339,20 @@ ursh' =
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1089
 abs :: FunctionDef
-abs = undefined
+abs =
+  let args = [("op", c "range")]
+      body = [ declare (t Signed) "l"
+             , declare (t Signed) "u"
+             , v "l" `assign` (v "op" .->. "lower")
+             , v "u" `assign` (v "op" .->. "upper")
+             , return_ $ call "Range" [ max_ (max_ (n Signed 0) (v "l")) (tern_ (v "u" .==. int32min) int32max (neg_ $ v "u"))
+                                      , max_ (max_ (n Signed 0) (v "u")) (tern_ (v "l" .==. int32min) int32max (neg_ $ v "l"))
+                                      , (call "hasInt32Bounds" [v "op"]) .&&. (v "l" .!=. int32min)
+                                      , excludesNegativeZero
+                                      , v "op" .->. "maxExponent"
+                                      ]
+             ]
+  in Function "abs" (c "range") args body
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1104
 min :: FunctionDef
@@ -329,4 +374,10 @@ ceil = undefined
 sign :: FunctionDef
 sign = undefined
 
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#485
+intersect :: FunctionDef
+intersect = undefined
 
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#579
+union :: FunctionDef
+union = undefined

@@ -109,6 +109,7 @@ genExprSMT expr =
     Abs e -> genExprSMT e >>= liftVerif . T.cppAbs
     -- Binary
     Eq left right  -> genBinOpSMT left right T.cppEq
+    NEq left right -> genBinOpSMT left right (\l r -> T.cppEq l r >>= T.cppNot)
     And left right -> genBinOpSMT left right T.cppAnd
     Add left right -> genBinOpSMT left right T.cppAdd
     Sub left right -> genBinOpSMT left right T.cppSub

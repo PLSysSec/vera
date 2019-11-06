@@ -43,6 +43,9 @@ int32max = n Signed 2147483647
 uint32max :: Codegen SExpr
 uint32max = n Signed 4294967295
 
+excludesNegativeZero :: Codegen SExpr
+excludesNegativeZero = n Bool 0
+
 maxFiniteExponent :: Codegen SExpr
 maxFiniteExponent = n Unsigned16 1023
 
@@ -63,6 +66,9 @@ jsIntMax = undefined
 
 jsIntMin :: Codegen SExpr
 jsIntMin = undefined
+
+hasInt32Bounds :: FunctionDef
+hasInt32Bounds = undefined
 
 isFiniteNonNegative :: FunctionDef
 isFiniteNonNegative =
