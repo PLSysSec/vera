@@ -1,6 +1,6 @@
 module IonMonkeyGenerated.Operations ( add -- done
                                      , sub -- done
-                                     , mul -- NOT DONE
+                                     , mul -- done
                                      , and -- done
                                      , or -- done
                                      , xor -- done
@@ -228,8 +228,34 @@ mul =
              , v "mayIncludeNegativeZero" `assign` (((call "canHaveSignBitSet" [v "lhs"]) .&&. (call "canBeFiniteNonNegative" [v "rhs"])) .||. ((call "canHaveSignBitSet" [v "rhs"]) .&&. (call "canBeFiniteNonNegative" [v "lhs"])))
              , declare (t Unsigned16) "exponent"
              , if_ ((not_ $ call "canBeInfiniteOrNan" [v "lhs"]) .&&. (not_ $ call "canBeInfiniteOrNan" [v "rhs"]))
-               []
-               []
+               [v "exponent" `assign` ((call "numBits" [v "lhs"]) .+. (call "numBits" [v "rhs"]) .-. n Unsigned16 1)
+               , if_ (v "exponent" .>. maxFiniteExponent)
+                 [v "exponent" `assign` includesInfinity] []
+               ]
+               [if_ ((not_ $ call "canBeNan" [v "lhs"]) .&&. (not_ $ call "canBeNan" [v "rhs"]) .&&. (not_ $ (call "canBeZero" [v "lhs"]) .&&. (call "canBeInfiniteOrNan" [v "rhs"])) .&&. (not_ $ (call "canBeZero" [v "rhs"]) .&&. (call "canBeInfiniteOrNan" [v "lhs"]) ))
+                  [v "exponent" `assign` includesInfinity]
+                  [v "exponent" `assign` includesInfinityAndNan]
+               ]
+             , if_ (call "missingAnyInt32Bounds" [v "lhs", v "rhs"])
+               [return_ $ call "Range" [ noInt32LowerBound
+                                       , noInt32UpperBound
+                                       , v "newMayIncludeNegativeZero"
+                                       , v "exponent"
+                                       ]
+               ] []
+             , declare (t Signed64) "a"
+             , declare (t Signed64) "b"
+             , declare (t Signed64) "c"
+             , declare (t Signed64) "d"
+             , v "a" `assign` ((cast (v "lhs" .->. "lower") Signed64) .*. (cast (v "rhs" .->. "lower") Signed64))
+             , v "b" `assign` ((cast (v "lhs" .->. "lower") Signed64) .*. (cast (v "rhs" .->. "upper") Signed64))
+             , v "c" `assign` ((cast (v "lhs" .->. "upper") Signed64) .*. (cast (v "rhs" .->. "lower") Signed64))
+             , v "d" `assign` ((cast (v "lhs" .->. "upper") Signed64) .*. (cast (v "rhs" .->. "upper") Signed64))
+             , return_ $ call "Range" [ min_ (min_ (v "a") (v "b")) (min_ (v "c") (v "d"))
+                                      , max_ (max_ (v "a") (v "b")) (max_ (v "c") (v "d"))
+                                      , v "newMayIncludeNegativeZero"
+                                      , v "exponent"
+                                      ]
              ]
   in Function "mul" (c "range") args body
 
