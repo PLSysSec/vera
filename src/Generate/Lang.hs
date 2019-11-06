@@ -158,8 +158,8 @@ isInf op = op >>= return . IsInf
 isZero :: Codegen SExpr -> Codegen SExpr
 isZero op = op >>= return . IsZero
 
-isNegative :: Codegen SExpr -> Codegen SExpr
-isNegative op = op >>= return . IsNegative
+isNeg :: Codegen SExpr -> Codegen SExpr
+isNeg op = op >>= return . IsNegative
 
 (.==.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.==.) left right = binOp left right Eq

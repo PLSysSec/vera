@@ -9,6 +9,7 @@ import           Generate.Lang
 import           Generate.SMTAST
 import           Generate.SMTGen
 import           Generate.State
+import           IonMonkeyGenerated.Helpers
 import           IonMonkeyGenerated.Objects
 
 verifyUnaryFunction :: String
@@ -117,9 +118,17 @@ intInRange =
 
 floatInRange :: FunctionDef
 floatInRange =
-  let args = [ ("result_range_init", c "range")]
+  let args = [ ("result_range_init", c "range")
+             , ("result_init", t Double)
+             ]
       body = [ declare (t Signed) "result_init"
-             -- If the range doesn't include inf or nan, the op shouldnt be inf or nan
+             -- Either its infinite or the exponent is less than the infinte exponent
+             , assert_ $ (isInf $ v "result_init") .^. ((v "result_range_init" .->. "maxExponent") .<. includesInfinity)
+             -- Either is not inf or nan or op is inf or nan
+             , assert_ $  ((isInf $ v "result_init") .||. ((isNan $ v "result_init")) .^. ((v "result_range_init" .->. "maxExponent" .<. includesInfinityAndNan)))
+             -- If the range doesnt say can be neg z, cant be negz
+             , assert_ $ (v "result_range_init" .->. "canBeNegativeZero") .^. (isNeg (v "result_init") .&&. (isZero $ v "result_init") )
+             , 
              , return_ $ v "result_init"
              ]
   in Function "floatInRange" (t Signed) args body

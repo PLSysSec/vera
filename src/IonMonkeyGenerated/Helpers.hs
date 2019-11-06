@@ -40,6 +40,15 @@ int32max = n Signed 2147483647
 uint32max :: Codegen SExpr
 uint32max = n Signed 4294967295
 
+maxFiniteExponent :: Codegen SExpr
+maxFiniteExponent = n Unsigned16 1023
+
+includesInfinity :: Codegen SExpr
+includesInfinity = n Unsigned16 1 .+. maxFiniteExponent
+
+includesInfinityAndNan :: Codegen SExpr
+includesInfinityAndNan = n Unsigned16 65535
+
 isFiniteNonNegative :: FunctionDef
 isFiniteNonNegative =
   let args = [ ("fnn", c "range") ]
