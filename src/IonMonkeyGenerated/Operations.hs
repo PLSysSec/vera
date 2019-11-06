@@ -1,16 +1,16 @@
 module IonMonkeyGenerated.Operations ( add
                                      , sub
+                                     , mul
                                      , and -- done
                                      , or -- done
                                      , xor -- done
                                      , not -- done
-                                     , mul
                                      , lsh -- done
                                      , rsh -- done
                                      , ursh -- done
                                      , lsh' -- done
                                      , rsh' -- done
-                                     , ursh'
+                                     , ursh' -- done
                                      , abs
                                      , min
                                      , max

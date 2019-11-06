@@ -78,6 +78,12 @@ v name = do
 n :: Type -> Integer -> Codegen SExpr
 n ty num = return $ NumExpr $ SNum ty num
 
+-- | Get an fp number
+d :: Type -> Double -> Codegen SExpr
+d ty num = case ty of
+             Double -> return $ NumExpr $ FNum ty num
+             _      -> error "Cannot make non-float float "
+
 -- | Get field from field name in a class method
 f :: FieldName -> Codegen SExpr
 f name = return $ FieldExpr name

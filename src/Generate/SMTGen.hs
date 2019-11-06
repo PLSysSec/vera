@@ -13,7 +13,6 @@ genVarSMT var = getVar var
 genNumSMT :: SNum
           -> Codegen T.VNode
 genNumSMT snum = do
-  let val = numVal snum
   liftVerif $ case numTy snum of
     T.Signed16   -> T.num16 val
     T.Unsigned16 -> T.unum16 val
@@ -22,7 +21,11 @@ genNumSMT snum = do
     T.Signed64   -> T.num64 val
     T.Unsigned64 -> T.unum64 val
     T.Bool       -> if val == 1 then T.true else T.false
+    T.Double     -> T.fpnum fval
     _            -> error "Float not supported"
+  where
+    val = numVal snum
+    fval = floatVal snum
 
 genCallSMT :: SExpr
            -> Codegen [T.VNode]

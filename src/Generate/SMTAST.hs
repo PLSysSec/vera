@@ -49,6 +49,9 @@ setVersion cv _                 = cv
 data SNum = SNum { numTy  :: Type
                  , numVal :: Integer
                  }
+          | FNum { numTy    :: Type
+                 , floatVal :: Double
+                 }
           deriving (Eq, Ord, Show)
 
 data SExpr = VarExpr { exprVar :: SVar }
