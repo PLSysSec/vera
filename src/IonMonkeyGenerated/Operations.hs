@@ -17,7 +17,7 @@ module IonMonkeyGenerated.Operations ( add -- done
                                      , floor -- done
                                      , ceil -- done
                                      , sign -- done
-                                     , intersect
+                                     , intersect -- ish
                                      , union
                                      ) where
 import           Control.Monad
@@ -440,7 +440,38 @@ sign =
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#485
 intersect :: FunctionDef
-intersect = undefined
+intersect =
+  let args = [ ("lhs", c "range")
+             , ("rhs", c "range")
+             ]
+      body = [ declare (t Signed) "newLower"
+             , declare (t Signed) "newUpper"
+             , declare (t Bool) "emptyRange"
+             , v "emptyRange" `assign` n Bool 0
+             , v "newLower" `assign` max_ (v "lhs" .->. "lower") (v "rhs" .->. "lower")
+             , v "newUpper" `assign` min_ (v "lhs" .->. "upper") (v "rhs" .->. "upper")
+             , if_ (v "newUpper" .<. v "newLower")
+               [if_ ((call "canBeNan" [v "lhs"]) .||. (call "canBeNan" [v "rhs"]))
+                  [v "emptyRange" `assign` n Bool 1]
+                  []
+               ] [] -- Return nptr
+             , declare (t Bool) "newHasInt32LowerBound"
+             , declare (t Bool) "newHasInt32UpperBound"
+             , declare (t Bool) "newMayIncludeNegativeZero"
+             , declare (t Unsigned16) "newExponent"
+             , v "newHasInt32LowerBound" `assign` ((v "lhs" .->. "hasInt32LowerBound") .||. (v "rhs" .->. "hasInt32LowerBound"))
+             , v "newHasInt32UpperBound" `assign` ((v "lhs" .->. "hasInt32UpperBound") .||. (v "rhs" .->. "hasInt32UpperBound"))
+             , v "newMayIncludeNegativeZero" `assign` ( (v "lhs" .->. "canBeNegativeZero") .&&. (v "lhs" .->. "canBeNegativeZero") )
+             , v "newExponent" `assign` min_ (v "lhs" .->. "maxExponent") (v "rhs" .->. "maxExponent")
+             , return_ $ call "Range" [ v "newLower"
+                                      , v "newHasInt32LowerBound"
+                                      , v "newUpper"
+                                      , v "newHasInt32UpperBound"
+                                      , v "newMayIncludeNegativeZero"
+                                      , v "newExponent"
+                                      ]
+             ]
+  in Function "intersect" (c "range") args body
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#579
 union :: FunctionDef
