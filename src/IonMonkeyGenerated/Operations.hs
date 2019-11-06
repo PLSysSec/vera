@@ -11,7 +11,7 @@ module IonMonkeyGenerated.Operations ( add -- done
                                      , lsh' -- done
                                      , rsh' -- done
                                      , ursh' -- done
-                                     , abs
+                                     , abs -- done
                                      , min
                                      , max
                                      , floor
@@ -346,6 +346,7 @@ abs =
              , v "l" `assign` (v "op" .->. "lower")
              , v "u" `assign` (v "op" .->. "upper")
              , return_ $ call "Range" [ max_ (max_ (n Signed 0) (v "l")) (tern_ (v "u" .==. int32min) int32max (neg_ $ v "u"))
+                                      , n Bool 1
                                       , max_ (max_ (n Signed 0) (v "u")) (tern_ (v "l" .==. int32min) int32max (neg_ $ v "l"))
                                       , (call "hasInt32Bounds" [v "op"]) .&&. (v "l" .!=. int32min)
                                       , excludesNegativeZero
@@ -354,9 +355,22 @@ abs =
              ]
   in Function "abs" (c "range") args body
 
+-- Nan thing
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1104
 min :: FunctionDef
-min = undefined
+min =
+  let args = [ ("lhs", c "range")
+             , ("rhs", c "range")
+             ]
+      body = [ return_ $ call "Range" [ min_ (v "lhs" .->. "lower") (v "rhs" .->. "lower")
+                                      , (v "lhs" .->. "hasInt32LowerBound") .&&. (v "rhs" .->. "hasInt32UpperBound")
+                                      , min_ (v "lhs" .->. "upper") (v "rhs" .->. "upper")
+                                      , (v "lhs" .->. "hasInt32UpperBound") .||. (v "rhs" .->. "hasInt32UpperBound")
+                                      , (v "lhs" .->. "canBeNegativeZero") .||. (v "rhs" .->. "canBeNegativeZero")
+                                      , max_ (v "lhs" .->. "maxExponent") (v "rhs" .->. "maxExponent")
+                                      ]
+             ]
+  in Function "min" (c "range") args body
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1123
 max :: FunctionDef
