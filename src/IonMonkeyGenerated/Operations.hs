@@ -27,7 +27,24 @@ import           Prelude                    hiding (abs, and, floor, max, min,
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#744
 add :: FunctionDef
-add = undefined
+add =
+  let args = [ ("lhs", c "range")
+             , ("rhs", c "range")
+             ]
+      body = [ declare (t Signed64) "l"
+             , declare (t Signed64) "h"
+             , declare (t Unsigned16) "e"
+             , if_ ((not_ $ v "lhs" .->. "hasInt32LowerBound") .||. (not_ $ v "rsh" .->. "hasInt32LowerBound")) [v "l" `assign` noInt32LowerBound] []
+             , if_ ((not_ $ v "lhs" .->. "hasInt32UpperBound") .||. (not_ $ v "rsh" .->. "hasInt32UpperBound")) [v "j" `assign` noInt32UpperBound] []
+             , v "e" `assign` (max_ (v "lhs" .->. "maxExponent") (v "rhs" .->. "maxExponent"))
+             , if_ (v "e" .<. maxFiniteExponent) [v "e" .+=. n Unsigned16 1] []
+             , if_ ((call "canBeInfiniteOrNan" [v "lhs"]) .&&. (call "canBeInfiniteOrNan" [v "rhs"])) [v "e" `assign` includesInfinityAndNan] []
+             , return_ $ call "Range" [ v "l"
+                                      , v "h"
+                                      , (v "lhs" .->. "canBeNegativeZero") .&&. (v "rhs" .->. "canBeNegativeZero")
+                                      ]
+             ]
+  in Function "add" (c "range") args body
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#775
 sub :: FunctionDef

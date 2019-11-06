@@ -31,6 +31,9 @@ newUInt32Range = let args = [ ("u_lower_bound", t Unsigned)
                             ]
                  in Function "newUInt32Range" (c "range") args body
 
+range_constructor :: FunctionDef
+range_constructor = undefined
+
 int32min :: Codegen SExpr
 int32min = n Signed (-2147483648)
 
@@ -48,6 +51,18 @@ includesInfinity = n Unsigned16 1 .+. maxFiniteExponent
 
 includesInfinityAndNan :: Codegen SExpr
 includesInfinityAndNan = n Unsigned16 65535
+
+noInt32LowerBound :: Codegen SExpr
+noInt32LowerBound = undefined
+
+noInt32UpperBound :: Codegen SExpr
+noInt32UpperBound = undefined
+
+jsIntMax :: Codegen SExpr
+jsIntMax = undefined
+
+jsIntMin :: Codegen SExpr
+jsIntMin = undefined
 
 isFiniteNonNegative :: FunctionDef
 isFiniteNonNegative =
