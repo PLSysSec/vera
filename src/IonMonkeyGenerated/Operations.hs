@@ -15,8 +15,10 @@ module IonMonkeyGenerated.Operations ( add -- done
                                      , min -- done
                                      , max -- done
                                      , floor -- done
-                                     , ceil
-                                     , sign
+                                     , ceil -- done
+                                     , sign -- done
+                                     , intersect
+                                     , union
                                      ) where
 import           Control.Monad
 import           DSL.Typed                  (Type (..))
@@ -409,11 +411,32 @@ floor =
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1166
 ceil :: FunctionDef
-ceil = undefined
+ceil =
+  let args = [ ("op", c "range") ]
+      body = [ declare (c "range") "copy"
+             , v "range" `assign` v "op"
+               -- missing fract check
+             , if_ (call "hasInt32Bounds" [v "copy"])
+               [(v "copy" .->. "maxExponent") `assign` (call "exponentImpliedByInt32Bounds" [v "copy"])]
+               [if_ (v "copy" .->. "maxExponent" .<. maxFiniteExponent)
+                 [v "copy" .->. "maxExponent" .+=. n Unsigned16 1] []
+               ]
+             , return_ $ v "copy"
+             ]
+  in Function "floor" (c "range") args body
 
+-- Not doing nan thing
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1184
 sign :: FunctionDef
-sign = undefined
+sign =
+  let args = [ ("op", c "range") ]
+      body = [ return_ $ call "Range" [ max_ ( min_ (v "op" .->. "lower") (n Signed 1) ) (n Signed (-1))
+                                      , max_ ( min_ (v "op" .->. "upper") (n Signed 1) ) (n Signed (-1))
+                                      , v "op" .->. "canBeNegativeZero"
+                                      , n Unsigned16 0
+                                      ]
+             ]
+  in Function "sign" (c "range") args body
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#485
 intersect :: FunctionDef
