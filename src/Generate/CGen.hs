@@ -8,6 +8,7 @@ import DSL.Typed       as T
 compileSType :: STy -> String
 compileSType (PrimType ty) = compileType ty
 compileSType (Class name) = name
+compileSType void = "void"
 
 compileType :: T.Type -> String
 compileType T.Unsigned = "uint32_t"
@@ -36,21 +37,24 @@ compileSFunction (SFunction name ty params body) = do
 compileSClass :: SClass -> [String]
 compileSClass (SClass name fields methods) = do
   let headerStrings = ["class " ++ name ++ " {", "public:"]
-  let fieldStrings = map (\(name, ty) -> (compileSType ty) ++ " " ++ name ++ ";") fields
+  let fieldStrings = map (\(argName, ty) -> (compileSType ty) ++ " " ++ argName ++ ";") fields
   let methodStrings = concat $ map compileSFunction methods
   headerStrings ++ fieldStrings ++ methodStrings ++ ["};"]
 
 compileSStmt :: SStmt -> [String]
-compileSStmt (Decl (SVar varTy varName _)) =
-  [(compileType varTy) ++ " " ++ varName]
+compileSStmt (Decl (SVar ty name _)) =
+  [(compileType ty) ++ " " ++ name ++ ";"]
+
+compileSStmt (Decl (CVar className name)) =
+  [className ++ " " ++ name ++ ";"]
 
 -- Only works if the left expression is a var?
-compileSStmt (Assign (VarExpr (SVar _ varName _ )) expr) =
-  [varName ++ " = " ++ (compileSExpr expr)]
+compileSStmt (Assign expr1 expr2) =
+  [(compileSExpr expr1) ++ " = " ++ (compileSExpr expr2) ++ ";"]
 
 -- Possibly don't need
 compileSStmt (Assert expr) =
-  ["assert(" ++ (compileSExpr expr) ++ ")"]
+  ["assert(" ++ (compileSExpr expr) ++ ")" ++ ";"]
 
 compileSStmt (If expr thenStmts elseStmts) = do
   let condString = "if(" ++ (compileSExpr expr) ++ ") {"
@@ -59,11 +63,14 @@ compileSStmt (If expr thenStmts elseStmts) = do
   [condString] ++ (thenStrings ++ elseStrings)
 
 compileSStmt (Return expr) =
-  ["return " ++ (compileSExpr expr)]
+  ["return " ++ (compileSExpr expr) ++ ";"]
+
+compileSStmt (VoidCall name args) =
+  [(compileSExpr (Call name args)) ++ ";"]
 
 compileSExpr :: SExpr -> String
-compileSExpr (VarExpr (SVar _ varName _)) =
-  varName
+compileSExpr (VarExpr (SVar _ name _)) =
+  name
 
 -- TODO: Right now this only works correctly on integers
 compileSExpr (NumExpr (SNum numType numVal)) =
