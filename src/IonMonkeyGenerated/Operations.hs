@@ -117,19 +117,19 @@ or =
              , declare (t Signed) "upper"
              , v "lower" `assign` int32min
              , v "upper" `assign` int32max
+             ,  declare (t Unsigned) "leadingOnes"
+             , v "leadingOnes" `assign` n Unsigned 0
              , if_ (((v "lhs" .->. "lower") .=>. n Signed 0) .&&. ((v "rhs" .->. "lower") .=>. n Signed 0))
                    [ v "lower" `assign` (max_ (v "lhs" .->. "lower") (v "rhs" .->. "lower"))
-                   , v "upper" `assign` (cast (uint32max .>>. (min_ (call "countLeadingZeroes" [v "lhs" .->. "upper"]) (call "countLeadingZeroes" [v "rhs" .->. "upper"]))) Signed)
+                   , v "upper" `assign` (cast (uint32max .>>. (min_ (call "countLeadingZeroes" [cast (v "lhs" .->. "upper") Unsigned]) (call "countLeadingZeroes" [cast (v "rhs" .->. "upper") Unsigned]))) Signed)
                    ]
-                   [ declare (t Unsigned) "leadingOnes"
-                   , v "leadingOnes" `assign` n Unsigned 0
-                   , if_ (v "lhs" .->. "upper" .<. n Signed 0)
-                     [ v "leadingOnes" `assign` call "countLeadingZeroes" [not_ $ v "lhs" .->. "lower"]
+                   [ if_ (v "lhs" .->. "upper" .<. n Signed 0)
+                     [ v "leadingOnes" `assign` call "countLeadingZeroes" [cast (not_ $ v "lhs" .->. "lower") Unsigned]
                      , v "lower" `assign` (max_ (v "lower") (not_ $ cast (uint32max .>>. v "leadingOnes") Signed))
                      , v "upper" `assign` n Signed (-1)
                      ] []
                    , if_ (v "rhs" .->. "upper" .<. n Signed 0)
-                     [v "leadingOnes" `assign` call "countLeadingZeroes" [not_ $ v "rhs" .->. "lower"]
+                     [v "leadingOnes" `assign` call "countLeadingZeroes" [cast (not_ $ v "rhs" .->. "lower") Unsigned]
                      , v "lower" `assign` (max_ (v "lower") (not_ $ cast (uint32max .>>. v "leadingOnes") Signed))
                      , v "upper" `assign` n Signed (-1) ] []
                    ]
