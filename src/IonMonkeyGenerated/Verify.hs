@@ -172,6 +172,23 @@ verifyUpper =
              ]
   in Function "verifyUpper" Void args body
 
+-- Floating point
+
+verifyNegZero :: FunctionDef
+verifyNegZero =
+  let args = [ ("result_range_nz", c "range")
+             , ("result_nz", t Double)
+             ]
+      body = [ push_
+               -- It's negative zero...
+             , assert_ $ (isNeg $ v "result_nz") .&&. (isZero $ v "result_nz")
+               -- ... but the negative zero flag isn't set
+             , assert_ $ not_ $ v "result_range_nz" .->. "canBeNegativeZero"
+             , expect_ isUnsat $ \r -> showInt32Result "Failed to verify NZ" r
+             , pop_
+             ]
+  in Function "verifyNegZ" Void args body
+
 -- Copypasted
 
 data VerifResult = Verified
