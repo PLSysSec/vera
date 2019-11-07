@@ -280,8 +280,8 @@ lsh =
       body = [ declare (t Signed) "shift"
              , v "shift" `assign` (v "c" .&&. n Signed 31)
              , if_ (((cast (((((cast (v "lhs" .->. "lower") Unsigned) .<<. v "shift")  .<<. n Signed 1) .>>. v "shift") .>>. n Signed 1) Signed) .==. ((cast (((((cast (v "lhs" .->. "upper") Unsigned) .<<. v "shift")  .<<. n Signed 1) .>>. v "shift") .>>. n Signed 1) Signed))))
-               [return_ $ call "newInt32Range" [ (cast (v "lhs" .->. "lower") Unsigned) .<<. v "shift"
-                                               , (cast (v "lhs" .->. "upper") Unsigned) .<<. v "shift"
+               [return_ $ call "newInt32Range" [ cast ((cast (v "lhs" .->. "lower") Unsigned) .<<. v "shift") Signed
+                                               , cast ((cast (v "lhs" .->. "upper") Unsigned) .<<. v "shift") Signed
                                                ]
                ] []
              , return_ $ call "newInt32Range" [int32min, int32max]
