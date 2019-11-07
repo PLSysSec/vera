@@ -1,10 +1,10 @@
 module IonMonkeyGenerated.Operations ( add -- done
                                      , sub -- done
                                      , mul -- done
-                                     , and -- done
+                                     , and -- done VER
                                      , or -- done
                                      , xor -- done
-                                     , not -- done
+                                     , not -- done VER
                                      , lsh -- done
                                      , rsh -- done
                                      , ursh -- done
@@ -372,7 +372,7 @@ ursh' =
              , ("rhs", c "range")
              ]
       body = [return_ $ call "newUInt32Range" [ n Unsigned 0
-                                              , tern_ (call "isFiniteNonNegative" [v "lhs"]) (v "lhs" .->. "upper") uint32max
+                                              , tern_ (call "isFiniteNonNegative" [v "lhs"]) (cast (v "lhs" .->. "upper") Unsigned) uint32max
                                               ]
              ]
   in Function "ursh'" (c "range") args body
