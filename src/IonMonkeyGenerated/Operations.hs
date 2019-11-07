@@ -190,8 +190,8 @@ xor =
                 ]
                 [if_ ((v "lhsLower" .=>. n Signed 0) .&&. (v "rhsLower" .=>. n Signed 0))
                    [ v "lower" `assign` n Signed 0
-                   , v "lhsLeadingZeroes" `assign` (call "countLeadingZeroes" [v "lhsUpper"])
-                   , v "rhsLeadingZeroes" `assign` (call "countLeadingZeroes" [v "rhsUpper"])
+                   , v "lhsLeadingZeroes" `assign` (call "countLeadingZeroes" [cast (v "lhsUpper") Unsigned])
+                   , v "rhsLeadingZeroes" `assign` (call "countLeadingZeroes" [cast (v "rhsUpper") Unsigned])
                    , v "upper" `assign` (min_ (v "rhsUpper" .||. (cast (uint32max .>>. v "lhsLeadingZeroes") Signed)) (v "lhsUpper" .||. (cast (uint32max .>>. v "lhsLeadingZeroes") Signed)))
                    ] []
                 ]
