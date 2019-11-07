@@ -21,7 +21,7 @@ newFloatInputRange =
   let body = [ declare (c "range") "rv"
              , assert_ $ ((v "rv") .->. "lower") .<=. ((v "rv") .->. "upper")
              , assert_ $ (((v "rv" .->. "lower") .==. n Signed (-2147483648)) .||. (v "rv" .->. "hasInt32LowerBound"))
-             , assert_ $ (((v "rv" .->. "uppwer") .==. n Signed 2147483647) .||. (v "rv" .->. "hasInt32LowerBound"))
+             , assert_ $ (((v "rv" .->. "upper") .==. n Signed 2147483647) .||. (v "rv" .->. "hasInt32LowerBound"))
              ]
   in Function "newFloatInputRange" (c "range") [] body
 

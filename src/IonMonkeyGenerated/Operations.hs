@@ -37,16 +37,16 @@ add =
              , declare (t Signed64) "h"
              , declare (t Unsigned16) "e"
              , v "l" `assign` ((cast (v "lhs" .->. "lower") Signed64) .+. (cast (v "rhs" .->. "lower") Signed64))
-             , if_ ((not_ $ v "lhs" .->. "hasInt32LowerBound") .||. (not_ $ v "rsh" .->. "hasInt32LowerBound")) [v "l" `assign` noInt32LowerBound] []
+             , if_ ((not_ $ v "lhs" .->. "hasInt32LowerBound") .||. (not_ $ v "rhs" .->. "hasInt32LowerBound")) [v "l" `assign` noInt32LowerBound] []
              , v "h" `assign` ((cast (v "lhs" .->. "upper") Signed64) .+. (cast (v "rhs" .->. "upper") Signed64))
-             , if_ ((not_ $ v "lhs" .->. "hasInt32UpperBound") .||. (not_ $ v "rsh" .->. "hasInt32UpperBound")) [v "h" `assign` noInt32UpperBound] []
+             , if_ ((not_ $ v "lhs" .->. "hasInt32UpperBound") .||. (not_ $ v "rhs" .->. "hasInt32UpperBound")) [v "h" `assign` noInt32UpperBound] []
              , v "e" `assign` (max_ (v "lhs" .->. "maxExponent") (v "rhs" .->. "maxExponent"))
              , if_ (v "e" .<. maxFiniteExponent) [v "e" .+=. n Unsigned16 1] []
              , if_ ((call "canBeInfiniteOrNan" [v "lhs"]) .&&. (call "canBeInfiniteOrNan" [v "rhs"])) [v "e" `assign` includesInfinityAndNan] []
-             , return_ $ call "Range" [ v "l"
-                                      , v "h"
-                                      , (v "lhs" .->. "canBeNegativeZero") .&&. (v "rhs" .->. "canBeNegativeZero")
-                                      ]
+             , return_ $ call "Range3" [ cast (v "l") Signed
+                                       , cast (v "h") Signed
+                                       , (v "lhs" .->. "canBeNegativeZero") .&&. (v "rhs" .->. "canBeNegativeZero")
+                                       ]
              ]
   in Function "add" (c "range") args body
 
@@ -60,16 +60,16 @@ sub =
              , declare (t Signed64) "h"
              , declare (t Unsigned16) "e"
              , v "l" `assign` ((cast (v "lhs" .->. "lower") Signed64) .-. (cast (v "rhs" .->. "lower") Signed64))
-             , if_ ((not_ $ v "lhs" .->. "hasInt32LowerBound") .||. (not_ $ v "rsh" .->. "hasInt32LowerBound")) [v "l" `assign` noInt32LowerBound] []
+             , if_ ((not_ $ v "lhs" .->. "hasInt32LowerBound") .||. (not_ $ v "rhs" .->. "hasInt32LowerBound")) [v "l" `assign` noInt32LowerBound] []
              , v "h" `assign` ((cast (v "lhs" .->. "upper") Signed64) .-. (cast (v "rhs" .->. "upper") Signed64))
-             , if_ ((not_ $ v "lhs" .->. "hasInt32UpperBound") .||. (not_ $ v "rsh" .->. "hasInt32UpperBound")) [v "h" `assign` noInt32UpperBound] []
+             , if_ ((not_ $ v "lhs" .->. "hasInt32UpperBound") .||. (not_ $ v "rhs" .->. "hasInt32UpperBound")) [v "h" `assign` noInt32UpperBound] []
              , v "e" `assign` (max_ (v "lhs" .->. "maxExponent") (v "rhs" .->. "maxExponent"))
              , if_ (v "e" .<. maxFiniteExponent) [v "e" .+=. n Unsigned16 1] []
              , if_ ((call "canBeInfiniteOrNan" [v "lhs"]) .&&. (call "canBeInfiniteOrNan" [v "rhs"])) [v "e" `assign` includesInfinityAndNan] []
-             , return_ $ call "Range" [ v "l"
-                                      , v "h"
-                                      , (v "lhs" .->. "canBeNegativeZero") .&&. (v "rhs" .->. "canBeNegativeZero")
-                                      ]
+             , return_ $ call "Range3" [ cast (v "l") Signed
+                                       , cast (v "h") Signed
+                                       , (v "lhs" .->. "canBeNegativeZero") .&&. (v "rhs" .->. "canBeNegativeZero")
+                                       ]
              ]
   in Function "sub" (c "range") args body
 

@@ -4,6 +4,20 @@ import           Generate.Lang
 import           Generate.SMTAST
 import           Generate.State
 
+range3 :: FunctionDef
+range3 =
+  let args = [ ("lower_bound", t Signed)
+             , ("upper_bound", t Signed)
+             , ("nz_flag", t Bool)
+             ]
+      body = [ declare (c "range") "rv"
+             , (v "rv") .->. "lower" `assign` (v "lower_bound")
+             , (v "rv") .->. "upper" `assign` (v "upper_bound")
+             , v "rv" .->. "canBeNegativeZero" `assign` (v "nz_flag")
+             , return_ (v "rv")
+             ]
+  in Function "Range3" (c "range") args body
+
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#394
 newInt32Range :: FunctionDef
 newInt32Range = let args = [ ("lower_bound", t Signed)
@@ -59,19 +73,24 @@ includesInfinityAndNan :: Codegen SExpr
 includesInfinityAndNan = n Unsigned16 65535
 
 noInt32LowerBound :: Codegen SExpr
-noInt32LowerBound = undefined
+noInt32LowerBound = (cast jsIntMin Signed64) .-. n Signed64 1
 
 noInt32UpperBound :: Codegen SExpr
-noInt32UpperBound = undefined
+noInt32UpperBound = (cast jsIntMax Signed64) .-. n Signed64 1
 
 jsIntMax :: Codegen SExpr
-jsIntMax = undefined
+jsIntMax = n Signed (0x7fffffff)
 
 jsIntMin :: Codegen SExpr
-jsIntMin = undefined
+jsIntMin = n Signed (0x80000000)
 
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#489
 hasInt32Bounds :: FunctionDef
-hasInt32Bounds = undefined
+hasInt32Bounds =
+  let args = [ ("bnds", c "range") ]
+      body = [ return_ $ (v "bnds" .->. "hasInt32LowerBound")  .&&. (v "bnds" .->. "hasInt32UpperBound")
+             ]
+  in Function "hasInt32Bounds" (t Bool) args body
 
 isFiniteNonNegative :: FunctionDef
 isFiniteNonNegative =
@@ -86,6 +105,13 @@ isFiniteNegative =
       body = [ return_ $ (v "fn" .->. "upper" .<. n Signed 0) -- finish this
              ]
   in Function "isFiniteNegative" (t Bool) args body
+
+canBeInfiniteOrNan :: FunctionDef
+canBeInfiniteOrNan =
+  let args = [ ("fnan", c "range") ]
+      body = [ return_ $ (v "fnan" .->. "maxExponent" .=>. includesInfinity)
+             ]
+  in Function "canBeInfiniteOrNan" (t Bool) args body
 
 -- | http://aggregate.org/MAGIC/#Population%20Count%20(Ones%20Count)
 countOnes :: FunctionDef

@@ -17,7 +17,13 @@ import           Test.Tasty.HUnit
 import           Utils
 
 genIonMonkeyTests :: BenchTest
-genIonMonkeyTests = benchTestGroup "Generated IonMonkey code test"
+genIonMonkeyTests = benchTestGroup "Generated IonMonkey tests"
+                    [ --intIonMonkeyTests
+                     fpIonMonkeyTests
+                    ]
+
+intIonMonkeyTests :: BenchTest
+intIonMonkeyTests = benchTestGroup "Generated IonMonkey i32 tests"
                     [ notTest
                     , andTest
                     , orTest
@@ -29,6 +35,24 @@ genIonMonkeyTests = benchTestGroup "Generated IonMonkey code test"
                     , ursh'Test
                     , lsh'Test
                     ]
+
+fpIonMonkeyTests :: BenchTest
+fpIonMonkeyTests = benchTestGroup "Generated IonMonkey fp tests"
+                   [ addTest
+                   , subTest
+--                   , mulTest
+                   ]
+
+
+-- FP
+
+addTest :: BenchTest
+addTest = benchTestCase "add" $ evalCodegen Nothing $ verifyFpFunction "add" jsAdd [add]
+
+subTest :: BenchTest
+subTest = benchTestCase "sub" $ evalCodegen Nothing $ verifyFpFunction "sub" jsSub [sub]
+
+-- Int32
 
 notTest :: BenchTest
 notTest = benchTestCase "not" $ evalCodegen Nothing $ verifyUnaryFunction "not" jsNot [not]
