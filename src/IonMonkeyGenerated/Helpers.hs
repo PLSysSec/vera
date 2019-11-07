@@ -43,6 +43,9 @@ int32max = n Signed 2147483647
 uint32max :: Codegen SExpr
 uint32max = n Unsigned 4294967295
 
+uint32min :: Codegen SExpr
+uint32min = n Unsigned 0
+
 excludesNegativeZero :: Codegen SExpr
 excludesNegativeZero = n Bool 0
 
@@ -104,7 +107,7 @@ countLeadingZeroes =
              , v "x" .|=. (v "x" .>>. n Unsigned 2)
              , v "x" .|=. (v "x" .>>. n Unsigned 4)
              , v "x" .|=. (v "x" .>>. n Unsigned 8)
-             , v "x" .|=. (v "x" .>>. n Unsigned 8)
+             , v "x" .|=. (v "x" .>>. n Unsigned 16)
              , declare (t Unsigned) "ones"
              , v "ones" `assign` call "countOnes" [v "x"]
              , return_ $ n Unsigned 32 .-. v "ones"

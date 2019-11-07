@@ -18,7 +18,7 @@ allTests = [ -- ionMonkeyTests
             genIonMonkeyTests
            -- , notTerminating
            -- , helpersTests
---           , genHelpersTests
+           , genHelpersTests
            -- , inputTests
            -- , cppTests
            -- , jsTests
