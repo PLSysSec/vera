@@ -101,7 +101,7 @@ module DSL.Typed ( vassert
                  , D.isSat
                  , D.isUnsat
                  ) where
-import           Control.Monad.State.Strict (unless, when)
+import           Control.Monad.State.Strict (unless, when, liftIO)
 import qualified DSL.DSL                    as D
 import           Prelude                    hiding (compare, exp)
 
@@ -1031,7 +1031,7 @@ DEFINEBINOPCLASS(CppShiftRight, cppShiftRight)
 instance CppShiftRight VNode VNode where
   cppShiftRight left right
     | not (is32Bits $ vtype left) || not (is32Bits $ vtype right) =
-        error "Only support 32 bit SHL"                
+        error "Only support 32 bit SHR"                
     | isUnsigned (vtype left) = do
         undef <- makeUndef
         result <- D.safeSrl (vnode left) (vnode right)

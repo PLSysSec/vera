@@ -232,6 +232,10 @@ getIntList :: M.Map String Double -> [String]
 getIntList fls = catMaybes $ map (\(str, fl) ->
                        case str of
                          _ | "undef" `isInfixOf` str -> Nothing
+                         _ | "upOr" `isInfixOf` str -> sstr str fl
+                         _ | "downOr" `isInfixOf` str -> sstr str fl
+                         _ | "rhsUpper" `isInfixOf` str -> sstr str fl
+                         _ | "rhsLeadingZeroes" `isInfixOf` str -> sstr str fl
                          _ | "result_range_upper" `isInfixOf` str -> sstr str fl
                          _ | "result_range_lower" `isInfixOf` str -> sstr str fl
                          _ | "result_1" `isInfixOf` str -> sstr str fl

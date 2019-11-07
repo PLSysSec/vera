@@ -178,8 +178,12 @@ xor =
                ] []
              , declare (t Signed) "lower"
              , declare (t Signed) "upper"
+             , declare (t Signed) "upOr"
+             , declare (t Signed) "downOr"
              , v "lower" `assign` int32min
              , v "upper" `assign` int32max
+             , v "upOr" `assign` int32min
+             , v "downOr" `assign` int32max
              , if_ ((v "lhsLower" .==. n Signed 0) .&&. (v "lhsUpper" .==. n Signed 0))
                [ v "upper" `assign` v "rhsUpper"
                , v "lower" `assign` v "rhsLower"
@@ -192,7 +196,9 @@ xor =
                    [ v "lower" `assign` n Signed 0
                    , v "lhsLeadingZeroes" `assign` (call "countLeadingZeroes" [cast (v "lhsUpper") Unsigned])
                    , v "rhsLeadingZeroes" `assign` (call "countLeadingZeroes" [cast (v "rhsUpper") Unsigned])
-                   , v "upper" `assign` (min_ (v "rhsUpper" .||. (cast (uint32max .>>. v "lhsLeadingZeroes") Signed)) (v "lhsUpper" .||. (cast (uint32max .>>. v "lhsLeadingZeroes") Signed)))
+                   , v "upOr" `assign` (v "rhsUpper" .||. (cast (uint32max .>>. v "lhsLeadingZeroes") Signed))
+                   , v "downOr" `assign` (v "lhsUpper" .||. (cast (uint32max .>>. v "rhsLeadingZeroes") Signed))
+                   , v "upper" `assign` min_ (v "upOr") (v "downOr")
                    ] []
                 ]
                ]

@@ -41,7 +41,7 @@ int32max :: Codegen SExpr
 int32max = n Signed 2147483647
 
 uint32max :: Codegen SExpr
-uint32max = n Signed 4294967295
+uint32max = n Unsigned 4294967295
 
 excludesNegativeZero :: Codegen SExpr
 excludesNegativeZero = n Bool 0
