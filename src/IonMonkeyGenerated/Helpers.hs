@@ -22,6 +22,30 @@ range3 =
              ]
   in Function "Range3" (c "range") args body
 
+range6 :: FunctionDef
+range6 =
+  let args = [ ("lower_bound", t Signed64)
+             , ("has_lower", t Bool)
+             , ("upper_bound", t Signed64)
+             , ("has_upper", t Bool)
+             , ("nz_flag", t Bool)
+             , ("exp_set", t Unsigned16)
+             ]
+      body = [ declare (c "range") "rv"
+             , v "rv" `assign` call "setLowerInit" [ v "lower_bound"
+                                                   , v "rv"
+                                                   ]
+             , v "rv" .->. "hasInt32LowerBound" `assign` v "has_lower"
+             , v "rv" `assign` call "setUpperInit" [ v "upper_bound"
+                                                   , v "rv"
+                                                   ]
+             , v "rv" .->. "hasInt32UpperBound" `assign` v "has_upper"
+             , v "rv" .->. "canBeNegativeZero" `assign` (v "nz_flag")
+             , v "rv" .->. "maxExponent" `assign` (v "exp_set")
+             , return_ (v "rv")
+             ]
+  in Function "Range6" (c "range") args body
+
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#394
 newInt32Range :: FunctionDef
 newInt32Range = let args = [ ("lower_bound", t Signed)

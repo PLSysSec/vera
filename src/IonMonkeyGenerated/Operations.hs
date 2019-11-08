@@ -1,16 +1,16 @@
 module IonMonkeyGenerated.Operations ( add -- done
                                      , sub -- done
                                      , mul -- done
-                                     , and -- done VER
-                                     , or -- done
-                                     , xor -- done
-                                     , not -- done VER
-                                     , lsh -- done
-                                     , rsh -- done
-                                     , ursh -- done
-                                     , lsh' -- done
-                                     , rsh' -- done
-                                     , ursh' -- done
+                                     , and -- 32
+                                     , or -- 32
+                                     , xor -- 32
+                                     , not -- 32
+                                     , lsh -- 32
+                                     , rsh -- 32
+                                     , ursh -- 32
+                                     , lsh' -- 32
+                                     , rsh' -- 32
+                                     , ursh' -- 32
                                      , abs -- done
                                      , min -- done
                                      , max -- done
@@ -402,12 +402,12 @@ min =
   let args = [ ("lhs", c "range")
              , ("rhs", c "range")
              ]
-      body = [ return_ $ call "Range" [ min_ (v "lhs" .->. "lower") (v "rhs" .->. "lower")
-                                      , (v "lhs" .->. "hasInt32LowerBound") .&&. (v "rhs" .->. "hasInt32UpperBound")
-                                      , min_ (v "lhs" .->. "upper") (v "rhs" .->. "upper")
-                                      , (v "lhs" .->. "hasInt32UpperBound") .||. (v "rhs" .->. "hasInt32UpperBound")
-                                      , (v "lhs" .->. "canBeNegativeZero") .||. (v "rhs" .->. "canBeNegativeZero")
-                                      , max_ (v "lhs" .->. "maxExponent") (v "rhs" .->. "maxExponent")
+      body = [ return_ $ call "Range6" [ cast (min_ (v "lhs" .->. "lower") (v "rhs" .->. "lower")) Signed64
+                                       , (v "lhs" .->. "hasInt32LowerBound") .&&. (v "rhs" .->. "hasInt32UpperBound")
+                                       , cast (min_ (v "lhs" .->. "upper") (v "rhs" .->. "upper")) Signed64
+                                       , (v "lhs" .->. "hasInt32UpperBound") .||. (v "rhs" .->. "hasInt32UpperBound")
+                                       , (v "lhs" .->. "canBeNegativeZero") .||. (v "rhs" .->. "canBeNegativeZero")
+                                       , max_ (v "lhs" .->. "maxExponent") (v "rhs" .->. "maxExponent")
                                       ]
              ]
   in Function "min" (c "range") args body
@@ -418,13 +418,13 @@ max =
   let args = [ ("lhs", c "range")
              , ("rhs", c "range")
              ]
-      body = [ return_ $ call "Range" [ max_ (v "lhs" .->. "lower") (v "rhs" .->. "lower")
-                                      , (v "lhs" .->. "hasInt32LowerBound") .||. (v "rhs" .->. "hasInt32UpperBound")
-                                      , max_ (v "lhs" .->. "upper") (v "rhs" .->. "upper")
-                                      , (v "lhs" .->. "hasInt32UpperBound") .&&. (v "rhs" .->. "hasInt32UpperBound")
-                                      , (v "lhs" .->. "canBeNegativeZero") .||. (v "rhs" .->. "canBeNegativeZero")
-                                      , max_ (v "lhs" .->. "maxExponent") (v "rhs" .->. "maxExponent")
-                                      ]
+      body = [ return_ $ call "Range6" [ cast (max_ (v "lhs" .->. "lower") (v "rhs" .->. "lower")) Signed64
+                                       , (v "lhs" .->. "hasInt32LowerBound") .||. (v "rhs" .->. "hasInt32UpperBound")
+                                       , cast (max_ (v "lhs" .->. "upper") (v "rhs" .->. "upper")) Signed64
+                                       , (v "lhs" .->. "hasInt32UpperBound") .&&. (v "rhs" .->. "hasInt32UpperBound")
+                                       , (v "lhs" .->. "canBeNegativeZero") .||. (v "rhs" .->. "canBeNegativeZero")
+                                       , max_ (v "lhs" .->. "maxExponent") (v "rhs" .->. "maxExponent")
+                                       ]
              ]
   in Function "max" (c "range") args body
 

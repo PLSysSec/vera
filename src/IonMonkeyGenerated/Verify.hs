@@ -119,6 +119,7 @@ verifyFpFunction fnName jsOp fns = do
   define setLowerInit
   define setUpperInit
   define range3
+  define range6
   forM_ fns define
   let verif = [ declare (c "range") "left_range"
               , declare (t Double) "left"
