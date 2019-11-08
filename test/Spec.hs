@@ -9,6 +9,7 @@ import           IonMonkey
 import           JavaScript
 import           Lang
 import           Test.Tasty
+import           CPPGen
 
 main :: IO ()
 main = defaultMain $ testGroup "All tests" $ map getTest allTests
@@ -24,4 +25,5 @@ allTests = [ -- ionMonkeyTests
            -- , jsTests
            -- , dslTests
 --           , langTests
+           , cppGenTests
            ]
