@@ -22,6 +22,26 @@ range3 =
              ]
   in Function "Range3" (c "range") args body
 
+range4 :: FunctionDef
+range4 =
+  let args = [ ("lower_bound", t Signed64)
+             , ("upper_bound", t Signed64)
+             , ("nz_flag", t Bool)
+             , ("exp_set", t Unsigned16)
+             ]
+      body = [ declare (c "range") "rv"
+             , v "rv" `assign` call "setLowerInit" [ v "lower_bound"
+                                                   , v "rv"
+                                                   ]
+             , v "rv" `assign` call "setUpperInit" [ v "upper_bound"
+                                                   , v "rv"
+                                                   ]
+             , v "rv" .->. "canBeNegativeZero" `assign` (v "nz_flag")
+             , v "rv" .->. "maxExponent" `assign` (v "exp_set")
+             , return_ (v "rv")
+             ]
+  in Function "Range4" (c "range") args body
+
 range6 :: FunctionDef
 range6 =
   let args = [ ("lower_bound", t Signed64)
@@ -115,6 +135,13 @@ setUpperInit =
              ]
   in Function "setUpperInit" (c "range") args body
 
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#566
+canHaveSignBitSet :: FunctionDef
+canHaveSignBitSet =
+  let args = [ ("sbs_range", c "range") ]
+      body = [ return_ $ (not_ $ v "sbs_range" .->. "hasInt32LowerBound") .||. (call "canBeFiniteNonNegative" [v "sbs_range"]) .||. (v "sbs_range" .->. "canBeNegativeZero")]
+  in Function "canHaveSignBitSet" (t Bool) args body
+
 --- Less complicated stuff
 
 range_constructor :: FunctionDef
@@ -170,6 +197,20 @@ hasInt32Bounds =
              ]
   in Function "hasInt32Bounds" (t Bool) args body
 
+numBits :: FunctionDef
+numBits =
+  let args = [ ("nbs", c "range") ]
+      body = [ return_ $ ((v "nbs" .->. "maxExponent") .+. n Unsigned16 1)
+             ]
+  in Function "numBits" (t Unsigned16) args body
+
+canBeFiniteNonNegative :: FunctionDef
+canBeFiniteNonNegative =
+  let args = [ ("fnn2", c "range") ]
+      body = [ return_ $ (v "fnn2" .->. "lower" .>. n Signed 0) -- finish this
+             ]
+  in Function "canBeFiniteNonNegative" (t Bool) args body
+
 isFiniteNonNegative :: FunctionDef
 isFiniteNonNegative =
   let args = [ ("fnn", c "range") ]
@@ -190,6 +231,38 @@ canBeInfiniteOrNan =
       body = [ return_ $ (v "fnan" .->. "maxExponent" .=>. includesInfinity)
              ]
   in Function "canBeInfiniteOrNan" (t Bool) args body
+
+missingAnyInt32Bounds :: FunctionDef
+missingAnyInt32Bounds =
+  let args = [ ("mibs1", c "range")
+             , ("mibs2", c "range")
+             ]
+      body = [ return_ $ (not_ $ call "hasInt32Bounds" [v "mibs1"]) .||. (not_ $ call "hasInt32Bounds" [v "mibs2"])
+             ]
+  in Function "missingAnyInt32Bounds" (t Bool) args body
+
+canBeNan :: FunctionDef
+canBeNan =
+  let args = [ ("nannan", c "range") ]
+      body = [ return_ $ (v "nannan" .->. "maxExponent" .==. includesInfinityAndNan)
+             ]
+  in Function "canBeNan" (t Bool) args body
+
+canBeZero :: FunctionDef
+canBeZero =
+  let args = [ ("zrange", c "range") ]
+      body = [ return_ $ call "contains" [v "zrange", n Signed 0]
+             ]
+  in Function "canBeZero" (t Bool) args body
+
+contains :: FunctionDef
+contains =
+  let args = [ ("crange", c "range")
+             , ("cval", t Signed)
+             ]
+      body = [ return_ $ (v "cval" .=>. (v "crange" .->. "lower")) .&&. (v "cval" .<=. (v "crange" .->. "upper"))
+             ]
+  in Function "contains" (t Bool) args body
 
 -- | http://aggregate.org/MAGIC/#Population%20Count%20(Ones%20Count)
 countOnes :: FunctionDef

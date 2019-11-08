@@ -120,6 +120,15 @@ verifyFpFunction fnName jsOp fns = do
   define setUpperInit
   define range3
   define range6
+  define range4
+  define canBeFiniteNonNegative
+  define numBits
+  define canBeNan
+  define canBeZero
+  define contains
+  define hasInt32Bounds
+  define missingAnyInt32Bounds
+  define canHaveSignBitSet
   forM_ fns define
   let verif = [ declare (c "range") "left_range"
               , declare (t Double) "left"
