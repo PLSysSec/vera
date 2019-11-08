@@ -115,6 +115,8 @@ verifyFpFunction fnName jsOp fns = do
   define verifySaneRange
   define verifyNegZero
   define canBeInfiniteOrNan
+  define setLowerInit
+  define setUpperInit
   define range3
   forM_ fns define
   let verif = [ declare (c "range") "left_range"
@@ -127,10 +129,10 @@ verifyFpFunction fnName jsOp fns = do
               , (v "right_range")  `assign` (call "newFloatInputRange" [])
               , (v "result_range") `assign` call fnName [v "left_range", v "right_range"]
                 -- Verify that the result range is well formed
-              , vcall "verifySaneRange" [v "result_range"]
+        --      , vcall "verifySaneRange" [v "result_range"]
                 -- Actually perform the JS operation
-              , (v "left")  `assign` (call "intInRange" [v "left_range"])
-              , (v "right") `assign` (call "intInRange" [v "right_range"])
+              , (v "left")  `assign` (call "floatInRange" [v "left_range"])
+              , (v "right") `assign` (call "floatInRange" [v "right_range"])
               , (v "result") `assign` (v "left" `jsOp` v "right")
                 -- Verify FP properties
               , vcall "verifyNegZ" [v "result_range", v "result"]
@@ -151,10 +153,8 @@ intInRange =
 
 floatInRange :: FunctionDef
 floatInRange =
-  let args = [ ("result_range_init", c "range")
-             , ("result_init", t Double)
-             ]
-      body = [ declare (t Signed) "result_init"
+  let args = [ ("result_range_init", c "range")]
+      body = [ declare (t Double) "result_init"
              -- Either its infinite or the exponent is less than the infinte exponent
              , assert_ $ (isInf $ v "result_init") .^. ((v "result_range_init" .->. "maxExponent") .<. includesInfinity)
              -- Either is not inf or nan or op is inf or nan
@@ -163,7 +163,7 @@ floatInRange =
              , assert_ $ (v "result_range_init" .->. "canBeNegativeZero") .^. (isNeg (v "result_init") .&&. (isZero $ v "result_init") )
              , return_ $ v "result_init"
              ]
-  in Function "floatInRange" (t Signed) args body
+  in Function "floatInRange" (t Double) args body
 
 -- Verification
 

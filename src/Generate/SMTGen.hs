@@ -126,6 +126,7 @@ genExprSMT expr =
     Shr left right -> genBinOpSMT left right T.cppShiftRight
     -- JavaScript
     JSAnd left right  -> genBinOpSMT left right T.jsAnd
+    JSAdd left right  -> genBinOpSMT left right T.jsAdd
     JSSub left right  -> genBinOpSMT left right T.jsSub
     JSMul left right  -> genBinOpSMT left right T.jsMul
     JSOr  left right  -> genBinOpSMT left right T.jsOr
@@ -149,6 +150,7 @@ genExprSMT expr =
       case result of
         [rval] -> return rval
         _      -> error "Cannot return a class variable for use in greater expression"
+    _ -> error $ unwords $ ["Don't support", show expr]
 
 genAssignOpSMT :: SExpr
                -> SExpr

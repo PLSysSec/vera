@@ -6,13 +6,17 @@ import           Generate.State
 
 range3 :: FunctionDef
 range3 =
-  let args = [ ("lower_bound", t Signed)
-             , ("upper_bound", t Signed)
+  let args = [ ("lower_bound", t Signed64)
+             , ("upper_bound", t Signed64)
              , ("nz_flag", t Bool)
              ]
       body = [ declare (c "range") "rv"
-             , (v "rv") .->. "lower" `assign` (v "lower_bound")
-             , (v "rv") .->. "upper" `assign` (v "upper_bound")
+             , v "rv" `assign` call "setLowerInit" [ v "lower_bound"
+                                                   , v "rv"
+                                                   ]
+             , v "rv" `assign` call "setUpperInit" [ v "upper_bound"
+                                                   , v "rv"
+                                                   ]
              , v "rv" .->. "canBeNegativeZero" `assign` (v "nz_flag")
              , return_ (v "rv")
              ]
@@ -44,6 +48,50 @@ newUInt32Range = let args = [ ("u_lower_bound", t Unsigned)
                             , return_ (v "rv")
                             ]
                  in Function "newUInt32Range" (c "range") args body
+
+setLowerInit :: FunctionDef
+setLowerInit =
+  let args = [ ("sli_x", t Signed64)
+             , ("sli_range", c "range")
+             ]
+      body = [ if_ (v "sli_x" .>. jsIntMax64)
+               [ v "sli_range" .->. "lower" `assign` jsIntMax
+               , v "sli_range" .->. "hasInt32LowerBound" `assign` n Bool 1
+               ]
+               [ if_ (v "sli_x" .<. jsIntMin64)
+                 [ v "sli_range" .->. "lower" `assign` jsIntMin
+                 , v "sli_range" .->. "hasInt32LowerBound" `assign` n Bool 0
+                 ]
+                 [ v "sli_range" .->. "lower" `assign` (cast (v "sli_x") Signed)
+                 , v "sli_range" .->. "hasInt32LowerBound" `assign` n Bool 1
+                 ]
+               ]
+             , return_ $ v "sli_range"
+             ]
+  in Function "setLowerInit" (c "range") args body
+
+setUpperInit :: FunctionDef
+setUpperInit =
+  let args = [ ("sui_x", t Signed64)
+             , ("sui_range", c "range")
+             ]
+      body = [ if_ (v "sui_x" .>. jsIntMax64)
+               [ v "sui_range" .->. "upper" `assign` jsIntMax
+               , v "sui_range" .->. "hasInt32UpperBound" `assign` n Bool 0
+               ]
+               [ if_ (v "sui_x" .<. jsIntMin64)
+                 [ v "sui_range" .->. "upper" `assign` jsIntMin
+                 , v "sui_range" .->. "hasInt32UpperBound" `assign` n Bool 1
+                 ]
+                 [ v "sui_range" .->. "upper" `assign` (cast (v "sui_x") Signed)
+                 , v "sui_range" .->. "hasInt32UpperBound" `assign` n Bool 1
+                 ]
+               ]
+             , return_ $ v "sui_range"
+             ]
+  in Function "setUpperInit" (c "range") args body
+
+--- Less complicated stuff
 
 range_constructor :: FunctionDef
 range_constructor = undefined
@@ -83,6 +131,12 @@ jsIntMax = n Signed (0x7fffffff)
 
 jsIntMin :: Codegen SExpr
 jsIntMin = n Signed (0x80000000)
+
+jsIntMax64 :: Codegen SExpr
+jsIntMax64 = n Signed64 (0x7fffffff)
+
+jsIntMin64 :: Codegen SExpr
+jsIntMin64 = n Signed64 (0x80000000)
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#489
 hasInt32Bounds :: FunctionDef

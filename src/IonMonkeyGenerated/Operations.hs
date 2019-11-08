@@ -43,8 +43,8 @@ add =
              , v "e" `assign` (max_ (v "lhs" .->. "maxExponent") (v "rhs" .->. "maxExponent"))
              , if_ (v "e" .<. maxFiniteExponent) [v "e" .+=. n Unsigned16 1] []
              , if_ ((call "canBeInfiniteOrNan" [v "lhs"]) .&&. (call "canBeInfiniteOrNan" [v "rhs"])) [v "e" `assign` includesInfinityAndNan] []
-             , return_ $ call "Range3" [ cast (v "l") Signed
-                                       , cast (v "h") Signed
+             , return_ $ call "Range3" [ v "l"
+                                       , v "h"
                                        , (v "lhs" .->. "canBeNegativeZero") .&&. (v "rhs" .->. "canBeNegativeZero")
                                        ]
              ]
@@ -66,8 +66,8 @@ sub =
              , v "e" `assign` (max_ (v "lhs" .->. "maxExponent") (v "rhs" .->. "maxExponent"))
              , if_ (v "e" .<. maxFiniteExponent) [v "e" .+=. n Unsigned16 1] []
              , if_ ((call "canBeInfiniteOrNan" [v "lhs"]) .&&. (call "canBeInfiniteOrNan" [v "rhs"])) [v "e" `assign` includesInfinityAndNan] []
-             , return_ $ call "Range3" [ cast (v "l") Signed
-                                       , cast (v "h") Signed
+             , return_ $ call "Range3" [ v "l"
+                                       , v "h"
                                        , (v "lhs" .->. "canBeNegativeZero") .&&. (v "rhs" .->. "canBeNegativeZero")
                                        ]
              ]
