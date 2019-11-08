@@ -97,8 +97,8 @@ compileSStmt (Assert expr) =
 
 compileSStmt (If expr thenStmts elseStmts) = do
   let condString = "if(" ++ (compileSExpr expr) ++ ") {"
-      thenStrings = concat $ map compileSStmt thenStmts
-      elseStrings = concat $ map compileSStmt elseStmts
+      thenStrings = concatMap compileSStmt thenStmts
+      elseStrings = concatMap compileSStmt elseStmts
       elseConcatString = if (null elseStrings)
                           then [""]
                           else ["} else {"]
@@ -180,13 +180,12 @@ compileSExpr (Shr expr1 expr2) =
 compileSExpr (Cast expr ty) =
   "(" ++ (compileType ty) ++ ")(" ++ (compileSExpr expr) ++ ")"
 
-compileSExpr (Call name exprs) = do
+compileSExpr (Call name exprs) =
   let exprStrings = map compileSExpr exprs
-  let argString = intercalate ", " exprStrings
-  name ++ "(" ++ argString ++ ")"
+      argString = intercalate ", " exprStrings
+  in name ++ "(" ++ argString ++ ")"
 
-compileSExpr (FieldExpr name) =
-  "this." ++ name
+compileSExpr (FieldExpr name) = "this." ++ name
 
 compileSExpr e =
   error $ show e
