@@ -55,137 +55,66 @@ compileSClass (SClass name fields methods) = do
   headerStrings ++ fieldStrings ++ methodStrings ++ ["};"]
 
 compileSStmt :: SStmt -> [String]
-compileSStmt (Decl (SVar ty name _)) =
-  [(compileType ty) ++ " " ++ name ++ ";"]
-
-compileSStmt (Decl var) =
-  case var of
+compileSStmt stmt = case stmt of
+  (Decl (SVar ty name _)) -> [(compileType ty) ++ " " ++ name ++ ";"]
+  (Decl var) -> case var of
     SVar ty name _ -> [(compileType ty) ++ " " ++ name ++ ";"]
     CVar cl name   -> [cl ++ " " ++ name ++ ";"]
-
--- Only works if the left expression is a var?
-compileSStmt (Assign expr1 expr2) =
-  [(compileSExpr expr1) ++ " = " ++ (compileSExpr expr2) ++ ";"]
-
-compileSStmt (AddEq _ expr1 expr2) = do
-  let c1 = compileSExpr expr1
-      c2 = compileSExpr expr2
-  [c1 ++ " += " ++ c2 ++ ";"]
-
-compileSStmt (SubEq _ expr1 expr2) = do
-  let c1 = compileSExpr expr1
-      c2 = compileSExpr expr2
-  [c1 ++ " -= " ++ c2 ++ ";"]
-
-compileSStmt (OrEq _ expr1 expr2) = do
-  let c1 = compileSExpr expr1
-      c2 = compileSExpr expr2
-  [c1 ++ " |= " ++ c2 ++ ";"]
-
-compileSStmt (AndEq _ expr1 expr2) = do
-  let c1 = compileSExpr expr1
-      c2 = compileSExpr expr2
-  [c1 ++ " &= " ++ c2 ++ ";"]
-
-compileSStmt Push = [""]
-
-compileSStmt Pop = [""]
-
--- Possibly don't need
-compileSStmt (Assert expr) =
-  ["assert(" ++ (compileSExpr expr) ++ ")" ++ ";"]
-
-compileSStmt (If expr thenStmts elseStmts) = do
-  let condString = "if(" ++ (compileSExpr expr) ++ ") {"
-      thenStrings = concatMap compileSStmt thenStmts
-      elseStrings = concatMap compileSStmt elseStmts
-      elseConcatString = if (null elseStrings)
-                          then [""]
-                          else ["} else {"]
-  [condString] ++ thenStrings ++ elseConcatString ++ elseStrings ++ ["}"]
-
-compileSStmt (Return expr) =
-  ["return " ++ (compileSExpr expr) ++ ";"]
-
-compileSStmt (VoidCall name args) =
-  [(compileSExpr (Call name args)) ++ ";"]
+  (Assign expr1 expr2) -> [(compileSExpr expr1) ++ " = " ++ (compileSExpr expr2) ++ ";"]
+  (AddEq _ expr1 expr2) -> [c1 ++ " += " ++ c2 ++ ";"] where
+    c1 = compileSExpr expr1
+    c2 = compileSExpr expr2
+  (SubEq _ expr1 expr2) -> [c1 ++ " -= " ++ c2 ++ ";"] where
+    c1 = compileSExpr expr1
+    c2 = compileSExpr expr2
+  (OrEq _ expr1 expr2) -> [c1 ++ " |= " ++ c2 ++ ";"] where
+    c1 = compileSExpr expr1
+    c2 = compileSExpr expr2
+  (AndEq _ expr1 expr2) -> [c1 ++ " &= " ++ c2 ++ ";"] where
+    c1 = compileSExpr expr1
+    c2 = compileSExpr expr2
+  Push -> [""]
+  Pop -> [""]
+  (Assert expr) -> ["assert(" ++ (compileSExpr expr) ++ ")" ++ ";"]
+  (If expr thenStmts elseStmts) -> [condString] ++ thenStrings ++ elseConcatString ++ elseStrings ++ ["}"] where
+    condString = "if(" ++ (compileSExpr expr) ++ ") {"
+    thenStrings = concatMap compileSStmt thenStmts
+    elseStrings = concatMap compileSStmt elseStmts
+    elseConcatString = if (null elseStrings)
+                            then [""]
+                            else ["} else {"]
+  (Return expr) -> ["return " ++ (compileSExpr expr) ++ ";"]
+  (VoidCall name args) -> [(compileSExpr (Call name args)) ++ ";"]
 
 compileSExpr :: SExpr -> String
-compileSExpr (VarExpr var) =
-  case var of
-    SVar _ name _ -> name
-    CVar _ name   -> name
-
--- TODO: Right now this only works correctly on integers
-compileSExpr (NumExpr (SNum numType numVal)) =
-  show numVal
-
-compileSExpr (Neg expr) =
-  "-(" ++ (compileSExpr expr) ++ ")"
-
-compileSExpr (Not expr) =
-  "!(" ++ (compileSExpr expr) ++ ")"
-
-compileSExpr (Abs expr) =
-  "abs(" ++ (compileSExpr expr) ++ ")"
-
-compileSExpr (Eq expr1 expr2) =
-  "(" ++ (compileSExpr expr1) ++ ") == (" ++ (compileSExpr expr2) ++ ")"
-
-compileSExpr (And expr1 expr2) =
-  "(" ++ (compileSExpr expr1) ++ ") & (" ++ (compileSExpr expr2) ++ ")"
-
-compileSExpr (Add expr1 expr2) =
-  "(" ++ (compileSExpr expr1) ++ ") + (" ++ (compileSExpr expr2) ++ ")"
-
-compileSExpr (Sub expr1 expr2) =
-  "(" ++ (compileSExpr expr1) ++ ") - (" ++ (compileSExpr expr2) ++ ")"
-
-compileSExpr (Mul expr1 expr2) =
-  "(" ++ (compileSExpr expr1) ++ ") * (" ++ (compileSExpr expr2) ++ ")"
-
-compileSExpr (Or expr1 expr2) =
-  "(" ++ (compileSExpr expr1) ++ ") | (" ++ (compileSExpr expr2) ++ ")"
-
-compileSExpr (XOr expr1 expr2) =
-  "(" ++ (compileSExpr expr1) ++ ") ^ (" ++ (compileSExpr expr2) ++ ")"
-
-compileSExpr (XOr expr1 expr2) =
-  "(" ++ (compileSExpr expr1) ++ ") ^ (" ++ (compileSExpr expr2) ++ ")"
-
-compileSExpr (Min expr1 expr2) =
-  "min((" ++ (compileSExpr expr1) ++ "), (" ++ (compileSExpr expr2) ++ "))"
-
-compileSExpr (Max expr1 expr2) =
-  "max((" ++ (compileSExpr expr1) ++ "), (" ++ (compileSExpr expr2) ++ "))"
-
-compileSExpr (Gt expr1 expr2) =
-  "(" ++ (compileSExpr expr1) ++ ") > (" ++ (compileSExpr expr2) ++ ")"
-
-compileSExpr (Gte expr1 expr2) =
-  "(" ++ (compileSExpr expr1) ++ ") >= (" ++ (compileSExpr expr2) ++ ")"
-
-compileSExpr (Lt expr1 expr2) =
-  "(" ++ (compileSExpr expr1) ++ ") < (" ++ (compileSExpr expr2) ++ ")"
-
-compileSExpr (Lte expr1 expr2) =
-  "(" ++ (compileSExpr expr1) ++ ") <= (" ++ (compileSExpr expr2) ++ ")"
-
-compileSExpr (Shl expr1 expr2) =
-  "(" ++ (compileSExpr expr1) ++ ") << (" ++ (compileSExpr expr2) ++ ")"
-
-compileSExpr (Shr expr1 expr2) =
-  "(" ++ (compileSExpr expr1) ++ ") >> (" ++ (compileSExpr expr2) ++ ")"
-
-compileSExpr (Cast expr ty) =
-  "(" ++ (compileType ty) ++ ")(" ++ (compileSExpr expr) ++ ")"
-
-compileSExpr (Call name exprs) =
-  let exprStrings = map compileSExpr exprs
-      argString = intercalate ", " exprStrings
-  in name ++ "(" ++ argString ++ ")"
-
-compileSExpr (FieldExpr name) = "this." ++ name
-
-compileSExpr e =
-  error $ show e
+compileSExpr expr = case expr of
+  (VarExpr var) ->
+    case var of
+      SVar _ name _ -> name
+      CVar _ name   -> name
+  (NumExpr (SNum numType numVal)) -> show numVal
+  (Neg expr) -> "-(" ++ (compileSExpr expr) ++ ")"
+  (Not expr) -> "!(" ++ (compileSExpr expr) ++ ")"
+  (Abs expr) -> "abs(" ++ (compileSExpr expr) ++ ")"
+  (Eq expr1 expr2) -> "(" ++ (compileSExpr expr1) ++ ") == (" ++ (compileSExpr expr2) ++ ")"
+  (And expr1 expr2) -> "(" ++ (compileSExpr expr1) ++ ") & (" ++ (compileSExpr expr2) ++ ")"
+  (Add expr1 expr2) -> "(" ++ (compileSExpr expr1) ++ ") + (" ++ (compileSExpr expr2) ++ ")"
+  (Sub expr1 expr2) -> "(" ++ (compileSExpr expr1) ++ ") - (" ++ (compileSExpr expr2) ++ ")"
+  (Mul expr1 expr2) -> "(" ++ (compileSExpr expr1) ++ ") * (" ++ (compileSExpr expr2) ++ ")"
+  (Or expr1 expr2) -> "(" ++ (compileSExpr expr1) ++ ") | (" ++ (compileSExpr expr2) ++ ")"
+  (XOr expr1 expr2) -> "(" ++ (compileSExpr expr1) ++ ") ^ (" ++ (compileSExpr expr2) ++ ")"
+  (XOr expr1 expr2) -> "(" ++ (compileSExpr expr1) ++ ") ^ (" ++ (compileSExpr expr2) ++ ")"
+  (Min expr1 expr2) -> "min((" ++ (compileSExpr expr1) ++ "), (" ++ (compileSExpr expr2) ++ "))"
+  (Max expr1 expr2) -> "max((" ++ (compileSExpr expr1) ++ "), (" ++ (compileSExpr expr2) ++ "))"
+  (Gt expr1 expr2) -> "(" ++ (compileSExpr expr1) ++ ") > (" ++ (compileSExpr expr2) ++ ")"
+  (Gte expr1 expr2) -> "(" ++ (compileSExpr expr1) ++ ") >= (" ++ (compileSExpr expr2) ++ ")"
+  (Lt expr1 expr2) -> "(" ++ (compileSExpr expr1) ++ ") < (" ++ (compileSExpr expr2) ++ ")"
+  (Lte expr1 expr2) -> "(" ++ (compileSExpr expr1) ++ ") <= (" ++ (compileSExpr expr2) ++ ")"
+  (Shl expr1 expr2) -> "(" ++ (compileSExpr expr1) ++ ") << (" ++ (compileSExpr expr2) ++ ")"
+  (Shr expr1 expr2) -> "(" ++ (compileSExpr expr1) ++ ") >> (" ++ (compileSExpr expr2) ++ ")"
+  (Cast expr ty) -> "(" ++ (compileType ty) ++ ")(" ++ (compileSExpr expr) ++ ")"
+  (Call name exprs) -> name ++ "(" ++ argString ++ ")" where
+    exprStrings = map compileSExpr exprs
+    argString = intercalate ", " exprStrings
+  (FieldExpr name) -> "this." ++ name
+  e -> error $ show e
