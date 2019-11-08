@@ -16,19 +16,48 @@ import           Prelude                       hiding (abs, and, floor, max,
                                                 min, not, or)
 import           Test.Tasty.HUnit
 import           Utils
+import           Data.List
 
 cppGenTests :: BenchTest
 cppGenTests = benchTestGroup "CPP Gen tests"
               [ --cppGenTests
-               cppAddTest
+                cppNotTest
+              , cppAddTest
+              , cppSubTest
               ]
+
+cppNotTest :: BenchTest
+cppNotTest = benchTestCase "cpp not test" $ do
+  r <- evalCodegen Nothing $ do
+    
+    class_ range
+    define not
+    compiled <- compileFunction not
+    let prog = intercalate "\n" compiled
+    liftIO $ writeFile "test/GenCPP/not.cpp" prog
+    error "test"
+  error "test1"
 
 cppAddTest :: BenchTest
 cppAddTest = benchTestCase "cpp add test" $ do
   r <- evalCodegen Nothing $ do
     
     class_ range
-    compiled <- compileFunction not
-    liftIO $ print compiled
+    define add
+    compiled <- compileFunction add
+    let prog = intercalate "\n" compiled
+    liftIO $ writeFile "test/GenCPP/add.cpp" prog
+    error "test"
+  error "test1"
+
+cppSubTest :: BenchTest
+cppSubTest = benchTestCase "cpp sub test" $ do
+  r <- evalCodegen Nothing $ do
+    
+    class_ range
+    define sub
+    compiled <- compileFunction sub
+    let prog = intercalate "\n" compiled
+    liftIO $ writeFile "test/GenCPP/sub.cpp" prog
     error "test"
   error "test1"
