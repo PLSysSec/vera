@@ -469,11 +469,11 @@ ceil =
 sign :: FunctionDef
 sign =
   let args = [ ("op", c "range") ]
-      body = [ return_ $ call "Range" [ max_ ( min_ (v "op" .->. "lower") (n Signed 1) ) (n Signed (-1))
-                                      , max_ ( min_ (v "op" .->. "upper") (n Signed 1) ) (n Signed (-1))
-                                      , v "op" .->. "canBeNegativeZero"
-                                      , n Unsigned16 0
-                                      ]
+      body = [ return_ $ call "Range4" [ cast (max_ ( min_ (v "op" .->. "lower") (n Signed 1) ) (n Signed (-1))) Signed64
+                                       , cast (max_ ( min_ (v "op" .->. "upper") (n Signed 1) ) (n Signed (-1))) Signed64
+                                       , v "op" .->. "canBeNegativeZero"
+                                       , n Unsigned16 0
+                                       ]
              ]
   in Function "sign" (c "range") args body
 
