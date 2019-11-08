@@ -226,6 +226,8 @@ floatInRange =
              , assert_ $  ((isInf $ v "result_init") .||. ((isNan $ v "result_init")) .^. ((v "result_range_init" .->. "maxExponent" .<. includesInfinityAndNan)))
              -- If the range doesnt say can be neg z, cant be negz
              , assert_ $ (not_ $ v "result_range_init" .->. "canBeNegativeZero") .^. (isNeg (v "result_init") .&&. (isZero $ v "result_init") )
+             -- The exponent should be >= the fpExp
+             , assert_ $ (fpExp $ v "result_init") .<=. (v "result_range_init" .->. "maxExponent")
              , return_ $ v "result_init"
              ]
   in Function "floatInRange" (t Double) args body
@@ -324,6 +326,7 @@ verifyExp =
              ]
       body = [ push_
              , assert_ $ (fpExp $ v "result_exp") .>. (v "result_range_exp" .->. "maxExponent")
+             , expect_ isUnsat $ \r -> showNegzResult "Failed to verify Exp" r
              , pop_
              ]
   in Function "verifyExp" Void args body
