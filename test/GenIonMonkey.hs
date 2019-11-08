@@ -46,6 +46,7 @@ fpIonMonkeyTests = benchTestGroup "Generated IonMonkey fp tests"
                    , floorTest
                    , ceilTest
                    , absTest
+                   , signTest
                    ]
 
 
@@ -75,8 +76,8 @@ ceilTest = benchTestCase "ceil" $ evalCodegen Nothing $ verifyFpUnaryFunction "c
 absTest :: BenchTest
 absTest = benchTestCase "abs" $ evalCodegen Nothing $ verifyFpUnaryFunction "abs" jsAbs [abs]
 
--- signTest :: BenchTest
--- signTest = benchTestCase "sign" $ evalCodegen Nothing $ verifyFpUnaryFunction "sign" jsSign [sign]
+signTest :: BenchTest
+signTest = benchTestCase "sign" $ evalCodegen Nothing $ verifyFpUnaryFunction "sign" jsSign [sign]
 
 -- Int32
 

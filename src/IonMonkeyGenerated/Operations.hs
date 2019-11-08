@@ -1,6 +1,6 @@
-module IonMonkeyGenerated.Operations ( add -- done
-                                     , sub -- done
-                                     , mul -- done
+module IonMonkeyGenerated.Operations ( add -- TEST
+                                     , sub -- TEST
+                                     , mul -- TEST
                                      , and -- 32
                                      , or -- 32
                                      , xor -- 32
@@ -11,11 +11,11 @@ module IonMonkeyGenerated.Operations ( add -- done
                                      , lsh' -- 32
                                      , rsh' -- 32
                                      , ursh' -- 32
-                                     , abs -- done
-                                     , min -- done
-                                     , max -- done
-                                     , floor -- done
-                                     , ceil -- done
+                                     , abs -- TEST
+                                     , min -- TEST
+                                     , max -- TEST
+                                     , floor -- TEST
+                                     , ceil -- TEST
                                      , sign -- done
                                      , intersect -- ish
                                      , union

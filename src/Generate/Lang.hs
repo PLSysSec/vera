@@ -149,6 +149,9 @@ abs_ ex = unaryOp ex Abs
 jsAbs :: Codegen SExpr -> Codegen SExpr
 jsAbs ex = unaryOp ex JSAbs
 
+jsSign :: Codegen SExpr -> Codegen SExpr
+jsSign ex = unaryOp ex JSSign
+
 jsCeil :: Codegen SExpr -> Codegen SExpr
 jsCeil ex = unaryOp ex JSCeil
 

@@ -140,6 +140,7 @@ genExprSMT expr =
     JSNot e           -> genExprSMT e >>= liftVerif . T.jsNot
     JSCeil e          -> genExprSMT e >>= liftVerif . T.jsCeil
     JSFloor e         -> genExprSMT e >>= liftVerif . T.jsFloor
+    JSSign  e         -> genExprSMT e >>= liftVerif . T.jsSign
     -- Fp
     IsInf  e     -> genExprSMT e >>= liftVerif . T.isInf
     IsNan  e     -> genExprSMT e >>= liftVerif . T.isNan
