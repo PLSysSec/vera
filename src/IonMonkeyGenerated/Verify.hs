@@ -150,6 +150,47 @@ verifyFpFunction fnName jsOp fns = do
               ]
   genBodySMT verif
 
+verifyFpUnaryFunction :: String
+                      -> (Codegen SExpr -> Codegen SExpr)
+                      -> [FunctionDef]
+                      -> Codegen ()
+verifyFpUnaryFunction fnName jsOp fns = do
+  class_ range
+  define floatInRange
+  define newFloatInputRange
+  define verifySaneRange
+  define verifyNegZero
+  define canBeInfiniteOrNan
+  define setLowerInit
+  define setUpperInit
+  define range3
+  define range6
+  define range4
+  define canBeFiniteNonNegative
+  define numBits
+  define canBeNan
+  define canBeZero
+  define contains
+  define hasInt32Bounds
+  define missingAnyInt32Bounds
+  define canHaveSignBitSet
+  forM_ fns define
+  let verif = [ declare (c "range") "start_range"
+              , declare (t Double) "start"
+              , declare (c "range") "result_range"
+              , declare (t Double) "result"
+              , (v "start_range")  `assign` (call "newFloatInputRange" [])
+              , (v "result_range") `assign` call fnName [v "start_range"]
+                -- Verify that the result range is well formed
+        --      , vcall "verifySaneRange" [v "result_range"]
+                -- Actually perform the JS operation
+              , (v "start")  `assign` (call "floatInRange" [v "start_range"])
+              , (v "result") `assign` (jsOp $ v "start")
+                -- Verify FP properties
+              , vcall "verifyNegZ" [v "result_range", v "result"]
+              ]
+  genBodySMT verif
+
 -- Setup
 
 intInRange :: FunctionDef

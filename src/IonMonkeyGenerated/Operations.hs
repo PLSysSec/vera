@@ -386,13 +386,13 @@ abs =
              , declare (t Signed) "u"
              , v "l" `assign` (v "op" .->. "lower")
              , v "u" `assign` (v "op" .->. "upper")
-             , return_ $ call "Range" [ max_ (max_ (n Signed 0) (v "l")) (tern_ (v "u" .==. int32min) int32max (neg_ $ v "u"))
-                                      , n Bool 1
-                                      , max_ (max_ (n Signed 0) (v "u")) (tern_ (v "l" .==. int32min) int32max (neg_ $ v "l"))
-                                      , (call "hasInt32Bounds" [v "op"]) .&&. (v "l" .!=. int32min)
-                                      , excludesNegativeZero
-                                      , v "op" .->. "maxExponent"
-                                      ]
+             , return_ $ call "Range6" [ cast (max_ (max_ (n Signed 0) (v "l")) (tern_ (v "u" .==. int32min) int32max (neg_ $ v "u"))) Signed64
+                                       , n Bool 1
+                                       , cast (max_ (max_ (n Signed 0) (v "u")) (tern_ (v "l" .==. int32min) int32max (neg_ $ v "l"))) Signed64
+                                       , (call "hasInt32Bounds" [v "op"]) .&&. (v "l" .!=. int32min)
+                                       , excludesNegativeZero
+                                       , v "op" .->. "maxExponent"
+                                       ]
              ]
   in Function "abs" (c "range") args body
 

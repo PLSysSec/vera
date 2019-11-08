@@ -45,6 +45,7 @@ fpIonMonkeyTests = benchTestGroup "Generated IonMonkey fp tests"
                    , maxTest
                    -- , floorTest
                    -- , ceilTest
+                   , absTest
                    ]
 
 
@@ -70,6 +71,9 @@ floorTest = error "bad" --benchTestCase "floor" $ evalCodegen Nothing $ verifyFp
 
 ceilTest :: BenchTest
 ceilTest = error "bad" --benchTestCase "ceil" $ evalCodegen Nothing $ verifyFpFunction "ceil" jsCeil [ceil]
+
+absTest :: BenchTest
+absTest = benchTestCase "abs" $ evalCodegen Nothing $ verifyFpUnaryFunction "abs" jsAbs [abs]
 
 -- Int32
 
