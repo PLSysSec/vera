@@ -161,7 +161,7 @@ floatInRange =
              -- Either is not inf or nan or op is inf or nan
              , assert_ $  ((isInf $ v "result_init") .||. ((isNan $ v "result_init")) .^. ((v "result_range_init" .->. "maxExponent" .<. includesInfinityAndNan)))
              -- If the range doesnt say can be neg z, cant be negz
-             , assert_ $ (v "result_range_init" .->. "canBeNegativeZero") .^. (isNeg (v "result_init") .&&. (isZero $ v "result_init") )
+             , assert_ $ (not_ $ v "result_range_init" .->. "canBeNegativeZero") .^. (isNeg (v "result_init") .&&. (isZero $ v "result_init") )
              , return_ $ v "result_init"
              ]
   in Function "floatInRange" (t Double) args body
