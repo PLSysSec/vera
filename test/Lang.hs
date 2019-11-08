@@ -1,7 +1,7 @@
 module Lang where
 import           BenchUtils
 import qualified Data.Map        as Map
-import           DSL.DSL         (SMTResult (..))
+import           DSL.DSL         (SMTResult (..), isUnsat)
 import           DSL.Typed       (Type (..))
 import           Generate.Lang
 import           Generate.SMTAST
@@ -256,7 +256,7 @@ voidCallTest = benchTestCase "void call" $ do
         body = [ declare (t Signed) "result"
                , (v "result") `assign` (n Signed 2)
                , assert_ $ v "result" .>. (n Signed 50)
-               , expect_ SolverUnsat
+               , expect_ isUnsat $ print
                ]
     define $ Function "fun" Void args body
 

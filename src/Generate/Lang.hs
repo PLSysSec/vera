@@ -78,6 +78,12 @@ v name = do
 n :: Type -> Integer -> Codegen SExpr
 n ty num = return $ NumExpr $ SNum ty num
 
+-- | Get an fp number
+d :: Type -> Double -> Codegen SExpr
+d ty num = case ty of
+             Double -> return $ NumExpr $ FNum ty num
+             _      -> error "Cannot make non-float float "
+
 -- | Get field from field name in a class method
 f :: FieldName -> Codegen SExpr
 f name = return $ FieldExpr name
@@ -126,41 +132,112 @@ tern_ c' b1' b2' = do
   b2 <- b2'
   return $ Tern c b1 b2
 
+
+
 neg_ :: Codegen SExpr -> Codegen SExpr
 neg_ ex = unaryOp ex Neg
 
 not_ :: Codegen SExpr -> Codegen SExpr
 not_ ex = unaryOp ex Not
 
+jsNot :: Codegen SExpr -> Codegen SExpr
+jsNot ex = unaryOp ex JSNot
+
 abs_ :: Codegen SExpr -> Codegen SExpr
 abs_ ex = unaryOp ex Abs
+
+jsAbs :: Codegen SExpr -> Codegen SExpr
+jsAbs ex = unaryOp ex JSAbs
+
+jsSign :: Codegen SExpr -> Codegen SExpr
+jsSign ex = unaryOp ex JSSign
+
+jsCeil :: Codegen SExpr -> Codegen SExpr
+jsCeil ex = unaryOp ex JSCeil
+
+jsFloor :: Codegen SExpr -> Codegen SExpr
+jsFloor ex = unaryOp ex JSFloor
+
+isNan :: Codegen SExpr -> Codegen SExpr
+isNan op = op >>= return . IsNan
+
+isInf :: Codegen SExpr -> Codegen SExpr
+isInf op = op >>= return . IsInf
+
+isZero :: Codegen SExpr -> Codegen SExpr
+isZero op = op >>= return . IsZero
+
+isNeg :: Codegen SExpr -> Codegen SExpr
+isNeg op = op >>= return . IsNegative
+
+fpExp :: Codegen SExpr -> Codegen SExpr
+fpExp op = op >>= return . GetExp
 
 (.==.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.==.) left right = binOp left right Eq
 
+(.!=.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+(.!=.) left right = binOp left right NEq
+
 (.&&.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.&&.) left right = binOp left right And
+
+(.&=.) :: Codegen SExpr -> Codegen SExpr -> Codegen SStmt
+(.&=.) left right = assignOp left right AndEq
+
+jsAnd :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+jsAnd left right = binOp left right JSAnd
 
 (.+.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.+.) left right = binOp left right Add
 
+(.+=.) :: Codegen SExpr -> Codegen SExpr -> Codegen SStmt
+(.+=.) left right = assignOp left right AddEq
+
+jsAdd :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+jsAdd left right = binOp left right JSAdd
+
 (.-.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.-.) left right = binOp left right Sub
+
+(.-=.) :: Codegen SExpr -> Codegen SExpr -> Codegen SStmt
+(.-=.) left right = assignOp left right SubEq
+
+jsSub :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+jsSub left right = binOp left right JSSub
 
 (.*.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.*.) left right = binOp left right Mul
 
+jsMul :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+jsMul left right = binOp left right JSMul
+
 (.||.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.||.) left right = binOp left right Or
+
+(.|=.) :: Codegen SExpr -> Codegen SExpr -> Codegen SStmt
+(.|=.) left right = assignOp left right OrEq
+
+jsOr :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+jsOr left right = binOp left right JSOr
 
 (.^.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.^.) left right = binOp left right XOr
 
+jsXOr :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+jsXOr left right = binOp left right JSXOr
+
 min_ :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 min_ left right = binOp left right Min
 
+jsMin :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+jsMin left right = binOp left right JSMin
+
 max_ :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 max_ left right = binOp left right Max
+
+jsMax :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+jsMax left right = binOp left right JSMax
 
 (.>.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.>.) left right = binOp left right Gt
@@ -177,8 +254,17 @@ max_ left right = binOp left right Max
 (.<<.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.<<.) left right = binOp left right Shl
 
+jsLsh :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+jsLsh left right = binOp left right JSLsh
+
 (.>>.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.>>.) left right = binOp left right Shr
+
+jsRsh :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+jsRsh left right = binOp left right JSRsh
+
+jsUrsh :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+jsUrsh left right = binOp left right JSUrsh
 
 (.->.) :: Codegen SExpr -> FieldName -> Codegen SExpr
 (.->.) ve' fieldname = do
@@ -218,6 +304,17 @@ assign svar' sexpr' = do
   newVar <- nextVar (varName $ exprVar svar)
   return $ Assign (VarExpr newVar) sexpr
 
+assignOp :: Codegen SExpr
+         -> Codegen SExpr
+         -> (SExpr -> SExpr -> SExpr -> SStmt)
+         -> Codegen SStmt
+assignOp svar' sexpr' op = do
+  svar <- svar'
+  sexpr <- sexpr'
+  unless (isPrimVarExpr svar) $ error "Cannot update-assign to a non-number-variable"
+  newVar <- nextVar (varName $ exprVar svar)
+  return $ op (VarExpr newVar) svar sexpr
+
 if_ :: Codegen SExpr
     -> [Codegen SStmt]
     -> [Codegen SStmt]
@@ -244,9 +341,10 @@ assert_ expr' = do
   expr <- expr'
   return $ Assert expr
 
-expect_ :: SMTResult
+expect_ :: (SMTResult -> Bool)
+        -> (SMTResult -> IO ())
         -> Codegen SStmt
-expect_ = return . Expect
+expect_ result act = return $ Expect result act
 
 push_ :: Codegen SStmt
 push_ = return Push

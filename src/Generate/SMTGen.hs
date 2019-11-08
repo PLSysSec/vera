@@ -13,7 +13,6 @@ genVarSMT var = getVar var
 genNumSMT :: SNum
           -> Codegen T.VNode
 genNumSMT snum = do
-  let val = numVal snum
   liftVerif $ case numTy snum of
     T.Signed16   -> T.num16 val
     T.Unsigned16 -> T.unum16 val
@@ -22,7 +21,11 @@ genNumSMT snum = do
     T.Signed64   -> T.num64 val
     T.Unsigned64 -> T.unum64 val
     T.Bool       -> if val == 1 then T.true else T.false
+    T.Double     -> T.fpnum fval
     _            -> error "Float not supported"
+  where
+    val = numVal snum
+    fval = floatVal snum
 
 genCallSMT :: SExpr
            -> Codegen [T.VNode]
@@ -37,9 +40,10 @@ genCallSMT expr =
 
       formalArgSyms <- do
         fas <- getFormalArgs name
-        forM fas $ \fa -> if isPrimType fa
-                          then genVarSMT fa >>= return . listOf
-                          else getFieldVars fa >>= mapM genVarSMT
+        forM fas $ \fa ->
+          if isPrimType fa
+          then genVarSMT fa >>= return . listOf
+          else getFieldVars fa >>= mapM genVarSMT
 
       unless (length argSyms == length formalArgSyms) $
         error $ unwords ["Improper number of arguments to", name]
@@ -105,6 +109,7 @@ genExprSMT expr =
     Abs e -> genExprSMT e >>= liftVerif . T.cppAbs
     -- Binary
     Eq left right  -> genBinOpSMT left right T.cppEq
+    NEq left right -> genBinOpSMT left right (\l r -> T.cppEq l r >>= T.cppNot)
     And left right -> genBinOpSMT left right T.cppAnd
     Add left right -> genBinOpSMT left right T.cppAdd
     Sub left right -> genBinOpSMT left right T.cppSub
@@ -119,21 +124,55 @@ genExprSMT expr =
     Lte left right -> genBinOpSMT left right T.cppLte
     Shl left right -> genBinOpSMT left right T.cppShiftLeft
     Shr left right -> genBinOpSMT left right T.cppShiftRight
+    -- JavaScript
+    JSAnd left right  -> genBinOpSMT left right T.jsAnd
+    JSAdd left right  -> genBinOpSMT left right T.jsAdd
+    JSSub left right  -> genBinOpSMT left right T.jsSub
+    JSMul left right  -> genBinOpSMT left right T.jsMul
+    JSOr  left right  -> genBinOpSMT left right T.jsOr
+    JSXOr left right  -> genBinOpSMT left right T.jsXor
+    JSMin left right  -> genBinOpSMT left right T.jsMin
+    JSMax left right  -> genBinOpSMT left right T.jsMax
+    JSLsh left right  -> genBinOpSMT left right T.jsShl
+    JSRsh left right  -> genBinOpSMT left right T.jsShr
+    JSUrsh left right -> genBinOpSMT left right T.jsUshr
+    JSAbs e           -> genExprSMT e >>= liftVerif . T.jsAbs
+    JSNot e           -> genExprSMT e >>= liftVerif . T.jsNot
+    JSCeil e          -> genExprSMT e >>= liftVerif . T.jsCeil
+    JSFloor e         -> genExprSMT e >>= liftVerif . T.jsFloor
+    JSSign  e         -> genExprSMT e >>= liftVerif . T.jsSign
+    -- Fp
+    IsInf  e     -> genExprSMT e >>= liftVerif . T.isInf
+    IsNan  e     -> genExprSMT e >>= liftVerif . T.isNan
+    IsZero e     -> genExprSMT e >>= liftVerif . T.isZero
+    IsNegative e -> genExprSMT e >>= liftVerif . T.isNeg
+    GetExp e     -> genExprSMT e >>= liftVerif . T.getFpExponent
 
     Call{}         -> do
       result <- genCallSMT expr
       case result of
         [rval] -> return rval
         _      -> error "Cannot return a class variable for use in greater expression"
+    _ -> error $ unwords $ ["Don't support", show expr]
+
+genAssignOpSMT :: SExpr
+               -> SExpr
+               -> SExpr
+               -> (T.VNode -> T.VNode -> T.Verif T.VNode)
+               -> Codegen ()
+genAssignOpSMT result one two op = do
+  lhsSMT <- genExprSMT result
+  leftSMT <- genExprSMT one
+  rightSMT <- genExprSMT two
+  tmp <- liftVerif $ op leftSMT rightSMT
+  liftVerif $ T.vassign lhsSMT tmp
 
 genStmtSMT :: SStmt -> Codegen ()
 genStmtSMT stmt =
   case stmt of
-    Expect smtResult -> do
+    Expect resultPred act -> do
       result <- runSolverOnSMT
-      -- we will have to fix this for sat
-      unless (smtResult == result) $
-        error $ unwords ["Verification failed with:", show result]
+      unless (resultPred result) $ liftIO $ act result
     Push -> D.push
     Pop -> D.pop
     Assert e -> genExprSMT e >>= liftVerif . T.vassert
@@ -162,6 +201,12 @@ genStmtSMT stmt =
       varSMT <- genExprSMT var
       exprSMT <- genExprSMT expr
       liftVerif $ T.vassign varSMT exprSMT
+
+    AddEq result one two -> genAssignOpSMT result one two T.cppAdd
+    SubEq result one two -> genAssignOpSMT result one two T.cppSub
+    OrEq result one two  -> genAssignOpSMT result one two T.cppOr
+    AndEq result one two -> genAssignOpSMT result one two T.cppAnd
+
     If cond trueBr falseBr -> do
       condSym <- genExprSMT cond
       mapM_ (rewriteConditional condSym) trueBr

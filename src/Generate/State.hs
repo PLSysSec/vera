@@ -2,6 +2,7 @@
 module Generate.State where
 import           Control.Monad.Reader
 import           Control.Monad.State.Strict
+import           Data.List                  (isInfixOf)
 import qualified Data.Map                   as M
 import           DSL.DSL                    hiding (vars)
 import           DSL.Typed

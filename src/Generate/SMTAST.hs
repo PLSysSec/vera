@@ -53,32 +53,57 @@ setVersion cv _                 = cv
 data SNum = SNum { numTy  :: Type
                  , numVal :: Integer
                  }
+          | FNum { numTy    :: Type
+                 , floatVal :: Double
+                 }
           deriving (Eq, Ord, Show)
 
 data SExpr = VarExpr { exprVar :: SVar }
            | NumExpr SNum
            | Neg SExpr
            | Not SExpr
+           | JSNot SExpr
            | Abs SExpr
+           | JSAbs SExpr
            | Eq SExpr SExpr
+           | NEq SExpr SExpr
            | And SExpr SExpr
+           | JSAnd SExpr SExpr
            | Add SExpr SExpr
+           | JSAdd SExpr SExpr
            | Sub SExpr SExpr
+           | JSSub SExpr SExpr
            | Mul SExpr SExpr
+           | JSMul SExpr SExpr
            | Or SExpr SExpr
+           | JSOr SExpr SExpr
            | XOr SExpr SExpr
+           | JSXOr SExpr SExpr
            | Min SExpr SExpr
+           | JSMin SExpr SExpr
            | Max SExpr SExpr
+           | JSMax SExpr SExpr
            | Gt SExpr SExpr
            | Gte SExpr SExpr
            | Lt SExpr SExpr
            | Lte SExpr SExpr
+           | IsNan SExpr
+           | IsInf SExpr
+           | IsZero SExpr
+           | IsNegative SExpr
+           | GetExp SExpr
            | Shl SExpr SExpr
+           | JSLsh SExpr SExpr
            | Shr SExpr SExpr
+           | JSRsh SExpr SExpr
+           | JSUrsh SExpr SExpr
            | Tern SExpr SExpr SExpr
            | Cast SExpr Type
            | Call FunctionName [SExpr]
            | FieldExpr FieldName
+           | JSCeil SExpr
+           | JSFloor SExpr
+           | JSSign SExpr
            deriving (Eq, Ord, Show)
 
 isCallExpr :: SExpr -> Bool
@@ -95,12 +120,16 @@ isPrimVarExpr _           = False
 
 data SStmt = Decl SVar
            | Assign SExpr SExpr
+           | AddEq SExpr SExpr SExpr
+           | SubEq SExpr SExpr SExpr
+           | OrEq SExpr SExpr SExpr
+           | AndEq SExpr SExpr SExpr
            | If SExpr [SStmt] [SStmt]
            | VoidCall FunctionName [SExpr]
            | Return SExpr
            | Assert SExpr
-           | Expect SMTResult
+           | Expect (SMTResult -> Bool) (SMTResult -> IO ())
            | Push
            | Pop
-           deriving (Eq, Ord, Show)
+
 

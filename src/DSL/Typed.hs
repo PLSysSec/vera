@@ -101,7 +101,7 @@ module DSL.Typed ( vassert
                  , D.isSat
                  , D.isUnsat
                  ) where
-import           Control.Monad.State.Strict (unless, when)
+import           Control.Monad.State.Strict (unless, when, liftIO)
 import qualified DSL.DSL                    as D
 import           Prelude                    hiding (compare, exp)
 
@@ -737,8 +737,10 @@ jsCeil op =
   then return op
   else do 
     result <- D.fpCeil $ vnode op
-    resultVar <- D.doubv "jsCailResult"
+    resultVar <- D.doubv "jsCeilResult"
+    startVar <- D.doubv "jsCeilStart"
     D.assign result resultVar
+    D.assign (vnode op) startVar
     newDefinedNode result Double                 
 
 -- | Have not found this one yet but we're guessing based on js
@@ -768,13 +770,15 @@ jsSign op =
     result' <- D.cond _isPos one minusOne
     -- if its pos zero return pos zero, neg zero return neg zero
     _isZero <- D.isZero $ vnode op
-    _posZero <- D.fpzero True
-    _negZero <- D.fpzero False
+    _posZero <- D.fpzero False
+    _negZero <- D.fpzero True
     correctZero <- D.cond _isPos _posZero _negZero
     result <- D.cond _isZero correctZero result'
     -- make a variable
     resultVar <- D.doubv "jsSign"
     D.assign result resultVar
+    inputVar <- D.doubv "jsSignStart"
+    D.assign (vnode op) inputVar
     newDefinedNode result Double
   
 --
@@ -1031,7 +1035,7 @@ DEFINEBINOPCLASS(CppShiftRight, cppShiftRight)
 instance CppShiftRight VNode VNode where
   cppShiftRight left right
     | not (is32Bits $ vtype left) || not (is32Bits $ vtype right) =
-        error "Only support 32 bit SHL"                
+        error "Only support 32 bit SHR"                
     | isUnsigned (vtype left) = do
         undef <- makeUndef
         result <- D.safeSrl (vnode left) (vnode right)

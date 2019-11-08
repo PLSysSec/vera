@@ -1,6 +1,7 @@
 import           BenchUtils
 import           Cpp
 import           DSL
+import           GenHelpers
 import           GenIonMonkey
 import           Helpers
 import           InputRanges
@@ -17,9 +18,10 @@ allTests = [ -- ionMonkeyTests
             genIonMonkeyTests
            -- , notTerminating
            -- , helpersTests
+           , genHelpersTests
            -- , inputTests
            -- , cppTests
            -- , jsTests
            -- , dslTests
-           , langTests
+--           , langTests
            ]
