@@ -9,6 +9,7 @@ import           Generate.Lang
 import           Generate.SMTAST
 import           Generate.SMTGen
 import           Generate.State
+import           GHC.Float
 import           IonMonkeyGenerated.Helpers
 import           IonMonkeyGenerated.Objects
 
@@ -217,7 +218,7 @@ verifyNegZero =
              , assert_ $ (isNeg $ v "result_nz") .&&. (isZero $ v "result_nz")
                -- ... but the negative zero flag isn't set
              , assert_ $ not_ $ v "result_range_nz" .->. "canBeNegativeZero"
-             , expect_ isUnsat $ \r -> showInt32Result "Failed to verify NZ" r
+             , expect_ isUnsat $ \r -> showNegzResult "Failed to verify NZ" r
              , pop_
              ]
   in Function "verifyNegZ" Void args body
@@ -264,16 +265,26 @@ getNanList fls = catMaybes $ map (\(str, fl) ->
                          _ -> Just $ unwords [str, ":", show (round fl :: Integer)]
                      ) $ M.toList fls
 
+showNegzResult :: String -> SMTResult -> IO ()
+showNegzResult str result = error $ str ++ "\n" ++ (unlines $ getNegzList $ example result)
+
 getNegzList :: M.Map String Double -> [String]
 getNegzList fls = catMaybes $ map (\(str, fl) ->
                        case str of
-                         _ | "_undef" `isInfixOf` str         -> Nothing
-                         _ | "_hasUpperBound" `isInfixOf` str -> Nothing
-                         _ | "_hasLowerBound" `isInfixOf` str -> Nothing
-                         _ | "hasFract" `isInfixOf` str       -> Nothing
-                         _ | "infOrNan" `isInfixOf` str       -> Nothing
-                         _ -> Just $ unwords [str, ":", show (round fl :: Integer)]
+                         _ | "undef" `isInfixOf` str -> Nothing
+                         _ | "left_range_canBeNegativeZero" `isInfixOf` str -> sstr str fl
+                         _ | "right_range_canBeNegativeZero" `isInfixOf` str -> sstr str fl
+                         _ | "result_range_canBeNegativeZero" `isInfixOf` str -> sstr str fl
+                         _ | "right_1" `isInfixOf` str -> sstr str fl
+                         _ | "left_1" `isInfixOf` str -> sstr str fl
+                         _ | "result_1" `isInfixOf` str -> sstr str fl
+                         _ -> Nothing
                      ) $ M.toList fls
+  where
+    sstr str fl = Just $ unwords [str, ":", if isNegativeZero fl
+                                            then "negz"
+                                            else show (round fl :: Integer)
+                                 ]
 
 showInt32Result :: String -> SMTResult -> IO ()
 showInt32Result str result = error $ str ++ "\n" ++ (unlines $ getIntList $ example result)
