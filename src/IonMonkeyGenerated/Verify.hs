@@ -334,6 +334,8 @@ getNegzList fls = catMaybes $ map (\(str, fl) ->
                          _ | "result_1" `isInfixOf` str -> sstr str fl
                          _ | "jsCeilStart" `isInfixOf` str -> sstr str fl
                          _ | "jsCeilResult" `isInfixOf` str -> sstr str fl
+                         _ | "jsSign" `isInfixOf` str -> sstr str fl
+                         _ | "jsSignStart" `isInfixOf` str -> sstr str fl
                          _ -> Nothing
                      ) $ M.toList fls
   where

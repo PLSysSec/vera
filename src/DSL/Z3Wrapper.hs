@@ -260,9 +260,9 @@ inf positive = do
   Z.mkFpInf doubSort positive
 
 fpzero ::MonadZ3 z3 => Bool -> z3 AST
-fpzero positive = do
+fpzero negative = do
   doubSort <- Z.mkDoubleSort
-  Z.mkFpZero doubSort positive
+  Z.mkFpZero doubSort negative
 
 nan :: MonadZ3 z3 => z3 AST
 nan = do

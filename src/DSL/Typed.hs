@@ -770,13 +770,15 @@ jsSign op =
     result' <- D.cond _isPos one minusOne
     -- if its pos zero return pos zero, neg zero return neg zero
     _isZero <- D.isZero $ vnode op
-    _posZero <- D.fpzero True
-    _negZero <- D.fpzero False
+    _posZero <- D.fpzero False
+    _negZero <- D.fpzero True
     correctZero <- D.cond _isPos _posZero _negZero
     result <- D.cond _isZero correctZero result'
     -- make a variable
     resultVar <- D.doubv "jsSign"
     D.assign result resultVar
+    inputVar <- D.doubv "jsSignStart"
+    D.assign (vnode op) inputVar
     newDefinedNode result Double
   
 --
