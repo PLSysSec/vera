@@ -1,5 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Generate.State where
+import           Control.Monad.Fail
 import           Control.Monad.Reader
 import           Control.Monad.State.Strict
 import           Data.List                  (isInfixOf)
@@ -11,6 +12,7 @@ import qualified Z3.Monad                   as Z
 
 data CodegenState = CodegenState { vars      :: M.Map VarName Version
                                  , tys       :: M.Map VarName STy
+                                 , fieldInfo :: M.Map VarName (VarName, FieldName)
                                  , classes   :: M.Map ClassName (M.Map FieldName Type)
                                  -- * For code generation
                                  , curClassVar :: [SVar]
@@ -34,12 +36,15 @@ instance Z.MonadZ3 Codegen where
     getSolver = Codegen $ lift $ Z.getSolver
     getContext = Codegen $ lift $ Z.getContext
 
+instance MonadFail Codegen where
+    fail = error "FAILED"
+
 --
 -- Normal setup things
 --
 
 emptyCodegenState :: CodegenState
-emptyCodegenState = CodegenState M.empty M.empty M.empty [] [] M.empty M.empty
+emptyCodegenState = CodegenState M.empty M.empty M.empty M.empty [] [] M.empty M.empty
 
 liftVerif :: Verif a -> Codegen a
 liftVerif = Codegen . lift
@@ -146,8 +151,9 @@ addClass className fields = do
 
 getField :: SVar -> FieldName -> Codegen SVar
 getField var field = do
-  let fieldName = (varName var) ++ "_" ++ field
-  curVar fieldName
+  let vname = (varName var) ++ "_" ++ field
+  addFieldInfo vname (varName var, field)
+  curVar vname
 
 getFields :: ClassName -> Codegen (M.Map FieldName Type)
 getFields name = do
@@ -208,6 +214,16 @@ newVar ty str = do
 --
 -- Variables
 --
+
+addFieldInfo :: VarName -> (VarName, FieldName) -> Codegen ()
+addFieldInfo var info = do
+  s0 <- get
+  put $ s0 { fieldInfo = M.insert var info $ fieldInfo s0 }
+
+getFieldInfo :: VarName -> Codegen (Maybe (VarName, FieldName))
+getFieldInfo var = do
+  fieldInfos <- fieldInfo `liftM` get
+  return $ M.lookup var fieldInfos
 
 varType :: VarName -> Codegen STy
 varType str = do

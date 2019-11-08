@@ -362,16 +362,28 @@ instance Show VerifResult where
     show Verified              = "Verified!"
     show UnsatImpl             = "Verification failed (e.g., due to a timeout)"
 
+showNanResult :: String -> SMTResult -> IO ()
+showNanResult str result = error $ str ++ "\n" ++ (unlines $ getNanList $ example result)
+
 getNanList :: M.Map String Double -> [String]
-getNanList fls = catMaybes $ map (\(str, fl) ->
-                       case str of
-                         _ | "_undef" `isInfixOf` str -> Nothing
-                         _ | "_hasUpperBound" `isInfixOf` str -> Nothing
-                         _ | "_hasLowerBound" `isInfixOf` str -> Nothing
-                         _ | "hasFract" `isInfixOf` str -> Nothing
-                         _ | "negZero" `isInfixOf` str -> Nothing
-                         _ -> Just $ unwords [str, ":", show (round fl :: Integer)]
-                     ) $ M.toList fls
+getNanList fls = error ""--catMaybes $ map (\(str, fl) ->
+  --                      case str of
+  --                        _ | "undef" `isInfixOf` str -> Nothing
+  --                        _ | "left_range_maxExponent" `isInfixOf` str -> sstr str fl
+  --                        _ | "right_range_maxExponent" `isInfixOf` str -> sstr str fl
+  --                        _ | "start_range_maxExponent" `isInfixOf` str -> sstr str fl
+  --                        _ | "result_range_maxExponent" `isInfixOf` str -> sstr str fl
+  --                        _ | "right_1" `isInfixOf` str -> sstr str fl
+  --                        _ | "left_1" `isInfixOf` str -> sstr str fl
+  --                        _ | "start_1" `isInfixOf` str -> sstr str fl
+  --                        _ | "result_1" `isInfixOf` str -> sstr str fl
+  --                        _ -> Nothing
+  --                      ) $ M.toList fls
+
+  -- where
+  --   sstr str fl = Just $ unwords [str, ":", if isNan fl
+  --                                           then "NaN"
+  --                                           else show (round fl :: Integer)
 
 showNegzResult :: String -> SMTResult -> IO ()
 showNegzResult str result = error $ str ++ "\n" ++ (unlines $ getNegzList $ example result)
