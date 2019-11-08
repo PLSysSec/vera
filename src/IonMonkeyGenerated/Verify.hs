@@ -167,6 +167,7 @@ verifyFpUnaryFunction fnName jsOp fns = do
   define range6
   define range4
   define canBeFiniteNonNegative
+  define exponentImpliedByInt32Bounds
   define numBits
   define canBeNan
   define canBeZero
@@ -325,10 +326,14 @@ getNegzList fls = catMaybes $ map (\(str, fl) ->
                          _ | "undef" `isInfixOf` str -> Nothing
                          _ | "left_range_canBeNegativeZero" `isInfixOf` str -> sstr str fl
                          _ | "right_range_canBeNegativeZero" `isInfixOf` str -> sstr str fl
+                         _ | "start_range_canBeNegativeZero" `isInfixOf` str -> sstr str fl
                          _ | "result_range_canBeNegativeZero" `isInfixOf` str -> sstr str fl
                          _ | "right_1" `isInfixOf` str -> sstr str fl
                          _ | "left_1" `isInfixOf` str -> sstr str fl
+                         _ | "start_1" `isInfixOf` str -> sstr str fl
                          _ | "result_1" `isInfixOf` str -> sstr str fl
+                         _ | "jsCeilStart" `isInfixOf` str -> sstr str fl
+                         _ | "jsCeilResult" `isInfixOf` str -> sstr str fl
                          _ -> Nothing
                      ) $ M.toList fls
   where

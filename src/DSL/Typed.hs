@@ -737,8 +737,10 @@ jsCeil op =
   then return op
   else do 
     result <- D.fpCeil $ vnode op
-    resultVar <- D.doubv "jsCailResult"
+    resultVar <- D.doubv "jsCeilResult"
+    startVar <- D.doubv "jsCeilStart"
     D.assign result resultVar
+    D.assign (vnode op) startVar
     newDefinedNode result Double                 
 
 -- | Have not found this one yet but we're guessing based on js

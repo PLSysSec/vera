@@ -138,6 +138,8 @@ genExprSMT expr =
     JSUrsh left right -> genBinOpSMT left right T.jsUshr
     JSAbs e           -> genExprSMT e >>= liftVerif . T.jsAbs
     JSNot e           -> genExprSMT e >>= liftVerif . T.jsNot
+    JSCeil e          -> genExprSMT e >>= liftVerif . T.jsCeil
+    JSFloor e         -> genExprSMT e >>= liftVerif . T.jsFloor
     -- Fp
     IsInf  e     -> genExprSMT e >>= liftVerif . T.isInf
     IsNan  e     -> genExprSMT e >>= liftVerif . T.isNan

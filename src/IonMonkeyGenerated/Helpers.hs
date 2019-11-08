@@ -142,6 +142,14 @@ canHaveSignBitSet =
       body = [ return_ $ (not_ $ v "sbs_range" .->. "hasInt32LowerBound") .||. (call "canBeFiniteNonNegative" [v "sbs_range"]) .||. (v "sbs_range" .->. "canBeNegativeZero")]
   in Function "canHaveSignBitSet" (t Bool) args body
 
+exponentImpliedByInt32Bounds :: FunctionDef
+exponentImpliedByInt32Bounds =
+  let args = [ ("eib_range", c "range") ]
+      body = [ return_ $ fpExp $ cast (max_ (abs_ $ v "eib_range" .->. "lower") (abs_ $ v "eib_range" .->. "upper")) Double
+             ]
+
+  in Function "exponentImpliedByInt32Bounds" (t Unsigned16) args body
+
 --- Less complicated stuff
 
 range_constructor :: FunctionDef

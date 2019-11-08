@@ -149,6 +149,12 @@ abs_ ex = unaryOp ex Abs
 jsAbs :: Codegen SExpr -> Codegen SExpr
 jsAbs ex = unaryOp ex JSAbs
 
+jsCeil :: Codegen SExpr -> Codegen SExpr
+jsCeil ex = unaryOp ex JSCeil
+
+jsFloor :: Codegen SExpr -> Codegen SExpr
+jsFloor ex = unaryOp ex JSFloor
+
 isNan :: Codegen SExpr -> Codegen SExpr
 isNan op = op >>= return . IsNan
 

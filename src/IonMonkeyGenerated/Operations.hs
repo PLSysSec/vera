@@ -435,10 +435,10 @@ floor :: FunctionDef
 floor =
   let args = [ ("op", c "range") ]
       body = [ declare (c "range") "copy"
-             , v "range" `assign` v "op"
+             , v "copy" `assign` v "op"
                -- missing fract check
              , if_ (v "op" .->. "hasInt32LowerBound")
-               [v "copy" `assign` (call "setLowerInit" [(cast (v "copy" .->. "lower") Signed64) .-. n Signed64 1]) ] []
+               [v "copy" `assign` (call "setLowerInit" [(cast (v "copy" .->. "lower") Signed64) .-. n Signed64 1, v "copy"]) ] []
              , if_ (call "hasInt32Bounds" [v "copy"])
                [(v "copy" .->. "maxExponent") `assign` (call "exponentImpliedByInt32Bounds" [v "copy"])]
                [if_ (v "copy" .->. "maxExponent" .<. maxFiniteExponent)
@@ -453,7 +453,7 @@ ceil :: FunctionDef
 ceil =
   let args = [ ("op", c "range") ]
       body = [ declare (c "range") "copy"
-             , v "range" `assign` v "op"
+             , v "copy" `assign` v "op"
                -- missing fract check
              , if_ (call "hasInt32Bounds" [v "copy"])
                [(v "copy" .->. "maxExponent") `assign` (call "exponentImpliedByInt32Bounds" [v "copy"])]
@@ -462,7 +462,7 @@ ceil =
                ]
              , return_ $ v "copy"
              ]
-  in Function "floor" (c "range") args body
+  in Function "ceil" (c "range") args body
 
 -- Not doing nan thing
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1184

@@ -97,6 +97,8 @@ data SExpr = VarExpr { exprVar :: SVar }
            | Cast SExpr Type
            | Call FunctionName [SExpr]
            | FieldExpr FieldName
+           | JSCeil SExpr
+           | JSFloor SExpr
            deriving (Eq, Ord, Show)
 
 isCallExpr :: SExpr -> Bool

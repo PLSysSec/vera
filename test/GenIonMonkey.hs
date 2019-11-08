@@ -43,8 +43,8 @@ fpIonMonkeyTests = benchTestGroup "Generated IonMonkey fp tests"
                    , mulTest
                    , minTest
                    , maxTest
-                   -- , floorTest
-                   -- , ceilTest
+                   , floorTest
+                   , ceilTest
                    , absTest
                    ]
 
@@ -67,13 +67,16 @@ maxTest :: BenchTest
 maxTest = benchTestCase "max" $ evalCodegen Nothing $ verifyFpFunction "max" jsMax [max]
 
 floorTest :: BenchTest
-floorTest = error "bad" --benchTestCase "floor" $ evalCodegen Nothing $ verifyFpFunction "floor" jsFloor [floor]
+floorTest = benchTestCase "floor" $ evalCodegen Nothing $ verifyFpUnaryFunction "floor" jsFloor [floor]
 
 ceilTest :: BenchTest
-ceilTest = error "bad" --benchTestCase "ceil" $ evalCodegen Nothing $ verifyFpFunction "ceil" jsCeil [ceil]
+ceilTest = benchTestCase "ceil" $ evalCodegen Nothing $ verifyFpUnaryFunction "ceil" jsCeil [ceil]
 
 absTest :: BenchTest
 absTest = benchTestCase "abs" $ evalCodegen Nothing $ verifyFpUnaryFunction "abs" jsAbs [abs]
+
+-- signTest :: BenchTest
+-- signTest = benchTestCase "sign" $ evalCodegen Nothing $ verifyFpUnaryFunction "sign" jsSign [sign]
 
 -- Int32
 
