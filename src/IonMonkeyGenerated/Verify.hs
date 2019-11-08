@@ -115,6 +115,7 @@ verifyFpFunction fnName jsOp fns = do
   define newFloatInputRange
   define verifySaneRange
   define verifyNegZero
+  define verifyNan
   define canBeInfiniteOrNan
   define setLowerInit
   define setUpperInit
@@ -147,6 +148,7 @@ verifyFpFunction fnName jsOp fns = do
               , (v "result") `assign` (v "left" `jsOp` v "right")
                 -- Verify FP properties
               , vcall "verifyNegZ" [v "result_range", v "result"]
+              , vcall "verifyNan"  [v "result_range", v "result"]
               ]
   genBodySMT verif
 
@@ -160,6 +162,7 @@ verifyFpUnaryFunction fnName jsOp fns = do
   define newFloatInputRange
   define verifySaneRange
   define verifyNegZero
+  define verifyNan
   define canBeInfiniteOrNan
   define setLowerInit
   define setUpperInit
@@ -189,6 +192,7 @@ verifyFpUnaryFunction fnName jsOp fns = do
               , (v "result") `assign` (jsOp $ v "start")
                 -- Verify FP properties
               , vcall "verifyNegZ" [v "result_range", v "result"]
+              , vcall "verifyNan"  [v "result_range", v "result"]
               ]
   genBodySMT verif
 
@@ -274,6 +278,21 @@ verifyNegZero =
              , pop_
              ]
   in Function "verifyNegZ" Void args body
+
+verifyNan :: FunctionDef
+verifyNan =
+  let args = [ ("result_range_nan", c "range")
+             , ("result_nan", t Double)
+             ]
+      body = [ push_
+               -- It's Nan
+             , assert_ $ isNan $ v "result_nan"
+               -- ... but the Nan exponent is not correct
+             , assert_ $ not_ $ (v "result_range_nan" .->. "maxExponent") .==. includesInfinityAndNan
+             , expect_ isUnsat $ \r -> showNegzResult "Failed to verify Nan" r
+             , pop_
+             ]
+  in Function "verifyNan" Void args body
 
 -- Copypasted
 
