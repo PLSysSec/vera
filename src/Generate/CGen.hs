@@ -1,6 +1,7 @@
 module Generate.CGen where
 import Control.Monad
 import Generate.SMTAST
+import Generate.State
 import Generate.Lang
 import Data.List
 import DSL.Typed       as T
@@ -26,6 +27,18 @@ compileParams :: [(VarName, STy)] -> String
 compileParams params = do
   let paramStrings = map (\(name, ty) -> (compileSType ty) ++ " " ++ name) params
   intercalate ", " paramStrings
+
+compileFunction :: FunctionDef -> Codegen [String]
+compileFunction (Function name ty params body) = do
+  let paramString = compileParams params
+      headerString = (compileSType ty) ++ " " ++ name ++ "(" ++ paramString ++ ") {"
+  bodyCodegenStrings <- mapM compileCodegenSStmt body
+  return $ [headerString] ++ bodyCodegenStrings ++ ["}"]
+
+compileCodegenSStmt :: Codegen SStmt -> Codegen String
+compileCodegenSStmt stmt = do
+  s <- stmt
+  return $ unlines $ compileSStmt s
 
 compileSFunction :: SFunction -> [String]
 compileSFunction (SFunction name ty params body) = do
