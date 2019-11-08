@@ -26,6 +26,11 @@ cppGenTests = benchTestGroup "CPP Gen tests"
               , cppSubTest
               ]
 
+writeCompiled :: String -> [String] -> Codegen ()
+writeCompiled fileName comp = do
+  let prog = intercalate "\n" comp
+  liftIO $ writeFile fileName prog
+
 cppNotTest :: BenchTest
 cppNotTest = benchTestCase "cpp not test" $ do
   r <- evalCodegen Nothing $ do
@@ -33,8 +38,7 @@ cppNotTest = benchTestCase "cpp not test" $ do
     class_ range
     define not
     compiled <- compileFunction not
-    let prog = intercalate "\n" compiled
-    liftIO $ writeFile "test/GenCPP/not.cpp" prog
+    writeCompiled "test/GenCPP/not.cpp" compiled
     error "test"
   error "test1"
 
@@ -45,8 +49,7 @@ cppAddTest = benchTestCase "cpp add test" $ do
     class_ range
     define add
     compiled <- compileFunction add
-    let prog = intercalate "\n" compiled
-    liftIO $ writeFile "test/GenCPP/add.cpp" prog
+    writeCompiled "test/GenCPP/add.cpp" compiled
     error "test"
   error "test1"
 
@@ -57,7 +60,6 @@ cppSubTest = benchTestCase "cpp sub test" $ do
     class_ range
     define sub
     compiled <- compileFunction sub
-    let prog = intercalate "\n" compiled
-    liftIO $ writeFile "test/GenCPP/sub.cpp" prog
+    writeCompiled "test/GenCPP/sub.cpp" compiled
     error "test"
   error "test1"
