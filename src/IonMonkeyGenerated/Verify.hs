@@ -116,6 +116,7 @@ verifyFpFunction fnName jsOp fns = do
   define verifySaneRange
   define verifyNegZero
   define verifyNan
+  define verifyInf
   define canBeInfiniteOrNan
   define setLowerInit
   define setUpperInit
@@ -149,6 +150,7 @@ verifyFpFunction fnName jsOp fns = do
                 -- Verify FP properties
               , vcall "verifyNegZ" [v "result_range", v "result"]
               , vcall "verifyNan"  [v "result_range", v "result"]
+              , vcall "verifyInf"  [v "result_range", v "result"]
               ]
   genBodySMT verif
 
@@ -163,6 +165,7 @@ verifyFpUnaryFunction fnName jsOp fns = do
   define verifySaneRange
   define verifyNegZero
   define verifyNan
+  define verifyInf
   define canBeInfiniteOrNan
   define setLowerInit
   define setUpperInit
@@ -193,6 +196,7 @@ verifyFpUnaryFunction fnName jsOp fns = do
                 -- Verify FP properties
               , vcall "verifyNegZ" [v "result_range", v "result"]
               , vcall "verifyNan"  [v "result_range", v "result"]
+              , vcall "verifyInf"  [v "result_range", v "result"]
               ]
   genBodySMT verif
 
@@ -293,6 +297,21 @@ verifyNan =
              , pop_
              ]
   in Function "verifyNan" Void args body
+
+verifyInf :: FunctionDef
+verifyInf =
+  let args = [ ("result_range_inf", c "range")
+             , ("result_inf", t Double)
+             ]
+      body = [ push_
+               -- It's inf
+             , assert_ $ isInf $ v "result_inf"
+               -- ... but the inf exponent is not correct
+             , assert_ $ not_ $ (v "result_range_nan" .->. "maxExponent") .=>. includesInfinity
+             , expect_ isUnsat $ \r -> showNegzResult "Failed to verify Inf" r
+             , pop_
+             ]
+  in Function "verifyInf" Void args body
 
 -- Copypasted
 
