@@ -117,6 +117,7 @@ verifyFpFunction fnName jsOp fns = do
   define verifyNegZero
   define verifyNan
   define verifyInf
+  define verifyExp
   define canBeInfiniteOrNan
   define setLowerInit
   define setUpperInit
@@ -151,6 +152,7 @@ verifyFpFunction fnName jsOp fns = do
               , vcall "verifyNegZ" [v "result_range", v "result"]
               , vcall "verifyNan"  [v "result_range", v "result"]
               , vcall "verifyInf"  [v "result_range", v "result"]
+              , vcall "verifyExp"  [v "result_range", v "result"]
               ]
   genBodySMT verif
 
@@ -166,6 +168,7 @@ verifyFpUnaryFunction fnName jsOp fns = do
   define verifyNegZero
   define verifyNan
   define verifyInf
+  define verifyExp
   define canBeInfiniteOrNan
   define setLowerInit
   define setUpperInit
@@ -197,6 +200,7 @@ verifyFpUnaryFunction fnName jsOp fns = do
               , vcall "verifyNegZ" [v "result_range", v "result"]
               , vcall "verifyNan"  [v "result_range", v "result"]
               , vcall "verifyInf"  [v "result_range", v "result"]
+              , vcall "verifyExp"  [v "result_range", v "result"]
               ]
   genBodySMT verif
 
@@ -312,6 +316,17 @@ verifyInf =
              , pop_
              ]
   in Function "verifyInf" Void args body
+
+verifyExp :: FunctionDef
+verifyExp =
+  let args = [ ("result_range_exp", c "range")
+             , ("result_exp", t Double)
+             ]
+      body = [ push_
+             , assert_ $ (fpExp $ v "result_exp") .>. (v "result_range_exp" .->. "maxExponent")
+             , pop_
+             ]
+  in Function "verifyExp" Void args body
 
 -- Copypasted
 
