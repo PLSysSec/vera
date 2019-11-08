@@ -33,7 +33,7 @@ compileFunction (Function name ty params body) = do
   let paramString = compileParams params
       headerString = (compileSType ty) ++ " " ++ name ++ "(" ++ paramString ++ ") {"
   bodyCodegenStrings <- mapM compileCodegenSStmt body
-  return $ [headerString] ++ bodyCodegenStrings ++ ["}"]
+  return $ [headerString] ++ bodyCodegenStrings ++ ["}", ""]
 
 compileCodegenSStmt :: Codegen SStmt -> Codegen String
 compileCodegenSStmt stmt = do
@@ -58,12 +58,38 @@ compileSStmt :: SStmt -> [String]
 compileSStmt (Decl (SVar ty name _)) =
   [(compileType ty) ++ " " ++ name ++ ";"]
 
-compileSStmt (Decl (CVar className name)) =
-  [className ++ " " ++ name ++ ";"]
+compileSStmt (Decl var) =
+  case var of
+    SVar ty name _ -> [(compileType ty) ++ " " ++ name ++ ";"]
+    CVar cl name   -> [cl ++ " " ++ name ++ ";"]
 
 -- Only works if the left expression is a var?
 compileSStmt (Assign expr1 expr2) =
   [(compileSExpr expr1) ++ " = " ++ (compileSExpr expr2) ++ ";"]
+
+compileSStmt (AddEq _ expr1 expr2) = do
+  let c1 = compileSExpr expr1
+      c2 = compileSExpr expr2
+  [c1 ++ " += " ++ c2 ++ ";"]
+
+compileSStmt (SubEq _ expr1 expr2) = do
+  let c1 = compileSExpr expr1
+      c2 = compileSExpr expr2
+  [c1 ++ " -= " ++ c2 ++ ";"]
+
+compileSStmt (OrEq _ expr1 expr2) = do
+  let c1 = compileSExpr expr1
+      c2 = compileSExpr expr2
+  [c1 ++ " |= " ++ c2 ++ ";"]
+
+compileSStmt (AndEq _ expr1 expr2) = do
+  let c1 = compileSExpr expr1
+      c2 = compileSExpr expr2
+  [c1 ++ " &= " ++ c2 ++ ";"]
+
+compileSStmt Push = [""]
+
+compileSStmt Pop = [""]
 
 -- Possibly don't need
 compileSStmt (Assert expr) =
@@ -71,9 +97,12 @@ compileSStmt (Assert expr) =
 
 compileSStmt (If expr thenStmts elseStmts) = do
   let condString = "if(" ++ (compileSExpr expr) ++ ") {"
-  let thenStrings = concat $ map compileSStmt thenStmts
-  let elseStrings = concat $ map compileSStmt elseStmts
-  [condString] ++ (thenStrings ++ elseStrings)
+      thenStrings = concat $ map compileSStmt thenStmts
+      elseStrings = concat $ map compileSStmt elseStmts
+      elseConcatString = if (null elseStrings)
+                          then [""]
+                          else ["} else {"]
+  [condString] ++ thenStrings ++ elseConcatString ++ elseStrings ++ ["}"]
 
 compileSStmt (Return expr) =
   ["return " ++ (compileSExpr expr) ++ ";"]
@@ -82,8 +111,10 @@ compileSStmt (VoidCall name args) =
   [(compileSExpr (Call name args)) ++ ";"]
 
 compileSExpr :: SExpr -> String
-compileSExpr (VarExpr (SVar _ name _)) =
-  name
+compileSExpr (VarExpr var) =
+  case var of
+    SVar _ name _ -> name
+    CVar _ name   -> name
 
 -- TODO: Right now this only works correctly on integers
 compileSExpr (NumExpr (SNum numType numVal)) =
@@ -157,3 +188,5 @@ compileSExpr (Call name exprs) = do
 compileSExpr (FieldExpr name) =
   "this." ++ name
 
+compileSExpr e =
+  error $ show e
