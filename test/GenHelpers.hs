@@ -36,12 +36,15 @@ ranges = benchTestCase "ranges" $ do
     genBodySMT [ declare (c "range") "testRange"
                , declare (t Signed) "low"
                , declare (t Signed) "high"
+               , declare (t Bool) "nz"
+               , declare (t Unsigned16) "exp"
                , v "testRange" `assign` call "Range3" [ cast (n Signed 8) Signed64
                                                       , cast (n Signed 8) Signed64
-                                                      , n Bool 0
+                                                      , n Bool 1
                                                       ]
                , v "low" `assign`  (v "testRange" .->. "lower")
                , v "high" `assign` (v "testRange" .->. "upper")
+               , v "nz" `assign` (v "testRange" .->. "canBeNegativeZero")
                , v "testRange" `assign` call "Range4" [ cast (n Signed 100) Signed64
                                                       , cast (n Signed 100) Signed64
                                                       , n Bool 1
@@ -49,23 +52,37 @@ ranges = benchTestCase "ranges" $ do
                                                       ]
                , v "low" `assign`  (v "testRange" .->. "lower")
                , v "high" `assign` (v "testRange" .->. "upper")
+               , v "nz" `assign` (v "testRange" .->. "canBeNegativeZero")
+               , v "exp" `assign` (v "testRange" .->. "maxExponent")
                , v "testRange" `assign` call "Range6" [ cast (n Signed 500) Signed64
                                                       , n Bool 1
                                                       , cast (n Signed 400) Signed64
-                                                      , n Bool 0
+                                                      , n Bool 1
                                                       , n Bool 1
                                                       , n Unsigned16 12
                                                       ]
                , v "low" `assign`  (v "testRange" .->. "lower")
                , v "high" `assign` (v "testRange" .->. "upper")
+               , v "nz" `assign` (v "testRange" .->. "canBeNegativeZero")
+               , v "exp" `assign` (v "testRange" .->. "maxExponent")
+               , declare (t Bool) "hlb"
+               , declare (t Bool) "hub"
+               , v "hlb" `assign` (v "testRange" .->. "hasInt32LowerBound")
+               , v "hub" `assign` (v "testRange" .->. "hasInt32UpperBound")
                ]
     runSolverOnSMT
   vtest r $ Map.fromList [ ("low_1", 8)
                          , ("high_1", 8)
+                         , ("nz_1", 1)
+                         , ("exp_1", 12)
                          , ("low_2", 100)
                          , ("high_2", 100)
                          , ("low_3", 500)
                          , ("high_3", 400)
+                         , ("nz_3", 1)
+                         , ("exp_2", 12)
+                         , ("hlb_1", 1)
+                         , ("hub_1", 1)
                          ]
 
 

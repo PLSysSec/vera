@@ -12,6 +12,7 @@ range3 =
              ]
       body = [ declare (c "range") "rv" -- You have to do this shit now.
              , declare (c "range") "tmp" -- Can't assign and pass thing into class
+             , v "tmp" `assign` v "rv"
              , v "rv" `assign` call "setLowerInit" [ v "lower_bound"
                                                    , v "tmp"
                                                    ]
@@ -34,6 +35,7 @@ range4 =
              ]
       body = [ declare (c "range") "rv"
              , declare (c "range") "tmp"
+             , v "tmp" `assign` v "rv"
              , v "rv" `assign` call "setLowerInit" [ v "lower_bound"
                                                    , v "tmp"
                                                    ]
@@ -43,6 +45,7 @@ range4 =
                                                    , v "tmp2"
                                                    ]
              , v "rv" .->. "canBeNegativeZero" `assign` (v "nz_flag")
+             , v "rv" .->. "maxExponent" `assign` (v "exp_set")
              , return_ (v "rv")
              ]
   in Function "Range4" (c "range") args body
@@ -58,6 +61,7 @@ range6 =
              ]
       body = [ declare (c "range") "rv"
              , declare (c "range") "tmp"
+             , v "tmp" `assign` v "rv"
              , v "rv" `assign` call "setLowerInit" [ v "lower_bound"
                                                    , v "tmp"
                                                    ]
