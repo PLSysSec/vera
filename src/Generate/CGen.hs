@@ -89,6 +89,7 @@ compileSStmt stmt = case stmt of
   (VoidCall name args) -> do
     comp <- (compileSExpr (Call name args))
     return [comp ++ ";"]
+  (Expect _ _) -> return [""]
 
 compUnarySExpr :: String -> SExpr -> Codegen String
 compUnarySExpr str expr = do
@@ -115,7 +116,15 @@ compileSExpr expr = case expr of
   (Neg expr) -> compUnarySExpr "-" expr
   (Not expr) -> compUnarySExpr "!" expr
   (Abs expr) -> compUnarySExpr "abs" expr
+  (GetExp expr) -> compUnarySExpr "frexp" expr
+  (IsInf expr) -> compUnarySExpr "isinf" expr
+  (IsNan expr) -> compUnarySExpr "isnan" expr
+  (IsNegative expr) -> compUnarySExpr "signbit" expr
+  (IsZero expr) -> do
+    comp <- compileSExpr expr
+    return $ "(" ++ comp ++ " == 0)"
   (Eq expr1 expr2) -> compBinarySExpr "==" expr1 expr2
+  (NEq expr1 expr2) -> compBinarySExpr "!=" expr1 expr2
   (And expr1 expr2) -> compBinarySExpr "&" expr1 expr2
   (Add expr1 expr2) -> compBinarySExpr "+" expr1 expr2
   (Sub expr1 expr2) -> compBinarySExpr "-" expr1 expr2
@@ -136,6 +145,11 @@ compileSExpr expr = case expr of
   (Lte expr1 expr2) -> compBinarySExpr "<=" expr1 expr2
   (Shl expr1 expr2) ->  compBinarySExpr "<<" expr1 expr2
   (Shr expr1 expr2) -> compBinarySExpr ">>" expr1 expr2
+  (Tern expr1 expr2 expr3) -> do
+    comp1 <- compileSExpr expr1
+    comp2 <- compileSExpr expr2
+    comp3 <- compileSExpr expr3
+    return $ "(" ++ comp1 ++ ") ? " ++ "(" ++ comp2 ++ ") : " ++ "(" ++ comp3 ++ ")"
   (Cast expr ty) -> do
     comp <- compileSExpr expr
     return $ "(" ++ (compileType ty) ++ ")(" ++ comp ++ ")"
