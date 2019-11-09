@@ -43,13 +43,19 @@ fpIonMonkeyTests = benchTestGroup "Generated IonMonkey fp tests"
                    , subTest
                    , sub32Test
                    , mulTest
-                  , mul32Test
+                   , mul32Test
                    , minTest
+                   , min32Test
                    , maxTest
-                   , floorTest
-                   , ceilTest
-                   , absTest
-                   , signTest
+                   , max32Test
+--                    , floorTest
+-- --                   , floor32Test
+--                    , ceilTest
+-- --                   , ceil32Test
+--                    , absTest
+-- --                   , abs32Test
+--                    , signTest
+-- --                   , sign32Test
                    ]
 
 
@@ -59,25 +65,31 @@ addTest :: BenchTest
 addTest = benchTestCase "add" $ evalCodegen Nothing $ verifyFpFunction "add" jsAdd [add]
 
 add32Test :: BenchTest
-add32Test = benchTestCase "add" $ evalCodegen Nothing $ verifyFunction "add" jsAdd [add]
+add32Test = benchTestCase "add32" $ evalCodegen Nothing $ verifyFunction "add" jsAdd [add]
 
 subTest :: BenchTest
 subTest = benchTestCase "sub" $ evalCodegen Nothing $ verifyFpFunction "sub" jsSub [sub]
 
 sub32Test :: BenchTest
-sub32Test = benchTestCase "sub" $ evalCodegen Nothing $ verifyFunction "sub" jsSub [sub]
+sub32Test = benchTestCase "sub32" $ evalCodegen Nothing $ verifyFunction "sub" jsSub [sub]
 
 mulTest :: BenchTest
 mulTest = benchTestCase "mul" $ evalCodegen Nothing $ verifyFpFunction "mul" jsMul [mul]
 
 mul32Test :: BenchTest
-mul32Test = benchTestCase "mul" $ evalCodegen Nothing $ verifyFunction "mul" jsMul [mul]
+mul32Test = benchTestCase "mul32" $ evalCodegen Nothing $ verifyFunction "mul" jsMul [mul]
 
 minTest :: BenchTest
 minTest = benchTestCase "min" $ evalCodegen Nothing $ verifyFpFunction "min" jsMin [min]
 
+min32Test :: BenchTest
+min32Test = benchTestCase "min32" $ evalCodegen Nothing $ verifyFunction "min" jsMin [min]
+
 maxTest :: BenchTest
 maxTest = benchTestCase "max" $ evalCodegen Nothing $ verifyFpFunction "max" jsMax [max]
+
+max32Test :: BenchTest
+max32Test = benchTestCase "max32" $ evalCodegen Nothing $ verifyFunction "max" jsMax [max]
 
 floorTest :: BenchTest
 floorTest = benchTestCase "floor" $ evalCodegen Nothing $ verifyFpUnaryFunction "floor" jsFloor [floor]

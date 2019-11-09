@@ -10,12 +10,15 @@ range3 =
              , ("upper_bound", t Signed64)
              , ("nz_flag", t Bool)
              ]
-      body = [ declare (c "range") "rv"
+      body = [ declare (c "range") "rv" -- You have to do this shit now.
+             , declare (c "range") "tmp" -- Can't assign and pass thing into class
              , v "rv" `assign` call "setLowerInit" [ v "lower_bound"
-                                                   , v "rv"
+                                                   , v "tmp"
                                                    ]
+             , declare (c "range") "tmp2"
+             , v "tmp2" `assign` v "rv"
              , v "rv" `assign` call "setUpperInit" [ v "upper_bound"
-                                                   , v "rv"
+                                                   , v "tmp2"
                                                    ]
              , v "rv" .->. "canBeNegativeZero" `assign` (v "nz_flag")
              , return_ (v "rv")
@@ -30,14 +33,16 @@ range4 =
              , ("exp_set", t Unsigned16)
              ]
       body = [ declare (c "range") "rv"
+             , declare (c "range") "tmp"
              , v "rv" `assign` call "setLowerInit" [ v "lower_bound"
-                                                   , v "rv"
+                                                   , v "tmp"
                                                    ]
+             , declare (c "range") "tmp2"
+             , v "tmp2" `assign` v "rv"
              , v "rv" `assign` call "setUpperInit" [ v "upper_bound"
-                                                   , v "rv"
+                                                   , v "tmp2"
                                                    ]
              , v "rv" .->. "canBeNegativeZero" `assign` (v "nz_flag")
-             , v "rv" .->. "maxExponent" `assign` (v "exp_set")
              , return_ (v "rv")
              ]
   in Function "Range4" (c "range") args body
@@ -52,12 +57,15 @@ range6 =
              , ("exp_set", t Unsigned16)
              ]
       body = [ declare (c "range") "rv"
+             , declare (c "range") "tmp"
              , v "rv" `assign` call "setLowerInit" [ v "lower_bound"
-                                                   , v "rv"
+                                                   , v "tmp"
                                                    ]
              , v "rv" .->. "hasInt32LowerBound" `assign` v "has_lower"
+             , declare (c "range") "tmp2"
+             , v "tmp2" `assign` v "rv"
              , v "rv" `assign` call "setUpperInit" [ v "upper_bound"
-                                                   , v "rv"
+                                                   , v "tmp2"
                                                    ]
              , v "rv" .->. "hasInt32UpperBound" `assign` v "has_upper"
              , v "rv" .->. "canBeNegativeZero" `assign` (v "nz_flag")
@@ -118,19 +126,19 @@ setUpperInit :: FunctionDef
 setUpperInit =
   let args = [ ("sui_x", t Signed64)
              , ("sui_range", c "range")
-             ]
-      body = [ if_ (v "sui_x" .>. cast (jsIntMax) Signed64)
-               [ v "sui_range" .->. "upper" `assign` jsIntMax
-               , v "sui_range" .->. "hasInt32UpperBound" `assign` n Bool 0
-               ]
-               [ if_ (v "sui_x" .<. cast (jsIntMin) Signed64)
-                 [ v "sui_range" .->. "upper" `assign` jsIntMin
-                 , v "sui_range" .->. "hasInt32UpperBound" `assign` n Bool 1
-                 ]
-                 [ v "sui_range" .->. "upper" `assign` (cast (v "sui_x") Signed)
-                 , v "sui_range" .->. "hasInt32UpperBound" `assign` n Bool 1
-                 ]
-               ]
+             ]  -- Do this so it doesnt stamp out previous assign when it gets prev var in if
+      body = [ if_ (v "sui_x" .>. (cast jsIntMax Signed64))
+                   [ v "sui_range" .->. "upper" `assign` jsIntMax
+                   , v "sui_range" .->. "hasInt32UpperBound" `assign` n Bool 0
+                   ]
+                   [ if_ (v "sui_x" .<. (cast jsIntMin Signed64))
+                     [ v "sui_range" .->. "upper" `assign` jsIntMin
+                     , v "sui_range" .->. "hasInt32UpperBound" `assign` n Bool 1
+                     ]
+                     [ v "sui_range" .->. "upper" `assign` (cast (v "sui_x") Signed)
+                     , v "sui_range" .->. "hasInt32UpperBound" `assign` n Bool 1
+                     ]
+                   ]
              , return_ $ v "sui_range"
              ]
   in Function "setUpperInit" (c "range") args body

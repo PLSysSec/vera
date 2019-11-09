@@ -17,9 +17,112 @@ import           Test.Tasty.HUnit
 import           Utils
 
 genHelpersTests :: BenchTest
-genHelpersTests = benchTestGroup "Helpers" [ onesTest
+genHelpersTests = benchTestGroup "Helpers" [ ranges
+                                           , lowerInit
+                                           , upperInit
+                                           , onesTest
                                            , zerosTest
                                            ]
+
+ranges :: BenchTest
+ranges = benchTestCase "ranges" $ do
+  r <- evalCodegen Nothing $ do
+    class_ range
+    define $ setLowerInit
+    define $ setUpperInit
+    define $ range3
+    define $ range4
+    define $ range6
+    genBodySMT [ declare (c "range") "testRange"
+               , declare (t Signed) "low"
+               , declare (t Signed) "high"
+               , v "testRange" `assign` call "Range3" [ cast (n Signed 8) Signed64
+                                                      , cast (n Signed 8) Signed64
+                                                      , n Bool 0
+                                                      ]
+               , v "low" `assign`  (v "testRange" .->. "lower")
+               , v "high" `assign` (v "testRange" .->. "upper")
+               , v "testRange" `assign` call "Range4" [ cast (n Signed 100) Signed64
+                                                      , cast (n Signed 100) Signed64
+                                                      , n Bool 1
+                                                      , n Unsigned16 12
+                                                      ]
+               , v "low" `assign`  (v "testRange" .->. "lower")
+               , v "high" `assign` (v "testRange" .->. "upper")
+               , v "testRange" `assign` call "Range6" [ cast (n Signed 500) Signed64
+                                                      , n Bool 1
+                                                      , cast (n Signed 400) Signed64
+                                                      , n Bool 0
+                                                      , n Bool 1
+                                                      , n Unsigned16 12
+                                                      ]
+               , v "low" `assign`  (v "testRange" .->. "lower")
+               , v "high" `assign` (v "testRange" .->. "upper")
+               ]
+    runSolverOnSMT
+  vtest r $ Map.fromList [ ("low_1", 8)
+                         , ("high_1", 8)
+                         , ("low_2", 100)
+                         , ("high_2", 100)
+                         , ("low_3", 500)
+                         , ("high_3", 400)
+                         ]
+
+
+lowerInit :: BenchTest
+lowerInit = benchTestCase "lower init" $ do
+
+  r <- evalCodegen Nothing $ do
+    class_ range
+    define $ setLowerInit
+    genBodySMT [ declare (c "range") "testRange"
+               , v "testRange" `assign` call "setLowerInit" [ cast (n Signed 0) Signed64
+                                                            , v "testRange"
+                                                            ]
+               , v "testRange" `assign` call "setLowerInit" [ cast (n Signed 20) Signed64
+                                                            , v "testRange"
+                                                            ]
+               , v "testRange" `assign` call "setLowerInit" [ cast (n Signed 2147483647) Signed64
+                                                            , v "testRange"
+                                                            ]
+               , v "testRange" `assign` call "setLowerInit" [ cast (n Signed 4294967295) Signed64
+                                                            , v "testRange"
+                                                            ]
+               ]
+    runSolverOnSMT
+  vtest r $ Map.fromList [ ("testRange_lower_1", 0)
+                         , ("testRange_lower_2", 20)
+                         , ("testRange_lower_3", 2147483647)
+                         , ("testRange_lower_4", 4294967295)
+                         ]
+
+upperInit :: BenchTest
+upperInit = benchTestCase "upper init" $ do
+
+  r <- evalCodegen Nothing $ do
+    class_ range
+    define $ setUpperInit
+    genBodySMT [ declare (c "range") "testRange"
+               , v "testRange" `assign` call "setUpperInit" [ cast (n Signed 0) Signed64
+                                                            , v "testRange"
+                                                            ]
+               , v "testRange" `assign` call "setUpperInit" [ cast (n Signed 20) Signed64
+                                                            , v "testRange"
+                                                            ]
+               , v "testRange" `assign` call "setUpperInit" [ cast (n Signed 2147483647) Signed64
+                                                            , v "testRange"
+                                                            ]
+               , v "testRange" `assign` call "setUpperInit" [ cast (n Signed 4294967295) Signed64
+                                                            , v "testRange"
+                                                            ]
+               ]
+    runSolverOnSMT
+  vtest r $ Map.fromList [ ("testRange_upper_1", 0)
+                         , ("testRange_upper_2", 20)
+                         , ("testRange_upper_3", 2147483647)
+                         , ("testRange_upper_4", 4294967295)
+                         ]
+
 
 onesTest :: BenchTest
 onesTest = benchTestCase "count ones" $ do
