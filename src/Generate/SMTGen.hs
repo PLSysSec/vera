@@ -152,7 +152,7 @@ genExprSMT expr =
       result <- genCallSMT expr
       case result of
         [rval] -> return rval
-        _      -> error "Cannot return a class variable for use in greater expression"
+        _      -> error $ unwords ["Cannot return a class variable for use in greater expression", show result]
     _ -> error $ unwords $ ["Don't support", show expr]
 
 genAssignOpSMT :: SExpr
@@ -228,13 +228,13 @@ genStmtSMT stmt =
             error "Cannot assign variables of different types"
           forM_ (zip fields rvals) $ \(f, r) -> liftVerif $ T.vassign f r
   where
-    rewriteAssign :: T.VNode -> SVar -> SExpr -> Codegen ()
-    rewriteAssign cond var expr = do
+    rewriteAssign :: T.VNode -> SVar -> T.VNode -> Codegen ()
+    rewriteAssign cond var exprNode | isPrimType var = do
       when (varVersion var <= 1) $
         error $ unwords $ ["Cannot initially define var in if-stmt:", varName var]
       curVar <- genVarSMT var
       let prevVar = SVar (varTy var) (varName var) (varVersion var - 1)
-      trueBr <- genExprSMT expr
+          trueBr = exprNode
       falseBr <- genVarSMT prevVar
       conditional <- liftVerif $ T.cppCond cond trueBr falseBr
       liftVerif $ T.vassign curVar conditional
@@ -253,12 +253,26 @@ genStmtSMT stmt =
           mapM_ (rewriteConditional bothConds) trueBr
           notBothConds <- liftVerif $ T.cppNot bothConds
           mapM_ (rewriteConditional notBothConds) falseBr
-        Assign (VarExpr var) expr ->
+        Assign (VarExpr var) expr -> do
           if isPrimType var
-          then rewriteAssign cond var expr
-          else do
-            fieldVars <- getFieldVars var
-            forM_ fieldVars $ \var -> rewriteAssign cond var expr
+          then do
+            exprSMT <- genExprSMT expr
+            rewriteAssign cond var exprSMT
+          else case expr of
+            Call{} -> do
+              rvs <- genCallSMT expr
+              fields <- getFieldVars var >>= mapM getVar
+              unless (length rvs == length fields) $
+                error $ unwords ["Wrong return type for function in assignment to", varName var]
+              forM_ (zip fields rvs) $ \(f, rv) -> rewriteReturn cond f rv
+            VarExpr v | isClassType v -> do
+              fields1 <- getFieldVars var
+              fields2 <- getFieldVars v >>= mapM genVarSMT
+              unless (length fields1 == length fields2) $
+                error $ unwords ["Type error in assignment to", varName var]
+              forM_ (zip fields1 fields2) $ \(f, r) -> rewriteAssign cond f r
+            _ -> error $ unwords $ ["Malformed assignment to", varName var]
+
         Return expr -> do
           rv <- getReturnValue
           case rv of

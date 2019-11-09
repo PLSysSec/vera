@@ -221,15 +221,24 @@ floatInRange :: FunctionDef
 floatInRange =
   let args = [ ("result_range_init", c "range")]
       body = [ declare (t Double) "result_init"
+
              -- Either its infinite or the exponent is less than the infinte exponent
              , assert_ $ (isInf $ v "result_init") .^. ((v "result_range_init" .->. "maxExponent") .<. includesInfinity)
+
              -- Either is not inf or nan or op is inf or nan
              , assert_ $  ((isInf $ v "result_init") .||. ((isNan $ v "result_init")) .^. ((v "result_range_init" .->. "maxExponent" .<. includesInfinityAndNan)))
+
              -- If the range doesnt say can be neg z, cant be negz
              , assert_ $ (not_ $ v "result_range_init" .->. "canBeNegativeZero") .^. (isNeg (v "result_init") .&&. (isZero $ v "result_init") )
+
              -- The exponent should be >= the fpExp
              , assert_ $ (((fpExp $ v "result_init") .==. (v "result_range_init" .->. "maxExponent")) .&&. (not_ $ isInf $ v "result_init") .&&. (not_ $ isNan $ v "result_init"))
+
+             -- If the number isnt in bounds, int32bound should be false
+             , assert_ $ ((v "result_init" .=>. (cast int32min Double)) .^. (not_ $ v "result_range_init" .->. "hasInt32LowerBound")) .&&. ((v "result_init" .<=. (cast int32max Double)) .^. (not_ $ v "result_range_init" .->. "hasInt32UpperBound"))
+
              , return_ $ v "result_init"
+
              ]
   in Function "floatInRange" (t Double) args body
 
@@ -456,7 +465,7 @@ getNegzList fls = catMaybes $ map (\(str, fl) ->
   where
     sstr str fl = Just $ unwords [str, ":", if isNegativeZero fl
                                             then "negz"
-                                            else show (round fl :: Integer)
+                                            else show fl
                                  ]
 
 showInt32Result :: String -> SMTResult -> IO ()

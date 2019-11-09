@@ -10,12 +10,12 @@ import           IonMonkeyExplicit.Objects
 data VerifResult = Verified
                  | UnsatImpl
                  | OverlappingRange { counterexample :: M.Map String Double }
-                 | BadLowerBound { counterexample :: M.Map String Double }
-                 | BadUpperBound { counterexample :: M.Map String Double }
-                 | UndefRange { counterexample :: M.Map String Double }
-                 | NoNanFlag { counterexample :: M.Map String Double }
-                 | NoInfFlag { counterexample :: M.Map String Double }
-                 | NoNegzFlag { counterexample :: M.Map String Double }
+                 | BadLowerBound    { counterexample :: M.Map String Double }
+                 | BadUpperBound    { counterexample :: M.Map String Double }
+                 | UndefRange       { counterexample :: M.Map String Double }
+                 | NoNanFlag        { counterexample :: M.Map String Double }
+                 | NoInfFlag        { counterexample :: M.Map String Double }
+                 | NoNegzFlag       { counterexample :: M.Map String Double }
                  deriving (Eq, Ord)
 
 instance Show VerifResult where
