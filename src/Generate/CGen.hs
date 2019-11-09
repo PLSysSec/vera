@@ -48,7 +48,7 @@ compileClass (ClassDef name fields methods) = do
       fieldStrings = map (\(argName, ty) -> (compileType ty) ++ " " ++ argName ++ ";") fields
   compFunctions <- mapM compileFunction methods
   let methodStrings = concat compFunctions
-  return $ headerStrings ++ fieldStrings ++ methodStrings ++ ["};"]
+  return $ headerStrings ++ fieldStrings ++ methodStrings ++ ["};", ""]
 
 compileAssignment :: String -> SExpr -> SExpr -> Codegen [String]
 compileAssignment assign expr1 expr2 = do
@@ -108,10 +108,10 @@ compileSExpr expr = case expr of
       SVar _ name _ -> do
         fieldInfo <- getFieldInfo name
         return $ case fieldInfo of
-          Just (name, fieldName) -> name ++ "->" ++ fieldName
+          Just (name, fieldName) -> name ++ "." ++ fieldName
           Nothing -> name
       CVar _ name   -> return name
-  (NumExpr (SNum numType numVal)) -> return $ show numVal
+  (NumExpr (SNum numType numVal)) -> return $ "(" ++ (compileType numType) ++ ")" ++ show numVal
   (Neg expr) -> compUnarySExpr "-" expr
   (Not expr) -> compUnarySExpr "!" expr
   (Abs expr) -> compUnarySExpr "abs" expr
