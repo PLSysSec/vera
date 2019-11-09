@@ -6,3 +6,4 @@ lejit.cabal
 *.swp
 tags
 TAGS
+test/GenCpp

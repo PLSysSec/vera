@@ -17,6 +17,7 @@ import           Prelude                       hiding (abs, and, floor, max,
 import           Test.Tasty.HUnit
 import           Utils
 import           Data.List
+import           System.Directory              (createDirectoryIfMissing)
 
 cppGenTests :: BenchTest
 cppGenTests = benchTestGroup "CPP Gen tests"
@@ -28,6 +29,7 @@ cppGenTests = benchTestGroup "CPP Gen tests"
 
 writeCompiled :: String -> [String] -> Codegen ()
 writeCompiled fileName comp = do
+  liftIO $ createDirectoryIfMissing True "test/GenCpp"
   let prog = intercalate "\n" comp
   liftIO $ writeFile fileName prog
 
@@ -38,7 +40,7 @@ cppNotTest = benchTestCase "cpp not test" $ do
     class_ range
     define not
     compiled <- compileFunction not
-    writeCompiled "test/GenCPP/not.cpp" compiled
+    writeCompiled "test/GenCpp/not.cpp" compiled
     error "test"
   error "test1"
 
@@ -49,7 +51,7 @@ cppAddTest = benchTestCase "cpp add test" $ do
     class_ range
     define add
     compiled <- compileFunction add
-    writeCompiled "test/GenCPP/add.cpp" compiled
+    writeCompiled "test/GenCpp/add.cpp" compiled
     error "test"
   error "test1"
 
@@ -60,6 +62,6 @@ cppSubTest = benchTestCase "cpp sub test" $ do
     class_ range
     define sub
     compiled <- compileFunction sub
-    writeCompiled "test/GenCPP/sub.cpp" compiled
+    writeCompiled "test/GenCpp/sub.cpp" compiled
     error "test"
   error "test1"
