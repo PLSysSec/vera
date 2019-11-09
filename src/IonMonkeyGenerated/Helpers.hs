@@ -98,11 +98,11 @@ setLowerInit =
   let args = [ ("sli_x", t Signed64)
              , ("sli_range", c "range")
              ]
-      body = [ if_ (v "sli_x" .>. jsIntMax64)
+      body = [ if_ (v "sli_x" .>. cast (jsIntMax) Signed64)
                [ v "sli_range" .->. "lower" `assign` jsIntMax
                , v "sli_range" .->. "hasInt32LowerBound" `assign` n Bool 1
                ]
-               [ if_ (v "sli_x" .<. jsIntMin64)
+               [ if_ (v "sli_x" .<. cast (jsIntMin) Signed64)
                  [ v "sli_range" .->. "lower" `assign` jsIntMin
                  , v "sli_range" .->. "hasInt32LowerBound" `assign` n Bool 0
                  ]
@@ -119,11 +119,11 @@ setUpperInit =
   let args = [ ("sui_x", t Signed64)
              , ("sui_range", c "range")
              ]
-      body = [ if_ (v "sui_x" .>. jsIntMax64)
+      body = [ if_ (v "sui_x" .>. cast (jsIntMax) Signed64)
                [ v "sui_range" .->. "upper" `assign` jsIntMax
                , v "sui_range" .->. "hasInt32UpperBound" `assign` n Bool 0
                ]
-               [ if_ (v "sui_x" .<. jsIntMin64)
+               [ if_ (v "sui_x" .<. cast (jsIntMin) Signed64)
                  [ v "sui_range" .->. "upper" `assign` jsIntMin
                  , v "sui_range" .->. "hasInt32UpperBound" `assign` n Bool 1
                  ]
