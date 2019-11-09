@@ -39,8 +39,11 @@ intIonMonkeyTests = benchTestGroup "Generated IonMonkey i32 tests"
 fpIonMonkeyTests :: BenchTest
 fpIonMonkeyTests = benchTestGroup "Generated IonMonkey fp tests"
                    [ addTest
+                   , add32Test
                    , subTest
+                   , sub32Test
                    , mulTest
+                  , mul32Test
                    , minTest
                    , maxTest
                    , floorTest
@@ -55,11 +58,20 @@ fpIonMonkeyTests = benchTestGroup "Generated IonMonkey fp tests"
 addTest :: BenchTest
 addTest = benchTestCase "add" $ evalCodegen Nothing $ verifyFpFunction "add" jsAdd [add]
 
+add32Test :: BenchTest
+add32Test = benchTestCase "add" $ evalCodegen Nothing $ verifyFunction "add" jsAdd [add]
+
 subTest :: BenchTest
 subTest = benchTestCase "sub" $ evalCodegen Nothing $ verifyFpFunction "sub" jsSub [sub]
 
+sub32Test :: BenchTest
+sub32Test = benchTestCase "sub" $ evalCodegen Nothing $ verifyFunction "sub" jsSub [sub]
+
 mulTest :: BenchTest
 mulTest = benchTestCase "mul" $ evalCodegen Nothing $ verifyFpFunction "mul" jsMul [mul]
+
+mul32Test :: BenchTest
+mul32Test = benchTestCase "mul" $ evalCodegen Nothing $ verifyFunction "mul" jsMul [mul]
 
 minTest :: BenchTest
 minTest = benchTestCase "min" $ evalCodegen Nothing $ verifyFpFunction "min" jsMin [min]
