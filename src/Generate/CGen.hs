@@ -42,12 +42,13 @@ compileCodegenSStmt stmt = do
   comp <- compileSStmt s
   return $ unlines comp
 
---compileSClass :: SClass -> [String]
---compileSClass (SClass name fields methods) = do
-  --let headerStrings = ["class " ++ name ++ " {", "public:"]
-  --let fieldStrings = map (\(argName, ty) -> (compileSType ty) ++ " " ++ argName ++ ";") fields
-  --let methodStrings = concat $ map compileSFunction methods
-  --headerStrings ++ fieldStrings ++ methodStrings ++ ["};"]
+compileClass :: ClassDef -> Codegen [String]
+compileClass (ClassDef name fields methods) = do
+  let headerStrings = ["class " ++ name ++ " {", "public:"]
+      fieldStrings = map (\(argName, ty) -> (compileType ty) ++ " " ++ argName ++ ";") fields
+  compFunctions <- mapM compileFunction methods
+  let methodStrings = concat compFunctions
+  return $ headerStrings ++ fieldStrings ++ methodStrings ++ ["};"]
 
 compileAssignment :: String -> SExpr -> SExpr -> Codegen [String]
 compileAssignment assign expr1 expr2 = do
@@ -74,10 +75,10 @@ compileSStmt stmt = case stmt of
   (If expr thenStmts elseStmts) -> do
     compCondExpr <- (compileSExpr expr)
     let condString = "if(" ++ compCondExpr ++ ") {"
-    thenStrings1 <- mapM compileSStmt thenStmts
-    elseStrings1 <- mapM compileSStmt elseStmts
-    let thenStrings = concat thenStrings1
-        elseStrings = concat elseStrings1
+    thenStringsComp <- mapM compileSStmt thenStmts
+    elseStringsComp <- mapM compileSStmt elseStmts
+    let thenStrings = concat thenStringsComp
+        elseStrings = concat elseStringsComp
         elseConcatString = if (null elseStrings)
           then [""]
           else ["} else {"]
