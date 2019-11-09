@@ -9,7 +9,7 @@ import           IonMonkey
 import           JavaScript
 import           Lang
 import           Test.Tasty
-import           CPPGen
+import           CppGen
 
 main :: IO ()
 main = defaultMain $ testGroup "All tests" $ map getTest allTests

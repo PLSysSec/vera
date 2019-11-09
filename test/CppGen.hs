@@ -1,4 +1,4 @@
-module CPPGen (cppGenTests) where
+module CppGen (cppGenTests) where
 
 import           BenchUtils
 import           Control.Monad.State.Strict    (liftIO)
