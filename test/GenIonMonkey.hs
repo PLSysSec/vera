@@ -39,14 +39,14 @@ intIonMonkeyTests = benchTestGroup "Generated IonMonkey i32 tests"
 fpIonMonkeyTests :: BenchTest
 fpIonMonkeyTests = benchTestGroup "Generated IonMonkey fp tests"
                    [ addTest
-                   -- , subTest
-                   -- , mulTest
-                   -- , minTest
-                   -- , maxTest
-                   -- , floorTest
-                   -- , ceilTest
-                   -- , absTest
-                   -- , signTest
+                   , subTest
+                   , mulTest
+                   , minTest
+                   , maxTest
+                   , floorTest
+                   , ceilTest
+                   , absTest
+                   , signTest
                    ]
 
 

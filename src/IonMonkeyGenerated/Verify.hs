@@ -327,7 +327,7 @@ verifyExp =
              ]
       body = [ push_
              , assert_ $ (fpExp $ v "result_exp") .>. (v "result_range_exp" .->. "maxExponent")
-             , expect_ isUnsat $ \r -> showNegzResult "Failed to verify Exp" r
+             , expect_ isUnsat $ \r -> showExpResult "Failed to verify Exp" r
              , pop_
              ]
   in Function "verifyExp" Void args body
@@ -362,6 +362,29 @@ instance Show VerifResult where
                                  (unlines $ getNegzList ce)
     show Verified              = "Verified!"
     show UnsatImpl             = "Verification failed (e.g., due to a timeout)"
+
+showExpResult :: String -> SMTResult -> IO ()
+showExpResult str result = error $ str ++ "\n" ++ (unlines $ getExpList $ example result)
+
+getExpList :: M.Map String Double -> [String]
+getExpList fls = catMaybes $ map (\(str, fl) ->
+                       case str of
+                         _ | "undef" `isInfixOf` str -> Nothing
+                         _ | "left_range_maxExponent" `isInfixOf` str -> sstr str fl
+                         _ | "right_range_maxExponent" `isInfixOf` str -> sstr str fl
+                         _ | "start_range_maxExponent" `isInfixOf` str -> sstr str fl
+                         _ | "result_range_maxExponent" `isInfixOf` str -> sstr str fl
+                         _ | "right_1" `isInfixOf` str -> sstr str fl
+                         _ | "left_1" `isInfixOf` str -> sstr str fl
+                         _ | "start_1" `isInfixOf` str -> sstr str fl
+                         _ | "result_1" `isInfixOf` str -> sstr str fl
+                         _ -> Nothing
+                       ) $ M.toList fls
+  where
+    sstr str fl = Just $ unwords [str, ":", if fl /= fl
+                                            then "NaN"
+                                            else show (round fl :: Integer)
+                                 ]
 
 showNanResult :: String -> SMTResult -> IO ()
 showNanResult str result = error $ str ++ "\n" ++ (unlines $ getNanList $ example result)

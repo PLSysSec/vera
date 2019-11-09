@@ -41,11 +41,12 @@ add =
              , v "h" `assign` ((cast (v "lhs" .->. "upper") Signed64) .+. (cast (v "rhs" .->. "upper") Signed64))
              , if_ ((not_ $ v "lhs" .->. "hasInt32UpperBound") .||. (not_ $ v "rhs" .->. "hasInt32UpperBound")) [v "h" `assign` noInt32UpperBound] []
              , v "e" `assign` (max_ (v "lhs" .->. "maxExponent") (v "rhs" .->. "maxExponent"))
-             , if_ (v "e" .<. maxFiniteExponent) [v "e" .+=. n Unsigned16 1] []
+             , if_ (v "e" .<=. maxFiniteExponent) [v "e" .+=. n Unsigned16 1] []
              , if_ ((call "canBeInfiniteOrNan" [v "lhs"]) .&&. (call "canBeInfiniteOrNan" [v "rhs"])) [v "e" `assign` includesInfinityAndNan] []
-             , return_ $ call "Range3" [ v "l"
+             , return_ $ call "Range4" [ v "l"
                                        , v "h"
                                        , (v "lhs" .->. "canBeNegativeZero") .&&. (v "rhs" .->. "canBeNegativeZero")
+                                       , v "e"
                                        ]
              ]
   in Function "add" (c "range") args body
@@ -64,11 +65,12 @@ sub =
              , v "h" `assign` ((cast (v "lhs" .->. "upper") Signed64) .-. (cast (v "rhs" .->. "upper") Signed64))
              , if_ ((not_ $ v "lhs" .->. "hasInt32UpperBound") .||. (not_ $ v "rhs" .->. "hasInt32UpperBound")) [v "h" `assign` noInt32UpperBound] []
              , v "e" `assign` (max_ (v "lhs" .->. "maxExponent") (v "rhs" .->. "maxExponent"))
-             , if_ (v "e" .<. maxFiniteExponent) [v "e" .+=. n Unsigned16 1] []
+             , if_ (v "e" .<=. maxFiniteExponent) [v "e" .+=. n Unsigned16 1] []
              , if_ ((call "canBeInfiniteOrNan" [v "lhs"]) .&&. (call "canBeInfiniteOrNan" [v "rhs"])) [v "e" `assign` includesInfinityAndNan] []
-             , return_ $ call "Range3" [ v "l"
+             , return_ $ call "Range4" [ v "l"
                                        , v "h"
                                        , (v "lhs" .->. "canBeNegativeZero") .&&. (v "rhs" .->. "canBeNegativeZero")
+                                       , v "e"
                                        ]
              ]
   in Function "sub" (c "range") args body
