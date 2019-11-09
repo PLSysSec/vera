@@ -7,9 +7,10 @@ import Data.List
 import DSL.Typed       as T
 
 compileSType :: STy -> String
-compileSType (PrimType ty) = compileType ty
-compileSType (Class name) = name
-compileSType void = "void"
+compileSType stype = case stype of
+  (PrimType ty) -> compileType ty
+  (Class name) -> name
+  void -> "void"
 
 compileType :: T.Type -> String
 compileType T.Unsigned = "uint32_t"
@@ -38,83 +39,108 @@ compileFunction (Function name ty params body) = do
 compileCodegenSStmt :: Codegen SStmt -> Codegen String
 compileCodegenSStmt stmt = do
   s <- stmt
-  return $ unlines $ compileSStmt s
+  comp <- compileSStmt s
+  return $ unlines comp
 
-compileSFunction :: SFunction -> [String]
-compileSFunction (SFunction name ty params body) = do
-  let paramString = compileParams params
-  let headerString = (compileSType ty) ++ " " ++ name ++ "(" ++ paramString ++ ") {"
-  let bodyStrings = concat $ map compileSStmt body
-  [headerString] ++ bodyStrings ++ ["}"]
+--compileSClass :: SClass -> [String]
+--compileSClass (SClass name fields methods) = do
+  --let headerStrings = ["class " ++ name ++ " {", "public:"]
+  --let fieldStrings = map (\(argName, ty) -> (compileSType ty) ++ " " ++ argName ++ ";") fields
+  --let methodStrings = concat $ map compileSFunction methods
+  --headerStrings ++ fieldStrings ++ methodStrings ++ ["};"]
 
-compileSClass :: SClass -> [String]
-compileSClass (SClass name fields methods) = do
-  let headerStrings = ["class " ++ name ++ " {", "public:"]
-  let fieldStrings = map (\(argName, ty) -> (compileSType ty) ++ " " ++ argName ++ ";") fields
-  let methodStrings = concat $ map compileSFunction methods
-  headerStrings ++ fieldStrings ++ methodStrings ++ ["};"]
+compileAssignment :: String -> SExpr -> SExpr -> Codegen [String]
+compileAssignment assign expr1 expr2 = do
+  compExpr1 <- compileSExpr expr1
+  compExpr2 <- compileSExpr expr2
+  return [(unwords [compExpr1, assign, compExpr2]) ++ ";"]
 
-compileSStmt :: SStmt -> [String]
+compileSStmt :: SStmt -> Codegen [String]
 compileSStmt stmt = case stmt of
-  (Decl (SVar ty name _)) -> [(compileType ty) ++ " " ++ name ++ ";"]
+  (Decl (SVar ty name _)) ->  return [(compileType ty) ++ " " ++ name ++ ";"]
   (Decl var) -> case var of
-    SVar ty name _ -> [(compileType ty) ++ " " ++ name ++ ";"]
-    CVar cl name   -> [cl ++ " " ++ name ++ ";"]
-  (Assign expr1 expr2) -> [(compileSExpr expr1) ++ " = " ++ (compileSExpr expr2) ++ ";"]
-  (AddEq _ expr1 expr2) -> [c1 ++ " += " ++ c2 ++ ";"] where
-    c1 = compileSExpr expr1
-    c2 = compileSExpr expr2
-  (SubEq _ expr1 expr2) -> [c1 ++ " -= " ++ c2 ++ ";"] where
-    c1 = compileSExpr expr1
-    c2 = compileSExpr expr2
-  (OrEq _ expr1 expr2) -> [c1 ++ " |= " ++ c2 ++ ";"] where
-    c1 = compileSExpr expr1
-    c2 = compileSExpr expr2
-  (AndEq _ expr1 expr2) -> [c1 ++ " &= " ++ c2 ++ ";"] where
-    c1 = compileSExpr expr1
-    c2 = compileSExpr expr2
-  Push -> [""]
-  Pop -> [""]
-  (Assert expr) -> ["assert(" ++ (compileSExpr expr) ++ ")" ++ ";"]
-  (If expr thenStmts elseStmts) -> [condString] ++ thenStrings ++ elseConcatString ++ elseStrings ++ ["}"] where
-    condString = "if(" ++ (compileSExpr expr) ++ ") {"
-    thenStrings = concatMap compileSStmt thenStmts
-    elseStrings = concatMap compileSStmt elseStmts
-    elseConcatString = if (null elseStrings)
-                            then [""]
-                            else ["} else {"]
-  (Return expr) -> ["return " ++ (compileSExpr expr) ++ ";"]
-  (VoidCall name args) -> [(compileSExpr (Call name args)) ++ ";"]
+    SVar ty name _ -> return [(compileType ty) ++ " " ++ name ++ ";"]
+    CVar cl name   -> return [cl ++ " " ++ name ++ ";"]
+  (Assign expr1 expr2) -> compileAssignment "=" expr1 expr2
+  (AddEq _ expr1 expr2) -> compileAssignment "+=" expr1 expr2
+  (SubEq _ expr1 expr2) -> compileAssignment "-=" expr1 expr2
+  (OrEq _ expr1 expr2) -> compileAssignment "|=" expr1 expr2
+  (AndEq _ expr1 expr2) -> compileAssignment "&=" expr1 expr2
+  Push -> return [""]
+  Pop -> return [""]
+  (Assert expr) -> do
+    comp <- (compileSExpr expr)
+    return ["assert(" ++ comp ++ ")" ++ ";"]
+  (If expr thenStmts elseStmts) -> do
+    compCondExpr <- (compileSExpr expr)
+    let condString = "if(" ++ compCondExpr ++ ") {"
+    thenStrings1 <- mapM compileSStmt thenStmts
+    elseStrings1 <- mapM compileSStmt elseStmts
+    let thenStrings = concat thenStrings1
+        elseStrings = concat elseStrings1
+        elseConcatString = if (null elseStrings)
+          then [""]
+          else ["} else {"]
+    return $ [condString] ++ thenStrings ++ elseConcatString ++ elseStrings ++ ["}"]
+  (Return expr) -> do
+    comp <- (compileSExpr expr)
+    return ["return " ++ comp ++ ";"]
+  (VoidCall name args) -> do
+    comp <- (compileSExpr (Call name args))
+    return [comp ++ ";"]
 
-compileSExpr :: SExpr -> String
+compUnarySExpr :: String -> SExpr -> Codegen String
+compUnarySExpr str expr = do
+  comp <- compileSExpr expr
+  return $ str ++ "(" ++ comp ++ ")"
+
+compBinarySExpr :: String -> SExpr ->SExpr -> Codegen String
+compBinarySExpr str expr1 expr2 = do
+  comp1 <- compileSExpr expr1
+  comp2 <- compileSExpr expr2
+  return $ "(" ++ comp1 ++ ") " ++ str ++ " (" ++ comp2 ++ ")"
+
+compileSExpr :: SExpr -> Codegen String
 compileSExpr expr = case expr of
   (VarExpr var) ->
     case var of
-      SVar _ name _ -> name
-      CVar _ name   -> name
-  (NumExpr (SNum numType numVal)) -> show numVal
-  (Neg expr) -> "-(" ++ (compileSExpr expr) ++ ")"
-  (Not expr) -> "!(" ++ (compileSExpr expr) ++ ")"
-  (Abs expr) -> "abs(" ++ (compileSExpr expr) ++ ")"
-  (Eq expr1 expr2) -> "(" ++ (compileSExpr expr1) ++ ") == (" ++ (compileSExpr expr2) ++ ")"
-  (And expr1 expr2) -> "(" ++ (compileSExpr expr1) ++ ") & (" ++ (compileSExpr expr2) ++ ")"
-  (Add expr1 expr2) -> "(" ++ (compileSExpr expr1) ++ ") + (" ++ (compileSExpr expr2) ++ ")"
-  (Sub expr1 expr2) -> "(" ++ (compileSExpr expr1) ++ ") - (" ++ (compileSExpr expr2) ++ ")"
-  (Mul expr1 expr2) -> "(" ++ (compileSExpr expr1) ++ ") * (" ++ (compileSExpr expr2) ++ ")"
-  (Or expr1 expr2) -> "(" ++ (compileSExpr expr1) ++ ") | (" ++ (compileSExpr expr2) ++ ")"
-  (XOr expr1 expr2) -> "(" ++ (compileSExpr expr1) ++ ") ^ (" ++ (compileSExpr expr2) ++ ")"
-  (XOr expr1 expr2) -> "(" ++ (compileSExpr expr1) ++ ") ^ (" ++ (compileSExpr expr2) ++ ")"
-  (Min expr1 expr2) -> "min((" ++ (compileSExpr expr1) ++ "), (" ++ (compileSExpr expr2) ++ "))"
-  (Max expr1 expr2) -> "max((" ++ (compileSExpr expr1) ++ "), (" ++ (compileSExpr expr2) ++ "))"
-  (Gt expr1 expr2) -> "(" ++ (compileSExpr expr1) ++ ") > (" ++ (compileSExpr expr2) ++ ")"
-  (Gte expr1 expr2) -> "(" ++ (compileSExpr expr1) ++ ") >= (" ++ (compileSExpr expr2) ++ ")"
-  (Lt expr1 expr2) -> "(" ++ (compileSExpr expr1) ++ ") < (" ++ (compileSExpr expr2) ++ ")"
-  (Lte expr1 expr2) -> "(" ++ (compileSExpr expr1) ++ ") <= (" ++ (compileSExpr expr2) ++ ")"
-  (Shl expr1 expr2) -> "(" ++ (compileSExpr expr1) ++ ") << (" ++ (compileSExpr expr2) ++ ")"
-  (Shr expr1 expr2) -> "(" ++ (compileSExpr expr1) ++ ") >> (" ++ (compileSExpr expr2) ++ ")"
-  (Cast expr ty) -> "(" ++ (compileType ty) ++ ")(" ++ (compileSExpr expr) ++ ")"
-  (Call name exprs) -> name ++ "(" ++ argString ++ ")" where
-    exprStrings = map compileSExpr exprs
-    argString = intercalate ", " exprStrings
-  (FieldExpr name) -> "this." ++ name
+      SVar _ name _ -> do
+        fieldInfo <- getFieldInfo name
+        return $ case fieldInfo of
+          Just (name, fieldName) -> name ++ "->" ++ fieldName
+          Nothing -> name
+      CVar _ name   -> return name
+  (NumExpr (SNum numType numVal)) -> return $ show numVal
+  (Neg expr) -> compUnarySExpr "-" expr
+  (Not expr) -> compUnarySExpr "!" expr
+  (Abs expr) -> compUnarySExpr "abs" expr
+  (Eq expr1 expr2) -> compBinarySExpr "==" expr1 expr2
+  (And expr1 expr2) -> compBinarySExpr "&" expr1 expr2
+  (Add expr1 expr2) -> compBinarySExpr "+" expr1 expr2
+  (Sub expr1 expr2) -> compBinarySExpr "-" expr1 expr2
+  (Mul expr1 expr2) -> compBinarySExpr "*" expr1 expr2
+  (Or expr1 expr2) -> compBinarySExpr "|" expr1 expr2
+  (XOr expr1 expr2) -> compBinarySExpr "^" expr1 expr2
+  (Min expr1 expr2) -> do
+    comp1 <- compileSExpr expr1
+    comp2 <- compileSExpr expr2
+    return $ "min((" ++ comp1 ++ "), (" ++ comp2 ++ "))"
+  (Max expr1 expr2) -> do
+    comp1 <- compileSExpr expr1
+    comp2 <- compileSExpr expr2
+    return $ "max((" ++ comp1 ++ "), (" ++ comp2 ++ "))"
+  (Gt expr1 expr2) -> compBinarySExpr ">" expr1 expr2
+  (Gte expr1 expr2) -> compBinarySExpr ">=" expr1 expr2
+  (Lt expr1 expr2) -> compBinarySExpr "<" expr1 expr2
+  (Lte expr1 expr2) -> compBinarySExpr "<=" expr1 expr2
+  (Shl expr1 expr2) ->  compBinarySExpr "<<" expr1 expr2
+  (Shr expr1 expr2) -> compBinarySExpr ">>" expr1 expr2
+  (Cast expr ty) -> do
+    comp <- compileSExpr expr
+    return $ "(" ++ (compileType ty) ++ ")(" ++ comp ++ ")"
+  (Call name exprs) -> do
+    argStrings <- mapM compileSExpr exprs
+    let argString = intercalate ", " argStrings
+    return $ name ++ "(" ++ argString ++ ")"
+  (FieldExpr name) -> return $ "this." ++ name
   e -> error $ show e
