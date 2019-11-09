@@ -228,7 +228,7 @@ floatInRange =
              -- If the range doesnt say can be neg z, cant be negz
              , assert_ $ (not_ $ v "result_range_init" .->. "canBeNegativeZero") .^. (isNeg (v "result_init") .&&. (isZero $ v "result_init") )
              -- The exponent should be >= the fpExp
-             , assert_ $ (fpExp $ v "result_init") .<=. (v "result_range_init" .->. "maxExponent")
+             , assert_ $ (((fpExp $ v "result_init") .==. (v "result_range_init" .->. "maxExponent")) .&&. (not_ $ isInf $ v "result_init") .&&. (not_ $ isNan $ v "result_init"))
              , return_ $ v "result_init"
              ]
   in Function "floatInRange" (t Double) args body
