@@ -153,7 +153,7 @@ verifyFpFunction fnName jsOp fns = do
               , vcall "verifyNegZ" [v "result_range", v "result"]
               , vcall "verifyNan"  [v "result_range", v "result"]
               , vcall "verifyInf"  [v "result_range", v "result"]
-              , vcall "verifyExp"  [v "result_range", v "result"]
+--              , vcall "verifyExp"  [v "result_range", v "result"]
               ]
   genBodySMT verif
 
@@ -201,7 +201,7 @@ verifyFpUnaryFunction fnName jsOp fns = do
               , vcall "verifyNegZ" [v "result_range", v "result"]
               , vcall "verifyNan"  [v "result_range", v "result"]
               , vcall "verifyInf"  [v "result_range", v "result"]
-              , vcall "verifyExp"  [v "result_range", v "result"]
+--              , vcall "verifyExp"  [v "result_range", v "result"]
               ]
   genBodySMT verif
 
