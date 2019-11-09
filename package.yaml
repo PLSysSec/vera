@@ -66,6 +66,7 @@ tests:
     - QuickCheck
     - tasty-quickcheck
     - criterion
+    - directory
     - bytestring
     - mtl >= 2.2.2
     - containers >= 0.6
