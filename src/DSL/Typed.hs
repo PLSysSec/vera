@@ -65,6 +65,8 @@ module DSL.Typed ( vassert
                  , jsShr
                  , jsUshr
                  , jsMul
+                 , jsDiv
+                 , jsRem
                  , jsAbs
                  , jsMin
                  , jsMax
@@ -639,6 +641,24 @@ jsMul node1 node2 = do
   let op = getOp node1 D.mul D.fpMul
   result <- op (vnode node1) (vnode node2)
   newDefinedNode result $ vtype node1
+
+jsDiv :: VNode
+      -> VNode
+      -> D.Verif VNode
+jsDiv node1 node2 = do
+  unless (vtype node1 == vtype node2) $ error "Types should match in jsMul"
+  let op = getOp node1 D.sdiv D.fpDiv
+  result <- op (vnode node1) (vnode node2)
+  newDefinedNode result $ vtype node1
+
+jsRem :: VNode
+      -> VNode
+      -> D.Verif VNode
+jsRem node1 node2 = do
+  unless (vtype node1 == vtype node2) $ error "Types should match in jsMul"
+  let op = getOp node1 D.srem D.fpRem
+  result <- op (vnode node1) (vnode node2)
+  newDefinedNode result $ vtype node1                                  
 
 -- | https://es5.github.io/#x15.8.2.12
 -- If no arguments are given, the result is +∞.

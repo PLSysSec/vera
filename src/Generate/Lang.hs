@@ -173,6 +173,12 @@ isNeg op = op >>= return . IsNegative
 fpExp :: Codegen SExpr -> Codegen SExpr
 fpExp op = op >>= return . GetExp
 
+jsDiv :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+jsDiv left right = binOp left right JSDiv
+
+jsRem :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+jsRem left right = binOp left right JSRem
+
 (.==.) :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 (.==.) left right = binOp left right Eq
 

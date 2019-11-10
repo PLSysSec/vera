@@ -58,6 +58,8 @@ fpIonMonkeyTests = benchTestGroup "Generated IonMonkey fp tests"
                    , sign32Test
                    ]
 
+oldBuggTests :: BenchTest
+oldBuggTests = benchTestGroup "Old bugs" []
 
 -- FP
 

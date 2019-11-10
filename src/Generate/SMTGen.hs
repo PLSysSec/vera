@@ -136,6 +136,8 @@ genExprSMT expr =
     JSLsh left right  -> genBinOpSMT left right T.jsShl
     JSRsh left right  -> genBinOpSMT left right T.jsShr
     JSUrsh left right -> genBinOpSMT left right T.jsUshr
+    JSRem left right  -> genBinOpSMT left right T.jsRem
+    JSDiv  left right -> genBinOpSMT left right T.jsDiv
     JSAbs e           -> genExprSMT e >>= liftVerif . T.jsAbs
     JSNot e           -> genExprSMT e >>= liftVerif . T.jsNot
     JSCeil e          -> genExprSMT e >>= liftVerif . T.jsCeil
