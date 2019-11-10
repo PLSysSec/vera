@@ -96,6 +96,7 @@ verifyFunction fnName jsOp fns = do
   define newInt32InputRange
   define intInRange
   define verifySaneRange
+  define isFiniteNonNegative
   define verifyLower
   define verifyUpper
   define canBeInfiniteOrNan
