@@ -439,12 +439,16 @@ floor :: FunctionDef
 floor =
   let args = [ ("op", c "range") ]
       body = [ declare (c "range") "copy"
+             , declare (c "range") "tmp"
              , v "copy" `assign` v "op"
-             , declare (t Signed64) "tmp"
-             , v "tmp" `assign` ((cast (v "copy" .->. "lower") Signed64) .-. n Signed64 1)
+             , v "tmp" `assign` v "copy"
                -- missing fract check
              , if_ (v "op" .->. "hasInt32LowerBound")
-               [v "copy" `assign` (call "setLowerInit" [v "tmp", v "copy"]) ] []
+               [ v "copy" `assign` (call "setLowerInit" [(cast (v "copy" .->. "lower") Signed64) .-. n Signed64 1
+                                                        , v "tmp"
+                                                        ]
+                                    )
+               ] []
              , if_ (call "hasInt32Bounds" [v "copy"])
                [(v "copy" .->. "maxExponent") `assign` (call "exponentImpliedByInt32Bounds" [v "copy"])]
                [if_ (v "copy" .->. "maxExponent" .<. maxFiniteExponent)
