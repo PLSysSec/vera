@@ -24,8 +24,8 @@ import           Control.Monad
 import           DSL.Typed                  (Type (..))
 import           Generate.Lang
 import           IonMonkeyGenerated.Helpers
-import           Prelude                    hiding (abs, and, floor, max, min,
-                                             not, or)
+import           Prelude                    hiding (abs, and, div, floor, max,
+                                             min, mod, not, or)
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#744
 add :: FunctionDef
