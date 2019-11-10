@@ -110,11 +110,11 @@ setLowerInit =
   let args = [ ("sli_x", t Signed64)
              , ("sli_range", c "range")
              ]
-      body = [ if_ (v "sli_x" .>. cast (jsIntMax) Signed64)
+      body = [ if_ (v "sli_x" .>. jsIntMax64) -- | sli > intmax
                [ v "sli_range" .->. "lower" `assign` jsIntMax
                , v "sli_range" .->. "hasInt32LowerBound" `assign` n Bool 1
                ]
-               [ if_ (v "sli_x" .<. cast (jsIntMin) Signed64)
+               [ if_ (v "sli_x" .<. jsIntMin64)
                  [ v "sli_range" .->. "lower" `assign` jsIntMin
                  , v "sli_range" .->. "hasInt32LowerBound" `assign` n Bool 0
                  ]
@@ -131,11 +131,11 @@ setUpperInit =
   let args = [ ("sui_x", t Signed64)
              , ("sui_range", c "range")
              ]  -- Do this so it doesnt stamp out previous assign when it gets prev var in if
-      body = [ if_ (v "sui_x" .>. (cast jsIntMax Signed64))
+      body = [ if_ (v "sui_x" .>. jsIntMax64)
                    [ v "sui_range" .->. "upper" `assign` jsIntMax
                    , v "sui_range" .->. "hasInt32UpperBound" `assign` n Bool 0
                    ]
-                   [ if_ (v "sui_x" .<. (cast jsIntMin Signed64))
+                   [ if_ (v "sui_x" .<. jsIntMin64)
                      [ v "sui_range" .->. "upper" `assign` jsIntMin
                      , v "sui_range" .->. "hasInt32UpperBound" `assign` n Bool 1
                      ]
@@ -204,10 +204,10 @@ jsIntMin :: Codegen SExpr
 jsIntMin = n Signed (0x80000000)
 
 jsIntMax64 :: Codegen SExpr
-jsIntMax64 = n Signed64 (0x7fffffff)
+jsIntMax64 = n Signed64 2147483647
 
 jsIntMin64 :: Codegen SExpr
-jsIntMin64 = n Signed64 (0x80000000)
+jsIntMin64 = n Signed64 (-2147483648)
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#489
 hasInt32Bounds :: FunctionDef

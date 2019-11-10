@@ -69,6 +69,12 @@ ranges = benchTestCase "ranges" $ do
                , declare (t Bool) "hub"
                , v "hlb" `assign` (v "testRange" .->. "hasInt32LowerBound")
                , v "hub" `assign` (v "testRange" .->. "hasInt32UpperBound")
+               , v "testRange" `assign` call "Range3" [ n Signed64 3475212292
+                                                      , n Signed64 3475212292
+                                                      , n Bool 1
+                                                      ]
+               , v "low" `assign`  (v "testRange" .->. "lower")
+               , v "high" `assign` (v "testRange" .->. "upper")
                ]
     runSolverOnSMT
   vtest r $ Map.fromList [ ("low_1", 8)
@@ -83,6 +89,8 @@ ranges = benchTestCase "ranges" $ do
                          , ("exp_2", 12)
                          , ("hlb_1", 1)
                          , ("hub_1", 1)
+                         , ("low_4", 2147483647)
+                         , ("high_4", 2147483647)
                          ]
 
 

@@ -16,14 +16,14 @@ main = defaultMain $ testGroup "All tests" $ map getTest allTests
 
 allTests :: [BenchTest]
 allTests = [ -- ionMonkeyTests
-          genIonMonkeyTests
+            genIonMonkeyTests
            -- , notTerminating
 --            helpersTests
-          , genHelpersTests
+           , genHelpersTests
            -- , inputTests
            -- , cppTests
            -- , jsTests
            -- , dslTests
 --           , langTests
-        , cppGenTests
+           , cppGenTests
            ]

@@ -251,7 +251,9 @@ genStmtSMT stmt =
           condSMT <- genExprSMT cond2
           bothConds <- liftVerif $ T.cppAnd cond condSMT
           mapM_ (rewriteConditional bothConds) trueBr
-          notBothConds <- liftVerif $ T.cppNot bothConds
+          notBothConds <- do
+            notCond2 <- liftVerif $ T.cppNot condSMT
+            liftVerif $ T.cppAnd cond notCond2
           mapM_ (rewriteConditional notBothConds) falseBr
         Assign (VarExpr var) expr -> do
           if isPrimType var

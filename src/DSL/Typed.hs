@@ -733,9 +733,9 @@ jsFloor op =
 jsCeil :: VNode
         -> D.Verif VNode
 jsCeil op = do
-  -- if is32Bits $ vtype op
-  -- then return op
-  -- else do 
+  if is32Bits $ vtype op
+  then return op
+  else do 
     result <- D.fpCeil $ vnode op
     resultVar <- D.doubv "jsCeilResult"
     startVar <- D.doubv "jsCeilStart"

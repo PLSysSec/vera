@@ -48,14 +48,14 @@ fpIonMonkeyTests = benchTestGroup "Generated IonMonkey fp tests"
                    , min32Test
                    , maxTest
                    , max32Test
---                    , floorTest
--- --                   , floor32Test
---                    , ceilTest
--- --                   , ceil32Test
---                    , absTest
--- --                   , abs32Test
---                    , signTest
--- --                   , sign32Test
+                   , floorTest
+                   , floor32Test
+                   , ceilTest
+                   , ceil32Test
+                   , absTest
+                   , abs32Test
+                   , signTest
+                   , sign32Test
                    ]
 
 
@@ -94,14 +94,26 @@ max32Test = benchTestCase "max32" $ evalCodegen Nothing $ verifyFunction "max" j
 floorTest :: BenchTest
 floorTest = benchTestCase "floor" $ evalCodegen Nothing $ verifyFpUnaryFunction "floor" jsFloor [floor]
 
+floor32Test :: BenchTest
+floor32Test = benchTestCase "floor32" $ evalCodegen Nothing $ verifyUnaryFunction "floor" jsFloor [floor, exponentImpliedByInt32Bounds]
+
 ceilTest :: BenchTest
 ceilTest = benchTestCase "ceil" $ evalCodegen Nothing $ verifyFpUnaryFunction "ceil" jsCeil [ceil]
+
+ceil32Test :: BenchTest
+ceil32Test = benchTestCase "ceil32" $ evalCodegen Nothing $ verifyUnaryFunction "ceil" jsCeil [ceil, exponentImpliedByInt32Bounds]
 
 absTest :: BenchTest
 absTest = benchTestCase "abs" $ evalCodegen Nothing $ verifyFpUnaryFunction "abs" jsAbs [abs]
 
+abs32Test :: BenchTest
+abs32Test = benchTestCase "abs32" $ evalCodegen Nothing $ verifyUnaryFunction "abs" jsAbs [abs]
+
 signTest :: BenchTest
 signTest = benchTestCase "sign" $ evalCodegen Nothing $ verifyFpUnaryFunction "sign" jsSign [sign]
+
+sign32Test :: BenchTest
+sign32Test = benchTestCase "sign32" $ evalCodegen Nothing $ verifyUnaryFunction "sign" jsSign [sign]
 
 -- Int32
 
@@ -110,36 +122,36 @@ notTest = benchTestCase "not" $ evalCodegen Nothing $ verifyUnaryFunction "not" 
 
 andTest :: BenchTest
 andTest = benchTestCase "and" $
-  evalCodegen Nothing $ verifyFunction "and" jsAnd [newInt32Range, and]
+  evalCodegen Nothing $ verifyFunction "and" jsAnd [and]
 
 orTest :: BenchTest
 orTest = benchTestCase "or" $
-  evalCodegen Nothing $ verifyFunction "or" jsOr [newInt32Range, countOnes, countLeadingZeroes, or]
+  evalCodegen Nothing $ verifyFunction "or" jsOr [or]
 
 xorTest :: BenchTest
 xorTest = benchTestCase "xor" $
-  evalCodegen Nothing $ verifyFunction "xor" jsXOr [newInt32Range, countOnes, countLeadingZeroes, xor]
+  evalCodegen Nothing $ verifyFunction "xor" jsXOr [xor]
 
 rshTest :: BenchTest
 rshTest = benchTestCase "rsh" $
-  evalCodegen Nothing $ verifyFunctionConstArg "rsh" jsRsh [newInt32Range, rsh]
+  evalCodegen Nothing $ verifyFunctionConstArg "rsh" jsRsh [rsh]
 
 urshTest :: BenchTest
 urshTest = benchTestCase "ursh" $
-  evalCodegen Nothing $ verifyFunctionConstArg "ursh" jsUrsh [newUInt32Range, isFiniteNegative, isFiniteNonNegative, ursh]
+  evalCodegen Nothing $ verifyFunctionConstArg "ursh" jsUrsh [ursh]
 
 lshTest :: BenchTest
 lshTest = benchTestCase "lsh" $
-  evalCodegen Nothing $ verifyFunctionConstArg "lsh" jsLsh [newInt32Range, lsh]
+  evalCodegen Nothing $ verifyFunctionConstArg "lsh" jsLsh [lsh]
 
 rsh'Test :: BenchTest
 rsh'Test = benchTestCase "rsh'" $
-  evalCodegen Nothing $ verifyFunction "rsh'" jsRsh [newInt32Range, rsh']
+  evalCodegen Nothing $ verifyFunction "rsh'" jsRsh [rsh']
 
 ursh'Test :: BenchTest
 ursh'Test = benchTestCase "ursh'" $
-  evalCodegen Nothing $ verifyFunction "ursh'" jsUrsh [newUInt32Range, ursh', isFiniteNonNegative]
+  evalCodegen Nothing $ verifyFunction "ursh'" jsUrsh [ursh']
 
 lsh'Test :: BenchTest
 lsh'Test = benchTestCase "lsh'" $
-  evalCodegen Nothing $ verifyFunction "lsh'" jsRsh [newInt32Range, lsh']
+  evalCodegen Nothing $ verifyFunction "lsh'" jsRsh [lsh']

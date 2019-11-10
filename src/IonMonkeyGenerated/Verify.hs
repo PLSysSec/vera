@@ -25,6 +25,20 @@ verifyUnaryFunction fnName jsOp fns = do
   define verifySaneRange
   define verifyLower
   define verifyUpper
+  define canBeInfiniteOrNan
+  define setLowerInit
+  define setUpperInit
+  define range3
+  define range6
+  define range4
+  define canBeFiniteNonNegative
+  define numBits
+  define canBeNan
+  define canBeZero
+  define contains
+  define hasInt32Bounds
+  define missingAnyInt32Bounds
+  define canHaveSignBitSet
   forM_ fns define
   let verif = [ declare (c "range") "start_range"
               , declare (t Signed) "start"
@@ -489,12 +503,7 @@ getIntList :: M.Map String Double -> [String]
 getIntList fls = catMaybes $ map (\(str, fl) ->
                        case str of
                          _ | "undef" `isInfixOf` str -> Nothing
-                         _ | "sli_x" `isInfixOf` str -> sstr str fl
-                         _ | "rv_lower" `isInfixOf` str -> sstr str fl
-                         _ | "minmin" `isInfixOf` str -> sstr str fl
                          _ | "bob" `isInfixOf` str -> sstr str fl
-                         _ | "clzLhs" `isInfixOf` str -> sstr str fl
-                         _ | "clzRhs" `isInfixOf` str -> sstr str fl
                          _ | "rhsUpper" `isInfixOf` str -> sstr str fl
                          _ | "rhsLeadingZeroes" `isInfixOf` str -> sstr str fl
                          _ | "result_range_upper" `isInfixOf` str -> sstr str fl

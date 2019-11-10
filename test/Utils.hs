@@ -1,5 +1,6 @@
 module Utils where
 import           Control.Monad (forM_, unless)
+
 import qualified Data.Map      as M
 import qualified DSL.DSL       as D
 
@@ -16,7 +17,7 @@ vtest result expectedVars = case result of
   D.SolverUnsat -> error "Expected SAT but got UNSAT"
   D.SolverFailed -> error "Expected SAT but the solver failed"
   D.SolverSat actualVars -> do
-    forM_ (M.toList expectedVars) $ \(expectedVar, expectedVal) ->
+    forM_ (M.toList expectedVars) $ \(expectedVar, expectedVal) -> do
       case M.lookup expectedVar actualVars of
         Nothing -> error $ unwords ["Expected to find"
                                    , show expectedVar
