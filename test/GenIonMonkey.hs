@@ -7,6 +7,7 @@ import           DSL.Typed                     (Type (..))
 import           Generate.Lang
 import           Generate.SMTGen
 import           Generate.State
+import           IonMonkeyGenerated.Bugs
 import           IonMonkeyGenerated.Helpers
 import           IonMonkeyGenerated.Objects
 import           IonMonkeyGenerated.Operations
@@ -20,6 +21,7 @@ genIonMonkeyTests :: BenchTest
 genIonMonkeyTests = benchTestGroup "Generated IonMonkey tests"
                     [ intIonMonkeyTests
                     , fpIonMonkeyTests
+--                    oldBugTests
                     ]
 
 intIonMonkeyTests :: BenchTest
@@ -58,8 +60,18 @@ fpIonMonkeyTests = benchTestGroup "Generated IonMonkey fp tests"
                    , sign32Test
                    ]
 
-oldBuggTests :: BenchTest
-oldBuggTests = benchTestGroup "Old bugs" []
+oldBugTests :: BenchTest
+oldBugTests = benchTestGroup "Old bugs" [ badModTest
+                                        , goodModTest
+                                        ]
+
+-- Old bugs
+
+badModTest :: BenchTest
+badModTest = benchTestCase "badMod32" $ evalCodegen Nothing $ verifyFpFunction "badMod32" jsRem [badMod32, newInt32Range]
+
+goodModTest :: BenchTest
+goodModTest = benchTestCase "goodMod32" $ evalCodegen Nothing $ verifyFpFunction "goodMod32" jsRem [goodMod32, newInt32Range]
 
 -- FP
 

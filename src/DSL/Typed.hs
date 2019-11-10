@@ -1170,13 +1170,15 @@ cppAbs node = if isUnsigned $ vtype node
               then return node
               else do
                 zero <- case vtype node of
-                          Signed -> D.i32c 0
-                          Double -> D.fpzero False 
-                          _      -> error "Do not support all types for cpp abs"
+                          Signed   -> D.i32c 0
+                          Signed64 -> D.i64c 0 
+                          Double   -> D.fpzero False 
+                          _        -> error "Do not support all types for cpp abs"
                 let (op, cmp) = case vtype node of
-                           Signed -> (D.neg, D.slt)
-                           Double -> (D.fpNeg, D.fpLt)
-                           _      -> error "Do not support all types for cpp abs"
+                           Signed   -> (D.neg, D.slt)
+                           Signed64 -> (D.neg, D.slt)
+                           Double   -> (D.fpNeg, D.fpLt)
+                           _        -> error "Do not support all types for cpp abs"
                 cond <- cmp (vnode node) zero
                 negated <- op (vnode node)
                 result <- D.cond cond negated $ vnode node
