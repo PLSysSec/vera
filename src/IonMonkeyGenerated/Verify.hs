@@ -291,6 +291,7 @@ verifyLower =
              ]
       body = [ push_
              , assert_ $ (v "result_range_l") .->. "hasInt32LowerBound"
+             , assert_ $ (v "result_range_l") .->. "hasInt32UpperBound"
              , assert_ $ ((v "result_range_l") .->. "lower") .>. (v "result_l")
              , expect_ isUnsat $ \r -> showInt32Result "Failed to verify lower" r
              , pop_
@@ -304,6 +305,7 @@ verifyUpper =
              ]
       body = [ push_
              , assert_ $ (v "result_range_u") .->. "hasInt32UpperBound"
+             , assert_ $ (v "result_range_u") .->. "hasInt32LowerBound"
              , assert_ $ ((v "result_range_u") .->. "upper") .<. (v "result_u")
              , expect_ isUnsat $ \r -> showInt32Result "Failed to verify upper" r
              , pop_
@@ -503,11 +505,16 @@ getIntList :: M.Map String Double -> [String]
 getIntList fls = catMaybes $ map (\(str, fl) ->
                        case str of
                          _ | "undef" `isInfixOf` str -> Nothing
-                         _ | "bob" `isInfixOf` str -> sstr str fl
-                         _ | "rhsUpper" `isInfixOf` str -> sstr str fl
-                         _ | "rhsLeadingZeroes" `isInfixOf` str -> sstr str fl
                          _ | "result_range_upper" `isInfixOf` str -> sstr str fl
                          _ | "result_range_lower" `isInfixOf` str -> sstr str fl
+                         _ | "result_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
+                         _ | "result_range_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
+                         _ | "left_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
+                         _ | "left_range_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
+                         _ | "right_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
+                         _ | "right_range_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
+                         _ | "start_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
+                         _ | "start_range_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
                          _ | "result_1" `isInfixOf` str -> sstr str fl
                          _ | "right_1" `isInfixOf` str -> sstr str fl
                          _ | "left_1" `isInfixOf` str -> sstr str fl

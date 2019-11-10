@@ -37,8 +37,6 @@ add =
              , declare (t Signed64) "h"
              , declare (t Unsigned16) "e"
              , v "l" `assign` ((cast (v "lhs" .->. "lower") Signed64) .+. (cast (v "rhs" .->. "lower") Signed64))
-             , declare (t Signed64) "bob"
-             , v "bob" `assign` v "l"
              , if_ ((not_ $ v "lhs" .->. "hasInt32LowerBound") .||. (not_ $ v "rhs" .->. "hasInt32LowerBound")) [v "l" `assign` noInt32LowerBound] []
              , v "h" `assign` ((cast (v "lhs" .->. "upper") Signed64) .+. (cast (v "rhs" .->. "upper") Signed64))
              , if_ ((not_ $ v "lhs" .->. "hasInt32UpperBound") .||. (not_ $ v "rhs" .->. "hasInt32UpperBound")) [v "h" `assign` noInt32UpperBound] []
