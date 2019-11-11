@@ -7,10 +7,10 @@ module IonMonkeyGenerated.Operations ( add -- TEST
                                      , not -- 32
                                      , lsh -- 32
                                      , rsh -- 32
-                                     , ursh -- 32
+                                     , ursh -- needs assumption
                                      , lsh' -- 32
                                      , rsh' -- 32
-                                     , ursh' -- 32
+                                     , ursh' -- needs assumption
                                      , abs -- TEST
                                      , min -- TEST
                                      , max -- TEST

@@ -31,7 +31,9 @@ range = let fields = [ ("lower", Signed)
                      , ("upper", Signed)
                      , ("hasInt32LowerBound", Bool)
                      , ("hasInt32UpperBound", Bool)
+                     , ("canHaveFractionalPart", Bool)
                      , ("canBeNegativeZero", Bool)
                      , ("maxExponent", Unsigned16)
+                     , ("isEmpty", Bool)
                      ]
         in ClassDef "range" fields []
