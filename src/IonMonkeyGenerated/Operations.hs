@@ -522,4 +522,24 @@ intersect =
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#579
 union :: FunctionDef
-union = undefined
+union =
+  let args = [ ("lhs", c "range")
+             , ("rhs", c "range")
+             ]
+      body = [ declare (t Signed) "newLower"
+             , declare (t Signed) "newUpper"
+             , v "newLower" `assign` (min_ (v "lhs" .->. "lower") (v "rhs" .->. "lower"))
+             , v "newUpper" `assign` (max_ (v "lhs" .->. "upper") (v "rhs" .->. "upper"))
+             , declare (t Bool) "newHasInt32LowerBound"
+             , declare (t Bool) "newHasInt32UpperBound"
+             , declare (t Bool) "newCanHaveFractionalPart"
+             , declare (t Bool) "newMayIncludeNegativeZero"
+             , declare (t Unsigned16) "exp"
+             , v "newHasInt32LowerBound" `assign` ((v "lhs" .->. "hasInt32LowerBound") .&&. (v "rhs" .->. "hasInt32LowerBound"))
+             , v "newHasInt32UpperBound" `assign` ((v "lhs" .->. "hasInt32UpperBound") .&&. (v "rhs" .->. "hasInt32UpperBound"))
+             , v "newCanHaveFractionalPart" `assign` ((v "lhs" .->. "canHaveFractionalPart") .&&. (v "canHaveFractionalPart"))
+             , v "newMayIncludeNegativeZero" `assign` ((v "lhs" .->. "canBeNegativeZero") .||. (v "rhs" .->. "canBeNegativeZero"))
+             , v "exp" `assign` (max_ (v "lhs" .->. "maxExponent") (v "rhs" .->. "maxExponent"))
+
+             ]
+  in Function "union" (c "range") args body
