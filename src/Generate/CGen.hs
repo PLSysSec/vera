@@ -113,7 +113,7 @@ compileSExpr expr = case expr of
           Nothing -> name
       CVar _ name   -> return name
   (NumExpr (SNum numType numVal)) -> return $ "(" ++ (compileType numType) ++ ")" ++ show numVal
-  (Neg expr) -> compUnarySExpr "-" expr
+  (Neg expr) -> compUnarySExpr "~" expr
   (Not expr) -> compUnarySExpr "!" expr
   (Abs expr) -> compUnarySExpr "abs" expr
   (GetExp expr) -> compUnarySExpr "frexp" expr
