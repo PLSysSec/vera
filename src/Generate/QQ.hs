@@ -1,6 +1,8 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Generate.QQ (prog, progFile) where
 
+import Data.List
 import Generate.Lang (Program)
 import Generate.Parser (program, parseProgram)
 import Language.Haskell.TH as TH
@@ -35,9 +37,32 @@ qExp pos source = do
     l <- pos
     let res = parse (setPosition l *> program) "foo" source;
     case res of
-        Left err -> reportError $ show err
+        Left err -> do
+            p <- pretty source err
+            reportError p
         _ -> return ()
     return $ TH.AppE (VarE 'unsafeParse) $ TH.LitE $ StringL source
+
+pretty :: String -> ParseError -> Q String
+pretty src err = do
+    lnum <- lineNum
+    let ltext = (lines src)!!(lnum -1)
+    let focus = pointTo lnum (sourceColumn pos) ltext
+    return $ "Error in: " ++ sourceName pos ++ "\n\n" ++ focus ++ indented_err ++ "\n"
+    where
+        indented_err = intercalate "\n" $ map ("    " ++) $ lines $ show err
+        lineNum = do
+            l <- location'
+            -- Inline usage
+            if sourceName pos == sourceName l
+                then return $ (sourceLine pos) - (sourceLine l)
+                else return $ sourceLine pos
+        pos = errorPos err
+
+pointTo :: Line -> Column -> String -> String
+pointTo l c src =
+    show l ++ " | " ++ src ++ "\n"
+    ++ (replicate (c + 2 + (length $ show l)) ' ') ++ "^\n"
 
 location' :: Q SourcePos
 location' = aux <$> location
