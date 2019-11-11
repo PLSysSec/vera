@@ -109,13 +109,13 @@ floorTest :: BenchTest
 floorTest = benchTestCase "floor" $ evalCodegen Nothing $ verifyFpUnaryFunction "floor" jsFloor [floor]
 
 floor32Test :: BenchTest
-floor32Test = benchTestCase "floor32" $ evalCodegen Nothing $ verifyUnaryFunction "floor" jsFloor [floor, exponentImpliedByInt32Bounds]
+floor32Test = benchTestCase "floor32" $ evalCodegen Nothing $ verifyUnaryFunction "floor" jsFloor [floor]
 
 ceilTest :: BenchTest
 ceilTest = benchTestCase "ceil" $ evalCodegen Nothing $ verifyFpUnaryFunction "ceil" jsCeil [ceil]
 
 ceil32Test :: BenchTest
-ceil32Test = benchTestCase "ceil32" $ evalCodegen Nothing $ verifyUnaryFunction "ceil" jsCeil [ceil, exponentImpliedByInt32Bounds]
+ceil32Test = benchTestCase "ceil32" $ evalCodegen Nothing $ verifyUnaryFunction "ceil" jsCeil [ceil]
 
 absTest :: BenchTest
 absTest = benchTestCase "abs" $ evalCodegen Nothing $ verifyFpUnaryFunction "abs" jsAbs [abs]

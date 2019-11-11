@@ -27,6 +27,7 @@ verifyUnaryFunction fnName jsOp fns = do
   define verifyUpper
   define canBeInfiniteOrNan
   define setLowerInit
+  define exponentImpliedByInt32Bounds
   define setUpperInit
   define range3
   define range6
@@ -34,6 +35,7 @@ verifyUnaryFunction fnName jsOp fns = do
   define canBeFiniteNonNegative
   define numBits
   define canBeNan
+  define optimize
   define canBeZero
   define contains
   define hasInt32Bounds
@@ -64,7 +66,9 @@ verifyFunctionConstArg :: String
 verifyFunctionConstArg fnName jsOp fns = do
   class_ range
   define newInt32InputRange
+  define optimize
   define intInRange
+  define exponentImpliedByInt32Bounds
   define verifySaneRange
   define verifyLower
   define verifyUpper
@@ -96,6 +100,7 @@ verifyFunction fnName jsOp fns = do
   define newInt32InputRange
   define intInRange
   define verifySaneRange
+  define optimize
   define isFiniteNonNegative
   define verifyLower
   define verifyUpper
@@ -104,6 +109,7 @@ verifyFunction fnName jsOp fns = do
   define setUpperInit
   define range3
   define range6
+  define exponentImpliedByInt32Bounds
   define range4
   define canBeFiniteNonNegative
   define numBits
@@ -145,6 +151,7 @@ verifyFpFunction fnName jsOp fns = do
   define newFloatInputRange
   define verifySaneRange
   define verifyNegZero
+  define optimize
   define verifyNan
   define verifyInf
   define verifyExp
@@ -153,6 +160,7 @@ verifyFpFunction fnName jsOp fns = do
   define setUpperInit
   define range3
   define range6
+  define exponentImpliedByInt32Bounds
   define range4
   define canBeFiniteNonNegative
   define numBits
@@ -201,6 +209,7 @@ verifyFpUnaryFunction fnName jsOp fns = do
   define verifyExp
   define canBeInfiniteOrNan
   define setLowerInit
+  define optimize
   define setUpperInit
   define range3
   define range6

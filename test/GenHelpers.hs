@@ -28,11 +28,16 @@ ranges :: BenchTest
 ranges = benchTestCase "ranges" $ do
   r <- evalCodegen Nothing $ do
     class_ range
-    define $ setLowerInit
-    define $ setUpperInit
-    define $ range3
-    define $ range4
-    define $ range6
+    define setLowerInit
+    define setUpperInit
+    define hasInt32Bounds
+    define exponentImpliedByInt32Bounds
+    define canBeZero
+    define contains
+    define optimize
+    define range3
+    define range4
+    define range6
     genBodySMT [ declare (c "range") "testRange"
                , declare (t Signed) "low"
                , declare (t Signed) "high"
@@ -59,7 +64,7 @@ ranges = benchTestCase "ranges" $ do
                                                       , cast (n Signed 400) Signed64
                                                       , n Bool 1
                                                       , n Bool 1
-                                                      , n Unsigned16 12
+                                                      , n Unsigned16 300
                                                       ]
                , v "low" `assign`  (v "testRange" .->. "lower")
                , v "high" `assign` (v "testRange" .->. "upper")

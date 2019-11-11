@@ -22,7 +22,7 @@ range3 =
                                                    , v "tmp2"
                                                    ]
              , v "rv" .->. "canBeNegativeZero" `assign` (v "nz_flag")
-             , return_ (v "rv")
+             , return_ $ call "optimize" [v "rv"]
              ]
   in Function "Range3" (c "range") args body
 
@@ -46,7 +46,7 @@ range4 =
                                                    ]
              , v "rv" .->. "canBeNegativeZero" `assign` (v "nz_flag")
              , v "rv" .->. "maxExponent" `assign` (v "exp_set")
-             , return_ (v "rv")
+             , return_ $ call "optimize" [v "rv"]
              ]
   in Function "Range4" (c "range") args body
 
@@ -74,7 +74,7 @@ range6 =
              , v "rv" .->. "hasInt32UpperBound" `assign` v "has_upper"
              , v "rv" .->. "canBeNegativeZero" `assign` (v "nz_flag")
              , v "rv" .->. "maxExponent" `assign` (v "exp_set")
-             , return_ (v "rv")
+             , return_ $ call "optimize" [v "rv"]
              ]
   in Function "Range6" (c "range") args body
 
@@ -89,6 +89,26 @@ newInt32Range = let args = [ ("lower_bound_v", t Signed)
                            , return_ (v "rvv")
                            ]
                 in Function "newInt32Range" (c "range") args body
+
+optimize :: FunctionDef
+optimize =
+  let args = [ ("opt_range", c "range") ]
+      body = [ declare (c "range") "optrv"
+             , v "optrv" `assign` v "opt_range"
+             , declare (t Unsigned16) "newExponent"
+             , v "newExponent" `assign` n Unsigned16 0
+             , if_ (call "hasInt32Bounds" [v "opt_range"])
+               [v "newExponent" `assign` (call "exponentImpliedByInt32Bounds" [v "opt_range"])
+               , if_ (v "newExponent" .<. (v "opt_range" .->. "maxExponent"))
+                 [v "optrv" .->. "maxExponent" `assign` v "newExponent" ] []
+               , if_ ((v "opt_range" .->. "canHaveFractionalPart") .&&. ((v "opt_range" .->. "lower") .==. (v "opt_range" .->. "upper")))
+                 [v "optrv" .->. "canHaveFractionalPart" `assign` excludesFractionalParts] []
+               ] []
+             , if_ (v "opt_range" .->. "canBeNegativeZero" .&&. (not_ $ call "canBeZero" [v "opt_range"]))
+               [v "optrv" .->. "canBeNegativeZero" `assign` excludesNegativeZero] []
+             , return_ $ v "optrv"
+             ]
+  in Function "optimize" (c "range") args body
 
 newUInt32Range :: FunctionDef
 newUInt32Range = let args = [ ("u_lower_bound", t Unsigned)
@@ -166,6 +186,9 @@ exponentImpliedByInt32Bounds =
 
 range_constructor :: FunctionDef
 range_constructor = undefined
+
+excludesFractionalParts :: Codegen SExpr
+excludesFractionalParts = n Bool 0
 
 int32min :: Codegen SExpr
 int32min = n Signed (-2147483648)
