@@ -74,6 +74,12 @@ funTest = benchTestCase "fun" $ do
   |]
   L.fName p @=? "doThing"
   
+progFileTest :: BenchTest
+progFileTest = benchTestCase "progFile" $ do
+  let Program fs cs = [progFile|test/test.lejit|]
+  length fs @=? 0
+  length cs @=? 1
+
 progTest :: BenchTest
 progTest = benchTestCase "prog" $ do
   let Program fs cs = [prog|

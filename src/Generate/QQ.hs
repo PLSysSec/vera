@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Generate.QQ (prog) where
+module Generate.QQ (prog, progFile) where
 
 import Generate.Lang (Program)
 import Generate.Parser (program, parseProgram)
@@ -8,6 +8,13 @@ import Language.Haskell.TH.Quote
 import Language.Haskell.TH.Syntax 
 import Text.Parsec
 import Text.Parsec.Pos
+
+
+-- Reads in a file rather than an inline string
+-- The argument is a filepath relative to the root of the project
+-- Extra whitespace is not allowed to [progFile| foo.txt] will fail. It's dumb
+progFile :: QuasiQuoter
+progFile = quoteFile prog
 
 prog :: QuasiQuoter
 prog = QuasiQuoter { quoteDec = error "undefined"

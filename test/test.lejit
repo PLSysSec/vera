@@ -1,0 +1,3 @@
+class Foo {
+    uint8_t foo;
+}
