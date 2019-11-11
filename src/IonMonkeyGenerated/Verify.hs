@@ -162,6 +162,7 @@ verifyFpFunction fnName jsOp fns = do
   define range6
   define exponentImpliedByInt32Bounds
   define range4
+  define verifyFract
   define canBeFiniteNonNegative
   define numBits
   define canBeNan
@@ -190,6 +191,7 @@ verifyFpFunction fnName jsOp fns = do
               , vcall "verifyNegZ" [v "result_range", v "result"]
               , vcall "verifyNan"  [v "result_range", v "result"]
               , vcall "verifyInf"  [v "result_range", v "result"]
+              , vcall "verifyFract"  [v "result_range", v "result"]
 --              , vcall "verifyExp"  [v "result_range", v "result"]
               ]
   genBodySMT verif
@@ -274,6 +276,9 @@ floatInRange =
 
              -- If the number isnt in bounds, int32bound should be false
              , assert_ $ ((v "result_init" .=>. (cast int32min Double)) .^. (not_ $ v "result_range_init" .->. "hasInt32LowerBound")) .&&. ((v "result_init" .<=. (cast int32max Double)) .^. (not_ $ v "result_range_init" .->. "hasInt32UpperBound"))
+
+             -- If the number rounded is not the number, hasFractionalPart should be true
+             , assert_ $ (v "result_init" .==. (jsCeil $ v "result_init")) .^. (v "result_range_init" .->. "canHaveFractionalPart")
 
              , return_ $ v "result_init"
 
@@ -380,6 +385,18 @@ verifyExp =
              , pop_
              ]
   in Function "verifyExp" Void args body
+
+verifyFract :: FunctionDef
+verifyFract =
+  let args = [ ("result_range_fract", c "range")
+             , ("result_fract", t Double)
+             ]
+      body = [ push_
+             , assert_ $ (not_ $ v "result_fract" .==. (jsCeil $ v "result_fract")) .&&. (not_ $ v "result_range_fract" .->. "canHaveFractionalPart")
+             , expect_ isUnsat $ \r -> showExpResult "Failed to verify Fract" r
+             , pop_
+             ]
+  in Function "verifyFract" Void args body
 
 -- Copypasted
 

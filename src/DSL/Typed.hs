@@ -722,8 +722,6 @@ jsAbs op = do
     _isNeg <- D.slt (vnode op) _0
     negOp <- D.neg (vnode op)
     result <- D.cond _isNeg negOp (vnode op)
-    resultVar <- D.i32v "jsAbsResult"
-    D.assign result resultVar
     newDefinedNode result $ vtype op
   else do 
     _isNan <- D.isNan $ vnode op
@@ -733,8 +731,6 @@ jsAbs op = do
       negOp <- D.fpNeg $ vnode op
       D.cond _isNeg negOp $ vnode op
     nanOrResult <- D.cond _isNan _nan result
-    resultVar <- D.doubv "jsAbsResult"
-    D.assign nanOrResult resultVar  
     newDefinedNode nanOrResult $ vtype op
 
 -- | https://es5.github.io/#x15.8.2.9
@@ -745,8 +741,6 @@ jsFloor op =
   then return op
   else do 
     result <- D.fpFloor $ vnode op
-    resultVar <- D.doubv "jsFloorResult"
-    D.assign result resultVar
     newDefinedNode result Double
 
 -- | https://es5.github.io/#x15.8.2.9
@@ -757,10 +751,6 @@ jsCeil op = do
   then return op
   else do 
     result <- D.fpCeil $ vnode op
-    resultVar <- D.doubv "jsCeilResult"
-    startVar <- D.doubv "jsCeilStart"
-    D.assign result resultVar
-    D.assign (vnode op) startVar
     newDefinedNode result Double                 
 
 -- | Have not found this one yet but we're guessing based on js
