@@ -304,7 +304,7 @@ prefixOp p f = do
 fieldAccess :: Parser CExpr
 fieldAccess = do
     reserved "this"
-    reservedOp "."
+    reservedOp "->"
     i <- identifier
     return $ pure $ FieldExpr i
 
@@ -344,7 +344,7 @@ languageDef =
                                       , "int8_t", "int16_t", "int32_t", "int64_t"
                                       ]
             , Token.reservedOpNames = ["!", "~", "+", "-", "*", "==", "!=", "?", ":", ">>",  "<<", "<=", ">=", "+=", "-=", "*=", "|=", "&=", "^="
-                                      , "<", ">", "&", "|", "."
+                                      , "<", ">", "&", "|", "->"
                                       ]
             }
 

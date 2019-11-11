@@ -41,22 +41,22 @@ castTest = benchTestCase "cast" $ do
 
 fieldTest :: BenchTest
 fieldTest = benchTestCase "field" $ do
-  let p = unwrap $ parseExpr "this.foo + (int32_t) 3"
+  let p = unwrap $ parseExpr "this->foo + (int32_t) 3"
   p `ceqs` Add (FieldExpr "foo") (i32 3)
 
 jsTest :: BenchTest
 jsTest = benchTestCase "js" $ do
-  let p = unwrap $ parseExpr "js::sub(js::ceil(this.foo), this.bar)"
+  let p = unwrap $ parseExpr "js::sub(js::ceil(this->foo), this->bar)"
   p `ceqs` JSSub (JSCeil (FieldExpr "foo")) (FieldExpr "bar")
 
 mathTest :: BenchTest
 mathTest = benchTestCase "math" $ do
-  let p = unwrap $ parseExpr "math::is_inf(this.foo)"
+  let p = unwrap $ parseExpr "math::is_inf(this->foo)"
   p `ceqs` IsInf (FieldExpr "foo")
 
 negTest :: BenchTest
 negTest = benchTestCase "neg" $ do
-  let p = unwrap $ parseExpr "math::is_neg(this.foo)"
+  let p = unwrap $ parseExpr "math::is_neg(this->foo)"
   p `ceqs` IsNegative (FieldExpr "foo")
 
 funTest :: BenchTest
