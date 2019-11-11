@@ -30,6 +30,7 @@ range4 :: FunctionDef
 range4 =
   let args = [ ("lower_bound", t Signed64)
              , ("upper_bound", t Signed64)
+             , ("fract_flag", t Bool)
              , ("nz_flag", t Bool)
              , ("exp_set", t Unsigned16)
              ]
@@ -56,6 +57,7 @@ range6 =
              , ("has_lower", t Bool)
              , ("upper_bound", t Signed64)
              , ("has_upper", t Bool)
+             , ("fract_flag", t Bool)
              , ("nz_flag", t Bool)
              , ("exp_set", t Unsigned16)
              ]

@@ -1,20 +1,20 @@
-module IonMonkeyGenerated.Operations ( add -- TEST
-                                     , sub -- TEST
-                                     , mul -- TEST
-                                     , and -- 32
-                                     , or -- 32
-                                     , xor -- 32
-                                     , not -- 32
-                                     , lsh -- 32
-                                     , rsh -- 32
-                                     , ursh -- needs assumption
-                                     , lsh' -- 32
-                                     , rsh' -- 32
-                                     , ursh' -- needs assumption
-                                     , abs -- TEST
-                                     , min -- TEST
-                                     , max -- TEST
-                                     , floor -- TEST
+module IonMonkeyGenerated.Operations ( add -- FRACT
+                                     , sub -- FRACT
+                                     , mul -- FRACT
+                                     , and -- FRACT
+                                     , or -- FRACT
+                                     , xor -- FRACT
+                                     , not -- FRACT
+                                     , lsh -- FRACT
+                                     , rsh -- FRACT
+                                     , ursh -- needs assumption, FRACT
+                                     , lsh' -- FRACT
+                                     , rsh' -- FRACT
+                                     , ursh' -- needs assumption, FRACT
+                                     , abs -- FRACT
+                                     , min -- FRACT
+                                     , max -- FRACT
+                                     , floor -- FRACT. WHY DIDNT THIS VERIFY BEFORE
                                      , ceil -- TEST
                                      , sign -- done
                                      , intersect -- ish
@@ -45,6 +45,7 @@ add =
              , if_ ((call "canBeInfiniteOrNan" [v "lhs"]) .&&. (call "canBeInfiniteOrNan" [v "rhs"])) [v "e" `assign` includesInfinityAndNan] []
              , return_ $ call "Range4" [ v "l"
                                        , v "h"
+                                       , (v "lhs" .->. "canHaveFractionalPart") .||. (v "rhs" .->. "canHaveFractionalPart")
                                        , (v "lhs" .->. "canBeNegativeZero") .&&. (v "rhs" .->. "canBeNegativeZero")
                                        , v "e"
                                        ]
@@ -69,6 +70,7 @@ sub =
              , if_ ((call "canBeInfiniteOrNan" [v "lhs"]) .&&. (call "canBeInfiniteOrNan" [v "rhs"])) [v "e" `assign` includesInfinityAndNan] []
              , return_ $ call "Range4" [ v "l"
                                        , v "h"
+                                       , (v "lhs" .->. "canHaveFractionalPart") .||. (v "rhs" .->. "canHaveFractionalPart")
                                        , (v "lhs" .->. "canBeNegativeZero") .&&. (v "rhs" .->. "canBeNegativeZero")
                                        , v "e"
                                        ]
@@ -254,6 +256,7 @@ mul =
              , if_ (call "missingAnyInt32Bounds" [v "lhs", v "rhs"])
                [return_ $ call "Range4" [ noInt32LowerBound
                                         , noInt32UpperBound
+                                        , (v "lhs" .->. "canHaveFractionalPart") .||. (v "rhs" .->. "canHaveFractionalPart")
                                         , v "newMayIncludeNegativeZero"
                                         , v "exponent"
                                         ]
@@ -268,6 +271,7 @@ mul =
              , v "d" `assign` ((cast (v "lhs" .->. "upper") Signed64) .*. (cast (v "rhs" .->. "upper") Signed64))
              , return_ $ call "Range4" [ min_ (min_ (v "a") (v "b")) (min_ (v "c") (v "d"))
                                        , max_ (max_ (v "a") (v "b")) (max_ (v "c") (v "d"))
+                                       , (v "lhs" .->. "canHaveFractionalPart") .||. (v "rhs" .->. "canHaveFractionalPart")
                                        , v "newMayIncludeNegativeZero"
                                        , v "exponent"
                                        ]
@@ -392,6 +396,7 @@ abs =
                                        , n Bool 1
                                        , cast (max_ (max_ (n Signed 0) (v "u")) (tern_ (v "l" .==. int32min) int32max (neg_ $ v "l"))) Signed64
                                        , (call "hasInt32Bounds" [v "op"]) .&&. (v "l" .!=. int32min)
+                                       , v "op" .->. "canHaveFractionalPart"
                                        , excludesNegativeZero
                                        , v "op" .->. "maxExponent"
                                        ]
@@ -409,6 +414,7 @@ min =
                                        , (v "lhs" .->. "hasInt32LowerBound") .&&. (v "rhs" .->. "hasInt32UpperBound")
                                        , cast (min_ (v "lhs" .->. "upper") (v "rhs" .->. "upper")) Signed64
                                        , (v "lhs" .->. "hasInt32UpperBound") .||. (v "rhs" .->. "hasInt32UpperBound")
+                                       , (v "lhs" .->. "canHaveFractionalPart") .||. (v "rhs" .->. "canHaveFractionalPart")
                                        , (v "lhs" .->. "canBeNegativeZero") .||. (v "rhs" .->. "canBeNegativeZero")
                                        , max_ (v "lhs" .->. "maxExponent") (v "rhs" .->. "maxExponent")
                                       ]
@@ -425,6 +431,7 @@ max =
                                        , (v "lhs" .->. "hasInt32LowerBound") .||. (v "rhs" .->. "hasInt32UpperBound")
                                        , cast (max_ (v "lhs" .->. "upper") (v "rhs" .->. "upper")) Signed64
                                        , (v "lhs" .->. "hasInt32UpperBound") .&&. (v "rhs" .->. "hasInt32UpperBound")
+                                       , (v "lhs" .->. "canHaveFractionalPart") .||. (v "rhs" .->. "canHaveFractionalPart")
                                        , (v "lhs" .->. "canBeNegativeZero") .||. (v "rhs" .->. "canBeNegativeZero")
                                        , max_ (v "lhs" .->. "maxExponent") (v "rhs" .->. "maxExponent")
                                        ]
@@ -441,7 +448,7 @@ floor =
              , v "copy" `assign` v "op"
              , v "tmp" `assign` v "copy"
                -- missing fract check
-             , if_ (v "op" .->. "hasInt32LowerBound")
+             , if_ ((v "op" .->. "canHaveFractionalPart") .&&. (v "op" .->. "hasInt32LowerBound"))
                [ v "copy" `assign` (call "setLowerInit" [(cast (v "copy" .->. "lower") Signed64) .-. n Signed64 1
                                                         , v "tmp"
                                                         ]
@@ -452,6 +459,7 @@ floor =
                [if_ (v "copy" .->. "maxExponent" .<. maxFiniteExponent)
                  [v "copy" .->. "maxExponent" .+=. n Unsigned16 1] []
                ]
+             , v "copy" .->. "canHaveFractionalPart" `assign` excludesFractionalParts
              , return_ $ v "copy"
              ]
   in Function "floor" (c "range") args body
@@ -468,6 +476,7 @@ ceil =
                [if_ (v "copy" .->. "maxExponent" .<. maxFiniteExponent)
                  [v "copy" .->. "maxExponent" .+=. n Unsigned16 1] []
                ]
+             , v "copy" .->. "canHaveFractionalPart" `assign` excludesFractionalParts
              , return_ $ v "copy"
              ]
   in Function "ceil" (c "range") args body
@@ -480,6 +489,7 @@ sign =
       body = [ return_ $ call "Range4" [ cast (max_ ( min_ (v "op" .->. "lower") (n Signed 1) ) (n Signed (-1))) Signed64
                                        , cast (max_ ( min_ (v "op" .->. "upper") (n Signed 1) ) (n Signed (-1))) Signed64
                                        , v "op" .->. "canBeNegativeZero"
+                                       , excludesFractionalParts
                                        , n Unsigned16 0
                                        ]
              ]
