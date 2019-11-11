@@ -1,3 +1,108 @@
-class Foo {
-    uint8_t foo;
+int64_t noInt32LowerBound() {
+    return (int64_t) 0x80000000 - (int64_t) 1;
+}
+
+int64_t noInt32UpperBound() {
+    return (int64_t) 0x7fffffff - (int64_t) 1;
+}
+
+uint16_t maxFiniteExponent() {
+    return (uint16_t) 1023;
+}
+
+uint16_t includesInfinityAndNan() {
+    return (uint16_t) 65535;
+}
+
+uint16_t includesInfinity() {
+    return (uint16_t) 1 + maxFiniteExponent();
+}
+
+bool canBeInfiniteOrNan(range fnan) {
+    return fnan->maxExponent >= includesInfinity();
+}
+
+bool excludesFractionalParts() {
+    uint64_t x;
+    x = (uint64_t) 0;
+    return (bool) x;
+}
+
+range Range4(int64_t lower_bound, int64_t upper_bound, bool fract_flag, bool nz_flag, uint16_t exp_set) {
+    range rv;
+    range tmp;
+    tmp = rv;
+    rv = setLowerInit(lower_bound, tmp);
+    
+    range tmp2;
+    tmp2 = rv;
+    rv = setUpperInit(upper_bound, tmp2);
+
+    rv->canBeNegativeZero = nz_flag;
+    rv->maxExponent = exp_set;
+    return optimize(rv);
+}
+
+bool canBeZero(range zrange) {
+    return contains(zrange, (int64_t) 0);
+}
+
+bool contains(range crange, int64_t cval) {
+    return cval >= crange-> lower & cval <= crange->upper;
+}
+
+class Range {
+    range optimize(range opt_range) {
+        range optrv;
+        optrv = opt_range;
+
+        uint16_t newExponent;
+        newExponent = (uint16_t) 0;
+        if (hasInt32Bounds(opt_range)) {
+            newExponent = exponentImpliedByInt32Bounds(opt_range);
+            if(newExponent < opt_range->maxExponent) {
+                optrv->maxExponent = newExponent;
+            }
+
+            if (opt_range->canHaveFractionalPart & (opt_range->lower == opt_range->upper)) {
+                optrv->canHaveFractionalPart = excludesFractionalParts();
+            }
+        }
+
+        if(opt_range->canBeNegativeZero & !canBeZero(opt_range)) {
+            optrv->canBeNegativeZero = excludesNegativeZero();
+        }
+        return optrv;
+    }
+
+    range sub(range lhs, range rhs) {
+        int64_t l;
+        int64_t h;
+        int64_t e;
+        l = (int64_t) lhs->lower - (int64_t) rhs ->lower;
+        if (!lhs->hasInt32LowerBound | !rhs->hasInt32LowerBound) {
+            l = noInt32LowerBound();
+        }
+        h = (int64_t) lhs->upper - (int64_t) rhs -> upper;
+        if (!lhs->hasInt32UpperBound | !rhs->hasInt32UpperBound) {
+            h = noInt32UpperBound();
+        }
+
+        e = math::max(lhs->maxExponent, rhs->maxExponent);
+
+        if (e <= maxFiniteExponent()) {
+            e += (uint16_t) 1;
+        }
+
+        if (canBeInfiniteOrNan(lhs) & canBeInfiniteOrNan(rhs)) {
+            e = includesInfinityAndNan();
+        }
+
+        return Range4(l,
+                      h, 
+                      lhs->canHaveFractionalPart | rhs -> canHaveFractionalPart,
+                      lhs->canBeNegativeZero & rhs->canBeNegativeZero,
+                      e);
+    }
+
 }

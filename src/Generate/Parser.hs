@@ -29,6 +29,7 @@ program :: Parser (L.Program)
 program = do
     whiteSpace
     els <- many $ parseEither func classDef
+    eof
     let (funcs, classes) = partitionEithers els
     return $ L.Program funcs classes
 
@@ -39,15 +40,15 @@ parseClass = parse classDef ""
 classDef :: Parser (L.ClassDef)
 classDef = do
     reserved "class"
-    i <- identifier
+    i <- identifier <?> "class name"
     els <- braces $ many $ parseEither (classField <* semi) func
     let (fields, fns) = partitionEithers els
     return $ L.ClassDef i fields fns
 
 classField :: Parser (FieldName, DT.Type)
 classField = do
-    t <- prim_type
-    i <- identifier
+    t <- prim_type <?> "class field type"
+    i <- identifier <?> "class field name"
     return (i, t)
 
 -- Functions
@@ -56,10 +57,10 @@ parseFunc = parse func ""
 
 func :: Parser L.FunctionDef
 func = do
-    ty <- decl_type
-    n <- identifier
-    args <- parens $ commaSep func_arg_decl
-    body <- block
+    ty <- decl_type <?> "function declaration return type"
+    n <- identifier <?> "function declaration name"
+    args <- parens (commaSep func_arg_decl <?> "function arg")
+    body <- block <?> "function body"
     return $ L.Function n ty args body
 
 func_arg_decl :: Parser (VarName, STy)
@@ -74,12 +75,12 @@ block = braces $ many stmt
 
 stmt :: Parser CStmt
 stmt = choice [
-    try $ if_stmt,
-    try decl <* semi,
-    try assign <* semi,
-    try opAssigns <* semi,
-    try void_stmt <* semi,
-    try return_stmt <* semi]
+    try if_stmt <?> "if statement",
+    try decl <* semi <?> "variable declaration",
+    try assign <* semi <?> "assignment",
+    try opAssigns <* semi <?> "operater assignment",
+    try void_stmt <* semi <?> "void call",
+    try return_stmt <* semi <?> "return"] <?> "statement"
 
 -- Decl
 decl :: Parser CStmt
@@ -99,7 +100,7 @@ decl_type =
 -- Assign
 assign :: Parser CStmt
 assign = do
-    lval <- var
+    lval <- expr
     reservedOp "="
     rval <- expr
     return $ L.assign lval rval
@@ -276,7 +277,7 @@ paren_expr = do
     <|> parens expr
 
 term :: Parser CExpr
-term    =  paren_expr <|> float_lit <|> fieldAccess <|> try js_builtin <|> try math_builtin <|> try call <|> var
+term    =  paren_expr <|> float_lit <|> try js_builtin <|> try math_builtin <|> try call <|> var
     <?> "simple expression"
 
 cast :: Parser CExpr
@@ -301,15 +302,15 @@ prefixOp p f = do
     reservedOp p
     return f
 
-fieldAccess :: Parser CExpr
-fieldAccess = do
-    reserved "this"
+member :: Parser(CExpr -> CExpr)
+member = do
     reservedOp "->"
     i <- identifier
-    return $ pure $ FieldExpr i
+    return $ (L..->. i)
 
 -- This list does its best to match: https://en.cppreference.com/w/cpp/language/operator_precedence
 operators = [ [prefix $ choice [prefixOp "!" L.not_, prefixOp "~" L.neg_]]
+            ,[postfix $ member]
             ,[binary "*" Mul AssocLeft]
             ,[binary "+" Add AssocLeft, binary "-" Sub AssocLeft]
             ,[binary "<<" Shl AssocLeft, binary ">>" Shr AssocLeft]
@@ -330,15 +331,15 @@ ternary = do
 
 binary  name fun assoc = Infix (do{ reservedOp name; return $  \l r -> L.binOp l r fun }) assoc
 prefix  p = Prefix  . chainl1 p $ return       (.)
--- postfix name fun       = Postfix (do{ reservedOp name; return fun })
+postfix p = Postfix . chainl1 p $ return (flip (.))
 
 languageDef:: LanguageDef st
 languageDef =
     emptyDef { Token.commentStart    = "/*"
             , Token.commentEnd      = "*/"
             , Token.commentLine     = "//"
-            , Token.identStart      = letter
-            , Token.identLetter     = alphaNum
+            , Token.identStart      = letter <|> char '_'
+            , Token.identLetter     = alphaNum <|> char '_'
             , Token.reservedNames   = ["this", "js", "math", "if", "else", "return", "class"
                                       , "uint8_t", "uint16_t", "uint32_t", "uint64_t"
                                       , "int8_t", "int16_t", "int32_t", "int64_t"
