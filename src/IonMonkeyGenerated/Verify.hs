@@ -243,7 +243,7 @@ verifyFpUnaryFunction fnName jsOp fns = do
               , vcall "verifyNan"  [v "result_range", v "result"]
               , vcall "verifyInf"  [v "result_range", v "result"]
               , vcall "verifyFract"  [v "result_range", v "result"]
---              , vcall "verifyExp"  [v "result_range", v "result"]
+              , vcall "verifyExp"  [v "result_range", v "result"]
               ]
   genBodySMT verif
 
