@@ -390,6 +390,7 @@ semi = Token.semi lexer
 
 whiteSpace :: Parser ()
 whiteSpace = Token.whiteSpace lexer
+
 -- Util
 parseEither :: Parser a -> Parser b -> Parser (Either a b)
 parseEither pa pb = do

@@ -4,12 +4,13 @@ module Generate.QQ (prog, progFile, func) where
 
 import Data.List
 import Generate.Lang (Program, FunctionDef)
-import qualified Generate.Parser as P (Parser, program, parseProgram, func, parseFunc) 
+import qualified Generate.Parser as P (Parser, program, parseProgram, func, parseFunc, whiteSpace) 
 import Language.Haskell.TH as TH
 import Language.Haskell.TH.Quote
 import Language.Haskell.TH.Syntax 
 import Text.Parsec
 import Text.Parsec.Pos
+import Text.Parsec.Token
 
 
 -- Reads in a file rather than an inline string
@@ -27,10 +28,13 @@ prog = QuasiQuoter { quoteDec = error "undefined"
 
 func :: QuasiQuoter
 func = QuasiQuoter { quoteDec = error "undefined"
-                   , quoteExp  = qExp P.func 'unsafeParseFunction location'
+                   , quoteExp  = qExp topLevelFunction 'unsafeParseFunction location'
                    , quotePat  = error "undefined"
                    , quoteType = error "undefined"
                    }
+
+topLevelFunction :: P.Parser FunctionDef
+topLevelFunction = P.whiteSpace *> P.func <* eof
 
 -- Okay here's the sitch, because things are hella monadic out the other end
 -- we can't just serialize our parsed output back to disk. We'd need another
@@ -62,7 +66,7 @@ pretty src err = do
             l <- location'
             -- Inline usage
             if sourceName pos == sourceName l
-                then return $ (sourceLine pos) - (sourceLine l)
+                then return $ (sourceLine pos) - (sourceLine l) + 1
                 else return $ sourceLine pos
         pos = errorPos err
 
@@ -81,7 +85,7 @@ unsafeParseProgram :: String -> Program
 unsafeParseProgram  = unwrap . P.parseProgram
 
 unsafeParseFunction :: String -> FunctionDef 
-unsafeParseFunction  = unwrap . P.parseFunc
+unsafeParseFunction = unwrap . (parse topLevelFunction "")
 
 unwrap :: Show a => Either a b -> b
 unwrap (Left err) = error $ show err
