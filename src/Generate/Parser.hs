@@ -1,0 +1,400 @@
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE OverloadedStrings #-}
+module Generate.Parser where
+import           Data.List
+import           Data.Either (partitionEithers)
+import           Data.Text (Text)
+import           Data.Void
+import qualified DSL.DSL                    as D
+import qualified DSL.Typed                  as DT
+import qualified Generate.Lang as L
+import           Generate.State
+import           Generate.SMTAST
+import           Text.Parsec (Parsec)
+import           Text.ParserCombinators.Parsec hiding (Parser)
+import           Text.ParserCombinators.Parsec.Expr
+import           Text.ParserCombinators.Parsec.Language
+import qualified Text.ParserCombinators.Parsec.Token as Token
+
+
+type CStmt = Codegen SStmt
+type CExpr = Codegen SExpr
+type Parser = Parsec String ()
+
+-- Programs
+parseProgram :: String -> Either ParseError L.Program
+parseProgram = parse program ""
+
+program :: Parser (L.Program)
+program = do
+    whiteSpace
+    els <- many $ parseEither func classDef
+    let (funcs, classes) = partitionEithers els
+    return $ L.Program funcs classes
+
+-- Classes
+parseClass :: String -> Either ParseError L.ClassDef
+parseClass = parse classDef ""
+
+classDef :: Parser (L.ClassDef)
+classDef = do
+    reserved "class"
+    i <- identifier
+    els <- braces $ many $ parseEither (classField <* semi) func
+    let (fields, fns) = partitionEithers els
+    return $ L.ClassDef i fields fns
+
+classField :: Parser (FieldName, DT.Type)
+classField = do
+    t <- prim_type
+    i <- identifier
+    return (i, t)
+
+-- Functions
+parseFunc :: String -> Either ParseError L.FunctionDef
+parseFunc = parse func ""
+
+func :: Parser L.FunctionDef
+func = do
+    ty <- decl_type
+    n <- identifier
+    args <- parens $ commaSep func_arg_decl
+    body <- block
+    return $ L.Function n ty args body
+
+func_arg_decl :: Parser (VarName, STy)
+func_arg_decl = do
+    ty <- decl_type
+    n <- identifier
+    return (n, ty)
+
+-- Statements
+block :: Parser [CStmt]
+block = braces $ many stmt
+
+stmt :: Parser CStmt
+stmt = choice [
+    try $ if_stmt,
+    try decl <* semi,
+    try assign <* semi,
+    try opAssigns <* semi,
+    try void_stmt <* semi,
+    try return_stmt <* semi]
+
+-- Decl
+decl :: Parser CStmt
+decl = do
+    ty <- decl_type
+    i <- identifier
+    return $ L.declare ty i 
+
+decl_type :: Parser STy
+decl_type = 
+    prim <|> void <|> clas
+    where
+        prim = PrimType <$> prim_type
+        void = return Void <$> reserved "void"
+        clas = Class <$> identifier
+
+-- Assign
+assign :: Parser CStmt
+assign = do
+    lval <- var
+    reservedOp "="
+    rval <- expr
+    return $ L.assign lval rval
+
+-- Operator Assigner (+=, -=, |=, &=)
+opAssigns :: Parser (CStmt)
+opAssigns = do
+    lval <- var
+    op <- choice $ map opParser [
+        ("+", Add),
+        ("-", Sub),
+        ("&", And),
+        ("|", Or),
+        ("^", XOr)]
+    rval <- expr
+    return $ L.assign lval (op <$> lval <*> rval)
+    where opParser (s,op) =
+                return op <* (reservedOp $ s ++ "=")
+
+-- If Statement
+if_stmt :: Parser CStmt
+if_stmt = do
+    reserved "if"
+    cond <- parens expr
+    t_branch <- choice [try single_stmt, block]
+    f_branch <- option [] $ do
+        reserved "else"
+        choice [try single_stmt, block]
+
+    return $ If <$> cond <*> sequence t_branch <*> sequence f_branch
+    where
+        single_stmt = return <$> stmt
+
+-- Void 
+void_stmt :: Parser CStmt
+void_stmt = do
+    i <- identifier
+    a <- fn_args
+    return $ VoidCall i <$> sequence a
+
+-- Return
+return_stmt :: Parser CStmt
+return_stmt = do
+    reserved "return"
+    e <- expr 
+    return $ Return <$> e
+
+
+js_builtins_1 :: [(String, SExpr -> SExpr)]
+js_builtins_1 = [
+      ("not", JSNot)
+    , ("abs", JSAbs)
+    , ("ceil", JSCeil)
+    , ("floor", JSFloor)
+    , ("sign", JSSign)]
+
+js_builtins_2 :: [(String, SExpr -> SExpr -> SExpr)]
+js_builtins_2 = [
+      ("and", JSAnd)
+    , ("sub", JSSub)
+    , ("mul", JSMul)
+    , ("or", JSOr)
+    , ("xor", JSXOr)
+    , ("min", JSMin)
+    , ("max", JSMax)
+    , ("lsh", JSLsh)
+    , ("rsh", JSRsh)
+    , ("rrsh", JSUrsh)]
+
+fn_args :: Parser [CExpr]
+fn_args = do
+    parens $ expr `sepBy` (symbol ",")
+
+builtin_call_1 :: (String, SExpr -> SExpr) -> Parser CExpr
+builtin_call_1 (n, c) = do
+    symbol n
+    args <- fn_args
+    case args of
+        [a] -> return $ L.unaryOp a c
+        _ ->  fail $ "Wrong number of args for builtin: '" ++ show n ++ "' (accepts 1)"
+
+builtin_call_2 :: (String, SExpr -> SExpr -> SExpr) -> Parser CExpr
+builtin_call_2 (n, c) = do
+    symbol n
+    args <- fn_args
+    case args of
+        [a1, a2] -> return $ L.binOp a1 a2 c
+        _ ->  fail $ "Wrong number of args for builtin: '" ++ show n ++ "' (accepts 2)"
+
+js_builtin = do
+    reserved "js"
+    reservedOp "::"
+    choice $ one_args ++ two_args
+    where
+        one_args = map (try . builtin_call_1) js_builtins_1
+        two_args = map (try . builtin_call_2) js_builtins_2
+
+
+math_builtins_1 :: [(String, SExpr -> SExpr)]
+math_builtins_1 = [
+      ("abs", Abs)
+    , ("exp", GetExp)
+    , ("is_neg", IsNegative)
+    , ("is_zero", IsZero)
+    , ("is_nan", IsNan)
+    , ("is_inf", IsInf)]
+
+math_builtins_2 :: [(String, SExpr -> SExpr -> SExpr)]
+math_builtins_2 = [
+      ("min", JSAnd)
+    , ("max", JSSub)]
+
+math_builtin :: Parser CExpr
+math_builtin = do
+    reserved "math"
+    reservedOp "::"
+    choice $ one_args ++ two_args
+    where
+        one_args = map (try . builtin_call_1) math_builtins_1
+        two_args = map (try . builtin_call_2) math_builtins_2
+
+parseExpr :: [Char] -> Either ParseError CExpr
+parseExpr = parse expr ""
+
+var :: Parser CExpr
+var = do
+    i <- identifier
+    return $ L.v i
+
+call :: Parser CExpr
+call = do
+    i <- identifier
+    a <- fn_args
+    return $ L.call i a
+
+expr :: Parser CExpr
+expr = buildExpressionParser operators term
+    <?> "expression"
+
+float_lit :: Parser CExpr
+float_lit = do
+    f <- float
+    return $ L.d DT.Double f
+
+
+int_type :: Parser DT.Type
+int_type = do
+    choice [
+        reserved "uint8_t" >> return DT.Unsigned8,
+        reserved "uint16_t" >> return DT.Unsigned16,
+        reserved "uint32_t" >> return DT.Unsigned,
+        reserved "uint64_t" >> return DT.Unsigned64,
+        reserved "int8_t" >> return DT.Signed8,
+        reserved "int16_t" >> return DT.Signed16,
+        reserved "int32_t" >> return DT.Signed,
+        reserved "int64_t" >> return DT.Signed64]
+
+float_type :: Parser DT.Type
+float_type = do
+    reserved "double" >> return DT.Double
+
+num_type :: Parser DT.Type
+num_type = do
+    try int_type <|> float_type
+
+prim_type :: Parser DT.Type
+prim_type = do
+    try num_type <|> (reserved "bool" >> return DT.Bool)
+
+paren_expr :: Parser CExpr
+paren_expr = do
+    try typed_lit
+    <|> try cast
+    <|> parens expr
+
+term :: Parser CExpr
+term    =  paren_expr <|> float_lit <|> fieldAccess <|> try js_builtin <|> try math_builtin <|> try call <|> var
+    <?> "simple expression"
+
+cast :: Parser CExpr
+cast = do
+    t <- parens prim_type
+    e <- term
+    return $ L.cast e t
+
+typed_lit :: Parser CExpr
+typed_lit = do
+    t <- parens int_type
+    n <- naturalOrFloat
+    case (n, t) of
+        (Left i, DT.Bool) -> fail "Integer needs a fixed type before cast to bool"
+        (Left i, DT.Double) -> return $ L.d DT.Double $ fromIntegral i
+        (Left i, _) -> return $ L.n t i
+        (Right f, _) -> return $ L.cast (L.d DT.Double f) t
+
+
+prefixOp :: [Char] -> (CExpr -> CExpr) -> Parser (CExpr -> CExpr)
+prefixOp p f = do
+    reservedOp p
+    return f
+
+fieldAccess :: Parser CExpr
+fieldAccess = do
+    reserved "this"
+    reservedOp "."
+    i <- identifier
+    return $ pure $ FieldExpr i
+
+-- This list does its best to match: https://en.cppreference.com/w/cpp/language/operator_precedence
+operators = [ [prefix $ choice [prefixOp "!" L.not_, prefixOp "~" L.neg_]]
+            ,[binary "*" Mul AssocLeft]
+            ,[binary "+" Add AssocLeft, binary "-" Sub AssocLeft]
+            ,[binary "<<" Shl AssocLeft, binary ">>" Shr AssocLeft]
+            ,[binary "<" Lt AssocLeft, binary "<=" Lte AssocLeft]
+            ,[binary ">" Gt AssocLeft, binary ">=" Gte AssocLeft]
+            ,[binary "==" Eq AssocLeft, binary "!=" NEq AssocLeft]
+            ,[binary "&" And AssocLeft]
+            ,[binary "^" XOr AssocLeft]
+            ,[binary "|" Or AssocLeft]
+            ,[Infix ternary AssocRight]]
+
+ternary :: Parser (CExpr -> CExpr -> CExpr)
+ternary = do
+    reservedOp "?"
+    t_branch <- expr
+    reservedOp ":"
+    return $ \cond f_branch -> L.tern_ cond t_branch f_branch
+
+binary  name fun assoc = Infix (do{ reservedOp name; return $  \l r -> L.binOp l r fun }) assoc
+prefix  p = Prefix  . chainl1 p $ return       (.)
+-- postfix name fun       = Postfix (do{ reservedOp name; return fun })
+
+languageDef:: LanguageDef st
+languageDef =
+    emptyDef { Token.commentStart    = "/*"
+            , Token.commentEnd      = "*/"
+            , Token.commentLine     = "//"
+            , Token.identStart      = letter
+            , Token.identLetter     = alphaNum
+            , Token.reservedNames   = ["this", "js", "math", "if", "else", "return", "class"
+                                      , "uint8_t", "uint16_t", "uint32_t", "uint64_t"
+                                      , "int8_t", "int16_t", "int32_t", "int64_t"
+                                      ]
+            , Token.reservedOpNames = ["!", "~", "+", "-", "*", "==", "!=", "?", ":", ">>",  "<<", "<=", ">=", "+=", "-=", "*=", "|=", "&=", "^="
+                                      , "<", ">", "&", "|", "."
+                                      ]
+            }
+
+lexer :: Token.TokenParser st
+lexer = Token.makeTokenParser languageDef
+
+integer :: Parser Integer
+integer = Token.integer lexer
+
+float :: Parser Double
+float = Token.float lexer
+
+naturalOrFloat :: Parser (Either Integer Double)
+naturalOrFloat = Token.naturalOrFloat lexer
+
+reservedOp :: String -> Parser ()
+reservedOp = Token.reservedOp lexer
+
+parens :: Parser a -> Parser a
+parens = Token.parens lexer
+
+braces :: Parser a -> Parser a
+braces = Token.braces lexer
+
+reserved :: String -> Parser ()
+reserved = Token.reserved lexer
+
+identifier :: Parser String
+identifier = Token.identifier lexer
+
+symbol :: String -> Parser String
+symbol = Token.symbol lexer
+
+commaSep :: Parser t -> Parser [t]
+commaSep = Token.commaSep lexer
+
+semiSep :: Parser t -> Parser [t]
+semiSep = Token.semiSep lexer
+
+semi :: Parser String
+semi = Token.semi lexer
+
+whiteSpace :: Parser ()
+whiteSpace = Token.whiteSpace lexer
+-- Util
+parseEither :: Parser a -> Parser b -> Parser (Either a b)
+parseEither pa pb = do
+    a <- optionMaybe $ try pa
+    case a of
+        Just o -> return $ Left o
+        Nothing -> do
+            b <- pb
+            return $ Right b

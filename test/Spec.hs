@@ -2,6 +2,7 @@ import           BenchUtils
 import           Cpp
 import           CppGen
 import           DSL
+import           Parser
 import           GenHelpers
 import           GenIonMonkey
 import           Helpers
@@ -16,14 +17,15 @@ main = defaultMain $ testGroup "All tests" $ map getTest allTests
 
 allTests :: [BenchTest]
 allTests = [ -- ionMonkeyTests
-           genIonMonkeyTests
+--            genIonMonkeyTests
            -- , notTerminating
-           , helpersTests
+           -- , helpersTests
 --           , genHelpersTests
            -- , inputTests
            -- , cppTests
            -- , jsTests
            -- , dslTests
-           -- langTests
---           , cppGenTests
+           --, langTests
+           parserTests
+          --, cppGenTests
            ]

@@ -1,9 +1,9 @@
 module Lang where
 import           BenchUtils
 import qualified Data.Map        as Map
-import           DSL.DSL         (SMTResult (..), isUnsat)
+import           DSL.DSL         (isUnsat)
 import           DSL.Typed       (Type (..))
-import           Generate.Lang
+import           Generate.Lang as L
 import           Generate.SMTAST
 import           Generate.SMTGen
 import           Generate.State
@@ -21,6 +21,7 @@ langTests = benchTestGroup "Lang" [ declTest
                                   , assignClassTest
                                   , voidCallTest
                                   ]
+
 
 declTest :: BenchTest
 declTest = benchTestCase "decl" $ do
