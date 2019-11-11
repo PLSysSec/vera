@@ -192,7 +192,7 @@ verifyFpFunction fnName jsOp fns = do
               , vcall "verifyNan"  [v "result_range", v "result"]
               , vcall "verifyInf"  [v "result_range", v "result"]
               , vcall "verifyFract"  [v "result_range", v "result"]
---              , vcall "verifyExp"  [v "result_range", v "result"]
+              , vcall "verifyExp"  [v "result_range", v "result"]
               ]
   genBodySMT verif
 
@@ -225,6 +225,7 @@ verifyFpUnaryFunction fnName jsOp fns = do
   define hasInt32Bounds
   define missingAnyInt32Bounds
   define canHaveSignBitSet
+  define verifyFract
   forM_ fns define
   let verif = [ declare (c "range") "start_range"
               , declare (t Double) "start"
@@ -241,6 +242,7 @@ verifyFpUnaryFunction fnName jsOp fns = do
               , vcall "verifyNegZ" [v "result_range", v "result"]
               , vcall "verifyNan"  [v "result_range", v "result"]
               , vcall "verifyInf"  [v "result_range", v "result"]
+              , vcall "verifyFract"  [v "result_range", v "result"]
 --              , vcall "verifyExp"  [v "result_range", v "result"]
               ]
   genBodySMT verif
