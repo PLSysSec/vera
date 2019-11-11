@@ -446,10 +446,9 @@ floor =
       body = [ declare (c "range") "copy"
              , declare (c "range") "tmp"
              , v "copy" `assign` v "op"
-             , v "tmp" `assign` v "copy"
-               -- missing fract check
+             , v "tmp" `assign` v "op"
              , if_ ((v "op" .->. "canHaveFractionalPart") .&&. (v "op" .->. "hasInt32LowerBound"))
-               [ v "copy" `assign` (call "setLowerInit" [(cast (v "copy" .->. "lower") Signed64) .-. n Signed64 1
+               [ v "copy" `assign` (call "setLowerInit" [ (cast (v "copy" .->. "lower") Signed64) .-. n Signed64 1
                                                         , v "tmp"
                                                         ]
                                     )

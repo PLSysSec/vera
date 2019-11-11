@@ -53,7 +53,8 @@ ranges = benchTestCase "ranges" $ do
                , v "testRange" `assign` call "Range4" [ cast (n Signed 100) Signed64
                                                       , cast (n Signed 100) Signed64
                                                       , n Bool 1
-                                                      , n Unsigned16 12
+                                                      , n Bool 1
+                                                      , n Unsigned16 100
                                                       ]
                , v "low" `assign`  (v "testRange" .->. "lower")
                , v "high" `assign` (v "testRange" .->. "upper")
@@ -62,6 +63,7 @@ ranges = benchTestCase "ranges" $ do
                , v "testRange" `assign` call "Range6" [ cast (n Signed 500) Signed64
                                                       , n Bool 1
                                                       , cast (n Signed 400) Signed64
+                                                      , n Bool 1
                                                       , n Bool 1
                                                       , n Bool 1
                                                       , n Unsigned16 300
@@ -85,13 +87,13 @@ ranges = benchTestCase "ranges" $ do
   vtest r $ Map.fromList [ ("low_1", 8)
                          , ("high_1", 8)
                          , ("nz_1", 1)
-                         , ("exp_1", 12)
+                         , ("exp_1", 7)
                          , ("low_2", 100)
                          , ("high_2", 100)
                          , ("low_3", 500)
                          , ("high_3", 400)
                          , ("nz_3", 1)
-                         , ("exp_2", 12)
+                         , ("exp_2", 9)
                          , ("hlb_1", 1)
                          , ("hub_1", 1)
                          , ("low_4", 2147483647)

@@ -265,10 +265,10 @@ genStmtSMT stmt =
           else case expr of
             Call{} -> do
               rvs <- genCallSMT expr
-              fields <- getFieldVars var >>= mapM getVar
+              fields <- getFieldVars var
               unless (length rvs == length fields) $
                 error $ unwords ["Wrong return type for function in assignment to", varName var]
-              forM_ (zip fields rvs) $ \(f, rv) -> rewriteReturn cond f rv
+              forM_ (zip fields rvs) $ \(f, rv) -> rewriteAssign cond f rv
             VarExpr v | isClassType v -> do
               fields1 <- getFieldVars var
               fields2 <- getFieldVars v >>= mapM genVarSMT

@@ -1083,6 +1083,9 @@ instance CppCast VNode where
                           Signed     -> do
                             result <- D.castFp (vnode node) 32
                             return $ VNode (vundef node) result Signed
+                          Signed64   -> do
+                            result <- D.castFp (vnode node) 64
+                            return $ VNode (vundef node) result Signed64
                           _          -> error "We only suppor Double to int32 casts rn"
     | is16Bits fromTy = case toTy of
                           Unsigned16 -> return $ VNode (vundef node) (vnode node) Unsigned16
@@ -1151,6 +1154,9 @@ instance CppCast VNode where
                             return $ VNode (vundef node) result Signed
                           Unsigned64 -> return $ VNode (vundef node) (vnode node) Unsigned64
                           Signed64   -> return $ VNode (vundef node) (vnode node) Signed64
+                          Double     -> do
+                            result <- D.castBv (vnode node)
+                            return $ VNode (vundef node) result Double
                           _          -> error "Illegal cast types"
     | otherwise = error "Illegal cast types"
     where fromTy = vtype node

@@ -188,11 +188,11 @@ verifyFpFunction fnName jsOp fns = do
               , (v "right") `assign` (call "floatInRange" [v "right_range"])
               , (v "result") `assign` (v "left" `jsOp` v "right")
                 -- Verify FP properties
-              , vcall "verifyNegZ" [v "result_range", v "result"]
-              , vcall "verifyNan"  [v "result_range", v "result"]
-              , vcall "verifyInf"  [v "result_range", v "result"]
+              , vcall "verifyNegZ"   [v "result_range", v "result"]
+              , vcall "verifyNan"    [v "result_range", v "result"]
+              , vcall "verifyInf"    [v "result_range", v "result"]
               , vcall "verifyFract"  [v "result_range", v "result"]
-              , vcall "verifyExp"  [v "result_range", v "result"]
+              , vcall "verifyExp"    [v "result_range", v "result"]
               ]
   genBodySMT verif
 
@@ -239,11 +239,11 @@ verifyFpUnaryFunction fnName jsOp fns = do
               , (v "start")  `assign` (call "floatInRange" [v "start_range"])
               , (v "result") `assign` (jsOp $ v "start")
                 -- Verify FP properties
-              , vcall "verifyNegZ" [v "result_range", v "result"]
-              , vcall "verifyNan"  [v "result_range", v "result"]
-              , vcall "verifyInf"  [v "result_range", v "result"]
+              , vcall "verifyNegZ"   [v "result_range", v "result"]
+              , vcall "verifyNan"    [v "result_range", v "result"]
+              , vcall "verifyInf"    [v "result_range", v "result"]
               , vcall "verifyFract"  [v "result_range", v "result"]
-              , vcall "verifyExp"  [v "result_range", v "result"]
+              , vcall "verifyExp"    [v "result_range", v "result"]
               ]
   genBodySMT verif
 
@@ -394,8 +394,9 @@ verifyFract =
              , ("result_fract", t Double)
              ]
       body = [ push_
-             , assert_ $ (not_ $ v "result_fract" .==. (jsCeil $ v "result_fract")) .&&. (not_ $ v "result_range_fract" .->. "canHaveFractionalPart")
-             , expect_ isUnsat $ \r -> showExpResult "Failed to verify Fract" r
+             , assert_ $ not_ $ v "result_fract" .==. (jsCeil $ v "result_fract")
+             , assert_ $ not_ $ v "result_range_fract" .->. "canHaveFractionalPart"
+             , expect_ isUnsat $ \r -> showFractResult "Failed to verify Fract" r
              , pop_
              ]
   in Function "verifyFract" Void args body
@@ -519,6 +520,31 @@ getNegzList fls = catMaybes $ map (\(str, fl) ->
                          _ | "jsCeilResult" `isInfixOf` str -> sstr str fl
                          _ | "jsSign" `isInfixOf` str -> sstr str fl
                          _ | "jsSignStart" `isInfixOf` str -> sstr str fl
+                         _ -> Nothing
+                     ) $ M.toList fls
+  where
+    sstr str fl = Just $ unwords [str, ":", if isNegativeZero fl
+                                            then "negz"
+                                            else show fl
+                                 ]
+
+showFractResult :: String -> SMTResult -> IO ()
+showFractResult str result = error $ str ++ "\n" ++ (unlines $ getFractList $ example result)
+
+getFractList :: M.Map String Double -> [String]
+getFractList fls = catMaybes $ map (\(str, fl) ->
+                       case str of
+                         _ | "undef" `isInfixOf` str -> Nothing
+                         _ | "bobbert" `isInfixOf` str -> sstr str fl
+                         _ | "bobelle" `isInfixOf` str -> sstr str fl
+                         _ | "left_range_canHaveFractionalPart" `isInfixOf` str -> sstr str fl
+                         _ | "right_range_canHaveFractionalPart" `isInfixOf` str -> sstr str fl
+                         _ | "start_range_canHaveFractionalPart" `isInfixOf` str -> sstr str fl
+                         _ | "result_range_canHaveFractionalPart" `isInfixOf` str -> sstr str fl
+                         _ | "right_1" `isInfixOf` str -> sstr str fl
+                         _ | "left_1" `isInfixOf` str -> sstr str fl
+                         _ | "start_1" `isInfixOf` str -> sstr str fl
+                         _ | "result_1" `isInfixOf` str -> sstr str fl
                          _ -> Nothing
                      ) $ M.toList fls
   where

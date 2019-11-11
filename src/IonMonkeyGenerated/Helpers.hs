@@ -45,7 +45,8 @@ range4 =
              , v "rv" `assign` call "setUpperInit" [ v "upper_bound"
                                                    , v "tmp2"
                                                    ]
-             , v "rv" .->. "canBeNegativeZero" `assign` (v "nz_flag")
+             , v "rv" .->. "canHaveFractionalPart" `assign` (v "nz_flag")
+             , v "rv" .->. "canBeNegativeZero" `assign` (v "fract_flag")
              , v "rv" .->. "maxExponent" `assign` (v "exp_set")
              , return_ $ call "optimize" [v "rv"]
              ]
@@ -74,6 +75,7 @@ range6 =
                                                    , v "tmp2"
                                                    ]
              , v "rv" .->. "hasInt32UpperBound" `assign` v "has_upper"
+             , v "rv" .->. "canHaveFractionalPart" `assign` (v "fract_flag")
              , v "rv" .->. "canBeNegativeZero" `assign` (v "nz_flag")
              , v "rv" .->. "maxExponent" `assign` (v "exp_set")
              , return_ $ call "optimize" [v "rv"]
@@ -132,7 +134,7 @@ setLowerInit =
   let args = [ ("sli_x", t Signed64)
              , ("sli_range", c "range")
              ]
-      body = [ if_ (v "sli_x" .>. jsIntMax64) -- | sli > intmax
+      body = [ if_ (v "sli_x" .>. jsIntMax64)
                [ v "sli_range" .->. "lower" `assign` jsIntMax
                , v "sli_range" .->. "hasInt32LowerBound" `assign` n Bool 1
                ]
