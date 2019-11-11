@@ -1,10 +1,10 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Generate.QQ (prog, progFile) where
+module Generate.QQ (prog, progFile, func) where
 
 import Data.List
-import Generate.Lang (Program)
-import Generate.Parser (program, parseProgram)
+import Generate.Lang (Program, FunctionDef)
+import qualified Generate.Parser as P (Parser, program, parseProgram, func, parseFunc) 
 import Language.Haskell.TH as TH
 import Language.Haskell.TH.Quote
 import Language.Haskell.TH.Syntax 
@@ -16,11 +16,18 @@ import Text.Parsec.Pos
 -- The argument is a filepath relative to the root of the project
 -- Extra whitespace is not allowed to [progFile| foo.txt] will fail. It's dumb
 progFile :: QuasiQuoter
-progFile = quoteFileWithPos qExp
+progFile = quoteFileWithPos $ qExp P.program 'unsafeParseProgram
 
 prog :: QuasiQuoter
 prog = QuasiQuoter { quoteDec = error "undefined"
-                   , quoteExp  = qExp location'
+                   , quoteExp  = qExp P.program 'unsafeParseProgram location'
+                   , quotePat  = error "undefined"
+                   , quoteType = error "undefined"
+                   }
+
+func :: QuasiQuoter
+func = QuasiQuoter { quoteDec = error "undefined"
+                   , quoteExp  = qExp P.func 'unsafeParseFunction location'
                    , quotePat  = error "undefined"
                    , quoteType = error "undefined"
                    }
@@ -32,16 +39,16 @@ prog = QuasiQuoter { quoteDec = error "undefined"
 -- 2. Report parse errors as compile errors
 -- 3. Emit code that parses again at runtime
 -- (note): if we get to step 3 the code is guaranteed to parse so we can safely unwrap
-qExp :: Q SourcePos -> String -> Q Exp
-qExp pos source = do
+qExp :: P.Parser a -> TH.Name -> Q SourcePos -> String -> Q Exp
+qExp parser uparse pos source = do
     l <- pos
-    let res = parse (setPosition l *> program) "foo" source;
+    let res = parse (setPosition l *> parser) "foo" source;
     case res of
         Left err -> do
             p <- pretty source err
             reportError p
         _ -> return ()
-    return $ TH.AppE (VarE 'unsafeParse) $ TH.LitE $ StringL source
+    return $ TH.AppE (VarE uparse) $ TH.LitE $ StringL source
 
 pretty :: String -> ParseError -> Q String
 pretty src err = do
@@ -70,8 +77,11 @@ location' = aux <$> location
     aux :: Loc -> SourcePos
     aux loc = uncurry (newPos (loc_filename loc)) (loc_start loc)
 
-unsafeParse :: String -> Program
-unsafeParse  = unwrap . parseProgram
+unsafeParseProgram :: String -> Program
+unsafeParseProgram  = unwrap . P.parseProgram
+
+unsafeParseFunction :: String -> FunctionDef 
+unsafeParseFunction  = unwrap . P.parseFunc
 
 unwrap :: Show a => Either a b -> b
 unwrap (Left err) = error $ show err

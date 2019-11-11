@@ -63,7 +63,7 @@ negTest = benchTestCase "neg" $ do
 
 funTest :: BenchTest
 funTest = benchTestCase "fun" $ do
-  let p = unwrap $ parseFunc [r|uint8_t doThing(double f) {
+  let p = [func|uint8_t doThing(double f) {
       uint16_t y;
       y = (uint16_t) f;
       if (x == 0.0) {
