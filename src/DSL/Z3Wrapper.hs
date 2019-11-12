@@ -1,6 +1,6 @@
 module DSL.Z3Wrapper where
 
-import           Control.Monad.State.Strict (unless)
+import           Control.Monad.State.Strict (liftIO, unless)
 import           Prelude                    hiding (not, or)
 import           Z3.Monad                   (MonadZ3)
 import qualified Z3.Monad                   as Z

@@ -88,6 +88,7 @@ data SExpr = VarExpr { exprVar :: SVar }
            | IsInf SExpr
            | IsZero SExpr
            | IsNegative SExpr
+           | IsNegativeZero SExpr
            | GetExp SExpr
            | Shl SExpr SExpr
            | JSLsh SExpr SExpr
@@ -103,6 +104,7 @@ data SExpr = VarExpr { exprVar :: SVar }
            | JSSign SExpr
            | JSDiv SExpr SExpr
            | JSRem SExpr SExpr
+           | Undef SExpr
            deriving (Eq, Ord, Show)
 
 isCallExpr :: SExpr -> Bool

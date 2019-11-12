@@ -58,6 +58,12 @@ class_ (ClassDef name fields functions) = do
 -- Variables and numbers
 --
 
+undef :: Codegen SExpr -> Codegen SExpr
+undef varExpr' = do
+  varExpr <- varExpr'
+  unless (isPrimVarExpr varExpr) $ error "Can't check undef bit of non variable"
+  return $ Undef varExpr
+
 -- | Make a primitive type
 t :: Type -> STy
 t = PrimType
@@ -169,6 +175,9 @@ isZero op = op >>= return . IsZero
 
 isNeg :: Codegen SExpr -> Codegen SExpr
 isNeg op = op >>= return . IsNegative
+
+isNegZero :: Codegen SExpr -> Codegen SExpr
+isNegZero op = op >>= return . IsNegativeZero
 
 fpExp :: Codegen SExpr -> Codegen SExpr
 fpExp op = op >>= return . GetExp

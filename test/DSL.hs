@@ -221,5 +221,3 @@ fpTest = benchTestCase "fp" $ do
                          , ("subs", -0.20000000000000018)
                          , ("notNegZ", 0.0)
                          ]
-
-

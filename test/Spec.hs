@@ -2,7 +2,6 @@ import           BenchUtils
 import           Cpp
 import           CppGen
 import           DSL
-import           Parser
 import           GenHelpers
 import           GenIonMonkey
 import           Helpers
@@ -10,6 +9,7 @@ import           InputRanges
 import           IonMonkey
 import           JavaScript
 import           Lang
+import           Parser
 import           Test.Tasty
 
 main :: IO ()
@@ -17,15 +17,15 @@ main = defaultMain $ testGroup "All tests" $ map getTest allTests
 
 allTests :: [BenchTest]
 allTests = [ -- ionMonkeyTests
---            genIonMonkeyTests
-           -- , notTerminating
+           -- , notterminating
            -- , helpersTests
---           , genHelpersTests
+             genHelpersTests
+           , genIonMonkeyTests
            -- , inputTests
-           -- , cppTests
+--            cppTests
            -- , jsTests
-           -- , dslTests
+--           dslTests
            --, langTests
-           parserTests
-          --, cppGenTests
+           , parserTests
+           , cppGenTests
            ]

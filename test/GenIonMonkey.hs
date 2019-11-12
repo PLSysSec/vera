@@ -44,8 +44,8 @@ fpIonMonkeyTests = benchTestGroup "Generated IonMonkey fp tests"
                    , add32Test
                    , subTest
                    , sub32Test
---                   , mulTest
---                   , mul32Test
+                   , mulTest
+                   -- , mul32Test
                    , minTest
                    , min32Test
                    , maxTest

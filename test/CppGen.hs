@@ -1,5 +1,6 @@
 module CppGen (cppGenTests) where
 
+import           ActiveCode.Cpp
 import           BenchUtils
 import           Control.Monad.State.Strict    (liftIO)
 import           DSL.DSL                       (SMTResult (..))
@@ -22,11 +23,14 @@ import           System.Directory              (createDirectoryIfMissing)
 cppGenTests :: BenchTest
 cppGenTests = benchTestGroup "CPP Gen tests"
               [ --cppGenTests
-                cppNotTest
-              , cppAddTest
-              , cppSubTest
-              , helloWorldTest
-              , genAllFunctionsTest
+                cppRangeCompileTest
+              , cppBaseCompileTest
+              , cppNotCompileTest
+              --, cppNotTest
+              --, cppAddTest
+              --, cppSubTest
+              --, helloWorldTest
+              --, genAllFunctionsTest
               ]
 
 writeCompiled :: String -> [String] -> Codegen ()
@@ -35,10 +39,65 @@ writeCompiled fileName comp = do
   let prog = intercalate "\n" comp
   liftIO $ writeFile fileName prog
 
+cppRangeCompileTest :: BenchTest
+cppRangeCompileTest = benchTestCase "cpp range compile test" $ do
+  r <- evalCodegen Nothing $ do
+
+    class_ range
+    compiled <- compileClass range
+    output <- liftIO $ cppCompile (concat compiled) ""
+    return output
+  assertBool "compilation failed" r
+
+cppBaseCode :: Codegen [String]
+cppBaseCode = do
+  class_ range
+  class_ range
+  define add
+  define sub
+  define newInt32InputRange
+  define canBeInfiniteOrNan
+  define range3
+  define range4
+  define setLowerInit
+  define setUpperInit
+  rangeCompiled <- compileClass range
+  range3Compiled <- compileFunction range3
+  range4Compiled <- compileFunction range4
+  lowerCompiled <- compileFunction setLowerInit
+  upperCompiled <- compileFunction setUpperInit
+  addCompiled <- compileFunction add
+  subCompiled <- compileFunction sub
+  newRangeCompiled <- compileFunction newInt32InputRange
+  canBeInfCompiled <- compileFunction canBeInfiniteOrNan
+  return $ concat [rangeCompiled, canBeInfCompiled, lowerCompiled,
+    upperCompiled, range3Compiled, range4Compiled, newRangeCompiled]
+
+
+cppBaseCompileTest :: BenchTest
+cppBaseCompileTest = benchTestCase "cpp base compile test" $ do
+  r <- evalCodegen Nothing $ do
+    compiled <- cppBaseCode
+    output <- liftIO $ cppCompile (concat compiled) ""
+    return output
+  assertBool "compilation failed" r
+
+cppNotCompileTest :: BenchTest
+cppNotCompileTest = benchTestCase "cpp not compile test" $ do
+  r <- evalCodegen Nothing $ do
+    define not
+    notCompiled <- compileFunction not
+    baseCompiled <- cppBaseCode
+    output <- liftIO $ cppCompile (concat $ baseCompiled ++ notCompiled) ""
+    return output
+  assertBool "compilation failed" r
+
+--TODO: Should really make a separate stack command to generate
+--      files rather than through tests
 cppNotTest :: BenchTest
 cppNotTest = benchTestCase "cpp not test" $ do
   r <- evalCodegen Nothing $ do
-    
+
     class_ range
     define not
     compiled <- compileFunction not
@@ -49,7 +108,7 @@ cppNotTest = benchTestCase "cpp not test" $ do
 cppAddTest :: BenchTest
 cppAddTest = benchTestCase "cpp add test" $ do
   r <- evalCodegen Nothing $ do
-    
+
     class_ range
     define add
     compiled <- compileFunction add
@@ -60,7 +119,7 @@ cppAddTest = benchTestCase "cpp add test" $ do
 cppSubTest :: BenchTest
 cppSubTest = benchTestCase "cpp sub test" $ do
   r <- evalCodegen Nothing $ do
-    
+
     class_ range
     define sub
     compiled <- compileFunction sub
@@ -71,7 +130,7 @@ cppSubTest = benchTestCase "cpp sub test" $ do
 genAllFunctionsTest :: BenchTest
 genAllFunctionsTest = benchTestCase "cpp gen all functions test" $ do
   r <- evalCodegen Nothing $ do
-    
+
     class_ range
     define add
     define sub
@@ -238,7 +297,7 @@ genAllFunctionsTest = benchTestCase "cpp gen all functions test" $ do
 helloWorldTest :: BenchTest
 helloWorldTest = benchTestCase "hello world" $ do
   r <- evalCodegen Nothing $ do
-    
+
     class_ range
     define add
     define sub
@@ -281,4 +340,3 @@ helloWorldTest = benchTestCase "hello world" $ do
 
     error "test"
   error "test1"
-

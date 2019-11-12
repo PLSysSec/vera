@@ -94,6 +94,8 @@ module DSL.Typed ( vassert
                  , cppCast
                  , cppAbs
                  , cppXor
+                 -- * Get rid of this export later
+                 , newDefinedNode 
                  -- * Running the solver and getting the model
                  , D.runSolver
                  , D.evalVerif
@@ -490,7 +492,7 @@ isNeg :: VNode -> D.Verif VNode
 isNeg n = do
   c <- D.isNeg $ vnode n
   newMaybeDefinedNode n n c Bool
-        
+
 isPos :: VNode -> D.Verif VNode
 isPos n = do
   c <- D.isPos $ vnode n
@@ -500,7 +502,7 @@ isZero :: VNode -> D.Verif VNode
 isZero n = do
   c <- D.isZero $ vnode n
   newMaybeDefinedNode n n c Bool
-          
+                      
 --
 -- JavaScript operations
 --
@@ -770,8 +772,6 @@ jsSign op =
     _isZero <- D.iseq (vnode op) _0
     result <- D.cond _isZero _0 result'
     -- make a variable 
-    resultVar <- D.i32v "jsSign"
-    D.assign result resultVar
     newDefinedNode result $ vtype op 
   else do
     one <- D.double 1
@@ -784,11 +784,6 @@ jsSign op =
     _negZero <- D.fpzero True
     correctZero <- D.cond _isPos _posZero _negZero
     result <- D.cond _isZero correctZero result'
-    -- make a variable
-    resultVar <- D.doubv "jsSign"
-    D.assign result resultVar
-    inputVar <- D.doubv "jsSignStart"
-    D.assign (vnode op) inputVar
     newDefinedNode result Double
   
 --
@@ -1083,6 +1078,9 @@ instance CppCast VNode where
                           Signed     -> do
                             result <- D.castFp (vnode node) 32
                             return $ VNode (vundef node) result Signed
+                          Signed64   -> do
+                            result <- D.castFp (vnode node) 64
+                            return $ VNode (vundef node) result Signed64
                           _          -> error "We only suppor Double to int32 casts rn"
     | is16Bits fromTy = case toTy of
                           Unsigned16 -> return $ VNode (vundef node) (vnode node) Unsigned16
@@ -1151,6 +1149,9 @@ instance CppCast VNode where
                             return $ VNode (vundef node) result Signed
                           Unsigned64 -> return $ VNode (vundef node) (vnode node) Unsigned64
                           Signed64   -> return $ VNode (vundef node) (vnode node) Signed64
+                          Double     -> do
+                            result <- D.castBv (vnode node)
+                            return $ VNode (vundef node) result Double
                           _          -> error "Illegal cast types"
     | otherwise = error "Illegal cast types"
     where fromTy = vtype node
@@ -1193,7 +1194,11 @@ getFpExponent node = do
   -- otherwise, it is the exponent + 1 
   sigZero <- D.significandConst 0
   sigIsZero <- D.iseq sig sigZero
-  expPlusOne <- D.exponentConst 1 >>= D.add exp 
-  result <- D.cond sigIsZero exp expPlusOne
-  castResult <- D.uext result 5
-  return $ VNode (vundef node) castResult Unsigned16
+  expPlusOne <- D.exponentConst 1 >>= D.add exp
+  resultTmp <- D.cond sigIsZero exp expPlusOne
+  castResultTmp <- D.uext resultTmp 5               
+  -- if the input is zero, the result is 0
+  isZero <- D.isZero $ vnode node
+  zeroExp <- D.i16c 0
+  result <- D.cond isZero zeroExp castResultTmp
+  return $ VNode (vundef node) result Unsigned16

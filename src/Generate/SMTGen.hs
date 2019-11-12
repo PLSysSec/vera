@@ -124,6 +124,11 @@ genExprSMT expr =
     Lte left right -> genBinOpSMT left right T.cppLte
     Shl left right -> genBinOpSMT left right T.cppShiftLeft
     Shr left right -> genBinOpSMT left right T.cppShiftRight
+    -- Weird
+    Undef var         -> do
+      result <- genExprSMT var
+      let resultUndef = T.vundef result
+      liftVerif $ T.newDefinedNode resultUndef T.Bool
     -- JavaScript
     JSAnd left right  -> genBinOpSMT left right T.jsAnd
     JSAdd left right  -> genBinOpSMT left right T.jsAdd
@@ -148,6 +153,11 @@ genExprSMT expr =
     IsNan  e     -> genExprSMT e >>= liftVerif . T.isNan
     IsZero e     -> genExprSMT e >>= liftVerif . T.isZero
     IsNegative e -> genExprSMT e >>= liftVerif . T.isNeg
+    IsNegativeZero  e -> do
+      exp <- genExprSMT e
+      isZero <- liftVerif $ T.isZero exp
+      isNeg <- liftVerif $ T.isNeg exp
+      liftVerif $ T.cppAnd isZero isNeg
     GetExp e     -> genExprSMT e >>= liftVerif . T.getFpExponent
 
     Call{}         -> do
@@ -265,10 +275,10 @@ genStmtSMT stmt =
           else case expr of
             Call{} -> do
               rvs <- genCallSMT expr
-              fields <- getFieldVars var >>= mapM getVar
+              fields <- getFieldVars var
               unless (length rvs == length fields) $
                 error $ unwords ["Wrong return type for function in assignment to", varName var]
-              forM_ (zip fields rvs) $ \(f, rv) -> rewriteReturn cond f rv
+              forM_ (zip fields rvs) $ \(f, rv) -> rewriteAssign cond f rv
             VarExpr v | isClassType v -> do
               fields1 <- getFieldVars var
               fields2 <- getFieldVars v >>= mapM genVarSMT

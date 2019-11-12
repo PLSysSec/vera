@@ -17,12 +17,96 @@ import           Test.Tasty.HUnit
 import           Utils
 
 genHelpersTests :: BenchTest
-genHelpersTests = benchTestGroup "Helpers" [ ranges
-                                           , lowerInit
-                                           , upperInit
-                                           , onesTest
-                                           , zerosTest
+genHelpersTests = benchTestGroup "Helpers" [ optimizeTest
+                                           -- , fpExponent
+                                           -- , fpNegative
+                                           -- , ranges
+                                           -- , lowerInit
+                                           -- , upperInit
+                                           -- , onesTest
+                                           -- , zerosTest
                                            ]
+
+optimizeTest :: BenchTest
+optimizeTest = benchTestCase "optimize" $ do
+  r <- evalCodegen Nothing $ do
+    class_ range
+    define optimize
+    define hasInt32Bounds
+    define contains
+    define exponentImpliedByInt32Bounds
+    define canBeZero
+    genBodySMT [ declare (c "range") "testRange"
+               , declare (c "range") "resultRange"
+               , v "testRange" .->. "lower" `assign` (n Signed 0)
+               , v "testRange" .->. "hasInt32LowerBound" `assign` (n Bool 1)
+               , v "testRange" .->. "upper" `assign` (n Signed 0)
+               , v "testRange" .->. "hasInt32UpperBound" `assign` (n Bool 1)
+               , v "testRange" .->. "canBeNegativeZero" `assign` (n Bool 1)
+               , v "resultRange" `assign` call "optimize" [v "testRange"]
+               , v "testRange" .->. "lower" `assign` jsIntMin
+               , v "testRange" .->. "hasInt32LowerBound" `assign` (n Bool 0)
+               , v "testRange" .->. "upper" `assign` jsIntMax
+               , v "testRange" .->. "hasInt32UpperBound" `assign` (n Bool 0)
+               , v "testRange" .->. "canBeNegativeZero" `assign` (n Bool 1)
+               , v "resultRange" `assign` call "optimize" [v "testRange"]
+
+               -- , v "testRange" .->. "lower" `assign` (n Signed (-100))
+               -- , v "testRange" .->. "upper" `assign` (n Signed 100)
+               -- , v "testRange" .->. "canBeNegativeZero" `assign` (n Bool 1)
+               -- , v "resultRange" `assign` call "optimize" [v "testRange"]
+               -- , v "testRange" .->. "lower" `assign` (n Signed (100))
+               -- , v "testRange" .->. "upper" `assign` (n Signed 500)
+               -- , v "testRange" .->. "canBeNegativeZero" `assign` (n Bool 1)
+               -- , v "resultRange" `assign` call "optimize" [v "testRange"]
+               ]
+    runSolverOnSMT
+  vtest r $ Map.fromList [ ("resultRange_canBeNegativeZero_1", 1)
+                         , ("resultRange_upper_1", 0)
+                         , ("resultRange_lower_1", 0)
+                         , ("resultRange_canBeNegativeZero_2", 1)
+                         , ("resultRange_upper_2", 2147483647)
+                         , ("resultRange_lower_2", 2147483648)
+                         -- , ("resultRange_canBeNegativeZero_2", 1)
+                         -- , ("resultRange_canBeNegativeZero_3", 0)
+                         ]
+
+
+fpExponent :: BenchTest
+fpExponent = benchTestCase "fp exponent" $ do
+
+  r <- evalCodegen Nothing $ do
+    genBodySMT [ declare (t Unsigned16) "expy"
+               , v "expy" `assign` (fpExp $ d Double 0.0)
+               , v "expy" `assign` (fpExp $ d Double 2.0)
+               , v "expy" `assign` (fpExp $ d Double 4.0)
+               , v "expy" `assign` (fpExp $ d Double (-4.0))
+               ]
+    runSolverOnSMT
+  vtest r $ Map.fromList [ ("expy_1", 0)
+                         , ("expy_2", 1)
+                         , ("expy_3", 2)
+                         , ("expy_4", 2)
+                         ]
+
+fpNegative :: BenchTest
+fpNegative = benchTestCase "fp exponent" $ do
+
+  r <- evalCodegen Nothing $ do
+    genBodySMT [ declare (t Bool) "neg"
+               , v "neg" `assign` (isNeg $ d Double 0.0)
+               , v "neg" `assign` (isNeg $ (d Double 5.0) .*. (d Double 5.0) .-. (d Double 25))
+               , v "neg" `assign` (isNeg $ d Double (-0.0))
+               , v "neg" `assign` (isNeg $ d Double 4.0)
+               , v "neg" `assign` (isNeg $ d Double (-4.0))
+               ]
+    runSolverOnSMT
+  vtest r $ Map.fromList [ ("neg_1", 0)
+                         , ("neg_2", 0)
+                         , ("neg_3", 1)
+                         , ("neg_4", 0)
+                         , ("neg_5", 1)
+                         ]
 
 ranges :: BenchTest
 ranges = benchTestCase "ranges" $ do
@@ -53,7 +137,8 @@ ranges = benchTestCase "ranges" $ do
                , v "testRange" `assign` call "Range4" [ cast (n Signed 100) Signed64
                                                       , cast (n Signed 100) Signed64
                                                       , n Bool 1
-                                                      , n Unsigned16 12
+                                                      , n Bool 1
+                                                      , n Unsigned16 100
                                                       ]
                , v "low" `assign`  (v "testRange" .->. "lower")
                , v "high" `assign` (v "testRange" .->. "upper")
@@ -62,6 +147,7 @@ ranges = benchTestCase "ranges" $ do
                , v "testRange" `assign` call "Range6" [ cast (n Signed 500) Signed64
                                                       , n Bool 1
                                                       , cast (n Signed 400) Signed64
+                                                      , n Bool 1
                                                       , n Bool 1
                                                       , n Bool 1
                                                       , n Unsigned16 300
@@ -85,13 +171,13 @@ ranges = benchTestCase "ranges" $ do
   vtest r $ Map.fromList [ ("low_1", 8)
                          , ("high_1", 8)
                          , ("nz_1", 1)
-                         , ("exp_1", 12)
+                         , ("exp_1", 7)
                          , ("low_2", 100)
                          , ("high_2", 100)
                          , ("low_3", 500)
                          , ("high_3", 400)
                          , ("nz_3", 1)
-                         , ("exp_2", 12)
+                         , ("exp_2", 9)
                          , ("hlb_1", 1)
                          , ("hub_1", 1)
                          , ("low_4", 2147483647)
