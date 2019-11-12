@@ -51,7 +51,7 @@ cppNotTest = benchTestCase "cpp not test" $ do
 cppAddTest :: BenchTest
 cppAddTest = benchTestCase "cpp add test" $ do
   r <- evalCodegen Nothing $ do
-    
+
     class_ range
     define add
     compiled <- compileFunction add
@@ -62,7 +62,7 @@ cppAddTest = benchTestCase "cpp add test" $ do
 cppSubTest :: BenchTest
 cppSubTest = benchTestCase "cpp sub test" $ do
   r <- evalCodegen Nothing $ do
-    
+
     class_ range
     define sub
     compiled <- compileFunction sub
@@ -73,7 +73,7 @@ cppSubTest = benchTestCase "cpp sub test" $ do
 genAllFunctionsTest :: BenchTest
 genAllFunctionsTest = benchTestCase "cpp gen all functions test" $ do
   r <- evalCodegen Nothing $ do
-    
+
     class_ range
     define add
     define sub
@@ -240,7 +240,7 @@ genAllFunctionsTest = benchTestCase "cpp gen all functions test" $ do
 helloWorldTest :: BenchTest
 helloWorldTest = benchTestCase "hello world" $ do
   r <- evalCodegen Nothing $ do
-    
+
     class_ range
     define add
     define sub
@@ -283,4 +283,3 @@ helloWorldTest = benchTestCase "hello world" $ do
 
     error "test"
   error "test1"
-
