@@ -1,5 +1,6 @@
 module CppGen (cppGenTests) where
 
+import           ActiveCode.Cpp
 import           BenchUtils
 import           Control.Monad.State.Strict    (liftIO)
 import           DSL.DSL                       (SMTResult (..))
@@ -22,11 +23,12 @@ import           System.Directory              (createDirectoryIfMissing)
 cppGenTests :: BenchTest
 cppGenTests = benchTestGroup "CPP Gen tests"
               [ --cppGenTests
-                cppNotTest
-              , cppAddTest
-              , cppSubTest
-              , helloWorldTest
-              , genAllFunctionsTest
+                cppRangeCompileTest
+              --, cppNotTest
+              --, cppAddTest
+              --, cppSubTest
+              --, helloWorldTest
+              --, genAllFunctionsTest
               ]
 
 writeCompiled :: String -> [String] -> Codegen ()
@@ -34,6 +36,16 @@ writeCompiled fileName comp = do
   liftIO $ createDirectoryIfMissing True "test/GenCpp"
   let prog = intercalate "\n" comp
   liftIO $ writeFile fileName prog
+
+cppRangeCompileTest :: BenchTest
+cppRangeCompileTest = benchTestCase "cpp not compile test" $ do
+  r <- evalCodegen Nothing $ do
+
+    class_ range
+    compiled <- compileClass range
+    output <- liftIO $ cppCompile (concat compiled) ""
+    return output
+  assertBool "compilation failed" r
 
 --TODO: Should really make a separate stack command to generate
 --      files rather than through tests
