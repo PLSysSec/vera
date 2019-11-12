@@ -1,9 +1,10 @@
 module IonMonkeyGenerated.Verify where
 import           Control.Monad              (forM_)
+import           Control.Monad.State.Strict (liftIO)
 import           Data.List                  (isInfixOf)
 import qualified Data.Map                   as M
 import           Data.Maybe                 (catMaybes)
-import           DSL.DSL                    (isUnsat)
+import           DSL.DSL                    (isSat, isUnsat)
 import           DSL.Typed                  (SMTResult (..), Type (..))
 import           Generate.Lang
 import           Generate.SMTAST
@@ -192,7 +193,9 @@ verifyFpFunction fnName jsOp fns = do
               , (v "left")  `assign` (call "floatInRange" [v "left_range"])
               , (v "right") `assign` (call "floatInRange" [v "right_range"])
               , (v "result") `assign` (v "left" `jsOp` v "right")
-                -- Verify FP properties
+              , expect_ isSat (error "Has to start out SAT")
+              , assert_ $ not_ $ isZero $ v "result"
+              --   -- Verify FP properties
               , vcall "verifyLowBoundInvariant"   [v "result_range", v "result"]
               , vcall "verifyUpBoundInvariant"   [v "result_range", v "result"]
               , vcall "verifyNegZ"   [v "result_range", v "result"]
@@ -237,20 +240,20 @@ verifyFpUnaryFunction fnName jsOp fns = do
   let verif = [ declare (c "range") "start_range"
               , declare (t Double) "start"
               , declare (c "range") "result_range"
-              , declare (t Double) "result"
+              , declare (t Double) "result_verif"
               , (v "start_range")  `assign` (call "newFloatInputRange" [])
               , (v "result_range") `assign` call fnName [v "start_range"]
                 -- Verify that the result range is well formed
         --      , vcall "verifySaneRange" [v "result_range"]
                 -- Actually perform the JS operation
               , (v "start")  `assign` (call "floatInRange" [v "start_range"])
-              , (v "result") `assign` (jsOp $ v "start")
+              , (v "result_verif") `assign` (jsOp $ v "start")
                 -- Verify FP properties
-              , vcall "verifyNegZ"   [v "result_range", v "result"]
-              , vcall "verifyNan"    [v "result_range", v "result"]
-              , vcall "verifyInf"    [v "result_range", v "result"]
-              , vcall "verifyFract"  [v "result_range", v "result"]
-              , vcall "verifyExp"    [v "result_range", v "result"]
+              , vcall "verifyNegZ"   [v "result_range", v "result_verif"]
+              , vcall "verifyNan"    [v "result_range", v "result_verif"]
+              , vcall "verifyInf"    [v "result_range", v "result_verif"]
+              , vcall "verifyFract"  [v "result_range", v "result_verif"]
+              , vcall "verifyExp"    [v "result_range", v "result_verif"]
               ]
   genBodySMT verif
 
@@ -272,25 +275,38 @@ floatInRange =
   let args = [ ("result_range_init", c "range")]
       body = [ declare (t Double) "result_init"
 
-             -- Either its infinite or the exponent is less than the infinte exponent
-             , assert_ $ (isInf $ v "result_init") .^. ((v "result_range_init" .->. "maxExponent") .<. includesInfinity)
+             -- |v| == OO   ==  exp >= includesInfinity
+             , implies_ (isInf $ v "result_init") ((v "result_range_init" .->. "maxExponent") .==. includesInfinity)
 
-             -- Either is not inf or nan or op is inf or nan
-             , assert_ $  ((isInf $ v "result_init") .||. ((isNan $ v "result_init")) .^. ((v "result_range_init" .->. "maxExponent" .<. includesInfinityAndNan)))
+             -- isNan(v)    ==  exp == includesInfinityAndNan
+             , implies_ (isNan $ v "result_init") ((v "result_range_init" .->. "maxExponent") .==. includesInfinityAndNan)
 
-             -- If the range doesnt say can be neg z, cant be negz
-             , assert_ $ (not_ $ v "result_range_init" .->. "canBeNegativeZero") .^. (isNeg (v "result_init") .&&. (isZero $ v "result_init") )
+             -- isNegZero(v)  => canBeNegativeZero
+             , implies_ (isNegZero $ v "result_init") (v "result_range_init" .->. "canBeNegativeZero")
 
-             -- The exponent should be >= the fpExp
-             , assert_ $ (((fpExp $ v "result_init") .==. (v "result_range_init" .->. "maxExponent")) .&&. (not_ $ isInf $ v "result_init") .&&. (not_ $ isNan $ v "result_init"))
+             -- v != round(v)  => canHaveFractionalPart
+             , implies_ (not_ $ v "result_init" .==. (jsCeil $ v "result_init")) (v "result_range_init" .->. "canHaveFractionalPart")
 
-             -- If the number isnt in bounds, int32bound should be false
-             -- If the number is in bounds, int32bound should be true
-             , assert_ $ ((v "result_init" .=>. (cast int32min Double)) .^. (not_ $ v "result_range_init" .->. "hasInt32LowerBound")) .&&. ((v "result_init" .<=. (cast int32max Double)) .^. (not_ $ v "result_range_init" .->. "hasInt32UpperBound"))
-             , assert_ $ ((v "result_init" .=>. (cast int32min Double)) .&&. (v "result_range_init" .->. "hasInt32LowerBound")) .&&. ((v "result_init" .<=. (cast int32max Double)) .&&. (v "result_range_init" .->. "hasInt32UpperBound"))
+             -- ((!Nan(v) and !Inf(v)) => log2(v) == exp
+             , implies_ ((not_ $ isNan $ v "result_init") .&&. (not_ $ isInf $ v "result_init")) ((fpExp $ v "result_init") .==. (v "result_range_init" .->. "maxExponent"))
 
-             -- If the number rounded is not the number, hasFractionalPart should be true
-             , assert_ $ (v "result_init" .==. (jsCeil $ v "result_init")) .^. (v "result_range_init" .->. "canHaveFractionalPart")
+             -- !hasInt32LBound => lower = jsMin
+            , implies_ (not_ $ v "result_range_init" .->. "hasInt32LowerBound") (v "result_range_init" .->. "lower" .==. jsIntMin)
+
+             -- !hasInt32HBound => upper = jsMax
+            , implies_ (not_ $ v "result_range_init" .->. "hasInt32UpperBound") (v "result_range_init" .->. "upper" .==. jsIntMin)
+
+             -- Special values or v < lower => !hasInt32LowerBound
+             , implies_ ((isNan $ v "result_init") .||. (isInf $ v "result_init") .||. (v "result_init" .<. (cast (v "result_range_init" .->. "lower") Double))) (not_ $ v "result_range_init" .->. "hasInt32LowerBound")
+
+             -- Special values or v > upper => !hasInt32UpperBound
+             , implies_ ((isNan $ v "result_init") .||. (isInf $ v "result_init") .||. (v "result_init" .>. (cast (v "result_range_init" .->. "upper") Double))) (not_ $ v "result_range_init" .->. "hasInt32UpperBound")
+
+             -- hasInt32Lower => v >= lower
+             , implies_ (v "result_range_init" .->. "hasInt32LowerBound") (v "result_init" .=>. (cast (v "result_range_init" .->. "lower") Double))
+
+             -- hasInt32Upper => v <= upper
+             , implies_ (v "result_range_init" .->. "hasInt32UpperBound") (v "result_init" .<=. (cast (v "result_range_init" .->. "upper") Double))
 
              , return_ $ v "result_init"
 
@@ -364,7 +380,6 @@ verifyLowBoundInvariant =
                -- ...but the int32 lower bound isnt intmax
              , assert_ $ not_ $ (v "result_range_bi" .->. "lower") .==. jsIntMin
              , expect_ isUnsat $ \r -> showInt32Result "Failed to verify low bound invariant" r
-             , pop_
              ]
   in Function "verifyLowBoundInvariant" Void args body
 
@@ -405,6 +420,8 @@ verifyNan =
              ]
       body = [ push_
                -- It's Nan
+             , declare (t Bool) "isNan"
+             , v "isNan" `assign` (isNan $ v "result_nan")
              , assert_ $ isNan $ v "result_nan"
                -- ... but the Nan exponent is not correct
              , assert_ $ not_ $ (v "result_range_nan" .->. "maxExponent") .==. includesInfinityAndNan
@@ -494,6 +511,9 @@ getExpList fls = catMaybes $ map (\(str, fl) ->
                        case str of
                          _ | "undef" `isInfixOf` str -> Nothing
                          _ | "expyy" `isInfixOf` str -> sstr str fl
+                         _ | "abs_res" `isInfixOf` str -> sstr str fl
+                         _ | "abs_after" `isInfixOf` str -> sstr str fl
+                         _ | "result_verif_1" `isInfixOf` str -> sstr str fl
                          _ | "left_range_maxExponent" `isInfixOf` str -> sstr str fl
                          _ | "right_range_maxExponent" `isInfixOf` str -> sstr str fl
                          _ | "start_range_maxExponent" `isInfixOf` str -> sstr str fl
@@ -518,8 +538,16 @@ getNanList fls = catMaybes $ map (\(str, fl) ->
                        case str of
                          _ | "undef" `isInfixOf` str -> Nothing
                          _ | "left_range_maxExponent" `isInfixOf` str -> sstr str fl
+                         _ | "result_nan" `isInfixOf` str -> sstr str fl
+                         _ | "abs_res" `isInfixOf` str -> sstr str fl
+                         _ | "abs_after" `isInfixOf` str -> sstr str fl
+                         _ | "isNan" `isInfixOf` str -> sstr str fl
+                         _ | "isNeg" `isInfixOf` str -> sstr str fl
+                         _ | "isInf" `isInfixOf` str -> sstr str fl
                          _ | "right_range_maxExponent" `isInfixOf` str -> sstr str fl
                          _ | "start_range_maxExponent" `isInfixOf` str -> sstr str fl
+                         _ | "start_range_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
+                         _ | "start_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
                          _ | "result_range_maxExponent" `isInfixOf` str -> sstr str fl
                          _ | "right_1" `isInfixOf` str -> sstr str fl
                          _ | "left_1" `isInfixOf` str -> sstr str fl
@@ -540,6 +568,8 @@ getInfList :: M.Map String Double -> [String]
 getInfList fls = catMaybes $ map (\(str, fl) ->
                        case str of
                          _ | "undef" `isInfixOf` str -> Nothing
+                         _ | "abs_res" `isInfixOf` str -> sstr str fl
+                         _ | "abs_after" `isInfixOf` str -> sstr str fl
                          _ | "left_range_maxExponent" `isInfixOf` str -> sstr str fl
                          _ | "right_range_maxExponent" `isInfixOf` str -> sstr str fl
                          _ | "start_range_maxExponent" `isInfixOf` str -> sstr str fl

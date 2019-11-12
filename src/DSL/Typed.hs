@@ -3,6 +3,7 @@
 {-# LANGUAGE CPP #-}
 module DSL.Typed ( vassert
                  , vassign
+                 , implies
                  , assertUndef
                  , assertDef
                  , newInputVar
@@ -326,6 +327,11 @@ named name act = do
 vassert :: VNode -> D.Verif ()
 vassert = D.assert . vnode
 
+implies :: VNode -> VNode -> D.Verif ()
+implies n1 n2 = do
+  unless (isBool (vtype n1) && isBool (vtype n2)) $ error "Must use bools for imples"
+  D.implies (vnode n1) (vnode n2)
+          
 vassign :: VNode -> VNode -> D.Verif ()
 vassign n1 n2 = do
   unless (vtype n1 == vtype n2) $ error $ unwords ["Tried to assign different typed nodes"
@@ -733,7 +739,12 @@ jsAbs op = do
       negOp <- D.fpNeg $ vnode op
       D.cond _isNeg negOp $ vnode op
     nanOrResult <- D.cond _isNan _nan result
-    newDefinedNode nanOrResult $ vtype op
+    resVar <- D.doubv "abs_res"
+    D.assign nanOrResult resVar
+    beforeRes <- newDefinedNode nanOrResult $ vtype op
+    resVarTwo <- fp "abs_after"
+    vassign beforeRes resVarTwo
+    return $ beforeRes
 
 -- | https://es5.github.io/#x15.8.2.9
 jsFloor :: VNode
