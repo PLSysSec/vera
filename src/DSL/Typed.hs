@@ -94,6 +94,8 @@ module DSL.Typed ( vassert
                  , cppCast
                  , cppAbs
                  , cppXor
+                 -- * Get rid of this export later
+                 , newDefinedNode 
                  -- * Running the solver and getting the model
                  , D.runSolver
                  , D.evalVerif

@@ -25,6 +25,7 @@ verifyUnaryFunction fnName jsOp fns = do
   define verifySaneRange
   define verifyLower
   define verifyUpper
+  define verifyUB
   define canBeInfiniteOrNan
   define setLowerInit
   define exponentImpliedByInt32Bounds
@@ -72,6 +73,7 @@ verifyFunctionConstArg fnName jsOp fns = do
   define verifySaneRange
   define verifyLower
   define verifyUpper
+  define verifyUB
   forM_ fns define
   let verif = [ declare (c "range") "left_range"
               , declare (t Signed) "left"
@@ -104,6 +106,7 @@ verifyFunction fnName jsOp fns = do
   define isFiniteNonNegative
   define verifyLower
   define verifyUpper
+  define verifyUB
   define canBeInfiniteOrNan
   define setLowerInit
   define setUpperInit
@@ -255,6 +258,7 @@ intInRange =
       body = [ declare (t Signed) "result_init"
              , assert_ $ (v "result_init") .=>. ((v "result_range_init") .->. "lower")
              , assert_ $ (v "result_init") .<=. ((v "result_range_init") .->. "upper")
+             , assert_ $ not_ $ undef $ v "result_init"
              , return_ $ v "result_init"
              ]
   in Function "intInRange" (t Signed) args body
@@ -328,6 +332,18 @@ verifyUpper =
              , pop_
              ]
   in Function "verifyUpper" Void args body
+
+verifyUB :: FunctionDef
+verifyUB =
+  let args = [ ("result_range_undef", c "range")
+             , ("result_undef", t Signed)
+             ]
+      body = [ push_
+             , assert_ $ undef $ v "result_undef"
+             , expect_ isUnsat $ \r -> showInt32Result "Failed to verify upper" r
+             , pop_
+             ]
+  in Function "verifyUB" Void args body
 
 -- Floating point
 

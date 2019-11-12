@@ -124,6 +124,11 @@ genExprSMT expr =
     Lte left right -> genBinOpSMT left right T.cppLte
     Shl left right -> genBinOpSMT left right T.cppShiftLeft
     Shr left right -> genBinOpSMT left right T.cppShiftRight
+    -- Weird
+    Undef var         -> do
+      result <- genExprSMT var
+      let resultUndef = T.vundef result
+      liftVerif $ T.newDefinedNode resultUndef T.Bool
     -- JavaScript
     JSAnd left right  -> genBinOpSMT left right T.jsAnd
     JSAdd left right  -> genBinOpSMT left right T.jsAdd

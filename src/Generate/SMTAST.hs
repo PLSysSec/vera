@@ -104,6 +104,7 @@ data SExpr = VarExpr { exprVar :: SVar }
            | JSSign SExpr
            | JSDiv SExpr SExpr
            | JSRem SExpr SExpr
+           | Undef SExpr
            deriving (Eq, Ord, Show)
 
 isCallExpr :: SExpr -> Bool

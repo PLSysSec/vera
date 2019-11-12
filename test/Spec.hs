@@ -20,12 +20,12 @@ allTests = [ -- ionMonkeyTests
           genIonMonkeyTests
            -- , notterminating
            -- , helpersTests
-           -- genHelpersTests
+          , genHelpersTests
            -- , inputTests
 --            cppTests
            -- , jsTests
 --           dslTests
            --, langTests
 --          , parserTests
-          --, cppGenTests
+          , cppGenTests
            ]
