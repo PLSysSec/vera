@@ -24,6 +24,8 @@ cppGenTests :: BenchTest
 cppGenTests = benchTestGroup "CPP Gen tests"
               [ --cppGenTests
                 cppRangeCompileTest
+              , cppBaseCompileTest
+              , cppNotCompileTest
               --, cppNotTest
               --, cppAddTest
               --, cppSubTest
@@ -44,6 +46,49 @@ cppRangeCompileTest = benchTestCase "cpp range compile test" $ do
     class_ range
     compiled <- compileClass range
     output <- liftIO $ cppCompile (concat compiled) ""
+    return output
+  assertBool "compilation failed" r
+
+cppBaseCode :: Codegen [String]
+cppBaseCode = do
+  class_ range
+  class_ range
+  define add
+  define sub
+  define newInt32InputRange
+  define canBeInfiniteOrNan
+  define range3
+  define range4
+  define setLowerInit
+  define setUpperInit
+  rangeCompiled <- compileClass range
+  range3Compiled <- compileFunction range3
+  range4Compiled <- compileFunction range4
+  lowerCompiled <- compileFunction setLowerInit
+  upperCompiled <- compileFunction setUpperInit
+  addCompiled <- compileFunction add
+  subCompiled <- compileFunction sub
+  newRangeCompiled <- compileFunction newInt32InputRange
+  canBeInfCompiled <- compileFunction canBeInfiniteOrNan
+  return $ concat [rangeCompiled, canBeInfCompiled, lowerCompiled,
+    upperCompiled, range3Compiled, range4Compiled, newRangeCompiled]
+
+
+cppBaseCompileTest :: BenchTest
+cppBaseCompileTest = benchTestCase "cpp base compile test" $ do
+  r <- evalCodegen Nothing $ do
+    compiled <- cppBaseCode
+    output <- liftIO $ cppCompile (concat compiled) ""
+    return output
+  assertBool "compilation failed" r
+
+cppNotCompileTest :: BenchTest
+cppNotCompileTest = benchTestCase "cpp not compile test" $ do
+  r <- evalCodegen Nothing $ do
+    define not
+    notCompiled <- compileFunction not
+    baseCompiled <- cppBaseCode
+    output <- liftIO $ cppCompile (concat $ baseCompiled ++ notCompiled) ""
     return output
   assertBool "compilation failed" r
 
