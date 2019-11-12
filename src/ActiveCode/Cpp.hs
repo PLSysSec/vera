@@ -111,6 +111,8 @@ cppString function mainBody =
           , "  return std::fabs(aLongDouble);"
           , "}"
           , ""
+          , function
+          , ""
           , "int main(int argc, char *argv[]) {"
           , mainBody
           , "return 0;"
