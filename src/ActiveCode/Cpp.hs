@@ -20,6 +20,7 @@ cppString function mainBody =
   unlines [ "#include <stdio.h>"
           , "#include <cmath>"
           , "#include <stdint.h>"
+          , "#include <cassert>"
           , ""
           , "template <class T>"
           , "static constexpr inline T Min(T t1, T t2) {"
@@ -126,7 +127,7 @@ cppCompile function mainBody = do
 
   -- compile
   (ccode, cout) <- readCommand "c++" ["-o", fp, fp ++ ".cpp"] ""
-  removeFile $ fp ++ ".cpp"
+  --removeFile $ fp ++ ".cpp"
   return $ ccode == ExitSuccess
 
 cpp :: Read a => String -> String -> IO a
