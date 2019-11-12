@@ -338,7 +338,7 @@ verifyNegZero =
              ]
       body = [ push_
                -- It's negative zero...
-             , assert_ $ (isNeg $ v "result_nz") .&&. (isZero $ v "result_nz")
+             , assert_ $ (isNegZero $ v "result_nz")
                -- ... but the negative zero flag isn't set
              , assert_ $ not_ $ v "result_range_nz" .->. "canBeNegativeZero"
              , expect_ isUnsat $ \r -> showNegzResult "Failed to verify NZ" r
@@ -382,6 +382,8 @@ verifyExp =
              , ("result_exp", t Double)
              ]
       body = [ push_
+             , declare (t Unsigned16) "expyy"
+             , v "expyy" `assign` (fpExp $ v "result_exp")
              , assert_ $ (fpExp $ v "result_exp") .>. (v "result_range_exp" .->. "maxExponent")
              , expect_ isUnsat $ \r -> showExpResult "Failed to verify Exp" r
              , pop_
@@ -439,6 +441,7 @@ getExpList :: M.Map String Double -> [String]
 getExpList fls = catMaybes $ map (\(str, fl) ->
                        case str of
                          _ | "undef" `isInfixOf` str -> Nothing
+                         _ | "expyy" `isInfixOf` str -> sstr str fl
                          _ | "left_range_maxExponent" `isInfixOf` str -> sstr str fl
                          _ | "right_range_maxExponent" `isInfixOf` str -> sstr str fl
                          _ | "start_range_maxExponent" `isInfixOf` str -> sstr str fl
@@ -452,7 +455,7 @@ getExpList fls = catMaybes $ map (\(str, fl) ->
   where
     sstr str fl = Just $ unwords [str, ":", if fl /= fl
                                             then "NaN"
-                                            else show (round fl :: Integer)
+                                            else show fl --(round fl :: Integer)
                                  ]
 
 showNanResult :: String -> SMTResult -> IO ()
@@ -508,10 +511,15 @@ getNegzList :: M.Map String Double -> [String]
 getNegzList fls = catMaybes $ map (\(str, fl) ->
                        case str of
                          _ | "undef" `isInfixOf` str -> Nothing
+                         _ | "sent_in" `isInfixOf` str -> sstr str fl
                          _ | "left_range_canBeNegativeZero" `isInfixOf` str -> sstr str fl
                          _ | "right_range_canBeNegativeZero" `isInfixOf` str -> sstr str fl
                          _ | "start_range_canBeNegativeZero" `isInfixOf` str -> sstr str fl
                          _ | "result_range_canBeNegativeZero" `isInfixOf` str -> sstr str fl
+                         _ | "start_range_lower" `isInfixOf` str -> sstr str fl
+                         _ | "start_range_upper" `isInfixOf` str -> sstr str fl
+                         _ | "result_range_lower" `isInfixOf` str -> sstr str fl
+                         _ | "result_range_upper" `isInfixOf` str -> sstr str fl
                          _ | "right_1" `isInfixOf` str -> sstr str fl
                          _ | "left_1" `isInfixOf` str -> sstr str fl
                          _ | "start_1" `isInfixOf` str -> sstr str fl

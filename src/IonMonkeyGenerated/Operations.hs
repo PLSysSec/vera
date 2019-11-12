@@ -487,8 +487,8 @@ sign =
   let args = [ ("op", c "range") ]
       body = [ return_ $ call "Range4" [ cast (max_ ( min_ (v "op" .->. "lower") (n Signed 1) ) (n Signed (-1))) Signed64
                                        , cast (max_ ( min_ (v "op" .->. "upper") (n Signed 1) ) (n Signed (-1))) Signed64
-                                       , v "op" .->. "canBeNegativeZero"
                                        , excludesFractionalParts
+                                       , v "op" .->. "canBeNegativeZero"
                                        , n Unsigned16 0
                                        ]
              ]

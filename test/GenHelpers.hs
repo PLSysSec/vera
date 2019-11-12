@@ -17,12 +17,50 @@ import           Test.Tasty.HUnit
 import           Utils
 
 genHelpersTests :: BenchTest
-genHelpersTests = benchTestGroup "Helpers" [ ranges
-                                           , lowerInit
-                                           , upperInit
-                                           , onesTest
-                                           , zerosTest
+genHelpersTests = benchTestGroup "Helpers" [ --fpExponent
+                                           fpNegative
+                                           -- , ranges
+                                           -- , lowerInit
+                                           -- , upperInit
+                                           -- , onesTest
+                                           -- , zerosTest
                                            ]
+
+fpExponent :: BenchTest
+fpExponent = benchTestCase "fp exponent" $ do
+
+  r <- evalCodegen Nothing $ do
+    genBodySMT [ declare (t Unsigned16) "expy"
+               , v "expy" `assign` (fpExp $ d Double 0.0)
+               , v "expy" `assign` (fpExp $ d Double 2.0)
+               , v "expy" `assign` (fpExp $ d Double 4.0)
+               , v "expy" `assign` (fpExp $ d Double (-4.0))
+               ]
+    runSolverOnSMT
+  vtest r $ Map.fromList [ ("expy_1", 0)
+                         , ("expy_2", 1)
+                         , ("expy_3", 2)
+                         , ("expy_4", 2)
+                         ]
+
+fpNegative :: BenchTest
+fpNegative = benchTestCase "fp exponent" $ do
+
+  r <- evalCodegen Nothing $ do
+    genBodySMT [ declare (t Bool) "neg"
+               , v "neg" `assign` (isNeg $ d Double 0.0)
+               , v "neg" `assign` (isNeg $ (d Double 5.0) .*. (d Double 5.0) .-. (d Double 25))
+               , v "neg" `assign` (isNeg $ d Double (-0.0))
+               , v "neg" `assign` (isNeg $ d Double 4.0)
+               , v "neg" `assign` (isNeg $ d Double (-4.0))
+               ]
+    runSolverOnSMT
+  vtest r $ Map.fromList [ ("neg_1", 0)
+                         , ("neg_2", 0)
+                         , ("neg_3", 1)
+                         , ("neg_4", 0)
+                         , ("neg_5", 1)
+                         ]
 
 ranges :: BenchTest
 ranges = benchTestCase "ranges" $ do

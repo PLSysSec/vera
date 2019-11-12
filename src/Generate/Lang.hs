@@ -170,6 +170,9 @@ isZero op = op >>= return . IsZero
 isNeg :: Codegen SExpr -> Codegen SExpr
 isNeg op = op >>= return . IsNegative
 
+isNegZero :: Codegen SExpr -> Codegen SExpr
+isNegZero op = op >>= return . IsNegativeZero
+
 fpExp :: Codegen SExpr -> Codegen SExpr
 fpExp op = op >>= return . GetExp
 
