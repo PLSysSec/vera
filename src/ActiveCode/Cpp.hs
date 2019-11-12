@@ -20,6 +20,7 @@ cppFileString functions mainBody =
   unlines [ "#include <stdio.h>"
           , "#include <cmath>"
           , "#include <stdint.h>"
+          , "#include <cassert.h>"
           , ""
           , "template <class T>"
           , "static constexpr inline T Min(T t1, T t2) {"
