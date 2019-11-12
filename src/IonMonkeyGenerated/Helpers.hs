@@ -22,8 +22,8 @@ range3 =
                                                    , v "tmp2"
                                                    ]
              , v "rv" .->. "canBeNegativeZero" `assign` (v "nz_flag")
-             -- , return_ $ call "optimize" [v "rv"]
-             , return_ $ v "rv"
+             , return_ $ call "optimize" [v "rv"]
+             -- , return_ $ v "rv"
              ]
   in Function "Range3" (c "range") args body
 
@@ -49,8 +49,8 @@ range4 =
              , v "rv" .->. "canHaveFractionalPart" `assign` (v "fract_flag")
              , v "rv" .->. "canBeNegativeZero" `assign` (v "nz_flag")
              , v "rv" .->. "maxExponent" `assign` (v "exp_set")
-             , return_ $ v "rv"
-             -- , return_ $ call "optimize" [v "rv"]
+             -- , return_ $ v "rv"
+             , return_ $ call "optimize" [v "rv"]
              ]
   in Function "Range4" (c "range") args body
 
@@ -80,8 +80,8 @@ range6 =
              , v "rv" .->. "canHaveFractionalPart" `assign` (v "fract_flag")
              , v "rv" .->. "canBeNegativeZero" `assign` (v "nz_flag")
              , v "rv" .->. "maxExponent" `assign` (v "exp_set")
-             , return_ $ v "rv"
-             -- , return_ $ call "optimize" [v "rv"]
+             -- , return_ $ v "rv"
+             , return_ $ call "optimize" [v "rv"]
              ]
   in Function "Range6" (c "range") args body
 
@@ -104,6 +104,10 @@ optimize =
              , v "optrv" `assign` v "opt_range"
              , declare (t Unsigned16) "newExponent"
              , v "newExponent" `assign` n Unsigned16 0
+
+             , declare (t Signed) "start_lower"
+             , v "start_lower" `assign` (v "opt_range" .->. "lower")
+
              , if_ (call "hasInt32Bounds" [v "opt_range"])
                [v "newExponent" `assign` (call "exponentImpliedByInt32Bounds" [v "opt_range"])
                , if_ (v "newExponent" .<. (v "opt_range" .->. "maxExponent"))
@@ -111,8 +115,13 @@ optimize =
                , if_ ((v "opt_range" .->. "canHaveFractionalPart") .&&. ((v "opt_range" .->. "lower") .==. (v "opt_range" .->. "upper")))
                  [v "optrv" .->. "canHaveFractionalPart" `assign` excludesFractionalParts] []
                ] []
+
              , if_ (v "opt_range" .->. "canBeNegativeZero" .&&. (not_ $ call "canBeZero" [v "opt_range"]))
                [v "optrv" .->. "canBeNegativeZero" `assign` excludesNegativeZero] []
+
+             , declare (t Signed) "end_lower"
+             , v "end_lower" `assign` (v "opt_range" .->. "lower")
+
              , return_ $ v "optrv"
              ]
   in Function "optimize" (c "range") args body

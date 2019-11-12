@@ -158,6 +158,8 @@ verifyFpFunction fnName jsOp fns = do
   define verifyNan
   define verifyInf
   define verifyExp
+  define verifyLowBoundInvariant
+  define verifyUpBoundInvariant
   define canBeInfiniteOrNan
   define setLowerInit
   define setUpperInit
@@ -191,6 +193,8 @@ verifyFpFunction fnName jsOp fns = do
               , (v "right") `assign` (call "floatInRange" [v "right_range"])
               , (v "result") `assign` (v "left" `jsOp` v "right")
                 -- Verify FP properties
+              , vcall "verifyLowBoundInvariant"   [v "result_range", v "result"]
+              , vcall "verifyUpBoundInvariant"   [v "result_range", v "result"]
               , vcall "verifyNegZ"   [v "result_range", v "result"]
               , vcall "verifyNan"    [v "result_range", v "result"]
               , vcall "verifyInf"    [v "result_range", v "result"]
@@ -281,7 +285,9 @@ floatInRange =
              , assert_ $ (((fpExp $ v "result_init") .==. (v "result_range_init" .->. "maxExponent")) .&&. (not_ $ isInf $ v "result_init") .&&. (not_ $ isNan $ v "result_init"))
 
              -- If the number isnt in bounds, int32bound should be false
+             -- If the number is in bounds, int32bound should be true
              , assert_ $ ((v "result_init" .=>. (cast int32min Double)) .^. (not_ $ v "result_range_init" .->. "hasInt32LowerBound")) .&&. ((v "result_init" .<=. (cast int32max Double)) .^. (not_ $ v "result_range_init" .->. "hasInt32UpperBound"))
+             , assert_ $ ((v "result_init" .=>. (cast int32min Double)) .&&. (v "result_range_init" .->. "hasInt32LowerBound")) .&&. ((v "result_init" .<=. (cast int32max Double)) .&&. (v "result_range_init" .->. "hasInt32UpperBound"))
 
              -- If the number rounded is not the number, hasFractionalPart should be true
              , assert_ $ (v "result_init" .==. (jsCeil $ v "result_init")) .^. (v "result_range_init" .->. "canHaveFractionalPart")
@@ -346,6 +352,36 @@ verifyUB =
   in Function "verifyUB" Void args body
 
 -- Floating point
+
+verifyLowBoundInvariant :: FunctionDef
+verifyLowBoundInvariant =
+  let args = [ ("result_range_bi", c "range")
+             , ("result_bi", t Double)
+             ]
+      body = [ push_
+              -- It has no int32 lower bound...
+             , assert_ $ not_ $ v "result_range_bi" .->. "hasInt32LowerBound"
+               -- ...but the int32 lower bound isnt intmax
+             , assert_ $ not_ $ (v "result_range_bi" .->. "lower") .==. jsIntMin
+             , expect_ isUnsat $ \r -> showInt32Result "Failed to verify low bound invariant" r
+             , pop_
+             ]
+  in Function "verifyLowBoundInvariant" Void args body
+
+verifyUpBoundInvariant :: FunctionDef
+verifyUpBoundInvariant =
+  let args = [ ("result_range_biu", c "range")
+             , ("result_biu", t Double)
+             ]
+      body = [ push_
+              -- It has no int32 lower bound...
+             , assert_ $ not_ $ v "result_range_biu" .->. "hasInt32UpperBound"
+               -- ...but the int32 lower bound isnt intmax
+             , assert_ $ not_ $ (v "result_range_biu" .->. "upper") .==. jsIntMax
+             , expect_ isUnsat $ \r -> showInt32Result "Failed to verify high bound invariant" r
+             , pop_
+             ]
+  in Function "verifyUpBoundInvariant" Void args body
 
 verifyNegZero :: FunctionDef
 verifyNegZero =
@@ -531,11 +567,23 @@ getNegzList fls = catMaybes $ map (\(str, fl) ->
                          _ | "left_range_canBeNegativeZero" `isInfixOf` str -> sstr str fl
                          _ | "right_range_canBeNegativeZero" `isInfixOf` str -> sstr str fl
                          _ | "start_range_canBeNegativeZero" `isInfixOf` str -> sstr str fl
+                         _ | "left_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
+                         _ | "right_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
+                         _ | "start_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
+                         _ | "left_range_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
+                         _ | "right_range_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
+                         _ | "start_range_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
+                         _ | "result_range_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
+                         _ | "result_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
                          _ | "result_range_canBeNegativeZero" `isInfixOf` str -> sstr str fl
                          _ | "start_range_lower" `isInfixOf` str -> sstr str fl
                          _ | "start_range_upper" `isInfixOf` str -> sstr str fl
                          _ | "result_range_lower" `isInfixOf` str -> sstr str fl
                          _ | "result_range_upper" `isInfixOf` str -> sstr str fl
+                         _ | "left_range_lower" `isInfixOf` str -> sstr str fl
+                         _ | "left_range_upper" `isInfixOf` str -> sstr str fl
+                         _ | "right_range_lower" `isInfixOf` str -> sstr str fl
+                         _ | "right_range_upper" `isInfixOf` str -> sstr str fl
                          _ | "right_1" `isInfixOf` str -> sstr str fl
                          _ | "left_1" `isInfixOf` str -> sstr str fl
                          _ | "start_1" `isInfixOf` str -> sstr str fl

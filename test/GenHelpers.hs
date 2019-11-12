@@ -17,14 +17,60 @@ import           Test.Tasty.HUnit
 import           Utils
 
 genHelpersTests :: BenchTest
-genHelpersTests = benchTestGroup "Helpers" [ --fpExponent
-                                           fpNegative
+genHelpersTests = benchTestGroup "Helpers" [ optimizeTest
+                                           -- , fpExponent
+                                           -- , fpNegative
                                            -- , ranges
                                            -- , lowerInit
                                            -- , upperInit
                                            -- , onesTest
                                            -- , zerosTest
                                            ]
+
+optimizeTest :: BenchTest
+optimizeTest = benchTestCase "optimize" $ do
+  r <- evalCodegen Nothing $ do
+    class_ range
+    define optimize
+    define hasInt32Bounds
+    define contains
+    define exponentImpliedByInt32Bounds
+    define canBeZero
+    genBodySMT [ declare (c "range") "testRange"
+               , declare (c "range") "resultRange"
+               , v "testRange" .->. "lower" `assign` (n Signed 0)
+               , v "testRange" .->. "hasInt32LowerBound" `assign` (n Bool 1)
+               , v "testRange" .->. "upper" `assign` (n Signed 0)
+               , v "testRange" .->. "hasInt32UpperBound" `assign` (n Bool 1)
+               , v "testRange" .->. "canBeNegativeZero" `assign` (n Bool 1)
+               , v "resultRange" `assign` call "optimize" [v "testRange"]
+               , v "testRange" .->. "lower" `assign` jsIntMin
+               , v "testRange" .->. "hasInt32LowerBound" `assign` (n Bool 0)
+               , v "testRange" .->. "upper" `assign` jsIntMax
+               , v "testRange" .->. "hasInt32UpperBound" `assign` (n Bool 0)
+               , v "testRange" .->. "canBeNegativeZero" `assign` (n Bool 1)
+               , v "resultRange" `assign` call "optimize" [v "testRange"]
+
+               -- , v "testRange" .->. "lower" `assign` (n Signed (-100))
+               -- , v "testRange" .->. "upper" `assign` (n Signed 100)
+               -- , v "testRange" .->. "canBeNegativeZero" `assign` (n Bool 1)
+               -- , v "resultRange" `assign` call "optimize" [v "testRange"]
+               -- , v "testRange" .->. "lower" `assign` (n Signed (100))
+               -- , v "testRange" .->. "upper" `assign` (n Signed 500)
+               -- , v "testRange" .->. "canBeNegativeZero" `assign` (n Bool 1)
+               -- , v "resultRange" `assign` call "optimize" [v "testRange"]
+               ]
+    runSolverOnSMT
+  vtest r $ Map.fromList [ ("resultRange_canBeNegativeZero_1", 1)
+                         , ("resultRange_upper_1", 0)
+                         , ("resultRange_lower_1", 0)
+                         , ("resultRange_canBeNegativeZero_2", 1)
+                         , ("resultRange_upper_2", 2147483647)
+                         , ("resultRange_lower_2", 2147483648)
+                         -- , ("resultRange_canBeNegativeZero_2", 1)
+                         -- , ("resultRange_canBeNegativeZero_3", 0)
+                         ]
+
 
 fpExponent :: BenchTest
 fpExponent = benchTestCase "fp exponent" $ do
