@@ -115,11 +115,11 @@ compileSExpr expr = case expr of
   (NumExpr (SNum numType numVal)) -> return $ "(" ++ (compileType numType) ++ ")" ++ show numVal
   (Neg expr) -> compUnarySExpr "~" expr
   (Not expr) -> compUnarySExpr "!" expr
-  (Abs expr) -> compUnarySExpr "abs" expr
+  (Abs expr) -> compUnarySExpr "std::abs" expr
   (GetExp expr) -> compUnarySExpr "frexp" expr
-  (IsInf expr) -> compUnarySExpr "isinf" expr
-  (IsNan expr) -> compUnarySExpr "isnan" expr
-  (IsNegative expr) -> compUnarySExpr "signbit" expr
+  (IsInf expr) -> compUnarySExpr "std::isinf" expr
+  (IsNan expr) -> compUnarySExpr "std::isnan" expr
+  (IsNegative expr) -> compUnarySExpr "std::signbit" expr
   (IsZero expr) -> do
     comp <- compileSExpr expr
     return $ "(" ++ comp ++ " == 0)"
@@ -134,11 +134,11 @@ compileSExpr expr = case expr of
   (Min expr1 expr2) -> do
     comp1 <- compileSExpr expr1
     comp2 <- compileSExpr expr2
-    return $ "min((" ++ comp1 ++ "), (" ++ comp2 ++ "))"
+    return $ "std::min((" ++ comp1 ++ "), (" ++ comp2 ++ "))"
   (Max expr1 expr2) -> do
     comp1 <- compileSExpr expr1
     comp2 <- compileSExpr expr2
-    return $ "max((" ++ comp1 ++ "), (" ++ comp2 ++ "))"
+    return $ "std::max((" ++ comp1 ++ "), (" ++ comp2 ++ "))"
   (Gt expr1 expr2) -> compBinarySExpr ">" expr1 expr2
   (Gte expr1 expr2) -> compBinarySExpr ">=" expr1 expr2
   (Lt expr1 expr2) -> compBinarySExpr "<" expr1 expr2
