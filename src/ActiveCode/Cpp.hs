@@ -118,6 +118,17 @@ cppString function mainBody =
           , "return 0;"
           , "}" ]
 
+cppCompile :: String -> String -> IO Bool
+cppCompile function mainBody = do
+  fp <- bracket (mkstemps "/tmp/activeC" ".cpp")
+                (hClose . snd)
+                (\(f, h) -> hPutStr h (cppString function mainBody) >> return (dropExtension f))
+
+  -- compile
+  (ccode, cout) <- readCommand "c++" ["-o", fp, fp ++ ".cpp"] ""
+  removeFile $ fp ++ ".cpp"
+  return $ ccode == ExitSuccess
+
 cpp :: Read a => String -> String -> IO a
 cpp function mainBody = do
   fp <- bracket (mkstemps "/tmp/activeC" ".cpp")
