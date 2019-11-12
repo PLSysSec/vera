@@ -14,6 +14,9 @@ solverToString = do
   Z.setASTPrintMode Z.Z3_PRINT_SMTLIB2_COMPLIANT
   Z.solverToString
 
+implies :: MonadZ3 z3 => AST -> AST -> z3 ()
+implies a b = Z.mkImplies a b >>= assert
+
 assert :: MonadZ3 z3 => AST -> z3 ()
 assert a = do
   sort <- Z.getSort a

@@ -188,6 +188,11 @@ genStmtSMT stmt =
     Push -> D.push
     Pop -> D.pop
     Assert e -> genExprSMT e >>= liftVerif . T.vassert
+    Implies e1 e2 -> do
+      e1SMT <- genExprSMT e1 >>= liftVerif . T.cppNot
+      e2SMT <- genExprSMT e2
+      disjunction <- liftVerif $ T.cppOr e1SMT e2SMT
+      liftVerif $ T.vassert disjunction
     VoidCall name expr -> void $ genCallSMT $ Call name expr
     Decl var -> return () -- Declaration is just important for variable tracking
     -- We are assigning to a class

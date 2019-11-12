@@ -350,6 +350,14 @@ return_ expr' = do
 -- SMT directives
 --
 
+implies_ :: Codegen SExpr
+         -> Codegen SExpr
+         -> Codegen SStmt
+implies_ expr1' expr2' = do
+  expr1 <- expr1'
+  expr2 <- expr2'
+  return $ Implies expr1 expr2
+
 assert_ :: Codegen SExpr
         -> Codegen SStmt
 assert_ expr' = do

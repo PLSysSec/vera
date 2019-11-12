@@ -129,6 +129,7 @@ data SStmt = Decl SVar
            | VoidCall FunctionName [SExpr]
            | Return SExpr
            | Assert SExpr
+           | Implies SExpr SExpr
            | Expect (SMTResult -> Bool) (SMTResult -> IO ())
            | Push
            | Pop
