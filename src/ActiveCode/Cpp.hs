@@ -15,12 +15,11 @@ import           System.Directory (removeFile)
 import           System.Exit
 import           System.IO
 
-cppFileString :: String -> String -> String
-cppFileString functions mainBody =
+cppString :: String -> String -> String
+cppString function mainBody =
   unlines [ "#include <stdio.h>"
           , "#include <cmath>"
           , "#include <stdint.h>"
-          , "#include <cassert.h>"
           , ""
           , "template <class T>"
           , "static constexpr inline T Min(T t1, T t2) {"
@@ -112,15 +111,13 @@ cppFileString functions mainBody =
           , "  return std::fabs(aLongDouble);"
           , "}"
           , ""
-          , functions
-          , ""
           , "int main(int argc, char *argv[]) {"
           , mainBody
           , "return 0;"
           , "}" ]
 
 cpp :: Read a => String -> String -> IO a
-cpp functions mainBody = do
+cpp function mainBody = do
   fp <- bracket (mkstemps "/tmp/activeC" ".cpp")
                 (hClose . snd)
                 (\(f,h) -> hPutStr h src >> return (dropExtension f))
@@ -136,7 +133,7 @@ cpp functions mainBody = do
   readIO out
 
     where cc = "c++"
-          src = cppFileString functionsMainBody
+          src = cppString function mainBody
 
 class Cpp a b where
   cppBin :: CppOp -> (a, a) -> IO b
@@ -144,152 +141,152 @@ class Cpp a b where
 
 instance Cpp Double Double where
    cppBin op (x, y) = do
-    i <- cpp $ "" $ unlines [ "double x = " ++ show x ++ ";"
-                            , "double y = " ++ show y ++ ";"
-                            , "double result = " ++ op2code op ++ ";"
-                            , "printf(\"%ld\", *(uint64_t*)(&result));"
-                            ]
+    i <- cpp "" $ unlines [ "double x = " ++ show x ++ ";"
+                       , "double y = " ++ show y ++ ";"
+                       , "double result = " ++ op2code op ++ ";"
+                       , "printf(\"%ld\", *(uint64_t*)(&result));"
+                       ]
     return $ wordToDouble $ fromInteger i
    cppUni op x = do
-    i <- cpp $ "" $ unlines [ "double x = " ++ show x ++ ";"
-                            , "double result = " ++ op2code op ++ ";"
-                            , "printf(\"%ld\", *(uint64_t*)(&result));"
-                            ]
+    i <- cpp "" $ unlines [ "double x = " ++ show x ++ ";"
+                       , "double result = " ++ op2code op ++ ";"
+                       , "printf(\"%ld\", *(uint64_t*)(&result));"
+                       ]
     return $ wordToDouble $ fromInteger i
 
 instance Cpp Double Bool where
    cppBin op (x, y) = do
-    cpp $ "" $ unlines [ "double x = " ++ show x ++ ";"
-                       , "double y = " ++ show y ++ ";"
-                       , "printf( (" ++ op2code op ++ ") ? \"True\" : \"False\");"
-                       ]
+    cpp "" $ unlines [ "double x = " ++ show x ++ ";"
+                  , "double y = " ++ show y ++ ";"
+                  , "printf( (" ++ op2code op ++ ") ? \"True\" : \"False\");"
+                  ]
    cppUni = error "BUG cppUni is not a comparison operator"
 
 
 instance Cpp Int32 Int32 where
    cppBin op (x, y) = do
-    cpp $ "" $ unlines [ "int32_t x = " ++ show x ++ ";"
-                       , "int32_t y = " ++ show y ++ ";"
-                       , "int32_t result = " ++ op2code op ++ ";"
-                       , "printf(\"%d\", result);"
-                       ]
+    cpp "" $ unlines [ "int32_t x = " ++ show x ++ ";"
+                  , "int32_t y = " ++ show y ++ ";"
+                  , "int32_t result = " ++ op2code op ++ ";"
+                  , "printf(\"%d\", result);"
+                  ]
    cppUni op x = do
-    cpp $ "" $ unlines [ "int32_t x = " ++ show x ++ ";"
-                      , "int32_t result = " ++ op2code op ++ ";"
-                      , "printf(\"%d\", result);"
-                      ]
+    cpp "" $ unlines [ "int32_t x = " ++ show x ++ ";"
+                  , "int32_t result = " ++ op2code op ++ ";"
+                  , "printf(\"%d\", result);"
+                  ]
 
 instance Cpp Int32 Bool where
    cppBin op (x, y) = do
-    cpp $ "" $ unlines [ "int32_t x = " ++ show x ++ ";"
-                       , "int32_t y = " ++ show y ++ ";"
-                       , "printf( (" ++ op2code op ++ ") ? \"True\" : \"False\");"
-                       ]
+    cpp "" $ unlines [ "int32_t x = " ++ show x ++ ";"
+                  , "int32_t y = " ++ show y ++ ";"
+                  , "printf( (" ++ op2code op ++ ") ? \"True\" : \"False\");"
+                  ]
    cppUni = error "BUG cppUni is not a comparison operator"
 
 instance Cpp Int16 Int16 where
    cppBin op (x, y) = do
-    cpp $ "" $ unlines [ "int16_t x = " ++ show x ++ ";"
-                       , "int16_t y = " ++ show y ++ ";"
-                       , "int16_t result = " ++ op2code op ++ ";"
-                       , "printf(\"%d\", result);"
-                       ]
+    cpp "" $ unlines [ "int16_t x = " ++ show x ++ ";"
+                  , "int16_t y = " ++ show y ++ ";"
+                  , "int16_t result = " ++ op2code op ++ ";"
+                  , "printf(\"%d\", result);"
+                  ]
    cppUni op x = do
-    cpp $ "" $ unlines [ "int16_t x = " ++ show x ++ ";"
-                       , "int16_t result = " ++ op2code op ++ ";"
-                       , "printf(\"%d\", result);"
-                       ]
+    cpp "" $ unlines [ "int16_t x = " ++ show x ++ ";"
+                  , "int16_t result = " ++ op2code op ++ ";"
+                  , "printf(\"%d\", result);"
+                  ]
 
 instance Cpp Int16 Bool where
    cppBin op (x, y) = do
-    cpp $ "" $ unlines [ "int16_t x = " ++ show x ++ ";"
-                       , "int16_t y = " ++ show y ++ ";"
-                       , "printf( (" ++ op2code op ++ ") ? \"True\" : \"False\");"
-                       ]
+    cpp "" $ unlines [ "int16_t x = " ++ show x ++ ";"
+                  , "int16_t y = " ++ show y ++ ";"
+                  , "printf( (" ++ op2code op ++ ") ? \"True\" : \"False\");"
+                  ]
    cppUni = error "BUG cppUni is not a comparison operator"
 
 instance Cpp Int8 Int8 where
    cppBin op (x, y) = do
-    cpp $ "" $ unlines [ "int8_t x = " ++ show x ++ ";"
-                       , "int8_t y = " ++ show y ++ ";"
-                       , "int8_t result = " ++ op2code op ++ ";"
-                       , "printf(\"%d\", result);"
-                       ]
+    cpp "" $ unlines [ "int8_t x = " ++ show x ++ ";"
+                  , "int8_t y = " ++ show y ++ ";"
+                  , "int8_t result = " ++ op2code op ++ ";"
+                  , "printf(\"%d\", result);"
+                  ]
    cppUni op x = do
-    cpp $ "" $ unlines [ "int8_t x = " ++ show x ++ ";"
-                       , "int8_t result = " ++ op2code op ++ ";"
-                       , "printf(\"%d\", result);"
-                       ]
+    cpp "" $ unlines [ "int8_t x = " ++ show x ++ ";"
+                  , "int8_t result = " ++ op2code op ++ ";"
+                  , "printf(\"%d\", result);"
+                  ]
 
 instance Cpp Int8 Bool where
    cppBin op (x, y) = do
-    cpp $ "" $ unlines [ "int8_t x = " ++ show x ++ ";"
-                       , "int8_t y = " ++ show y ++ ";"
-                       , "printf( (" ++ op2code op ++ ") ? \"True\" : \"False\");"
-                       ]
+    cpp "" $ unlines [ "int8_t x = " ++ show x ++ ";"
+                  , "int8_t y = " ++ show y ++ ";"
+                  , "printf( (" ++ op2code op ++ ") ? \"True\" : \"False\");"
+                  ]
    cppUni = error "BUG cppUni is not a comparison operator"
 
 instance Cpp Word32 Word32 where
    cppBin op (x, y) = do
-    cpp $ "" $ unlines [ "uint32_t x = " ++ show x ++ ";"
-                       , "uint32_t y = " ++ show y ++ ";"
-                       , "uint32_t result = " ++ op2code op ++ ";"
-                       , "printf(\"%u\", result);"
-                       ]
+    cpp "" $ unlines [ "uint32_t x = " ++ show x ++ ";"
+                  , "uint32_t y = " ++ show y ++ ";"
+                  , "uint32_t result = " ++ op2code op ++ ";"
+                  , "printf(\"%u\", result);"
+                  ]
    cppUni op x = do
-    cpp $ "" $ unlines [ "uint32_t x = " ++ show x ++ ";"
-                       , "uint32_t result = " ++ op2code op ++ ";"
-                       , "printf(\"%u\", result);"
-                       ]
+    cpp "" $ unlines [ "uint32_t x = " ++ show x ++ ";"
+                  , "uint32_t result = " ++ op2code op ++ ";"
+                  , "printf(\"%u\", result);"
+                  ]
 
 instance Cpp Word32 Bool where
    cppBin op (x, y) = do
-    cpp $ "" $ unlines [ "uint32_t x = " ++ show x ++ ";"
-                       , "uint32_t y = " ++ show y ++ ";"
-                       , "printf( (" ++ op2code op ++ ") ? \"True\" : \"False\");"
-                       ]
+    cpp "" $ unlines [ "uint32_t x = " ++ show x ++ ";"
+                  , "uint32_t y = " ++ show y ++ ";"
+                  , "printf( (" ++ op2code op ++ ") ? \"True\" : \"False\");"
+                  ]
    cppUni = error "BUG cppUni is not a comparison operator"
 
 instance Cpp Word16 Word16 where
    cppBin op (x, y) = do
-    cpp $ "" $ unlines [ "uint16_t x = " ++ show x ++ ";"
-                       , "uint16_t y = " ++ show y ++ ";"
-                       , "uint16_t result = " ++ op2code op ++ ";"
-                       , "printf(\"%u\", result);"
-                       ]
+    cpp "" $ unlines [ "uint16_t x = " ++ show x ++ ";"
+                  , "uint16_t y = " ++ show y ++ ";"
+                  , "uint16_t result = " ++ op2code op ++ ";"
+                  , "printf(\"%u\", result);"
+                  ]
    cppUni op x = do
-    cpp $ "" $ unlines [ "uint16_t x = " ++ show x ++ ";"
-                       , "uint16_t result = " ++ op2code op ++ ";"
-                       , "printf(\"%d\", result);"
-                       ]
+    cpp "" $ unlines [ "uint16_t x = " ++ show x ++ ";"
+                  , "uint16_t result = " ++ op2code op ++ ";"
+                  , "printf(\"%d\", result);"
+                  ]
 
 instance Cpp Word16 Bool where
    cppBin op (x, y) = do
-    cpp $ "" $ unlines [ "uint16_t x = " ++ show x ++ ";"
-                       , "uint16_t y = " ++ show y ++ ";"
-                       , "printf( (" ++ op2code op ++ ") ? \"True\" : \"False\");"
-                       ]
+    cpp "" $ unlines [ "uint16_t x = " ++ show x ++ ";"
+                  , "uint16_t y = " ++ show y ++ ";"
+                  , "printf( (" ++ op2code op ++ ") ? \"True\" : \"False\");"
+                  ]
    cppUni = error "BUG cppUni is not a comparison operator"
 
 instance Cpp Word8 Word8 where
    cppBin op (x, y) = do
-    cpp $ "" $ unlines [ "uint8_t x = " ++ show x ++ ";"
-                       , "uint8_t y = " ++ show y ++ ";"
-                       , "uint8_t result = " ++ op2code op ++ ";"
-                       , "printf(\"%u\", result);"
-                       ]
+    cpp "" $ unlines [ "uint8_t x = " ++ show x ++ ";"
+                  , "uint8_t y = " ++ show y ++ ";"
+                  , "uint8_t result = " ++ op2code op ++ ";"
+                  , "printf(\"%u\", result);"
+                  ]
    cppUni op x = do
-    cpp $ "" $ unlines [ "uint8_t x = " ++ show x ++ ";"
-                       , "uint8_t result = " ++ op2code op ++ ";"
-                       , "printf(\"%u\", result);"
-                       ]
+    cpp "" $ unlines [ "uint8_t x = " ++ show x ++ ";"
+                  , "uint8_t result = " ++ op2code op ++ ";"
+                  , "printf(\"%u\", result);"
+                  ]
 
 instance Cpp Word8 Bool where
    cppBin op (x, y) = do
-    cpp $ "" $ unlines [ "uint8_t x = " ++ show x ++ ";"
-                       , "uint8_t y = " ++ show y ++ ";"
-                       , "printf( (" ++ op2code op ++ ") ? \"True\" : \"False\");"
-                       ]
+    cpp "" $ unlines [ "uint8_t x = " ++ show x ++ ";"
+                  , "uint8_t y = " ++ show y ++ ";"
+                  , "printf( (" ++ op2code op ++ ") ? \"True\" : \"False\");"
+                  ]
    cppUni = error "BUG cppUni is not a comparison operator"
 
 
