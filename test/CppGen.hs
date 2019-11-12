@@ -38,7 +38,7 @@ writeCompiled fileName comp = do
   liftIO $ writeFile fileName prog
 
 cppRangeCompileTest :: BenchTest
-cppRangeCompileTest = benchTestCase "cpp not compile test" $ do
+cppRangeCompileTest = benchTestCase "cpp range compile test" $ do
   r <- evalCodegen Nothing $ do
 
     class_ range
