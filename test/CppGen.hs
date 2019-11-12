@@ -35,10 +35,12 @@ writeCompiled fileName comp = do
   let prog = intercalate "\n" comp
   liftIO $ writeFile fileName prog
 
+--TODO: Should really make a separate stack command to generate
+--      files rather than through tests
 cppNotTest :: BenchTest
 cppNotTest = benchTestCase "cpp not test" $ do
   r <- evalCodegen Nothing $ do
-    
+
     class_ range
     define not
     compiled <- compileFunction not
