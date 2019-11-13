@@ -22,8 +22,8 @@ range3 =
                                                    , v "tmp2"
                                                    ]
              , v "rv" .->. "canBeNegativeZero" `assign` (v "nz_flag")
-             -- , return_ $ call "optimize" [v "rv"]
-             , return_ $ v "rv"
+             , return_ $ call "optimize" [v "rv"]
+             -- , return_ $ v "rv"
              ]
   in Function "Range3" (c "range") args body
 
@@ -49,8 +49,8 @@ range4 =
              , v "rv" .->. "canHaveFractionalPart" `assign` (v "fract_flag")
              , v "rv" .->. "canBeNegativeZero" `assign` (v "nz_flag")
              , v "rv" .->. "maxExponent" `assign` (v "exp_set")
-             -- , return_ $ v "rv"
-             , return_ $ call "optimize" [v "rv"]
+             , return_ $ v "rv"
+             -- , return_ $ call "optimize" [v "rv"]
              ]
   in Function "Range4" (c "range") args body
 
@@ -80,8 +80,8 @@ range6 =
              , v "rv" .->. "canHaveFractionalPart" `assign` (v "fract_flag")
              , v "rv" .->. "canBeNegativeZero" `assign` (v "nz_flag")
              , v "rv" .->. "maxExponent" `assign` (v "exp_set")
-             -- , return_ $ v "rv"
-             , return_ $ call "optimize" [v "rv"]
+             , return_ $ v "rv"
+             -- , return_ $ call "optimize" [v "rv"]
              ]
   in Function "Range6" (c "range") args body
 

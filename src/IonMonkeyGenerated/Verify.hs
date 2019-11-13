@@ -611,6 +611,12 @@ getInfList fls = catMaybes $ map (\(str, fl) ->
                          _ | "start_range_maxExponent" `isInfixOf` str -> sstr str fl
                          _ | "result_range_maxExponent" `isInfixOf` str -> sstr str fl
                          _ | "right_1" `isInfixOf` str -> sstr str fl
+                         _ | "right_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
+                         _ | "right_range_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
+                         _ | "left_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
+                         _ | "left_range_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
+                         _ | "result_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
+                         _ | "result_range_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
                          _ | "left_1" `isInfixOf` str -> sstr str fl
                          _ | "start_1" `isInfixOf` str -> sstr str fl
                          _ | "result_1" `isInfixOf` str -> sstr str fl
