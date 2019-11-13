@@ -295,7 +295,9 @@ floatInRange =
              , implies_ (not_ $ v "result_init" .==. (jsCeil $ v "result_init")) (v "result_range_init" .->. "canHaveFractionalPart")
 
              -- ((!Nan(v) and !Inf(v)) => log2(v) == exp
-             , implies_ ((not_ $ isNan $ v "result_init") .&&. (not_ $ isInf $ v "result_init")) ((fpExp $ v "result_init") .<=. ((v "result_range_init" .->. "maxExponent")) .&&. ((v "result_range_init" .->. "maxExponent") .<=. maxFiniteExponent))
+             , implies_ ((not_ $ isNan $ v "result_init") .&&. (not_ $ isInf $ v "result_init")) ((fpExp $ v "result_init") .==. ((v "result_range_init" .->. "maxExponent")) .&&. ((v "result_range_init" .->. "maxExponent") .<=. maxFiniteExponent))
+
+             -- BOUNDS ASSERTIONS: HADEST
 
              -- !hasInt32LBound => lower = jsMin
             , implies_ (not_ $ v "result_range_init" .->. "hasInt32LowerBound") (v "result_range_init" .->. "lower" .==. jsIntMin)
@@ -303,19 +305,23 @@ floatInRange =
              -- !hasInt32HBound => upper = jsMax
             , implies_ (not_ $ v "result_range_init" .->. "hasInt32UpperBound") (v "result_range_init" .->. "upper" .==. jsIntMax)
 
+              -- lower and upper are both within int min and int max
+              -- lower is less than upper
+             , assert_ $ (v "result_range_init" .->. "lower" .=>. jsIntMin) .&&. (v "result_range_init" .->. "lower" .<=. jsIntMax)
+             , assert_ $ (v "result_range_init" .->. "upper" .=>. jsIntMin) .&&. (v "result_range_init" .->. "upper" .<=. jsIntMax)
+             , assert_ $ (v "result_range_init" .->. "lower") .<=. (v "result_range_init" .->. "upper")
+
              -- Special values or v < lower => !hasInt32LowerBound
              , implies_ ((isNan $ v "result_init") .||. (isInf $ v "result_init") .||. (v "result_init" .<. (cast (v "result_range_init" .->. "lower") Double))) (not_ $ v "result_range_init" .->. "hasInt32LowerBound")
 
              -- Special values or v > upper => !hasInt32UpperBound
              , implies_ ((isNan $ v "result_init") .||. (isInf $ v "result_init") .||. (v "result_init" .>. (cast (v "result_range_init" .->. "upper") Double))) (not_ $ v "result_range_init" .->. "hasInt32UpperBound")
 
-             -- hasInt32Lower => v >= lower
-             , implies_ (v "result_range_init" .->. "hasInt32LowerBound") (((v "result_init" .=>. (cast (v "result_range_init" .->. "lower") Double)) .&&. ((v "result_range_init" .->. "lower") .=>. jsIntMin)))
+             -- -- hasInt32Lower => v >= lower
+             -- , implies_ (v "result_range_init" .->. "hasInt32LowerBound") ((v "result_init") .=>. (cast (v "result_range_init" .->. "lower") Double))
 
-             -- hasInt32Upper => v <= upper
-             , implies_ (v "result_range_init" .->. "hasInt32UpperBound") (((v "result_init" .<=. (cast (v "result_range_init" .->. "upper") Double)) .&&. ((v "result_range_init" .->. "lower") .<=. jsIntMax)))
-
-             , assert_ $ (v "result_range_init" .->. "lower") .<=. (v "result_range_init" .->. "upper")
+             -- -- hasInt32Upper => v <= upper
+             -- , implies_ (v "result_range_init" .->. "hasInt32UpperBound") ((v "result_init") .<=. (cast (v "result_range_init" .->. "upper") Double))
 
              , return_ $ v "result_init"
 
@@ -461,8 +467,6 @@ verifyExp =
              , ("result_exp", t Double)
              ]
       body = [ push_
-             , declare (t Double) "upper_big"
-             , v "upper_big" `assign` (cast (v "result_range_init" .->. "upper") Double)
              , assert_ $ (fpExp $ v "result_exp") .>. (v "result_range_exp" .->. "maxExponent")
              , expect_ isUnsat $ \r -> showExpResult "Failed to verify Exp" r
              , pop_
@@ -546,7 +550,7 @@ getExpList fls = catMaybes $ map (\(str, fl) ->
                          -- _ | "start_range_canHaveFractionalPart" `isInfixOf` str -> sstr str fl
                          _ | "start_range_lower" `isInfixOf` str -> sstr str fl
                          _ | "start_range_upper" `isInfixOf` str -> sstr str fl
-                         -- _ | "result_range_lower" `isInfixOf` str -> sstr str fl
+                         _ | "start_1" `isInfixOf` str -> sstr str fl
                          -- _ | "result_range_upper" `isInfixOf` str -> sstr str fl
                          -- _ | "abs_res" `isInfixOf` str -> sstr str fl
                          -- _ | "abs_after" `isInfixOf` str -> sstr str fl
