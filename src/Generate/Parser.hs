@@ -210,8 +210,8 @@ math_builtins_1 = [
 
 math_builtins_2 :: [(String, SExpr -> SExpr -> SExpr)]
 math_builtins_2 = [
-      ("min", JSAnd)
-    , ("max", JSSub)]
+      ("min", Min)
+    , ("max", Max)]
 
 math_builtin :: Parser CExpr
 math_builtin = do
@@ -273,23 +273,22 @@ prim_type = do
 paren_expr :: Parser CExpr
 paren_expr = do
     try typed_lit
-    <|> try cast
     <|> parens expr
 
 term :: Parser CExpr
 term    =  paren_expr <|> float_lit <|> try js_builtin <|> try math_builtin <|> try call <|> var
     <?> "simple expression"
 
-cast :: Parser CExpr
+cast :: Parser (CExpr -> CExpr)
 cast = do
     t <- parens prim_type
-    e <- term
-    return $ L.cast e t
+    notFollowedBy signedNaturalOrFloat
+    return $ \e -> L.cast e t
 
 typed_lit :: Parser CExpr
 typed_lit = do
     t <- parens int_type
-    n <- naturalOrFloat
+    n <- signedNaturalOrFloat
     case (n, t) of
         (Left i, DT.Bool) -> fail "Integer needs a fixed type before cast to bool"
         (Left i, DT.Double) -> return $ L.d DT.Double $ fromIntegral i
@@ -309,8 +308,8 @@ member = do
     return $ (L..->. i)
 
 -- This list does its best to match: https://en.cppreference.com/w/cpp/language/operator_precedence
-operators = [ [prefix $ choice [prefixOp "!" L.not_, prefixOp "~" L.neg_]]
-            ,[postfix $ member]
+operators = [[postfix $ member]
+            ,[prefix $ choice [prefixOp "!" L.not_, prefixOp "~" L.neg_, try cast]]
             ,[binary "*" Mul AssocLeft]
             ,[binary "+" Add AssocLeft, binary "-" Sub AssocLeft]
             ,[binary "<<" Shl AssocLeft, binary ">>" Shr AssocLeft]
@@ -360,6 +359,14 @@ float = Token.float lexer
 
 naturalOrFloat :: Parser (Either Integer Double)
 naturalOrFloat = Token.naturalOrFloat lexer
+
+signedNaturalOrFloat :: Parser (Either Integer Double)
+signedNaturalOrFloat = do
+    s <- option 1 $ char '-' >> (return  (-1))
+    n <- naturalOrFloat
+    return $ case n of
+        Left i -> Left $ i * s
+        Right f -> Right $ f * fromIntegral s
 
 reservedOp :: String -> Parser ()
 reservedOp = Token.reservedOp lexer

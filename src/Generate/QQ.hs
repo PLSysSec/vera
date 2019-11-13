@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Generate.QQ (prog, progFile, func) where
+module Generate.QQ (prog, progFile, func, funcStr) where
 
 import Data.List
 import Generate.Lang (Program, FunctionDef)
@@ -11,6 +11,7 @@ import Language.Haskell.TH.Syntax
 import Text.Parsec
 import Text.Parsec.Pos
 import Text.Parsec.Token
+import Data.String.Interpolate
 
 
 -- Reads in a file rather than an inline string
@@ -32,6 +33,19 @@ func = QuasiQuoter { quoteDec = error "undefined"
                    , quotePat  = error "undefined"
                    , quoteType = error "undefined"
                    }
+
+funcStr :: QuasiQuoter
+funcStr = QuasiQuoter { quoteDec = error "undefined"
+                   , quoteExp  = qExpStr
+                   , quotePat  = error "undefined"
+                   , quoteType = error "undefined"
+}
+
+qExpStr :: String -> Q Exp
+qExpStr s = do 
+    e <- quoteExp i s
+    return $ TH.AppE (TH.VarE 'unsafeParseFunction) e
+
 
 topLevelFunction :: P.Parser FunctionDef
 topLevelFunction = P.whiteSpace *> P.func <* eof

@@ -33,6 +33,7 @@ library:
   - split >= 0.2.3.3
   - parsec >= 3.1.14.0
   - template-haskell >= 2.14.0.0
+  - string-interpolate >= 0.1.0.1
   - data-binary-ieee754
   - filepath
   - directory
