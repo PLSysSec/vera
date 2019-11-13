@@ -1,28 +1,28 @@
 module Generate.CGen where
-import Control.Monad
-import Generate.SMTAST
-import Generate.State
-import Generate.Lang
-import Data.List
-import DSL.Typed       as T
+import           Control.Monad
+import           Data.List
+import           DSL.Typed       as T
+import           Generate.Lang
+import           Generate.SMTAST
+import           Generate.State
 
 compileSType :: STy -> String
 compileSType stype = case stype of
   (PrimType ty) -> compileType ty
-  (Class name) -> name
-  void -> "void"
+  (Class name)  -> name
+  void          -> "void"
 
 compileType :: T.Type -> String
-compileType T.Unsigned = "uint32_t"
-compileType T.Signed = "int32_t"
+compileType T.Unsigned   = "uint32_t"
+compileType T.Signed     = "int32_t"
 compileType T.Unsigned64 = "uint64_t"
-compileType T.Signed64 = "int64_t"
+compileType T.Signed64   = "int64_t"
 compileType T.Unsigned16 = "uint16_t"
-compileType T.Signed16 = "int16_t"
-compileType T.Unsigned8 = "uint8_t"
-compileType T.Signed8 = "int8_t"
-compileType T.Double = "double"
-compileType T.Bool = "bool"
+compileType T.Signed16   = "int16_t"
+compileType T.Unsigned8  = "uint8_t"
+compileType T.Signed8    = "int8_t"
+compileType T.Double     = "double"
+compileType T.Bool       = "bool"
 
 compileParams :: [(VarName, STy)] -> String
 compileParams params = do
@@ -63,10 +63,6 @@ compileSStmt stmt = case stmt of
     SVar ty name _ -> return [(compileType ty) ++ " " ++ name ++ ";"]
     CVar cl name   -> return [cl ++ " " ++ name ++ ";"]
   (Assign expr1 expr2) -> compileAssignment "=" expr1 expr2
-  (AddEq _ expr1 expr2) -> compileAssignment "+=" expr1 expr2
-  (SubEq _ expr1 expr2) -> compileAssignment "-=" expr1 expr2
-  (OrEq _ expr1 expr2) -> compileAssignment "|=" expr1 expr2
-  (AndEq _ expr1 expr2) -> compileAssignment "&=" expr1 expr2
   Push -> return [""]
   Pop -> return [""]
   (Assert expr) -> do
@@ -110,7 +106,7 @@ compileSExpr expr = case expr of
         fieldInfo <- getFieldInfo name
         return $ case fieldInfo of
           Just (name, fieldName) -> name ++ "." ++ fieldName
-          Nothing -> name
+          Nothing                -> name
       CVar _ name   -> return name
   (NumExpr (SNum numType numVal)) -> return $ "(" ++ (compileType numType) ++ ")" ++ show numVal
   (Neg expr) -> compUnarySExpr "~" expr

@@ -198,7 +198,9 @@ jsRem left right = binOp left right JSRem
 (.&&.) left right = binOp left right And
 
 (.&=.) :: Codegen SExpr -> Codegen SExpr -> Codegen SStmt
-(.&=.) left right = assignOp left right AndEq
+(.&=.) left right = do
+  let add = left .&&. right
+  assign left add
 
 jsAnd :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 jsAnd left right = binOp left right JSAnd
@@ -207,7 +209,9 @@ jsAnd left right = binOp left right JSAnd
 (.+.) left right = binOp left right Add
 
 (.+=.) :: Codegen SExpr -> Codegen SExpr -> Codegen SStmt
-(.+=.) left right = assignOp left right AddEq
+(.+=.) left right = do
+  let add = left .+. right
+  assign left add
 
 jsAdd :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 jsAdd left right = binOp left right JSAdd
@@ -216,7 +220,9 @@ jsAdd left right = binOp left right JSAdd
 (.-.) left right = binOp left right Sub
 
 (.-=.) :: Codegen SExpr -> Codegen SExpr -> Codegen SStmt
-(.-=.) left right = assignOp left right SubEq
+(.-=.) left right = do
+  let add = left .-. right
+  assign left add
 
 jsSub :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 jsSub left right = binOp left right JSSub
@@ -231,7 +237,9 @@ jsMul left right = binOp left right JSMul
 (.||.) left right = binOp left right Or
 
 (.|=.) :: Codegen SExpr -> Codegen SExpr -> Codegen SStmt
-(.|=.) left right = assignOp left right OrEq
+(.|=.) left right = do
+  let add = left .||. right
+  assign left add
 
 jsOr :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
 jsOr left right = binOp left right JSOr

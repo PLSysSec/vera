@@ -334,6 +334,9 @@ floatIsInRange =
       body = [ declare (t Bool) "inRange"
              , declare (t Bool) "infHolds"
 
+             , if_ (v "result_range_init" .->. "isEmpty")
+               [return_ $ n Bool 0] []
+
              , v "infHolds" `assign` ((isInf $ v "result_init") .||. (not_ $ ((v "result_range_init" .->. "maxExponent") .==. includesInfinity)))
 
              , declare (t Bool) "nanHolds"

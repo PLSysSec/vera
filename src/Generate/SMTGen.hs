@@ -220,11 +220,6 @@ genStmtSMT stmt =
       exprSMT <- genExprSMT expr
       liftVerif $ T.vassign varSMT exprSMT
 
-    AddEq result one two -> genAssignOpSMT result one two T.cppAdd
-    SubEq result one two -> genAssignOpSMT result one two T.cppSub
-    OrEq result one two  -> genAssignOpSMT result one two T.cppOr
-    AndEq result one two -> genAssignOpSMT result one two T.cppAnd
-
     If cond trueBr falseBr -> do
       condSym <- genExprSMT cond
       mapM_ (rewriteConditional condSym) trueBr
