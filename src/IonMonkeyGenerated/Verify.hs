@@ -295,9 +295,9 @@ floatInRange =
              , implies_ (not_ $ v "result_init" .==. (jsCeil $ v "result_init")) (v "result_range_init" .->. "canHaveFractionalPart")
 
              -- ((!Nan(v) and !Inf(v)) => log2(v) == exp
-             , implies_ ((not_ $ isNan $ v "result_init") .&&. (not_ $ isInf $ v "result_init")) ((fpExp $ v "result_init") .==. ((v "result_range_init" .->. "maxExponent")) .&&. ((v "result_range_init" .->. "maxExponent") .<=. maxFiniteExponent))
+             , implies_ ((not_ $ isNan $ v "result_init") .&&. (not_ $ isInf $ v "result_init")) ((fpExp $ v "result_init") .<=. ((v "result_range_init" .->. "maxExponent")) .&&. (((fpExp $ v "result_init") .+. n Signed16 1) .>. (v "result_range_init" .->. "maxExponent")))
 
-             -- BOUNDS ASSERTIONS: HADEST
+             -- BOUNDS ASSERTIONS: HARDEST
 
              -- !hasInt32LBound => lower = jsMin
             , implies_ (not_ $ v "result_range_init" .->. "hasInt32LowerBound") (v "result_range_init" .->. "lower" .==. jsIntMin)
