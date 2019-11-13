@@ -188,8 +188,6 @@ verifyFpFunction fnName jsOp fns = do
               , (v "left_range")   `assign` (call "newFloatInputRange" [])
               , (v "right_range")  `assign` (call "newFloatInputRange" [])
               , (v "result_range") `assign` call fnName [v "left_range", v "right_range"]
-                -- Verify that the result range is well formed
-        --      , vcall "verifySaneRange" [v "result_range"]
                 -- Actually perform the JS operation
               , (v "left")  `assign` (call "floatInRange" [v "left_range"])
               , (v "right") `assign` (call "floatInRange" [v "right_range"])
@@ -317,7 +315,7 @@ floatInRange =
              -- Special values or v > upper => !hasInt32UpperBound
              , implies_ ((isNan $ v "result_init") .||. (isInf $ v "result_init") .||. (v "result_init" .>. (cast (v "result_range_init" .->. "upper") Double))) (not_ $ v "result_range_init" .->. "hasInt32UpperBound")
 
-             -- -- hasInt32Lower => v >= lower
+             -- -- -- hasInt32Lower => v >= lower
              -- , implies_ (v "result_range_init" .->. "hasInt32LowerBound") ((v "result_init") .=>. (cast (v "result_range_init" .->. "lower") Double))
 
              -- -- hasInt32Upper => v <= upper

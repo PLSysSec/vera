@@ -19,8 +19,8 @@ import           Utils
 
 genIonMonkeyTests :: BenchTest
 genIonMonkeyTests = benchTestGroup "Generated IonMonkey tests"
-                    [ intIonMonkeyTests
-                    , fpIonMonkeyTests
+                    [-- intIonMonkeyTests
+                     fpIonMonkeyTests
 --                    oldBugTests
                     ]
 
