@@ -240,7 +240,7 @@ noInt32LowerBound :: Codegen SExpr
 noInt32LowerBound = (cast jsIntMin Signed64) .-. n Signed64 1
 
 noInt32UpperBound :: Codegen SExpr
-noInt32UpperBound = (cast jsIntMax Signed64) .-. n Signed64 1
+noInt32UpperBound = (cast jsIntMax Signed64) .+. n Signed64 1
 
 jsIntMax :: Codegen SExpr
 jsIntMax = n Signed (0x7fffffff)

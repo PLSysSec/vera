@@ -196,9 +196,9 @@ verifyFpFunction fnName jsOp fns = do
               , (v "result") `assign` (v "left" `jsOp` v "right")
               , expect_ isSat (error "Has to start out SAT")
               --   -- Verify FP properties
-              -- , vcall "verifyFpBound"    [v "result_range", v "result"]
-              -- , vcall "verifyLowBoundInvariant"   [v "result_range", v "result"]
-              -- , vcall "verifyUpBoundInvariant"   [v "result_range", v "result"]
+              , vcall "verifyFpBound"    [v "result_range", v "result"]
+              , vcall "verifyLowBoundInvariant"   [v "result_range", v "result"]
+              , vcall "verifyUpBoundInvariant"   [v "result_range", v "result"]
               , vcall "verifyNegZ"   [v "result_range", v "result"]
               , vcall "verifyNan"    [v "result_range", v "result"]
               , vcall "verifyInf"    [v "result_range", v "result"]
