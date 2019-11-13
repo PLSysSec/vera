@@ -157,6 +157,7 @@ verifyFpFunction fnName jsOp fns = do
   define verifyNegZero
   define optimize
   define verifyNan
+  define verifyFpBound
   define verifyInf
   define verifyExp
   define verifyLowBoundInvariant
@@ -194,10 +195,10 @@ verifyFpFunction fnName jsOp fns = do
               , (v "right") `assign` (call "floatInRange" [v "right_range"])
               , (v "result") `assign` (v "left" `jsOp` v "right")
               , expect_ isSat (error "Has to start out SAT")
-              , assert_ $ not_ $ isZero $ v "result"
               --   -- Verify FP properties
-              , vcall "verifyLowBoundInvariant"   [v "result_range", v "result"]
-              , vcall "verifyUpBoundInvariant"   [v "result_range", v "result"]
+              -- , vcall "verifyFpBound"    [v "result_range", v "result"]
+              -- , vcall "verifyLowBoundInvariant"   [v "result_range", v "result"]
+              -- , vcall "verifyUpBoundInvariant"   [v "result_range", v "result"]
               , vcall "verifyNegZ"   [v "result_range", v "result"]
               , vcall "verifyNan"    [v "result_range", v "result"]
               , vcall "verifyInf"    [v "result_range", v "result"]
@@ -230,10 +231,13 @@ verifyFpUnaryFunction fnName jsOp fns = do
   define exponentImpliedByInt32Bounds
   define numBits
   define canBeNan
+  define verifyFpBound
   define canBeZero
   define contains
   define hasInt32Bounds
   define missingAnyInt32Bounds
+  define verifyLowBoundInvariant
+  define verifyUpBoundInvariant
   define canHaveSignBitSet
   define verifyFract
   forM_ fns define
@@ -249,6 +253,9 @@ verifyFpUnaryFunction fnName jsOp fns = do
               , (v "start")  `assign` (call "floatInRange" [v "start_range"])
               , (v "result_verif") `assign` (jsOp $ v "start")
                 -- Verify FP properties
+              , vcall "verifyFpBound"    [v "result_range", v "result_verif"]
+              , vcall "verifyLowBoundInvariant"   [v "result_range", v "result_verif"]
+              , vcall "verifyUpBoundInvariant"   [v "result_range", v "result_verif"]
               , vcall "verifyNegZ"   [v "result_range", v "result_verif"]
               , vcall "verifyNan"    [v "result_range", v "result_verif"]
               , vcall "verifyInf"    [v "result_range", v "result_verif"]
@@ -288,13 +295,13 @@ floatInRange =
              , implies_ (not_ $ v "result_init" .==. (jsCeil $ v "result_init")) (v "result_range_init" .->. "canHaveFractionalPart")
 
              -- ((!Nan(v) and !Inf(v)) => log2(v) == exp
-             , implies_ ((not_ $ isNan $ v "result_init") .&&. (not_ $ isInf $ v "result_init")) ((fpExp $ v "result_init") .==. (v "result_range_init" .->. "maxExponent"))
+             , implies_ ((not_ $ isNan $ v "result_init") .&&. (not_ $ isInf $ v "result_init")) ((fpExp $ v "result_init") .<=. ((v "result_range_init" .->. "maxExponent")) .&&. ((v "result_range_init" .->. "maxExponent") .<=. maxFiniteExponent))
 
              -- !hasInt32LBound => lower = jsMin
             , implies_ (not_ $ v "result_range_init" .->. "hasInt32LowerBound") (v "result_range_init" .->. "lower" .==. jsIntMin)
 
              -- !hasInt32HBound => upper = jsMax
-            , implies_ (not_ $ v "result_range_init" .->. "hasInt32UpperBound") (v "result_range_init" .->. "upper" .==. jsIntMin)
+            , implies_ (not_ $ v "result_range_init" .->. "hasInt32UpperBound") (v "result_range_init" .->. "upper" .==. jsIntMax)
 
              -- Special values or v < lower => !hasInt32LowerBound
              , implies_ ((isNan $ v "result_init") .||. (isInf $ v "result_init") .||. (v "result_init" .<. (cast (v "result_range_init" .->. "lower") Double))) (not_ $ v "result_range_init" .->. "hasInt32LowerBound")
@@ -303,10 +310,12 @@ floatInRange =
              , implies_ ((isNan $ v "result_init") .||. (isInf $ v "result_init") .||. (v "result_init" .>. (cast (v "result_range_init" .->. "upper") Double))) (not_ $ v "result_range_init" .->. "hasInt32UpperBound")
 
              -- hasInt32Lower => v >= lower
-             , implies_ (v "result_range_init" .->. "hasInt32LowerBound") (v "result_init" .=>. (cast (v "result_range_init" .->. "lower") Double))
+             , implies_ (v "result_range_init" .->. "hasInt32LowerBound") (((v "result_init" .=>. (cast (v "result_range_init" .->. "lower") Double)) .&&. ((v "result_range_init" .->. "lower") .=>. jsIntMin)))
 
              -- hasInt32Upper => v <= upper
-             , implies_ (v "result_range_init" .->. "hasInt32UpperBound") (v "result_init" .<=. (cast (v "result_range_init" .->. "upper") Double))
+             , implies_ (v "result_range_init" .->. "hasInt32UpperBound") (((v "result_init" .<=. (cast (v "result_range_init" .->. "upper") Double)) .&&. ((v "result_range_init" .->. "lower") .<=. jsIntMax)))
+
+             , assert_ $ (v "result_range_init" .->. "lower") .<=. (v "result_range_init" .->. "upper")
 
              , return_ $ v "result_init"
 
@@ -380,6 +389,7 @@ verifyLowBoundInvariant =
                -- ...but the int32 lower bound isnt intmax
              , assert_ $ not_ $ (v "result_range_bi" .->. "lower") .==. jsIntMin
              , expect_ isUnsat $ \r -> showInt32Result "Failed to verify low bound invariant" r
+             , pop_
              ]
   in Function "verifyLowBoundInvariant" Void args body
 
@@ -451,8 +461,8 @@ verifyExp =
              , ("result_exp", t Double)
              ]
       body = [ push_
-             , declare (t Unsigned16) "expyy"
-             , v "expyy" `assign` (fpExp $ v "result_exp")
+             , declare (t Double) "upper_big"
+             , v "upper_big" `assign` (cast (v "result_range_init" .->. "upper") Double)
              , assert_ $ (fpExp $ v "result_exp") .>. (v "result_range_exp" .->. "maxExponent")
              , expect_ isUnsat $ \r -> showExpResult "Failed to verify Exp" r
              , pop_
@@ -465,12 +475,25 @@ verifyFract =
              , ("result_fract", t Double)
              ]
       body = [ push_
+             , assert_ $ not_ $ isNan $ v "result_fract"
              , assert_ $ not_ $ v "result_fract" .==. (jsCeil $ v "result_fract")
              , assert_ $ not_ $ v "result_range_fract" .->. "canHaveFractionalPart"
              , expect_ isUnsat $ \r -> showFractResult "Failed to verify Fract" r
              , pop_
              ]
   in Function "verifyFract" Void args body
+
+verifyFpBound :: FunctionDef
+verifyFpBound =
+  let args = [ ("result_range_fpbound", c "range")
+             , ("result_fpbound", t Double)
+             ]
+      body = [ push_
+             , assert_ $ ((v "result_range_fpbound" .->. "lower") .>. (v "result_range_fpbound" .->. "upper"))
+             , expect_ isUnsat $ \r -> showInt32Result "Failed to verify fp bound" r
+             , pop_
+             ]
+  in Function "verifyFpBound" Void args body
 
 -- Copypasted
 
@@ -510,24 +533,38 @@ getExpList :: M.Map String Double -> [String]
 getExpList fls = catMaybes $ map (\(str, fl) ->
                        case str of
                          _ | "undef" `isInfixOf` str -> Nothing
-                         _ | "expyy" `isInfixOf` str -> sstr str fl
-                         _ | "abs_res" `isInfixOf` str -> sstr str fl
-                         _ | "abs_after" `isInfixOf` str -> sstr str fl
+                         _ | "copy_maxExponent" `isInfixOf` str -> sstr str fl
+                         -- _ | "eib_ret" `isInfixOf` str -> sstr str fl
+                         _ | "themax" `isInfixOf` str -> sstr str fl
+                         _ | "abs_lower" `isInfixOf` str -> sstr str fl
+                         _ | "abs_upper" `isInfixOf` str -> sstr str fl
+                         _ | "la_" `isInfixOf` str -> sstr str fl
+                         _ | "ua_" `isInfixOf` str -> sstr str fl
+                         _ | "upper_big" `isInfixOf` str -> sstr str fl
+                         _ | "start_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
+                         _ | "start_range_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
+                         -- _ | "start_range_canHaveFractionalPart" `isInfixOf` str -> sstr str fl
+                         _ | "start_range_lower" `isInfixOf` str -> sstr str fl
+                         _ | "start_range_upper" `isInfixOf` str -> sstr str fl
+                         -- _ | "result_range_lower" `isInfixOf` str -> sstr str fl
+                         -- _ | "result_range_upper" `isInfixOf` str -> sstr str fl
+                         -- _ | "abs_res" `isInfixOf` str -> sstr str fl
+                         -- _ | "abs_after" `isInfixOf` str -> sstr str fl
                          _ | "result_verif_1" `isInfixOf` str -> sstr str fl
-                         _ | "left_range_maxExponent" `isInfixOf` str -> sstr str fl
-                         _ | "right_range_maxExponent" `isInfixOf` str -> sstr str fl
-                         _ | "start_range_maxExponent" `isInfixOf` str -> sstr str fl
-                         _ | "result_range_maxExponent" `isInfixOf` str -> sstr str fl
-                         _ | "right_1" `isInfixOf` str -> sstr str fl
-                         _ | "left_1" `isInfixOf` str -> sstr str fl
-                         _ | "start_1" `isInfixOf` str -> sstr str fl
-                         _ | "result_1" `isInfixOf` str -> sstr str fl
+                         -- _ | "left_range_maxExponent" `isInfixOf` str -> sstr str fl
+                         -- _ | "right_range_maxExponent" `isInfixOf` str -> sstr str fl
+                         -- _ | "start_range_maxExponent" `isInfixOf` str -> sstr str fl
+                         -- _ | "result_range_maxExponent" `isInfixOf` str -> sstr str fl
+                         -- _ | "right_1" `isInfixOf` str -> sstr str fl
+                         -- _ | "left_1" `isInfixOf` str -> sstr str fl
+                         -- _ | "start_1" `isInfixOf` str -> sstr str fl
+                         -- _ | "result_1" `isInfixOf` str -> sstr str fl
                          _ -> Nothing
                        ) $ M.toList fls
   where
     sstr str fl = Just $ unwords [str, ":", if fl /= fl
                                             then "NaN"
-                                            else show fl --(round fl :: Integer)
+                                            else show (round fl :: Integer)
                                  ]
 
 showNanResult :: String -> SMTResult -> IO ()
@@ -538,12 +575,7 @@ getNanList fls = catMaybes $ map (\(str, fl) ->
                        case str of
                          _ | "undef" `isInfixOf` str -> Nothing
                          _ | "left_range_maxExponent" `isInfixOf` str -> sstr str fl
-                         _ | "result_nan" `isInfixOf` str -> sstr str fl
-                         _ | "abs_res" `isInfixOf` str -> sstr str fl
-                         _ | "abs_after" `isInfixOf` str -> sstr str fl
-                         _ | "isNan" `isInfixOf` str -> sstr str fl
-                         _ | "isNeg" `isInfixOf` str -> sstr str fl
-                         _ | "isInf" `isInfixOf` str -> sstr str fl
+                         _ | "copy_maxExponent" `isInfixOf` str -> sstr str fl
                          _ | "right_range_maxExponent" `isInfixOf` str -> sstr str fl
                          _ | "start_range_maxExponent" `isInfixOf` str -> sstr str fl
                          _ | "start_range_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
@@ -637,8 +669,8 @@ getFractList :: M.Map String Double -> [String]
 getFractList fls = catMaybes $ map (\(str, fl) ->
                        case str of
                          _ | "undef" `isInfixOf` str -> Nothing
-                         _ | "bobbert" `isInfixOf` str -> sstr str fl
-                         _ | "bobelle" `isInfixOf` str -> sstr str fl
+                         _ | "result_fract" `isInfixOf` str -> sstr str fl
+                         _ | "result_1" `isInfixOf` str -> sstr str fl
                          _ | "left_range_canHaveFractionalPart" `isInfixOf` str -> sstr str fl
                          _ | "right_range_canHaveFractionalPart" `isInfixOf` str -> sstr str fl
                          _ | "start_range_canHaveFractionalPart" `isInfixOf` str -> sstr str fl
