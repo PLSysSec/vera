@@ -367,11 +367,17 @@ fpCeil toRound = do
   rm <- rtp
   Z.mkFpRound rm toRound
 
-castBv :: MonadZ3 z3 => AST -> z3 AST
-castBv bv = do
+castSBv :: MonadZ3 z3 => AST -> z3 AST
+castSBv bv = do
   rm <- rtntte
   doubSort <- Z.mkDoubleSort
-  Z.mkBvToFp rm bv doubSort
+  Z.mkSBvToFp rm bv doubSort
+
+castUBv :: MonadZ3 z3 => AST -> z3 AST
+castUBv bv = do
+  rm <- rtntte
+  doubSort <- Z.mkDoubleSort
+  Z.mkUBvToFp rm bv doubSort
 
 castFp :: MonadZ3 z3 => AST -> Int -> z3 AST
 castFp fp sz = do

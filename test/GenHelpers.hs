@@ -17,8 +17,8 @@ import           Test.Tasty.HUnit
 import           Utils
 
 genHelpersTests :: BenchTest
-genHelpersTests = benchTestGroup "Helpers" [ optimizeTest
-                                           -- , fpExponent
+genHelpersTests = benchTestGroup "Helpers" [-- optimizeTest
+                                            fpExponent
                                            -- , fpNegative
                                            -- , ranges
                                            -- , lowerInit
@@ -81,12 +81,29 @@ fpExponent = benchTestCase "fp exponent" $ do
                , v "expy" `assign` (fpExp $ d Double 2.0)
                , v "expy" `assign` (fpExp $ d Double 4.0)
                , v "expy" `assign` (fpExp $ d Double (-4.0))
+               , v "expy" `assign` (fpExp $ d Double 2147483647)
+               , v "expy" `assign` (fpExp $ d Double 2147483648)
+               , v "expy" `assign` (fpExp $ d Double 2147483647.5)
+               , v "expy" `assign` (fpExp $ d Double 2149580800)
+               , v "expy" `assign` (fpExp $ (cast (n Signed 2149580800) Double))
+               , v "expy" `assign` (fpExp $ cast (n Signed (-3604463)) Double)
+               , declare (t Bool) "e_neg"
+               , v "e_neg" `assign` (isNeg $ cast (n Signed (-3604463)) Double)
+               -- , v "expy" `assign` (fpExp $ cast (n Signed 4291362833) Double)
+               -- , v "expy" `assign` (fpExp $ d Double 4291362833)
                ]
     runSolverOnSMT
-  vtest r $ Map.fromList [ ("expy_1", 0)
-                         , ("expy_2", 1)
-                         , ("expy_3", 2)
-                         , ("expy_4", 2)
+  vtest r $ Map.fromList [--  ("expy_1", 0)
+                         -- , ("expy_2", 1)
+                         -- , ("expy_3", 2)
+                         -- , ("expy_4", 2)
+                         -- , ("expy_5", 31)
+                         -- , ("expy_6", 31)
+                         -- , ("expy_7", 31)
+                         -- , ("expy_8", 31)
+                         -- , ("expy_9", 31)
+                          ("e_neg_1", 1)
+--                         , ("expy_10", 31)
                          ]
 
 fpNegative :: BenchTest

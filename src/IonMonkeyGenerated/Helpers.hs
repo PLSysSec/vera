@@ -199,6 +199,7 @@ exponentImpliedByInt32Bounds =
              , v "abs_upper" `assign` (abs_ $ v "ua")
              , v "themax" `assign` (cast (max_ (cast (v "abs_lower") Unsigned) (cast (v "abs_upper")Unsigned)) Signed)
              , v "eib_ret" `assign` (fpExp $ cast (v "themax") Double)
+             , if_ (v "eib_ret" .>. n Unsigned16 31) [return_ $ n Unsigned16 31] []
              , return_ $ v "eib_ret"
              ]
 
