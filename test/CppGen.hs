@@ -25,7 +25,7 @@ cppGenTests = benchTestGroup "CPP Gen tests"
               [ --cppGenTests
                 cppRangeCompileTest
               , cppBaseCompileTest
-              , cppNotCompileTest
+              --cppNotCompileTest
               --, cppNotTest
               --, cppAddTest
               --, cppSubTest
