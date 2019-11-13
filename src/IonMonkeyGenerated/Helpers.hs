@@ -22,7 +22,7 @@ range3 =
                                                    , v "tmp2"
                                                    ]
              , v "rv" .->. "canBeNegativeZero" `assign` (v "nz_flag")
---             , return_ $ call "optimize" [v "rv"]
+             -- , return_ $ call "optimize" [v "rv"]
              , return_ $ v "rv"
              ]
   in Function "Range3" (c "range") args body
@@ -49,8 +49,8 @@ range4 =
              , v "rv" .->. "canHaveFractionalPart" `assign` (v "fract_flag")
              , v "rv" .->. "canBeNegativeZero" `assign` (v "nz_flag")
              , v "rv" .->. "maxExponent" `assign` (v "exp_set")
-             , return_ $ v "rv"
-             -- , return_ $ call "optimize" [v "rv"]
+             -- , return_ $ v "rv"
+             , return_ $ call "optimize" [v "rv"]
              ]
   in Function "Range4" (c "range") args body
 
@@ -80,8 +80,8 @@ range6 =
              , v "rv" .->. "canHaveFractionalPart" `assign` (v "fract_flag")
              , v "rv" .->. "canBeNegativeZero" `assign` (v "nz_flag")
              , v "rv" .->. "maxExponent" `assign` (v "exp_set")
-             , return_ $ v "rv"
-             -- , return_ $ call "optimize" [v "rv"]
+             -- , return_ $ v "rv"
+             , return_ $ call "optimize" [v "rv"]
              ]
   in Function "Range6" (c "range") args body
 
@@ -187,7 +187,19 @@ canHaveSignBitSet =
 exponentImpliedByInt32Bounds :: FunctionDef
 exponentImpliedByInt32Bounds =
   let args = [ ("eib_range", c "range") ]
-      body = [ return_ $ fpExp $ cast (max_ (abs_ $ v "eib_range" .->. "lower") (abs_ $ v "eib_range" .->. "upper")) Double
+      body = [ declare (t Unsigned16) "eib_ret"
+             , declare (t Signed) "themax"
+             , declare (t Signed) "abs_lower"
+             , declare (t Signed) "abs_upper"
+             , declare (t Signed) "ua"
+             , declare (t Signed) "la"
+             , v "la" `assign` (v "eib_range" .->. "lower")
+             , v "ua" `assign` (v "eib_range" .->. "upper")
+             , v "abs_lower" `assign` (abs_ $ v "la")
+             , v "abs_upper" `assign` (abs_ $ v "ua")
+             , v "themax" `assign` (cast (max_ (cast (v "abs_lower") Unsigned) (cast (v "abs_upper")Unsigned)) Signed)
+             , v "eib_ret" `assign` (fpExp $ cast (v "themax") Double)
+             , return_ $ v "eib_ret"
              ]
 
   in Function "exponentImpliedByInt32Bounds" (t Unsigned16) args body

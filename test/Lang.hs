@@ -3,23 +3,24 @@ import           BenchUtils
 import qualified Data.Map        as Map
 import           DSL.DSL         (isUnsat)
 import           DSL.Typed       (Type (..))
-import           Generate.Lang as L
+import           Generate.Lang   as L
 import           Generate.SMTAST
 import           Generate.SMTGen
 import           Generate.State
 import           Utils
 
 langTests :: BenchTest
-langTests = benchTestGroup "Lang" [ declTest
-                                  , classTest
-                                  , ifTest
-                                  , callTest
-                                  , returnTest
-                                  , classArgTest
-                                  , classMethodTest
-                                  , returnClassTest
-                                  , assignClassTest
-                                  , voidCallTest
+langTests = benchTestGroup "Lang" [ -- declTest
+                                  -- , classTest
+                                  -- , ifTest
+                                    ifTestTwo
+                                  -- , callTest
+                                  -- , returnTest
+                                  -- , classArgTest
+                                  -- , classMethodTest
+                                  -- , returnClassTest
+                                  -- , assignClassTest
+                                  -- , voidCallTest
                                   ]
 
 
@@ -97,6 +98,28 @@ ifTest = benchTestCase "if" $ do
                          , ("x_4", 20)
                          , ("x_5", 20)
                          , ("x_6", 0)
+                         ]
+
+ifTestTwo :: BenchTest
+ifTestTwo = benchTestCase "if2" $ do
+  r <- evalCodegen Nothing $ do
+
+    let decls = [ declare (t Signed) "tester"
+                , v "tester" `assign` n Signed 15
+                , if_ (n Bool 0)
+                  [v "tester" `assign` n Signed 5]
+                  [if_ (n Bool 0)
+                   [v "tester" `assign` n Signed 10] []
+                  ]
+                , declare (t Bool) "cmper"
+                , v "cmper" `assign` (v "tester" .==. n Signed 15)
+                ]
+    genBodySMT decls
+    runSolverOnSMT
+  vtest r $ Map.fromList [ ("tester_1", 15)
+                         , ("tester_2", 15)
+                         , ("tester_3", 15)
+                         , ("cmper_1", 1)
                          ]
 
 callTest :: BenchTest

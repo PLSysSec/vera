@@ -41,7 +41,7 @@ add =
              , v "h" `assign` ((cast (v "lhs" .->. "upper") Signed64) .+. (cast (v "rhs" .->. "upper") Signed64))
              , if_ ((not_ $ v "lhs" .->. "hasInt32UpperBound") .||. (not_ $ v "rhs" .->. "hasInt32UpperBound")) [v "h" `assign` noInt32UpperBound] []
              , v "e" `assign` (max_ (v "lhs" .->. "maxExponent") (v "rhs" .->. "maxExponent"))
-             , if_ (v "e" .<=. maxFiniteExponent) [v "e" .+=. n Unsigned16 1] []
+             , if_ (v "e" .<=. maxFiniteExponent) [v "e" `assign` ((n Unsigned16 1) .+. (v "e"))] []
              , if_ ((call "canBeInfiniteOrNan" [v "lhs"]) .&&. (call "canBeInfiniteOrNan" [v "rhs"])) [v "e" `assign` includesInfinityAndNan] []
              , return_ $ call "Range4" [ v "l"
                                        , v "h"
@@ -66,7 +66,7 @@ sub =
              , v "h" `assign` ((cast (v "lhs" .->. "upper") Signed64) .-. (cast (v "rhs" .->. "upper") Signed64))
              , if_ ((not_ $ v "lhs" .->. "hasInt32UpperBound") .||. (not_ $ v "rhs" .->. "hasInt32UpperBound")) [v "h" `assign` noInt32UpperBound] []
              , v "e" `assign` (max_ (v "lhs" .->. "maxExponent") (v "rhs" .->. "maxExponent"))
-             , if_ (v "e" .<=. maxFiniteExponent) [v "e" .+=. n Unsigned16 1] []
+             , if_ (v "e" .<=. maxFiniteExponent) [v "e" `assign` ((n Unsigned16 1) .+. (v "e"))] []
              , if_ ((call "canBeInfiniteOrNan" [v "lhs"]) .&&. (call "canBeInfiniteOrNan" [v "rhs"])) [v "e" `assign` includesInfinityAndNan] []
              , return_ $ call "Range4" [ v "l"
                                        , v "h"
@@ -411,7 +411,7 @@ min =
              , ("rhs", c "range")
              ]
       body = [ return_ $ call "Range6" [ cast (min_ (v "lhs" .->. "lower") (v "rhs" .->. "lower")) Signed64
-                                       , (v "lhs" .->. "hasInt32LowerBound") .&&. (v "rhs" .->. "hasInt32UpperBound")
+                                       , (v "lhs" .->. "hasInt32LowerBound") .&&. (v "rhs" .->. "hasInt32LowerBound")
                                        , cast (min_ (v "lhs" .->. "upper") (v "rhs" .->. "upper")) Signed64
                                        , (v "lhs" .->. "hasInt32UpperBound") .||. (v "rhs" .->. "hasInt32UpperBound")
                                        , (v "lhs" .->. "canHaveFractionalPart") .||. (v "rhs" .->. "canHaveFractionalPart")
@@ -428,7 +428,7 @@ max =
              , ("rhs", c "range")
              ]
       body = [ return_ $ call "Range6" [ cast (max_ (v "lhs" .->. "lower") (v "rhs" .->. "lower")) Signed64
-                                       , (v "lhs" .->. "hasInt32LowerBound") .||. (v "rhs" .->. "hasInt32UpperBound")
+                                       , (v "lhs" .->. "hasInt32LowerBound") .||. (v "rhs" .->. "hasInt32LowerBound")
                                        , cast (max_ (v "lhs" .->. "upper") (v "rhs" .->. "upper")) Signed64
                                        , (v "lhs" .->. "hasInt32UpperBound") .&&. (v "rhs" .->. "hasInt32UpperBound")
                                        , (v "lhs" .->. "canHaveFractionalPart") .||. (v "rhs" .->. "canHaveFractionalPart")
@@ -453,10 +453,14 @@ floor =
                                                         ]
                                     )
                ] []
+             , declare (t Unsigned16) "expyy"
+             , v "expyy" `assign` (v "copy" .->. "maxExponent")
              , if_ (call "hasInt32Bounds" [v "copy"])
-               [(v "copy" .->. "maxExponent") `assign` (call "exponentImpliedByInt32Bounds" [v "copy"])]
+               [(v "copy" .->. "maxExponent") `assign` (call "exponentImpliedByInt32Bounds" [v "copy"])
+               , v "expyy" `assign` (v "copy" .->. "maxExponent")
+               ]
                [if_ (v "copy" .->. "maxExponent" .<. maxFiniteExponent)
-                 [v "copy" .->. "maxExponent" .+=. n Unsigned16 1] []
+                 [v "copy" .->. "maxExponent" `assign` ((v "copy" .->. "maxExponent") .+. (n Unsigned16 1))] []
                ]
              , v "copy" .->. "canHaveFractionalPart" `assign` excludesFractionalParts
              , return_ $ v "copy"
@@ -473,7 +477,7 @@ ceil =
              , if_ (call "hasInt32Bounds" [v "copy"])
                [(v "copy" .->. "maxExponent") `assign` (call "exponentImpliedByInt32Bounds" [v "copy"])]
                [if_ (v "copy" .->. "maxExponent" .<. maxFiniteExponent)
-                 [v "copy" .->. "maxExponent" .+=. n Unsigned16 1] []
+                 [v "copy" .->. "maxExponent" `assign` ((v "copy" .->. "maxExponent") .+. (n Unsigned16 1))] []
                ]
              , v "copy" .->. "canHaveFractionalPart" `assign` excludesFractionalParts
              , return_ $ v "copy"

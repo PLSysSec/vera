@@ -1,5 +1,6 @@
 module Generate.SMTGen where
 import           Control.Monad.State.Strict
+import           Data.List                  (isInfixOf)
 import qualified Data.Map                   as M
 import qualified DSL.DSL                    as D
 import qualified DSL.Typed                  as T
