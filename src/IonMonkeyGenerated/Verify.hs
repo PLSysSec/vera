@@ -326,7 +326,105 @@ floatInRange =
              ]
   in Function "floatInRange" (t Double) args body
 
+floatIsInRange :: FunctionDef
+floatIsInRange =
+  let args = [ ("test_range", c "range")
+             , ("test_float", t Double)
+             ]
+      body = [ declare (t Bool) "inRange"
+             , declare (t Bool) "infHolds"
+
+             , v "infHolds" `assign` ((isInf $ v "result_init") .||. (not_ $ ((v "result_range_init" .->. "maxExponent") .==. includesInfinity)))
+
+             , declare (t Bool) "nanHolds"
+             , v "nanHolds" `assign` ((isNan $ v "result_init") .||. (not_ $ ((v "result_range_init" .->. "maxExponent") .==. includesInfinityAndNan)))
+
+             , declare (t Bool) "negzHolds"
+             , v "negzHolds" `assign` ((isNegZero $ v "result_init") .||. (not_ $ (v "result_range_init" .->. "canBeNegativeZero")))
+
+             , declare (t Bool) "fractHolds"
+             , v "fractHolds" `assign` ((not_ $ v "result_init" .==. (jsCeil $ v "result_init")) .||. (not_ $ (v "result_range_init" .->. "canHaveFractionalPart")))
+
+             , declare (t Bool) "expHolds"
+             , v "expHolds" `assign` (((not_ $ isNan $ v "result_init") .&&. (not_ $ isInf $ v "result_init")) .||. (not_ $ ((fpExp $ v "result_init") .<=. ((v "result_range_init" .->. "maxExponent")) .&&. (((fpExp $ v "result_init") .+. n Signed16 1) .>. (v "result_range_init" .->. "maxExponent")))))
+
+            --  -- BOUNDS ASSERTIONS: HARDEST
+
+             , declare (t Bool) "lowHolds"
+            , v "lowHolds" `assign` ((not_ $ v "result_range_init" .->. "hasInt32LowerBound") .||. (not_ (v "result_range_init" .->. "lower" .==. jsIntMin)))
+
+             , declare (t Bool) "highHolds"
+            , v "highHolds" `assign` ((not_ $ v "result_range_init" .->. "hasInt32UpperBound") .||. (not_ (v "result_range_init" .->. "upper" .==. jsIntMax)))
+
+              -- lower and upper are both within int min and int max
+              -- lower is less than upper
+              -- JUST KEEP AROUND ASSERTIONS ON WELL FORMED RANGE
+             , assert_ $ (v "result_range_init" .->. "lower" .=>. jsIntMin) .&&. (v "result_range_init" .->. "lower" .<=. jsIntMax)
+             , assert_ $ (v "result_range_init" .->. "upper" .=>. jsIntMin) .&&. (v "result_range_init" .->. "upper" .<=. jsIntMax)
+             , assert_ $ (v "result_range_init" .->. "lower") .<=. (v "result_range_init" .->. "upper")
+
+             , declare (t Bool) "hasLowHolds"
+             , v "hasLowHolds" `assign` (((isNan $ v "result_init") .||. (isInf $ v "result_init") .||. (v "result_init" .<. (cast (v "result_range_init" .->. "lower") Double))) .||. (v "result_range_init" .->. "hasInt32LowerBound"))
+
+             , declare (t Bool) "hasHighHolds"
+             , v "hasHighHolds" `assign` (((isNan $ v "result_init") .||. (isInf $ v "result_init") .||. (v "result_init" .>. (cast (v "result_range_init" .->. "upper") Double))) .||. (v "result_range_init" .->. "hasInt32UpperBound"))
+
+             , return_ $ v "hasHighHolds" .&&. v "hasLowHolds" .&&. v "highHolds" .&&. v "lowHolds" .&&. v "expHolds" .&&. v "fractHolds" .&&. v "negzHolds" .&&. v "nanHolds" .&&. v "infHolds"
+
+             ]
+  in Function "floatIsInRange" (t Bool) args body
+
 -- Verification
+
+-- Union and intersection
+
+verifyUnion :: FunctionDef
+verifyUnion =
+  let args = [ ("right_range_union", c "range")
+             , ("left_range_union", c "range")
+             , ("result_range_union", c "range")
+             ]
+      body = [ declare (t Double) "right_elem"
+             , declare (t Bool) "right_in_right"
+             , v "right_in_right" `assign` call "floatIsInRange" [ v "right_range_union"
+                                                                 , v "right_elem"]
+             , declare (t Bool) "right_in_result"
+             , v "right_in_result" `assign` call "floatIsInRange" [ v "result_range_union"
+                                                                  , v "right_elem"
+                                                                  ]
+             , push_
+             , assert_ $ v "right_in_right" .&&. (not_ $ v "right_in_result")
+             , expect_ isUnsat $ \r -> showInt32Result "Failed to verify union 1" r
+             , pop_
+             , push_
+             , assert_ $ v "right_in_result" .&&. (not_ $ v "right_in_right")
+             , expect_ isUnsat $ \r -> showInt32Result "Failed to verify union 2" r
+             , pop_
+
+             , declare (t Double) "left_elem"
+             , declare (t Bool) "left_in_left"
+             , v "left_in_left" `assign` call "floatIsInRange" [ v "left_range_union"
+                                                               , v "left_elem"]
+             , declare (t Bool) "left_in_result"
+             , v "left_in_result" `assign` call "floatIsInRange" [ v "result_range_union"
+                                                                 , v "left_elem"
+                                                                 ]
+
+             , push_
+             , assert_ $ v "left_in_left" .&&. (not_ $ v "left_in_result")
+             , expect_ isUnsat $ \r -> showInt32Result "Failed to verify union 3" r
+             , pop_
+             , push_
+             , assert_ $ v "left_in_result" .&&. (not_ $ v "left_in_left")
+             , expect_ isUnsat $ \r -> showInt32Result "Failed to verify union 4" r
+             , pop_
+
+             , push_
+             , pop_
+             ]
+  in Function "verifyUnion" Void args body
+
+-- Normal
 
 verifySaneRange :: FunctionDef
 verifySaneRange =
