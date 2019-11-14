@@ -130,6 +130,10 @@ genExprSMT expr =
       result <- genExprSMT var
       let resultUndef = T.vundef result
       liftVerif $ T.newDefinedNode resultUndef T.Bool
+    TestImplies e1 e2 -> do
+      e1SMT <- genExprSMT e1 >>= liftVerif . T.cppNot
+      e2SMT <- genExprSMT e2
+      liftVerif $ T.cppOr e1SMT e2SMT
     -- JavaScript
     JSAnd left right  -> genBinOpSMT left right T.jsAnd
     JSAdd left right  -> genBinOpSMT left right T.jsAdd
@@ -189,6 +193,12 @@ genStmtSMT stmt =
     Push -> D.push
     Pop -> D.pop
     Assert e -> genExprSMT e >>= liftVerif . T.vassert
+    Iff e1 e2 -> do
+      e1SMT <- genExprSMT e1
+      e2SMT <- genExprSMT e2
+      e1ANDe2 <- liftVerif $ T.cppAnd e1SMT e2SMT
+      _NEITHERe1NORe2 <- liftVerif $ T.cppOr e1SMT e2SMT >>= T.cppNot
+      liftVerif $ T.cppOr e1ANDe2 _NEITHERe1NORe2 >>= T.vassert
     Implies e1 e2 -> do
       e1SMT <- genExprSMT e1 >>= liftVerif . T.cppNot
       e2SMT <- genExprSMT e2

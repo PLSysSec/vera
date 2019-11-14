@@ -105,6 +105,7 @@ data SExpr = VarExpr { exprVar :: SVar }
            | JSDiv SExpr SExpr
            | JSRem SExpr SExpr
            | Undef SExpr
+           | TestImplies SExpr SExpr
            deriving (Eq, Ord, Show)
 
 isCallExpr :: SExpr -> Bool
@@ -126,6 +127,7 @@ data SStmt = Decl SVar
            | Return SExpr
            | Assert SExpr
            | Implies SExpr SExpr
+           | Iff SExpr SExpr
            | Expect (SMTResult -> Bool) (SMTResult -> IO ())
            | Push
            | Pop

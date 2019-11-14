@@ -292,8 +292,13 @@ floatInRange =
              -- v != round(v)  => canHaveFractionalPart
              , implies_ (not_ $ v "result_init" .==. (jsCeil $ v "result_init")) (v "result_range_init" .->. "canHaveFractionalPart")
 
-             -- ((!Nan(v) and !Inf(v)) => log2(v) == exp
-             , implies_ ((not_ $ isNan $ v "result_init") .&&. (not_ $ isInf $ v "result_init")) ((fpExp $ v "result_init") .<=. ((v "result_range_init" .->. "maxExponent")) .&&. (((fpExp $ v "result_init") .+. n Signed16 1) .>. (v "result_range_init" .->. "maxExponent")))
+             -- ((!Nan(v) and !Inf(v)) => log2(v) <= exp,
+             , declare (t Bool) "goodExpVal"
+             , declare (t Bool) "goodExpBound"
+             , v "goodExpVal" `assign` ((fpExp $ v "result_init") .<=. (v "result_range_init" .->. "maxExponent"))
+             , v "goodExpBound" `assign` (( (fpExp $ cast (max_ (abs_ $ v "result_range_init" .->. "lower") (abs_ $ v "result_range_init" .->. "upper")) Double) .+. n Signed16 1) .>. (v "result_range_init" .->. "maxExponent"))
+             , implies_ ((not_ $ isNan $ v "result_init") .&&. (not_ $ isInf $ v "result_init")) (v "goodExpVal" .&&. v "goodExpBound")
+                   --((fpExp $ v "result_init") .<=. ((v "result_range_init" .->. "maxExponent")) .&&. (((fpExp $ v "result_init") .+. n Signed16 1) .>. (v "result_range_init" .->. "maxExponent")))
 
              -- BOUNDS ASSERTIONS: HARDEST
 
@@ -328,8 +333,8 @@ floatInRange =
 
 floatIsInRange :: FunctionDef
 floatIsInRange =
-  let args = [ ("test_range", c "range")
-             , ("test_float", t Double)
+  let args = [ ("result_range_init", c "range")
+             , ("result_init", t Double)
              ]
       body = [ declare (t Bool) "inRange"
              , declare (t Bool) "infHolds"
@@ -337,27 +342,28 @@ floatIsInRange =
              , if_ (v "result_range_init" .->. "isEmpty")
                [return_ $ n Bool 0] []
 
-             , v "infHolds" `assign` ((isInf $ v "result_init") .||. (not_ $ ((v "result_range_init" .->. "maxExponent") .==. includesInfinity)))
+             -- , declare (t Bool) "infHolds"
+             -- , v "infHolds" `assign` (testImplies (isInf $ v "result_init") ((v "result_range_init" .->. "maxExponent") .==. includesInfinity))
 
-             , declare (t Bool) "nanHolds"
-             , v "nanHolds" `assign` ((isNan $ v "result_init") .||. (not_ $ ((v "result_range_init" .->. "maxExponent") .==. includesInfinityAndNan)))
+             -- , declare (t Bool) "nanHolds"
+             -- , v "nanHolds" `assign` (testImplies (isNan $ v "result_init") ((v "result_range_init" .->. "maxExponent") .==. includesInfinityAndNan))
 
-             , declare (t Bool) "negzHolds"
-             , v "negzHolds" `assign` ((isNegZero $ v "result_init") .||. (not_ $ (v "result_range_init" .->. "canBeNegativeZero")))
+             -- , declare (t Bool) "negzHolds"
+             -- , v "negzHolds" `assign` (testImplies (isNegZero $ v "result_init") (v "result_range_init" .->. "canBeNegativeZero"))
 
-             , declare (t Bool) "fractHolds"
-             , v "fractHolds" `assign` ((not_ $ v "result_init" .==. (jsCeil $ v "result_init")) .||. (not_ $ (v "result_range_init" .->. "canHaveFractionalPart")))
+             -- , declare (t Bool) "fractHolds"
+             -- , v "fractHolds" `assign` (testImplies (not_ $ v "result_init" .==. (jsCeil $ v "result_init")) (v "result_range_init" .->. "canHaveFractionalPart"))
 
-             , declare (t Bool) "expHolds"
-             , v "expHolds" `assign` (((not_ $ isNan $ v "result_init") .&&. (not_ $ isInf $ v "result_init")) .||. (not_ $ ((fpExp $ v "result_init") .<=. ((v "result_range_init" .->. "maxExponent")) .&&. (((fpExp $ v "result_init") .+. n Signed16 1) .>. (v "result_range_init" .->. "maxExponent")))))
+             -- , declare (t Bool) "expHolds"
+             -- , v "expHolds" `assign` (testImplies ((not_ $ isNan $ v "result_init") .&&. (not_ $ isInf $ v "result_init")) ((fpExp $ v "result_init") .<=. ((v "result_range_init" .->. "maxExponent")) .&&. (((fpExp $ (cast (v "result_range_init" .->. "upper") Double) .+. n Signed16 1) .>. (v "result_range_init" .->. "maxExponent")))))
 
             --  -- BOUNDS ASSERTIONS: HARDEST
 
              , declare (t Bool) "lowHolds"
-            , v "lowHolds" `assign` ((not_ $ v "result_range_init" .->. "hasInt32LowerBound") .||. (not_ (v "result_range_init" .->. "lower" .==. jsIntMin)))
+            , v "lowHolds" `assign` (testImplies (not_ $ v "result_range_init" .->. "hasInt32LowerBound") (v "result_range_init" .->. "lower" .==. jsIntMin))
 
              , declare (t Bool) "highHolds"
-            , v "highHolds" `assign` ((not_ $ v "result_range_init" .->. "hasInt32UpperBound") .||. (not_ (v "result_range_init" .->. "upper" .==. jsIntMax)))
+            , v "highHolds" `assign` (testImplies (not_ $ v "result_range_init" .->. "hasInt32UpperBound") (v "result_range_init" .->. "upper" .==. jsIntMax))
 
               -- lower and upper are both within int min and int max
               -- lower is less than upper
@@ -367,12 +373,12 @@ floatIsInRange =
              , assert_ $ (v "result_range_init" .->. "lower") .<=. (v "result_range_init" .->. "upper")
 
              , declare (t Bool) "hasLowHolds"
-             , v "hasLowHolds" `assign` (((isNan $ v "result_init") .||. (isInf $ v "result_init") .||. (v "result_init" .<. (cast (v "result_range_init" .->. "lower") Double))) .||. (v "result_range_init" .->. "hasInt32LowerBound"))
+             , v "hasLowHolds" `assign` (testImplies ((isNan $ v "result_init") .||. (isInf $ v "result_init") .||. (v "result_init" .<. (cast (v "result_range_init" .->. "lower") Double))) (not_ $ v "result_range_init" .->. "hasInt32LowerBound"))
 
              , declare (t Bool) "hasHighHolds"
-             , v "hasHighHolds" `assign` (((isNan $ v "result_init") .||. (isInf $ v "result_init") .||. (v "result_init" .>. (cast (v "result_range_init" .->. "upper") Double))) .||. (v "result_range_init" .->. "hasInt32UpperBound"))
+             , v "hasHighHolds" `assign` (testImplies ((isNan $ v "result_init") .||. (isInf $ v "result_init") .||. (v "result_init" .>. (cast (v "result_range_init" .->. "upper") Double))) (not_ $ v "result_range_init" .->. "hasInt32UpperBound"))
 
-             , return_ $ v "hasHighHolds" .&&. v "hasLowHolds" .&&. v "highHolds" .&&. v "lowHolds" .&&. v "expHolds" .&&. v "fractHolds" .&&. v "negzHolds" .&&. v "nanHolds" .&&. v "infHolds"
+             , return_ $ v "hasHighHolds" .&&. v "hasLowHolds" .&&. v "highHolds" .&&. v "lowHolds" .&&. v "expHolds" -- .&&. v "fractHolds" .&&. v "negzHolds" .&&. v "nanHolds" .&&. v "infHolds"
 
              ]
   in Function "floatIsInRange" (t Bool) args body

@@ -18,7 +18,8 @@ import           Utils
 
 genHelpersTests :: BenchTest
 genHelpersTests = benchTestGroup "Helpers" [-- optimizeTest
-                                            fpExponent
+                                            floatInRangeTest
+                                           -- , fpExponent
                                            -- , fpNegative
                                            -- , ranges
                                            -- , lowerInit
@@ -26,6 +27,34 @@ genHelpersTests = benchTestGroup "Helpers" [-- optimizeTest
                                            -- , onesTest
                                            -- , zerosTest
                                            ]
+
+floatInRangeTest :: BenchTest
+floatInRangeTest = benchTestCase "float in range" $ do
+  r <- evalCodegen Nothing $ do
+    class_ range
+    define floatIsInRange
+    genBodySMT [ declare (c "range") "testRange"
+               , declare (t Double) "testNum"
+               , declare (t Bool) "inRange"
+               , v "testRange" .->. "maxExponent" `assign` (n Unsigned16 3)
+               , v "testRange" .->. "canHaveFractionalPart" `assign` (n Bool 0)
+               , v "testRange" .->. "canBeNegativeZero" `assign` (n Bool 0)
+               , v "testRange" .->. "lower" `assign` (n Signed 1)
+               , v "testRange" .->. "hasInt32LowerBound" `assign` (n Bool 1)
+               , v "testRange" .->. "upper" `assign` (n Signed 5)
+               , v "testRange" .->. "hasInt32UpperBound" `assign` (n Bool 1)
+               , v "testNum" `assign` d Double 4
+               , declare (t Unsigned16) "expy"
+               , v "expy" `assign` (fpExp $ v "testNum")
+               , v "inRange" `assign` call "floatIsInRange" [ v "testRange"
+                                                            , v "testNum"
+                                                            ]
+               ]
+    runSolverOnSMT
+  vtest r $ Map.fromList [ --("inRange_1", 1)
+                           ("expy_1", 2)
+                         ]
+
 
 optimizeTest :: BenchTest
 optimizeTest = benchTestCase "optimize" $ do

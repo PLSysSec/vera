@@ -303,6 +303,9 @@ method ve' funName args' = do
   let fullFunName = (varClass $ exprVar ve) ++ "_" ++ funName
   return $ Call fullFunName (ve:args)
 
+testImplies :: Codegen SExpr -> Codegen SExpr -> Codegen SExpr
+testImplies left right = binOp left right TestImplies
+
 --
 -- Statements
 --
@@ -357,6 +360,14 @@ return_ expr' = do
 --
 -- SMT directives
 --
+
+iff :: Codegen SExpr
+    -> Codegen SExpr
+    -> Codegen SStmt
+iff expr1' expr2' = do
+  expr1 <- expr1'
+  expr2 <- expr2'
+  return $ Iff expr1 expr2
 
 implies_ :: Codegen SExpr
          -> Codegen SExpr
