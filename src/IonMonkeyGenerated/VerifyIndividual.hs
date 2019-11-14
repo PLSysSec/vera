@@ -17,8 +17,14 @@ import           IonMonkeyGenerated.Operations
 import           IonMonkeyGenerated.Verify
 import           Prelude
 
-data TestFunction = Binary { testName :: String, binaryJSOp :: (Codegen SExpr -> Codegen SExpr -> Codegen SExpr) }
-                  | Unary { testName :: String, unaryJSOp :: (Codegen SExpr -> Codegen SExpr) }
+data TestFunction = Binary { testName :: String
+                           , binaryCppOp :: FunctionDef
+                           , binaryJSOp :: (Codegen SExpr -> Codegen SExpr -> Codegen SExpr)
+                           }
+                  | Unary { testName   :: String
+                          , unaryCppOp :: FunctionDef
+                          , unaryJSOp  :: (Codegen SExpr -> Codegen SExpr)
+                          }
 
 isBinary :: TestFunction -> Bool
 isBinary Binary{} = True
@@ -61,12 +67,12 @@ testNegZ fn = do
 testNan :: TestFunction -> Codegen ()
 testNan fn = do
   setupAllFloat fn
-  genBodySMT [vcall "verifyNegNan" [v "result_range", v "result"]]
+  genBodySMT [vcall "verifyNan" [v "result_range", v "result"]]
 
 testInf :: TestFunction -> Codegen ()
 testInf fn = do
   setupAllFloat fn
-  genBodySMT [vcall "verifyInfNan" [v "result_range", v "result"]]
+  genBodySMT [vcall "verifyInf" [v "result_range", v "result"]]
 
 testFract :: TestFunction -> Codegen ()
 testFract fn = do
@@ -82,23 +88,25 @@ testExp fn = do
 
 setupAlli32 :: TestFunction -> Codegen ()
 setupAlli32 fn = do
+  define (binaryCppOp fn)
   if isBinary fn
-  then setupi32 (testName fn) (binaryJSOp fn)
-  else setupUnaryi32 (testName fn) (unaryJSOp fn)
+  then setupi32 (binaryCppOp fn) (testName fn) (binaryJSOp fn)
+  else setupUnaryi32 (unaryCppOp fn) (testName fn) (unaryJSOp fn)
 
 setupAllFloat :: TestFunction -> Codegen ()
 setupAllFloat fn = do
   if isBinary fn
-  then setupFloat (testName fn) (binaryJSOp fn)
-  else setupUnaryFloat (testName fn) (unaryJSOp fn)
+  then setupFloat (binaryCppOp fn) (testName fn) (binaryJSOp fn)
+  else setupUnaryFloat (unaryCppOp fn) (testName fn) (unaryJSOp fn)
 
 -- Individual setup functions
 
-setupUnaryi32 :: String
+setupUnaryi32 :: FunctionDef
+              -> String
               -> (Codegen SExpr -> Codegen SExpr)
               -> Codegen ()
-setupUnaryi32 fnName fn = do
-  defineAll
+setupUnaryi32 op fnName fn = do
+  defineAll op
   let verif = [ declare (c "range") "start_range"
               , declare (t Signed) "start"
               , declare (c "range") "result_range"
@@ -113,11 +121,12 @@ setupUnaryi32 fnName fn = do
   -- Once we generate the SMT, we can verify each condition
   genBodySMT verif
 
-setupUnaryFloat :: String
-                 -> (Codegen SExpr -> Codegen SExpr)
-                 -> Codegen ()
-setupUnaryFloat fnName fn = do
-  defineAll
+setupUnaryFloat :: FunctionDef
+                -> String
+                -> (Codegen SExpr -> Codegen SExpr)
+                -> Codegen ()
+setupUnaryFloat op fnName fn = do
+  defineAll op
   let verif = [ declare (c "range") "start_range"
               , declare (t Double) "start"
               , declare (c "range") "result_range"
@@ -130,11 +139,12 @@ setupUnaryFloat fnName fn = do
               ]
   genBodySMT verif
 
-setupConstanti32 :: String
+setupConstanti32 :: FunctionDef
+                 -> String
                  -> (Codegen SExpr -> Codegen SExpr -> Codegen SExpr)
                  -> Codegen ()
-setupConstanti32 fnName fn = do
-  defineAll
+setupConstanti32 op fnName fn = do
+  defineAll op
   let verif = [ declare (c "range") "left_range"
               , declare (t Signed) "left"
               , declare (t Signed) "right"
@@ -149,11 +159,12 @@ setupConstanti32 fnName fn = do
               ]
   genBodySMT verif
 
-setupi32 :: String
+setupi32 :: FunctionDef
+         -> String
          -> (Codegen SExpr -> Codegen SExpr -> Codegen SExpr)
          -> Codegen ()
-setupi32 fnName fn = do
-  defineAll
+setupi32 op fnName fn = do
+  defineAll op
   let verif = [ declare (c "range") "left_range"
               , declare (t Signed) "left"
               , declare (c "range") "right_range"
@@ -171,11 +182,12 @@ setupi32 fnName fn = do
               ]
   genBodySMT verif
 
-setupFloat :: String
+setupFloat :: FunctionDef
+           -> String
            -> (Codegen SExpr -> Codegen SExpr -> Codegen SExpr)
            -> Codegen ()
-setupFloat fnName fn = do
-  defineAll
+setupFloat op fnName fn = do
+  defineAll op
   let verif = [ declare (c "range") "left_range"
               , declare (t Double) "left"
               , declare (c "range") "right_range"
@@ -193,5 +205,34 @@ setupFloat fnName fn = do
               ]
   genBodySMT verif
 
-defineAll = undefined
+defineAll op = do
+  class_ range
+  define op
+  define floatInRange
+  define newFloatInputRange
+  define verifySaneRange
+  define verifyNegZero
+  define verifyNan
+  define verifyInf
+  define verifyExp
+  define canBeInfiniteOrNan
+  define setLowerInit
+  define optimize
+  define setUpperInit
+  define range3
+  define range6
+  define range4
+  define canBeFiniteNonNegative
+  define exponentImpliedByInt32Bounds
+  define numBits
+  define canBeNan
+  define verifyFpBound
+  define canBeZero
+  define contains
+  define hasInt32Bounds
+  define missingAnyInt32Bounds
+  define verifyLowBoundInvariant
+  define verifyUpBoundInvariant
+  define canHaveSignBitSet
+  define verifyFract
 

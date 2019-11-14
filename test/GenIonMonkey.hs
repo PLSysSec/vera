@@ -1,9 +1,9 @@
 module GenIonMonkey (genIonMonkeyTests) where
 
 import           BenchUtils
-import           Control.Monad.State.Strict    (liftIO)
-import           DSL.DSL                       (SMTResult (..))
-import           DSL.Typed                     (Type (..))
+import           Control.Monad.State.Strict          (liftIO)
+import           DSL.DSL                             (SMTResult (..))
+import           DSL.Typed                           (Type (..))
 import           Generate.Lang
 import           Generate.SMTGen
 import           Generate.State
@@ -12,18 +12,21 @@ import           IonMonkeyGenerated.Helpers
 import           IonMonkeyGenerated.Objects
 import           IonMonkeyGenerated.Operations
 import           IonMonkeyGenerated.Verify
-import           Prelude                       hiding (abs, and, floor, max,
-                                                min, not, or)
+import           IonMonkeyGenerated.VerifyIndividual
+import           Prelude                             hiding (abs, and, floor,
+                                                      max, min, not, or)
 import           Test.Tasty.HUnit
 import           Utils
 
 genIonMonkeyTests :: BenchTest
 genIonMonkeyTests = benchTestGroup "Generated IonMonkey tests"
-                    [-- unionIntersectTest
-                     intIonMonkeyTests
-                     , fpIonMonkeyTests
+                    [ addTests ]
+
+                    -- unionIntersectTest
+                     -- intIonMonkeyTests
+                     -- , fpIonMonkeyTests
 -- --                    oldBugTests
-                    ]
+
 
 intIonMonkeyTests :: BenchTest
 intIonMonkeyTests = benchTestGroup "Generated IonMonkey i32 tests"
@@ -65,6 +68,37 @@ oldBugTests :: BenchTest
 oldBugTests = benchTestGroup "Old bugs" [ badModTest
                                         , goodModTest
                                         ]
+
+addTests :: BenchTest
+addTests = benchTestGroup "Add float tests" [ addLow
+                                            , addHigh
+                                            , addNegZ
+                                            , addNan
+                                            , addInf
+                                            , addFract
+                                            , addExp
+                                            ]
+
+addLow :: BenchTest
+addLow = benchTestCase "Add low" $ evalCodegen Nothing $ testLowInvariant $ Binary "add" add jsAdd
+
+addHigh :: BenchTest
+addHigh = benchTestCase "Add high" $ evalCodegen Nothing $ testHighInvariant $ Binary "add" add jsAdd
+
+addNegZ :: BenchTest
+addNegZ = benchTestCase "Add negz" $ evalCodegen Nothing $ testNegZ $ Binary "add" add jsAdd
+
+addNan :: BenchTest
+addNan = benchTestCase "Add nan" $ evalCodegen Nothing $ testNan $ Binary "add" add jsAdd
+
+addInf :: BenchTest
+addInf = benchTestCase "Add inf" $ evalCodegen Nothing $ testInf $ Binary "add" add jsAdd
+
+addFract :: BenchTest
+addFract = benchTestCase "Add fract" $ evalCodegen Nothing $ testFract $ Binary "add" add jsAdd
+
+addExp :: BenchTest
+addExp = benchTestCase "Add exp" $ evalCodegen Nothing $ testExp $ Binary "add" add jsAdd
 
 -- Union and intersection
 

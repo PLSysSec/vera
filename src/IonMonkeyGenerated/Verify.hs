@@ -314,7 +314,7 @@ floatInRange =
       body = [ declare (t Double) "result_init"
 
              -- |v| == OO   ==  exp >= includesInfinity
-             , implies_ (isInf $ v "result_init") ((v "result_range_init" .->. "maxExponent") .=>. includesInfinity)
+             , implies_ (isInf $ v "result_init") (((v "result_range_init" .->. "maxExponent") .==. includesInfinity) .||. (v "result_range_init" .->. "maxExponent" .==. includesInfinityAndNan))
 
              -- isNan(v)    ==  exp == includesInfinityAndNan
              , implies_ (isNan $ v "result_init") ((v "result_range_init" .->. "maxExponent") .==. includesInfinityAndNan)
@@ -597,7 +597,7 @@ verifyInf =
                -- It's inf
              , assert_ $ isInf $ v "result_inf"
                -- ... but the inf exponent is not correct
-             , assert_ $ not_ $ (v "result_range_nan" .->. "maxExponent") .=>. includesInfinity
+             , assert_ $ not_ $ (v "result_range_inf" .->. "maxExponent") .=>. includesInfinity
              , expect_ isUnsat $ \r -> showInfResult "Failed to verify Inf" r
              , pop_
              ]
