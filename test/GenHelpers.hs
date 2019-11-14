@@ -35,56 +35,78 @@ floatInRangeTest = benchTestCase "float in range" $ do
     define floatIsInRange
     genBodySMT [ declare (c "range") "testRange"
                , declare (t Bool) "inRange"
-               , v "testRange" .->. "maxExponent" `assign` (n Unsigned16 3)
-               , v "testRange" .->. "canHaveFractionalPart" `assign` (n Bool 1)
-               , v "testRange" .->. "canBeNegativeZero" `assign` (n Bool 0)
-               , v "testRange" .->. "lower" `assign` (n Signed 1)
+               -- , v "testRange" .->. "maxExponent" `assign` (n Unsigned16 3)
+               -- , v "testRange" .->. "canHaveFractionalPart" `assign` (n Bool 1)
+               -- , v "testRange" .->. "canBeNegativeZero" `assign` (n Bool 0)
+               -- , v "testRange" .->. "lower" `assign` (n Signed 1)
+               -- , v "testRange" .->. "hasInt32LowerBound" `assign` (n Bool 1)
+               -- , v "testRange" .->. "upper" `assign` (n Signed 5)
+               -- , v "testRange" .->. "hasInt32UpperBound" `assign` (n Bool 1)
+               -- , v "inRange" `assign` call "floatIsInRange" [ v "testRange"
+               --                                              , d Double 4
+               --                                              ]
+               -- , v "inRange" `assign` call "floatIsInRange" [ v "testRange"
+               --                                              , d Double 6
+               --                                              ]
+               -- , v "inRange" `assign` call "floatIsInRange" [ v "testRange"
+               --                                              , d Double (4/0)
+               --                                              ]
+               -- , v "inRange" `assign` call "floatIsInRange" [ v "testRange"
+               --                                              , d Double (-0.0)
+               --                                              ]
+               -- , v "inRange" `assign` call "floatIsInRange" [ v "testRange"
+               --                                              , d Double 4.1
+               --                                              ]
+               -- , v "testRange" .->. "lower" `assign` (n Signed 0)
+               -- , v "testRange" .->. "canBeNegativeZero" `assign` (n Bool 1)
+               -- , v "inRange" `assign` call "floatIsInRange" [ v "testRange"
+               --                                              , d Double (-0.0)
+               --                                              ]
+               -- , v "testRange" .->. "maxExponent" `assign` includesInfinityAndNan
+               -- , v "testRange" .->. "canHaveFractionalPart" `assign` (n Bool 1)
+               -- , v "testRange" .->. "canBeNegativeZero" `assign` (n Bool 0)
+               -- , v "testRange" .->. "lower" `assign` jsIntMin
+               -- , v "testRange" .->. "hasInt32LowerBound" `assign` (n Bool 0)
+               -- , v "testRange" .->. "upper" `assign` jsIntMax
+               -- , v "testRange" .->. "hasInt32UpperBound" `assign` (n Bool 0)
+               -- , v "inRange" `assign` call "floatIsInRange" [ v "testRange"
+               --                                              , d Double (3/0)
+               --                                              ]
+               -- , v "inRange" `assign` call "floatIsInRange" [ v "testRange"
+               --                                              , d Double (0/0)
+               --                                              ]
+               -- , v "testRange" .->. "maxExponent" `assign` (n Unsigned16 31)
+               -- , v "testRange" .->. "canHaveFractionalPart" `assign` (n Bool 1)
+               -- , v "testRange" .->. "canBeNegativeZero" `assign` (n Bool 0)
+               -- , v "testRange" .->. "lower" `assign` (n Signed 2147483648)
+               -- , v "testRange" .->. "hasInt32LowerBound" `assign` (n Bool 1)
+               -- , v "testRange" .->. "upper" `assign` (n Signed 2147483647)
+               -- , v "testRange" .->. "hasInt32UpperBound" `assign` (n Bool 1)
+               -- , v "inRange" `assign` call "floatIsInRange" [ v "testRange"
+               --                                              , d Double 0
+               --                                              ]
+               , v "testRange" .->. "maxExponent" `assign` (n Unsigned16 18)
+               , v "testRange" .->. "canHaveFractionalPart" `assign` (n Bool 0)
+               , v "testRange" .->. "canBeNegativeZero" `assign` (n Bool 1)
+               , v "testRange" .->. "lower" `assign` (n Signed 0)
                , v "testRange" .->. "hasInt32LowerBound" `assign` (n Bool 1)
-               , v "testRange" .->. "upper" `assign` (n Signed 5)
+               , v "testRange" .->. "upper" `assign` (n Signed 393384)
                , v "testRange" .->. "hasInt32UpperBound" `assign` (n Bool 1)
                , v "inRange" `assign` call "floatIsInRange" [ v "testRange"
-                                                            , d Double 4
-                                                            ]
-               , v "inRange" `assign` call "floatIsInRange" [ v "testRange"
-                                                            , d Double 6
-                                                            ]
-               , v "inRange" `assign` call "floatIsInRange" [ v "testRange"
-                                                            , d Double (4/0)
-                                                            ]
-               , v "inRange" `assign` call "floatIsInRange" [ v "testRange"
-                                                            , d Double (-0.0)
-                                                            ]
-               , v "inRange" `assign` call "floatIsInRange" [ v "testRange"
-                                                            , d Double 4.1
-                                                            ]
-               , v "testRange" .->. "lower" `assign` (n Signed 0)
-               , v "testRange" .->. "canBeNegativeZero" `assign` (n Bool 1)
-               , v "inRange" `assign` call "floatIsInRange" [ v "testRange"
-                                                            , d Double (-0.0)
-                                                            ]
-               , v "testRange" .->. "maxExponent" `assign` includesInfinityAndNan
-               , v "testRange" .->. "canHaveFractionalPart" `assign` (n Bool 1)
-               , v "testRange" .->. "canBeNegativeZero" `assign` (n Bool 0)
-               , v "testRange" .->. "lower" `assign` jsIntMin
-               , v "testRange" .->. "hasInt32LowerBound" `assign` (n Bool 0)
-               , v "testRange" .->. "upper" `assign` jsIntMax
-               , v "testRange" .->. "hasInt32UpperBound" `assign` (n Bool 0)
-               , v "inRange" `assign` call "floatIsInRange" [ v "testRange"
-                                                            , d Double (3/0)
-                                                            ]
-               , v "inRange" `assign` call "floatIsInRange" [ v "testRange"
-                                                            , d Double (0/0)
+                                                            , d Double 0
                                                             ]
                ]
     runSolverOnSMT
-  vtest r $ Map.fromList [ ("inRange_1", 1)
-                         , ("inRange_2", 0)
-                         , ("inRange_3", 0)
-                         , ("inRange_4", 0)
-                         , ("inRange_5", 1)
-                         , ("inRange_6", 1)
-                         , ("inRange_7", 1)
-                         , ("inRange_8", 1)
+  vtest r $ Map.fromList [ -- ("inRange_1", 1)
+                         -- , ("inRange_2", 0)
+                         -- , ("inRange_3", 0)
+                         -- , ("inRange_4", 0)
+                         -- , ("inRange_5", 1)
+                         -- , ("inRange_6", 1)
+                         -- , ("inRange_7", 1)
+                         -- , ("inRange_8", 1)
+                          -- ("inRange_1", 1)
+                          ("inRange_1", 1)
                          ]
 
 

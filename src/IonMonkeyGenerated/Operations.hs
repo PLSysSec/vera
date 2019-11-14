@@ -514,22 +514,32 @@ intersect =
                [if_ ((call "canBeNan" [v "lhs"]) .||. (call "canBeNan" [v "rhs"]))
                   [v "emptyRange" `assign` n Bool 1]
                   []
-               ] [] -- Return nptr
+               ] [v "emptyRange" `assign` n Bool 1] -- Return nptr
              , declare (t Bool) "newHasInt32LowerBound"
              , declare (t Bool) "newHasInt32UpperBound"
              , declare (t Bool) "newMayIncludeNegativeZero"
+             , declare (t Bool) "newCanHaveFractionalPart"
              , declare (t Unsigned16) "newExponent"
+
              , v "newHasInt32LowerBound" `assign` ((v "lhs" .->. "hasInt32LowerBound") .||. (v "rhs" .->. "hasInt32LowerBound"))
              , v "newHasInt32UpperBound" `assign` ((v "lhs" .->. "hasInt32UpperBound") .||. (v "rhs" .->. "hasInt32UpperBound"))
+
+             , v "newCanHaveFractionalPart" `assign` ((v "lhs" .->. "canHaveFractionalPart") .&&. (v "rhs" .->. "canHavFractionalPart"))
              , v "newMayIncludeNegativeZero" `assign` ( (v "lhs" .->. "canBeNegativeZero") .&&. (v "lhs" .->. "canBeNegativeZero") )
+
              , v "newExponent" `assign` min_ (v "lhs" .->. "maxExponent") (v "rhs" .->. "maxExponent")
-             , return_ $ call "Range" [ v "newLower"
-                                      , v "newHasInt32LowerBound"
-                                      , v "newUpper"
-                                      , v "newHasInt32UpperBound"
-                                      , v "newMayIncludeNegativeZero"
-                                      , v "newExponent"
-                                      ]
+
+             , if_ (v "newHasInt32LowerBound" .&&. v "newHasInt32UpperBound" .&&. (v "newExponent" .==. includesInfinityAndNan)) [v "emptyRange" `assign` n Signed 1] []
+
+             , declare (c "range") "intersect_result"
+             , v "intersect_result" .->. "lower" `assign` v "newLower"
+             , v "intersect_result" .->. "hasInt32LowerBound" `assign` v "newHasInt32LowerBound"
+             , v "intersect_result" .->. "upper" `assign` v "newUpper"
+             , v "intersect_result" .->. "hasInt32UpperBound" `assign` v "newHasInt32UpperBound"
+             , v "intersect_result" .->. "canIncludeNegativeZero" `assign` v "newMayIncludeNegativeZero"
+             , v "intersect_result" .->. "maxExponent" `assign` v "newExponent"
+             , return_ $ v "intersect_result"
+
              ]
   in Function "intersect" (c "range") args body
 
@@ -547,12 +557,21 @@ union =
              , declare (t Bool) "newHasInt32UpperBound"
              , declare (t Bool) "newCanHaveFractionalPart"
              , declare (t Bool) "newMayIncludeNegativeZero"
-             , declare (t Unsigned16) "exp"
+             , declare (t Unsigned16) "newExponent"
              , v "newHasInt32LowerBound" `assign` ((v "lhs" .->. "hasInt32LowerBound") .&&. (v "rhs" .->. "hasInt32LowerBound"))
              , v "newHasInt32UpperBound" `assign` ((v "lhs" .->. "hasInt32UpperBound") .&&. (v "rhs" .->. "hasInt32UpperBound"))
-             , v "newCanHaveFractionalPart" `assign` ((v "lhs" .->. "canHaveFractionalPart") .&&. (v "canHaveFractionalPart"))
+             , v "newCanHaveFractionalPart" `assign` ((v "lhs" .->. "canHaveFractionalPart") .||. (v "rhs" .->. "canHaveFractionalPart"))
              , v "newMayIncludeNegativeZero" `assign` ((v "lhs" .->. "canBeNegativeZero") .||. (v "rhs" .->. "canBeNegativeZero"))
-             , v "exp" `assign` (max_ (v "lhs" .->. "maxExponent") (v "rhs" .->. "maxExponent"))
+             , v "newExponent" `assign` (max_ (v "lhs" .->. "maxExponent") (v "rhs" .->. "maxExponent"))
+             , declare (c "range") "unionRet"
+             , v "unionRet" .->. "lower" `assign` v "newLower"
+             , v "unionRet" .->. "hasInt32LowerBound" `assign` v "newHasInt32LowerBound"
+             , v "unionRet" .->. "upper" `assign` v "newUpper"
+             , v "unionRet" .->. "hasInt32UpperBound" `assign` v "newHasInt32UpperBound"
+             , v "unionRet" .->. "canHaveFractionalPart" `assign` v "newCanHaveFractionalPart"
+             , v "unionRet" .->. "canBeNegativeZero" `assign` v "newMayIncludeNegativeZero"
+             , v "unionRet" .->. "maxExponent" `assign` v "newExponent"
+             , return_ $ v "unionRet"
 
              ]
   in Function "union" (c "range") args body

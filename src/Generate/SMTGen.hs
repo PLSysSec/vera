@@ -193,6 +193,13 @@ genStmtSMT stmt =
     Push -> D.push
     Pop -> D.pop
     Assert e -> genExprSMT e >>= liftVerif . T.vassert
+    NotIff e1 e2 -> do
+      e1SMT <- genExprSMT e1 >>= liftVerif . T.cppNot
+      e2SMT <- genExprSMT e2
+      liftVerif $ T.cppOr e1SMT e2SMT >>= T.cppNot >>= T.vassert
+      e1SMT <- genExprSMT e1
+      e2SMT <- genExprSMT e2 >>= liftVerif . T.cppNot
+      liftVerif $ T.cppOr e1SMT e2SMT >>= T.cppNot >>= T.vassert
     Iff e1 e2 -> do
       e1SMT <- genExprSMT e1
       e2SMT <- genExprSMT e2

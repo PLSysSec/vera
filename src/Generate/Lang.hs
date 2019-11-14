@@ -361,13 +361,13 @@ return_ expr' = do
 -- SMT directives
 --
 
-iff :: Codegen SExpr
+notIff :: Codegen SExpr
     -> Codegen SExpr
     -> Codegen SStmt
-iff expr1' expr2' = do
+notIff expr1' expr2' = do
   expr1 <- expr1'
   expr2 <- expr2'
-  return $ Iff expr1 expr2
+  return $ NotIff expr1 expr2
 
 implies_ :: Codegen SExpr
          -> Codegen SExpr

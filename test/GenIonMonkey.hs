@@ -19,9 +19,10 @@ import           Utils
 
 genIonMonkeyTests :: BenchTest
 genIonMonkeyTests = benchTestGroup "Generated IonMonkey tests"
-                    [ intIonMonkeyTests
-                    , fpIonMonkeyTests
---                    oldBugTests
+                    [-- unionIntersectTest
+                    --  intIonMonkeyTests
+                     fpIonMonkeyTests
+-- --                    oldBugTests
                     ]
 
 intIonMonkeyTests :: BenchTest
@@ -64,6 +65,11 @@ oldBugTests :: BenchTest
 oldBugTests = benchTestGroup "Old bugs" [ badModTest
                                         , goodModTest
                                         ]
+
+-- Union and intersection
+
+unionIntersectTest :: BenchTest
+unionIntersectTest = benchTestCase "union and intersection" $ evalCodegen Nothing $ verifyMetaUnion
 
 -- Old bugs
 

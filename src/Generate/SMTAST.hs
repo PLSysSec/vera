@@ -127,6 +127,7 @@ data SStmt = Decl SVar
            | Return SExpr
            | Assert SExpr
            | Implies SExpr SExpr
+           | NotIff SExpr SExpr
            | Iff SExpr SExpr
            | Expect (SMTResult -> Bool) (SMTResult -> IO ())
            | Push
