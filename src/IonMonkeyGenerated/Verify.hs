@@ -59,6 +59,7 @@ verifyUnaryFunction fnName jsOp fns = do
                 -- Verify that the result is in the computed range
               , vcall "verifyLower" [v "result_range", v "result"]
               , vcall "verifyUpper" [v "result_range", v "result"]
+              , vcall "verifyUB" [v "result_range", v "result"]
               ]
   genBodySMT verif
 
@@ -92,6 +93,7 @@ verifyFunctionConstArg fnName jsOp fns = do
                 -- Verify that the result is in the computed range
               , vcall "verifyLower" [v "result_range", v "result"]
               , vcall "verifyUpper" [v "result_range", v "result"]
+              , vcall "verifyUB" [v "result_range", v "result"]
               ]
   genBodySMT verif
 
@@ -143,6 +145,7 @@ verifyFunction fnName jsOp fns = do
                 -- Verify that the result is in the computed range
               , vcall "verifyLower" [v "result_range", v "result"]
               , vcall "verifyUpper" [v "result_range", v "result"]
+              , vcall "verifyUB" [v "result_range", v "result"]
               ]
   genBodySMT verif
 

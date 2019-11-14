@@ -9,6 +9,7 @@ type Sort = Z.Sort
 type Node = Z.AST
 type AST = Z.AST
 
+
 solverToString :: MonadZ3 z3 => z3 String
 solverToString = do
   Z.setASTPrintMode Z.Z3_PRINT_SMTLIB2_COMPLIANT
