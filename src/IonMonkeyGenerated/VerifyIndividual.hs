@@ -17,6 +17,83 @@ import           IonMonkeyGenerated.Operations
 import           IonMonkeyGenerated.Verify
 import           Prelude
 
+data TestFunction = Binary { testName :: String, binaryJSOp :: (Codegen SExpr -> Codegen SExpr -> Codegen SExpr) }
+                  | Unary { testName :: String, unaryJSOp :: (Codegen SExpr -> Codegen SExpr) }
+
+isBinary :: TestFunction -> Bool
+isBinary Binary{} = True
+isBinary _        = False
+
+-- Int32 verification conditions
+
+testLower :: TestFunction -> Codegen ()
+testLower fn = do
+  setupAlli32 fn
+  genBodySMT [vcall "verifyLower" [v "result_range", v "result"]]
+
+testUpper :: TestFunction -> Codegen ()
+testUpper fn = do
+  setupAlli32 fn
+  genBodySMT [vcall "verifyUpper" [v "result_range", v "result"]]
+
+testUB :: TestFunction -> Codegen ()
+testUB fn = do
+  setupAlli32 fn
+  genBodySMT [vcall "verifyUB" [v "result_range", v "result"]]
+
+-- Float verification conditions
+
+testLowInvariant :: TestFunction -> Codegen ()
+testLowInvariant fn = do
+  setupAllFloat fn
+  genBodySMT [vcall "verifyLowBoundInvariant" [v "result_range", v "result"]]
+
+testHighInvariant :: TestFunction -> Codegen ()
+testHighInvariant fn = do
+  setupAllFloat fn
+  genBodySMT [vcall "verifyUpBoundInvariant" [v "result_range", v "result"]]
+
+testNegZ :: TestFunction -> Codegen ()
+testNegZ fn = do
+  setupAllFloat fn
+  genBodySMT [vcall "verifyNegZ" [v "result_range", v "result"]]
+
+testNan :: TestFunction -> Codegen ()
+testNan fn = do
+  setupAllFloat fn
+  genBodySMT [vcall "verifyNegNan" [v "result_range", v "result"]]
+
+testInf :: TestFunction -> Codegen ()
+testInf fn = do
+  setupAllFloat fn
+  genBodySMT [vcall "verifyInfNan" [v "result_range", v "result"]]
+
+testFract :: TestFunction -> Codegen ()
+testFract fn = do
+  setupAllFloat fn
+  genBodySMT [vcall "verifyFract" [v "result_range", v "result"]]
+
+testExp :: TestFunction -> Codegen ()
+testExp fn = do
+  setupAllFloat fn
+  genBodySMT [vcall "verifyExp" [v "result_range", v "result"]]
+
+-- General setup functions
+
+setupAlli32 :: TestFunction -> Codegen ()
+setupAlli32 fn = do
+  if isBinary fn
+  then setupi32 (testName fn) (binaryJSOp fn)
+  else setupUnaryi32 (testName fn) (unaryJSOp fn)
+
+setupAllFloat :: TestFunction -> Codegen ()
+setupAllFloat fn = do
+  if isBinary fn
+  then setupFloat (testName fn) (binaryJSOp fn)
+  else setupUnaryFloat (testName fn) (unaryJSOp fn)
+
+-- Individual setup functions
+
 setupUnaryi32 :: String
               -> (Codegen SExpr -> Codegen SExpr)
               -> Codegen ()
