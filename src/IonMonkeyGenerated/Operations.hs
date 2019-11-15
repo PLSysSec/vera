@@ -228,6 +228,7 @@ xor =
 not :: FunctionDef
 not = let args = [ ("op", c "range") ]
           body = [ declare (c "range") "result_range"
+                 , declare (t Bool) "startIsUndef"
                  , (v "result_range") .->. "lower" `assign` (not_ $ (v "op") .->. "upper")
                  , (v "result_range") .->. "upper" `assign` (not_ $ (v "op") .->. "lower")
                  , return_ $ v "result_range"

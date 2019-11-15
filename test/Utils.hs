@@ -1,8 +1,35 @@
 module Utils where
-import           Control.Monad (forM_, unless)
+import           BenchUtils
+import           Control.Monad                       (forM_, unless)
+import qualified Data.Map                            as M
+import qualified DSL.DSL                             as D
+import           Generate.State
+import           IonMonkeyGenerated.VerifyIndividual
 
-import qualified Data.Map      as M
-import qualified DSL.DSL       as D
+mkFloatTests :: String -> TestFunction -> BenchTest
+mkFloatTests testGroupName testFn =
+  benchTestGroup testGroupName
+    [ makeTest (testGroupName ++ " lower i32") $ testLower testFn
+    , makeTest (testGroupName ++ " upper i32") $ testUpper testFn
+    , makeTest (testGroupName ++ " UB") $ testUB testFn
+    , makeTest (testGroupName ++ " low invariant") $ testLowInvariant testFn
+    , makeTest (testGroupName ++ " high invariant") $ testHighInvariant testFn
+    , makeTest (testGroupName ++ " negative zero") $ testNegZ testFn
+    , makeTest (testGroupName ++ " nan") $ testNan testFn
+    , makeTest (testGroupName ++ " inf") $ testInf testFn
+    , makeTest (testGroupName ++ " fract") $ testFract testFn
+    , makeTest (testGroupName ++ " exp") $ testExp testFn
+    ]
+  where makeTest str act = benchTestCase str $ evalCodegen Nothing act
+
+mki32Tests :: String -> TestFunction -> BenchTest
+mki32Tests testGroupName testFn =
+  benchTestGroup testGroupName
+    [ makeTest (testGroupName ++ " lower i32") $ testLower testFn
+    , makeTest (testGroupName ++ " upper i32") $ testUpper testFn
+    , makeTest (testGroupName ++ " UB") $ testUB testFn
+    ]
+  where makeTest str act = benchTestCase str $ evalCodegen Nothing act
 
 satTest :: D.SMTResult -> IO ()
 satTest D.SolverSat{} = return ()

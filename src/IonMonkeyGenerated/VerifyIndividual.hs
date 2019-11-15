@@ -21,6 +21,10 @@ data TestFunction = Binary { testName :: String
                            , binaryCppOp :: FunctionDef
                            , binaryJSOp :: (Codegen SExpr -> Codegen SExpr -> Codegen SExpr)
                            }
+                  | Constant { testName :: String
+                             , constCppOp :: FunctionDef
+                             , constJSOp :: (Codegen SExpr -> Codegen SExpr -> Codegen SExpr)
+                             }
                   | Unary { testName   :: String
                           , unaryCppOp :: FunctionDef
                           , unaryJSOp  :: (Codegen SExpr -> Codegen SExpr)
@@ -29,6 +33,11 @@ data TestFunction = Binary { testName :: String
 isBinary :: TestFunction -> Bool
 isBinary Binary{} = True
 isBinary _        = False
+
+isConstant :: TestFunction -> Bool
+isConstant Constant{} = True
+isConstant _          = False
+
 
 -- Int32 verification conditions
 
@@ -88,10 +97,11 @@ testExp fn = do
 
 setupAlli32 :: TestFunction -> Codegen ()
 setupAlli32 fn = do
-  define (binaryCppOp fn)
   if isBinary fn
   then setupi32 (binaryCppOp fn) (testName fn) (binaryJSOp fn)
-  else setupUnaryi32 (unaryCppOp fn) (testName fn) (unaryJSOp fn)
+  else if isConstant fn
+       then setupConstanti32 (constCppOp fn) (testName fn) (constJSOp fn)
+       else setupUnaryi32 (unaryCppOp fn) (testName fn) (unaryJSOp fn)
 
 setupAllFloat :: TestFunction -> Codegen ()
 setupAllFloat fn = do
@@ -130,11 +140,11 @@ setupUnaryFloat op fnName fn = do
   let verif = [ declare (c "range") "start_range"
               , declare (t Double) "start"
               , declare (c "range") "result_range"
-              , declare (t Double) "result_verif"
+              , declare (t Double) "result"
               , (v "start_range")  `assign` (call "newFloatInputRange" [])
               , (v "result_range") `assign` call fnName [v "start_range"]
               , (v "start")  `assign` (call "floatInRange" [v "start_range"])
-              , (v "result_verif") `assign` (fn $ v "start")
+              , (v "result") `assign` (fn $ v "start")
               , expect_ isSat (error "Has to start out SAT")
               ]
   genBodySMT verif
@@ -228,11 +238,22 @@ defineAll op = do
   define canBeNan
   define verifyFpBound
   define canBeZero
+  define newInt32InputRange
+  define isFiniteNonNegative
+  define isFiniteNegative
+  define newUInt32Range
+  define intInRange
+  define verifyLower
+  define verifyUpper
+  define verifyUB
   define contains
   define hasInt32Bounds
   define missingAnyInt32Bounds
   define verifyLowBoundInvariant
   define verifyUpBoundInvariant
+  define newInt32Range
+  define countLeadingZeroes
+  define countOnes
   define canHaveSignBitSet
   define verifyFract
 

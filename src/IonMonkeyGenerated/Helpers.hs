@@ -12,6 +12,10 @@ range3 =
              ]
       body = [ declare (c "range") "rv" -- You have to do this shit now.
              , declare (c "range") "tmp" -- Can't assign and pass thing into class
+             , assert_ $ not_ $ undef $ v "tmp" .->. "lower"
+             , assert_ $ not_ $ undef $ v "tmp" .->. "upper"
+             , assert_ $ not_ $ undef $ v "rv" .->. "lower"
+             , assert_ $ not_ $ undef $ v "rv" .->. "upper"
              , v "tmp" `assign` v "rv"
              , v "rv" `assign` call "setLowerInit" [ v "lower_bound"
                                                    , v "tmp"
@@ -37,6 +41,10 @@ range4 =
              ]
       body = [ declare (c "range") "rv"
              , declare (c "range") "tmp"
+             , assert_ $ not_ $ undef $ v "tmp" .->. "lower"
+             , assert_ $ not_ $ undef $ v "tmp" .->. "upper"
+             , assert_ $ not_ $ undef $ v "rv" .->. "lower"
+             , assert_ $ not_ $ undef $ v "rv" .->. "upper"
              , v "tmp" `assign` v "rv"
              , v "rv" `assign` call "setLowerInit" [ v "lower_bound"
                                                    , v "tmp"
@@ -67,6 +75,10 @@ range6 =
       body = [ declare (c "range") "rv"
              , declare (c "range") "tmp"
              , v "tmp" `assign` v "rv"
+             , assert_ $ not_ $ undef $ v "tmp" .->. "lower"
+             , assert_ $ not_ $ undef $ v "tmp" .->. "upper"
+             , assert_ $ not_ $ undef $ v "rv" .->. "lower"
+             , assert_ $ not_ $ undef $ v "rv" .->. "upper"
              , v "rv" `assign` call "setLowerInit" [ v "lower_bound"
                                                    , v "tmp"
                                                    ]
@@ -87,13 +99,13 @@ range6 =
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#394
 newInt32Range :: FunctionDef
-newInt32Range = let args = [ ("lower_bound_v", t Signed)
-                           , ("upper_bound_v", t Signed)
+newInt32Range = let args = [ ("lower_bound_vv", t Signed)
+                           , ("upper_bound_vv", t Signed)
                            ]
-                    body = [ declare (c "range") "rvv"
-                           , (v "rvv") .->. "lower" `assign` (v "lower_bound_v")
-                           , (v "rvv") .->. "upper" `assign` (v "upper_bound_v")
-                           , return_ (v "rvv")
+                    body = [ declare (c "range") "rvvv"
+                           , (v "rvvv") .->. "lower" `assign` (v "lower_bound_vv")
+                           , (v "rvvv") .->. "upper" `assign` (v "upper_bound_vv")
+                           , return_ (v "rvvv")
                            ]
                 in Function "newInt32Range" (c "range") args body
 

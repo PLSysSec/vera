@@ -81,6 +81,7 @@ verifyFunctionConstArg fnName jsOp fns = do
   let verif = [ declare (c "range") "left_range"
               , declare (t Signed) "left"
               , declare (t Signed) "right"
+              , assert_ $ not_ $ undef $ v "right"
               , declare (c "range") "result_range"
               , declare (t Signed) "result"
               , (v "left_range")   `assign` (call "newInt32InputRange" [])
@@ -303,7 +304,8 @@ intInRange =
       body = [ declare (t Signed) "result_init"
              , assert_ $ (v "result_init") .=>. ((v "result_range_init") .->. "lower")
              , assert_ $ (v "result_init") .<=. ((v "result_range_init") .->. "upper")
-             , assert_ $ not_ $ undef $ v "result_init"
+             , assert_ $ not_ $ undef $ v "result_range_init" .->. "lower"
+             , assert_ $ not_ $ undef $ v "result_range_init" .->. "upper"
              , return_ $ v "result_init"
              ]
   in Function "intInRange" (t Signed) args body
@@ -518,8 +520,12 @@ verifyUB =
              , ("result_undef", t Signed)
              ]
       body = [ push_
-             , assert_ $ undef $ v "result_undef"
-             , expect_ isUnsat $ \r -> showInt32Result "Failed to verify upper" r
+             , assert_ $ undef $ v "result_range_undef" .->. "lower"
+             , expect_ isUnsat $ \r -> showInt32Result "Failed to verify lower UB" r
+             , pop_
+             , push_
+             , assert_ $ undef $ v "result_range_undef" .->. "upper"
+             , expect_ isUnsat $ \r -> showInt32Result "Failed to verify upper UB" r
              , pop_
              ]
   in Function "verifyUB" Void args body
@@ -846,37 +852,32 @@ getIntList :: M.Map String Double -> [String]
 getIntList fls = catMaybes $ map (\(str, fl) ->
                        case str of
                          _ | "undef" `isInfixOf` str -> Nothing
-                         -- _ | "result_range_upper" `isInfixOf` str -> sstr str fl
-                         _ | "in_right" `isInfixOf` str -> sstr str fl
-                         _ | "in_left" `isInfixOf` str -> sstr str fl
-                         _ | "in_result" `isInfixOf` str -> sstr str fl
-                         _ | "elem" `isInfixOf` str -> sstr str fl
-                         _ | "left_range_intersect" `isInfixOf` str -> sstr str fl
-                         _ | "right_range_intersect" `isInfixOf` str -> sstr str fl
-                         _ | "result_range_intersect" `isInfixOf` str -> sstr str fl
-                         -- _ | "result_range_lower" `isInfixOf` str -> sstr str fl
-                         -- _ | "result_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
-                         -- _ | "result_range_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
-                         -- _ | "result_range_union_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
-                         -- _ | "result_range_union_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
-                         -- _ | "result_range_intersection_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
-                         -- _ | "result_range_intersection_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
-                         -- _ | "left_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
-                         -- _ | "left_range_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
-                         -- _ | "right_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
-                         -- _ | "right_range_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
-                         -- _ | "start_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
-                         -- _ | "start_range_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
-                         -- _ | "result_1" `isInfixOf` str -> sstr str fl
-                         -- _ | "right_1" `isInfixOf` str -> sstr str fl
-                         -- _ | "left_1" `isInfixOf` str -> sstr str fl
-                         -- _ | "start_1" `isInfixOf` str -> sstr str fl
-                         -- _ | "left_range_lower" `isInfixOf` str -> sstr str fl
-                         -- _ | "right_range_lower" `isInfixOf` str -> sstr str fl
-                         -- _ | "left_range_upper" `isInfixOf` str -> sstr str fl
-                         -- _ | "right_range_upper" `isInfixOf` str -> sstr str fl
-                         -- _ | "start_range_lower" `isInfixOf` str -> sstr str fl
-                         -- _ | "start_range_upper" `isInfixOf` str -> sstr str fl
+                         _ | "startIsUndef" `isInfixOf` str -> sstr str fl
+                         _ | "result_range_upper" `isInfixOf` str -> sstr str fl
+                         _ | "result_range_lower" `isInfixOf` str -> sstr str fl
+                         _ | "result_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
+                         _ | "result_range_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
+                         _ | "result_range_union_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
+                         _ | "result_range_union_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
+                         _ | "result_range_intersection_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
+                         _ | "result_range_intersection_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
+                         _ | "left_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
+                         _ | "left_range_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
+                         _ | "right_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
+                         _ | "right_range_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
+                         _ | "start_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
+                         _ | "start_range_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
+                         _ | "result_1" `isInfixOf` str -> sstr str fl
+                         _ | "right_1" `isInfixOf` str -> sstr str fl
+                         _ | "shift_1" `isInfixOf` str -> sstr str fl
+                         _ | "left_1" `isInfixOf` str -> sstr str fl
+                         _ | "start_1" `isInfixOf` str -> sstr str fl
+                         _ | "left_range_lower" `isInfixOf` str -> sstr str fl
+                         _ | "right_range_lower" `isInfixOf` str -> sstr str fl
+                         _ | "left_range_upper" `isInfixOf` str -> sstr str fl
+                         _ | "right_range_upper" `isInfixOf` str -> sstr str fl
+                         _ | "start_range_lower" `isInfixOf` str -> sstr str fl
+                         _ | "start_range_upper" `isInfixOf` str -> sstr str fl
                          _ -> Nothing
                      ) $ M.toList fls
   where

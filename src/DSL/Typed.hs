@@ -105,10 +105,15 @@ module DSL.Typed ( vassert
                  , D.Verif
                  , D.isSat
                  , D.isUnsat
+                 , rawNot
+                 , D.assert
                  ) where
 import           Control.Monad.State.Strict (unless, when, liftIO)
 import qualified DSL.DSL                    as D
 import           Prelude                    hiding (compare, exp)
+
+rawNot :: D.Node -> D.Verif D.Node     
+rawNot = D.not    
 
 {-|
 

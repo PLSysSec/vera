@@ -212,7 +212,10 @@ genStmtSMT stmt =
       disjunction <- liftVerif $ T.cppOr e1SMT e2SMT
       liftVerif $ T.vassert disjunction
     VoidCall name expr -> void $ genCallSMT $ Call name expr
-    Decl var -> return () -- Declaration is just important for variable tracking
+    Decl var -> when (isPrimType var) $ do
+      varSMT <- genVarSMT var
+      liftVerif $ T.rawNot (T.vundef varSMT) >>= T.assert
+    -- Declaration is just important for variable tracking
     -- We are assigning to a class
     -- In this case, the RHS must either be another class or a call
     Assign (VarExpr var) expr | isClassType var ->

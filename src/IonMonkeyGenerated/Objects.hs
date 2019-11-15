@@ -5,11 +5,13 @@ import           Generate.Lang
 -- | Set up invariants for our input range. This is not an IonMonkey function
 newInt32InputRange :: FunctionDef
 newInt32InputRange =
-  let body = [ declare (c "range") "rv"
-             , (v "rv") .->. "hasInt32LowerBound" `assign` (n Bool 1)
-             , (v "rv") .->. "hasInt32UpperBound" `assign` (n Bool 1)
-             , assert_ $ ((v "rv") .->. "lower") .<=. ((v "rv") .->. "upper")
-             , return_ $ v "rv"
+  let body = [ declare (c "range") "rvir"
+             , (v "rvir") .->. "hasInt32LowerBound" `assign` (n Bool 1)
+             , assert_ $ not_ $ undef $ v "rvir" .->. "hasInt32LowerBound"
+             , (v "rvir") .->. "hasInt32UpperBound" `assign` (n Bool 1)
+             , assert_ $ not_ $ undef $ v "rvir" .->. "hasInt32UpperBound"
+             , assert_ $ ((v "rvir") .->. "lower") .<=. ((v "rvir") .->. "upper")
+             , return_ $ v "rvir"
              ]
   in Function "newInt32InputRange" (c "range") [] body
 
@@ -18,10 +20,10 @@ newFloatInputRange =
   -- // To facilitate this trick, we maintain the invariants that:
   -- // 1) hasInt32LowerBound_ == false implies lower_ == JSVAL_INT_MIN
   -- // 2) hasInt32UpperBound_ == false implies upper_ == JSVAL_INT_MAX
-  let body = [ declare (c "range") "rv"
-             , assert_ $ ((v "rv") .->. "lower") .<=. ((v "rv") .->. "upper")
-             , assert_ $ (((v "rv" .->. "lower") .==. n Signed (-2147483648)) .||. (v "rv" .->. "hasInt32LowerBound"))
-             , assert_ $ (((v "rv" .->. "upper") .==. n Signed 2147483647) .||. (v "rv" .->. "hasInt32LowerBound"))
+  let body = [ declare (c "range") "rvfl"
+             , assert_ $ ((v "rvfl") .->. "lower") .<=. ((v "rvfl") .->. "upper")
+             , assert_ $ (((v "rvfl" .->. "lower") .==. n Signed (-2147483648)) .||. (v "rvfl" .->. "hasInt32LowerBound"))
+             , assert_ $ (((v "rvfl" .->. "upper") .==. n Signed 2147483647) .||. (v "rvfl" .->. "hasInt32LowerBound"))
              ]
   in Function "newFloatInputRange" (c "range") [] body
 
