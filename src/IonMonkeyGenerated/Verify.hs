@@ -500,6 +500,19 @@ verifyLower =
              ]
   in Function "verifyLower" Void args body
 
+verifyLowerFl :: FunctionDef
+verifyLowerFl =
+  let args = [ ("result_range_fl", c "range")
+             , ("result_fl", t Double)
+             ]
+      body = [ push_
+             , assert_ $ (v "result_range_fl") .->. "hasInt32LowerBound"
+             , assert_ $ (cast ((v "result_range_fl") .->. "lower") Double) .>. (v "result_fl")
+             , expect_ isUnsat $ \r -> showInt32Result "Failed to verify fl lower" r
+             , pop_
+             ]
+  in Function "verifyFlLower" Void args body
+
 verifyUpper :: FunctionDef
 verifyUpper =
   let args = [ ("result_range_u", c "range")
@@ -513,6 +526,19 @@ verifyUpper =
              , pop_
              ]
   in Function "verifyUpper" Void args body
+
+verifyUpperFl :: FunctionDef
+verifyUpperFl =
+  let args = [ ("result_range_ufl", c "range")
+             , ("result_ufl", t Double)
+             ]
+      body = [ push_
+             , assert_ $ (v "result_range_ufl") .->. "hasInt32UpperBound"
+             , assert_ $ (cast ((v "result_range_ufl") .->. "upper") Double) .<. (v "result_ufl")
+             , expect_ isUnsat $ \r -> showInt32Result "Failed to verify upper fl" r
+             , pop_
+             ]
+  in Function "verifyFlUpper" Void args body
 
 verifyUB :: FunctionDef
 verifyUB =
@@ -784,7 +810,7 @@ getNegzList :: M.Map String Double -> [String]
 getNegzList fls = catMaybes $ map (\(str, fl) ->
                        case str of
                          _ | "undef" `isInfixOf` str -> Nothing
-                         _ | "sent_in" `isInfixOf` str -> sstr str fl
+                         _ | "sbs" `isInfixOf` str -> sstr str fl
                          _ | "left_range_canBeNegativeZero" `isInfixOf` str -> sstr str fl
                          _ | "right_range_canBeNegativeZero" `isInfixOf` str -> sstr str fl
                          _ | "start_range_canBeNegativeZero" `isInfixOf` str -> sstr str fl

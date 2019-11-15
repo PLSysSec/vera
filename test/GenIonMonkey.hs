@@ -20,23 +20,23 @@ import           Utils
 
 genIonMonkeyTests :: BenchTest
 genIonMonkeyTests = benchTestGroup "Generated IonMonkey tests"
-                    [ --addTests
---                     subTests
-                  mulTests
-                    -- , andTests
-                     -- orTests
-                    -- , xorTests
-                    -- , notTests
-                    -- , lshTests
-                    -- , rshTests
-                    -- , urshTests
-                    -- , lsh'Tests
-                    -- , rsh'Tests
-                    -- , ursh'Tests
-                    -- , absTests
-                    -- , minTests
-                    -- , maxTests
-                    -- , floorTests
+                    [-- --  addTests
+                    -- -- , subTests
+                    -- -- , mulTests
+                    -- --   andTests
+                    -- -- , orTests
+                    -- -- , xorTests
+                    -- -- , notTests
+                    -- -- , lshTests
+                    -- -- , rshTests
+                    -- -- , urshTests
+                    -- -- , lsh'Tests
+                    -- -- , rsh'Tests
+                    -- -- , ursh'Tests
+                    -- -- , absTests
+                    -- -- , minTests
+                    -- -- , maxTests
+                    --  floorTests
                     -- , ceilTests
                     -- , signTests
                     ]

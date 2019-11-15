@@ -66,6 +66,7 @@ fInRange =
 
              -- try to help out the solver
              , assert_ $ (isInf $ v "fval") .||. (isNan $ v "fval") .||. (fpExp (v "fval") .<=. maxFiniteExponent)
+             , implies_ ((v "fval" .<=. d Double 1) .&&. (v "fval" .=>. d Double (-1))) (fpExp (v "fval") .==. n Unsigned16 0)
 
              , declare (t Bool) "underExp"
              , v "underExp" `assign` ((fpExp $ v "fval") .<=. (v "frange" .->. "maxExponent"))
@@ -121,6 +122,16 @@ testUB fn = do
   genBodySMT [vcall "verifyUB" [v "result_range", v "result"]]
 
 -- Float verification conditions
+
+testFlUpper :: TestFunction -> Codegen ()
+testFlUpper fn = do
+  setupAllFloat fn
+  genBodySMT [vcall "verifyFlUpper" [v "result_range", v "result"]]
+
+testFlLower :: TestFunction -> Codegen ()
+testFlLower fn = do
+  setupAllFloat fn
+  genBodySMT [vcall "verifyFlLower" [v "result_range", v "result"]]
 
 testLowInvariant :: TestFunction -> Codegen ()
 testLowInvariant fn = do
@@ -348,4 +359,6 @@ defineAll op = do
   define countOnes
   define canHaveSignBitSet
   define verifyFract
+  define verifyUpperFl
+  define verifyLowerFl
 

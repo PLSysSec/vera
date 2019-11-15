@@ -284,7 +284,7 @@ numBits =
 canBeFiniteNonNegative :: FunctionDef
 canBeFiniteNonNegative =
   let args = [ ("fnn2", c "range") ]
-      body = [ return_ $ (v "fnn2" .->. "lower" .>. n Signed 0) -- finish this
+      body = [ return_ $ (v "fnn2" .->. "upper" .=>. n Signed 0) -- finish this
              ]
   in Function "canBeFiniteNonNegative" (t Bool) args body
 

@@ -242,6 +242,8 @@ mul =
              , ("rhs", c "range")
              ]
       body = [ declare (t Bool) "newMayIncludeNegativeZero"
+             , declare (t Bool) "sbs"
+             , v "sbs" `assign` (call "canHaveSignBitSet" [v "lhs"])
              , v "newMayIncludeNegativeZero" `assign` (((call "canHaveSignBitSet" [v "lhs"]) .&&. (call "canBeFiniteNonNegative" [v "rhs"])) .||. ((call "canHaveSignBitSet" [v "rhs"]) .&&. (call "canBeFiniteNonNegative" [v "lhs"])))
              , declare (t Unsigned16) "exponent"
              , v "exponent" `assign` n Unsigned16 0
