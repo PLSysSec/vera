@@ -17,6 +17,24 @@ import           IonMonkeyGenerated.Operations
 import           IonMonkeyGenerated.Verify
 import           Prelude
 
+wellFormedRange :: FunctionDef
+wellFormedRange =
+  let body = [ declare (c "range") "rvf"
+             , assert_ $ (v "rvf" .->. "lower") .=>. jsIntMin
+             , assert_ $ (v "rvf" .->. "lower") .<=. jsIntMax
+             , assert_ $ (v "rvf" .->. "upper") .=>. jsIntMin
+             , assert_ $ (v "rvf" .->. "upper") .<=. jsIntMax
+             , implies_ (not_ $ v "rvf" .->. "hasInt32LowerBound") (v "rvf" .->. "lower" .==. jsIntMax)
+             , implies_ (not_ $ v "rvf" .->. "hasInt32UpperBound") (v "rvf" .->. "upper" .==. jsIntMax)
+
+             , implies_ (v "rvf" .->. "canBeNegativeZero") (call "contains" [v "rvf", n Signed 0])
+             , assert_ $ (v "rvf" .->. "maxExponent" .==. includesInfinityAndNan) .||. (v "rvf" .->. "maxExponent" .==. includesInfinity) .||. (v "rvf" .->. "maxExponent" .<=. maxFiniteExponent)
+             , implies_ (v "rvf" .->. "hasInt32LowerBound" .&&. (v "rvf" .->. "hasInt32UpperBound")) (v "rvf" .->. "maxExponent" .==. (fpExp (cast (max_ (abs_ $ v "rvf" .->. "lower") (abs_ $ v "rvf" .->. "upper")) Double)))
+             , implies_ (v "rvf" .->. "hasInt32LowerBound") (v "rvf" .->. "maxExponent" .=>. (fpExp (cast (abs_ $ v "rvf" .->. "lower") Double)))
+             , implies_ (v "rvf" .->. "hasInt32UpperBound") (v "rvf" .->. "maxExponent" .=>. (fpExp (cast (abs_ $ v "rvf" .->. "upper") Double)))
+             ]
+  in Function "newInt32InputRange" (c "range") [] body
+
 data TestFunction = Binary { testName :: String
                            , binaryCppOp :: FunctionDef
                            , binaryJSOp :: (Codegen SExpr -> Codegen SExpr -> Codegen SExpr)
