@@ -38,10 +38,8 @@ genIonMonkeyTests = benchTestGroup "Generated IonMonkey tests"
                     , maxTests
                     , floorTests
                     , ceilTests
+                    , signTests
                     ]
-
-
-
 
 addTests :: BenchTest
 addTests = mkFloatTests "Add" $ Binary "add" add jsAdd
@@ -96,6 +94,9 @@ floorTests = mkFloatTests "floor" $ Unary "floor" floor jsFloor
 
 ceilTests :: BenchTest
 ceilTests = mkFloatTests "ceil" $ Unary "ceil" ceil jsCeil
+
+signTests :: BenchTest
+signTests = mkFloatTests "sign" $ Unary "sign" sign jsSign
 
 
 -- Union and intersection
