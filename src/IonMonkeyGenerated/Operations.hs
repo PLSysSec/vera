@@ -454,11 +454,8 @@ floor =
                                                         ]
                                     )
                ] []
-             , declare (t Unsigned16) "expyy"
-             , v "expyy" `assign` (v "copy" .->. "maxExponent")
              , if_ (call "hasInt32Bounds" [v "copy"])
                [(v "copy" .->. "maxExponent") `assign` (call "exponentImpliedByInt32Bounds" [v "copy"])
-               , v "expyy" `assign` (v "copy" .->. "maxExponent")
                ]
                [if_ (v "copy" .->. "maxExponent" .<. maxFiniteExponent)
                  [v "copy" .->. "maxExponent" `assign` ((v "copy" .->. "maxExponent") .+. (n Unsigned16 1))] []

@@ -853,6 +853,7 @@ getIntList fls = catMaybes $ map (\(str, fl) ->
                        case str of
                          _ | "undef" `isInfixOf` str -> Nothing
                          _ | "startIsUndef" `isInfixOf` str -> sstr str fl
+                         _ | "subby" `isInfixOf` str -> sstr str fl
                          _ | "result_range_upper" `isInfixOf` str -> sstr str fl
                          _ | "result_range_lower" `isInfixOf` str -> sstr str fl
                          _ | "result_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl

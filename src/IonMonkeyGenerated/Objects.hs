@@ -9,6 +9,7 @@ newInt32InputRange =
              , (v "rvir") .->. "hasInt32LowerBound" `assign` (n Bool 1)
              , assert_ $ not_ $ undef $ v "rvir" .->. "hasInt32LowerBound"
              , (v "rvir") .->. "hasInt32UpperBound" `assign` (n Bool 1)
+             , (v "rvir") .->. "canHaveFractionalPart" `assign` (n Bool 1)
              , assert_ $ not_ $ undef $ v "rvir" .->. "hasInt32UpperBound"
              , assert_ $ ((v "rvir") .->. "lower") .<=. ((v "rvir") .->. "upper")
              , return_ $ v "rvir"
