@@ -18,8 +18,8 @@ import           Utils
 
 genHelpersTests :: BenchTest
 genHelpersTests = benchTestGroup "Helpers" [-- optimizeTest
-                                            floatInRangeTest
-                                           -- , fpExponent
+                                            -- floatInRangeTest
+                                            fpExponent
                                            -- , fpNegative
                                            -- , ranges
                                            -- , lowerInit

@@ -1223,8 +1223,12 @@ getFpExponent node = do
   expPlusOne <- D.exponentConst 1 >>= D.add exp
   resultTmp <- D.cond sigIsZero exp expPlusOne
   castResultTmp <- D.uext resultTmp 5               
-  -- if the input is zero, the result is 0
-  isZero <- D.isZero $ vnode node
+  -- if the input is between -1 and 1, the result is 0  
+  fpOne <- D.double 1.0
+  fpNegOne <- D.double (-1.0)
+  isLtOne <- D.fpLt (vnode node) fpOne
+  isGtNegOne <- D.fpGt (vnode node) fpNegOne
+  tiny <- D.and isLtOne isGtNegOne 
   zeroExp <- D.i16c 0
-  result <- D.cond isZero zeroExp castResultTmp
+  result <- D.cond tiny zeroExp castResultTmp
   return $ VNode (vundef node) result Unsigned16

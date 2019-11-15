@@ -685,38 +685,39 @@ getExpList :: M.Map String Double -> [String]
 getExpList fls = catMaybes $ map (\(str, fl) ->
                        case str of
                          _ | "undef" `isInfixOf` str -> Nothing
-                         _ | "copy_maxExponent" `isInfixOf` str -> sstr str fl
-                         -- _ | "eib_ret" `isInfixOf` str -> sstr str fl
-                         _ | "themax" `isInfixOf` str -> sstr str fl
-                         _ | "abs_lower" `isInfixOf` str -> sstr str fl
-                         _ | "abs_upper" `isInfixOf` str -> sstr str fl
-                         _ | "la_" `isInfixOf` str -> sstr str fl
-                         _ | "ua_" `isInfixOf` str -> sstr str fl
-                         _ | "upper_big" `isInfixOf` str -> sstr str fl
                          _ | "start_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
+                         _ | "fuppy" `isInfixOf` str -> sstr str fl
+                         _ | "testy2" `isInfixOf` str -> sstr str fl
                          _ | "start_range_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
-                         -- _ | "start_range_canHaveFractionalPart" `isInfixOf` str -> sstr str fl
+                         _ | "start_range_canHaveFractionalPart" `isInfixOf` str -> sstr str fl
                          _ | "start_range_lower" `isInfixOf` str -> sstr str fl
                          _ | "start_range_upper" `isInfixOf` str -> sstr str fl
                          _ | "start_1" `isInfixOf` str -> sstr str fl
-                         -- _ | "result_range_upper" `isInfixOf` str -> sstr str fl
-                         -- _ | "abs_res" `isInfixOf` str -> sstr str fl
-                         -- _ | "abs_after" `isInfixOf` str -> sstr str fl
-                         _ | "result_verif_1" `isInfixOf` str -> sstr str fl
-                         -- _ | "left_range_maxExponent" `isInfixOf` str -> sstr str fl
-                         -- _ | "right_range_maxExponent" `isInfixOf` str -> sstr str fl
-                         -- _ | "start_range_maxExponent" `isInfixOf` str -> sstr str fl
-                         -- _ | "result_range_maxExponent" `isInfixOf` str -> sstr str fl
-                         -- _ | "right_1" `isInfixOf` str -> sstr str fl
-                         -- _ | "left_1" `isInfixOf` str -> sstr str fl
-                         -- _ | "start_1" `isInfixOf` str -> sstr str fl
-                         -- _ | "result_1" `isInfixOf` str -> sstr str fl
+                         _ | "result_range_upper" `isInfixOf` str -> sstr str fl
+                         _ | "result_range_lower" `isInfixOf` str -> sstr str fl
+                         _ | "right_range_upper" `isInfixOf` str -> sstr str fl
+                         _ | "right_range_lower" `isInfixOf` str -> sstr str fl
+                         _ | "left_range_upper" `isInfixOf` str -> sstr str fl
+                         _ | "left_range_lower" `isInfixOf` str -> sstr str fl
+                         _ | "left_range_maxExponent" `isInfixOf` str -> sstr str fl
+                         _ | "right_range_maxExponent" `isInfixOf` str -> sstr str fl
+                         _ | "start_range_maxExponent" `isInfixOf` str -> sstr str fl
+                         _ | "result_range_maxExponent" `isInfixOf` str -> sstr str fl
+                         _ | "left_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
+                         _ | "right_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
+                         _ | "start_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
+                         _ | "result_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
+                         _ | "testy" `isInfixOf` str -> sstr str fl
+                         _ | "right_1" `isInfixOf` str -> sstr str fl
+                         _ | "left_1" `isInfixOf` str -> sstr str fl
+                         _ | "start_1" `isInfixOf` str -> sstr str fl
+                         _ | "result_1" `isInfixOf` str -> sstr str fl
                          _ -> Nothing
                        ) $ M.toList fls
   where
     sstr str fl = Just $ unwords [str, ":", if fl /= fl
                                             then "NaN"
-                                            else show (round fl :: Integer)
+                                            else show fl --(round fl :: Integer)
                                  ]
 
 showNanResult :: String -> SMTResult -> IO ()

@@ -45,7 +45,7 @@ range4 =
              , assert_ $ not_ $ undef $ v "tmp" .->. "upper"
              , assert_ $ not_ $ undef $ v "rv" .->. "lower"
              , assert_ $ not_ $ undef $ v "rv" .->. "upper"
-             , v "tmp" `assign` v "rv"
+              , v "tmp" `assign` v "rv"
              , v "rv" `assign` call "setLowerInit" [ v "lower_bound"
                                                    , v "tmp"
                                                    ]

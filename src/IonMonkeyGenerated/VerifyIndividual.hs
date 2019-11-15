@@ -24,7 +24,9 @@ wellFormedRange =
              , assert_ $ (v "rvf" .->. "lower") .<=. jsIntMax
              , assert_ $ (v "rvf" .->. "upper") .=>. jsIntMin
              , assert_ $ (v "rvf" .->. "upper") .<=. jsIntMax
-             , implies_ (not_ $ v "rvf" .->. "hasInt32LowerBound") (v "rvf" .->. "lower" .==. jsIntMax)
+             , assert_ $ (v "rvf" .->. "upper") .=>. (v "rvf" .->. "lower")
+
+             , implies_ (not_ $ v "rvf" .->. "hasInt32LowerBound") (v "rvf" .->. "lower" .==. jsIntMin)
              , implies_ (not_ $ v "rvf" .->. "hasInt32UpperBound") (v "rvf" .->. "upper" .==. jsIntMax)
 
              , implies_ (v "rvf" .->. "canBeNegativeZero") (call "contains" [v "rvf", n Signed 0])
@@ -32,8 +34,49 @@ wellFormedRange =
              , implies_ (v "rvf" .->. "hasInt32LowerBound" .&&. (v "rvf" .->. "hasInt32UpperBound")) (v "rvf" .->. "maxExponent" .==. (fpExp (cast (max_ (abs_ $ v "rvf" .->. "lower") (abs_ $ v "rvf" .->. "upper")) Double)))
              , implies_ (v "rvf" .->. "hasInt32LowerBound") (v "rvf" .->. "maxExponent" .=>. (fpExp (cast (abs_ $ v "rvf" .->. "lower") Double)))
              , implies_ (v "rvf" .->. "hasInt32UpperBound") (v "rvf" .->. "maxExponent" .=>. (fpExp (cast (abs_ $ v "rvf" .->. "upper") Double)))
+             , return_ $ v "rvf"
              ]
-  in Function "newInt32InputRange" (c "range") [] body
+  in Function "wellFormedRange" (c "range") [] body
+
+fInRange :: FunctionDef
+fInRange =
+  let args = [ ("fval", t Double)
+             , ("frange", c "range")
+             ]
+      body = [ if_ (v "frange" .->. "isEmpty")
+                 [return_ $ n Bool 0] []
+
+             , declare (t Bool) "infHolds"
+             , v "infHolds" `assign` (testImplies (isInf $ v "fval") ((v "frange" .->. "maxExponent") .=>. includesInfinity))
+
+             , declare (t Bool) "nanHolds"
+             , v "nanHolds" `assign` (testImplies (isNan $ v "fval") ((v "frange" .->. "maxExponent") .==. includesInfinityAndNan))
+
+             , declare (t Bool) "negzHolds"
+             , v "negzHolds" `assign` (testImplies (isNegZero $ v "fval") (v "frange" .->. "canBeNegativeZero"))
+
+             , declare (t Bool) "fractHolds"
+             , v "fractHolds" `assign` (testImplies (not_ $ v "fval" .==. (jsCeil $ v "fval")) (v "frange" .->. "canHaveFractionalPart"))
+
+             , declare (t Bool) "hasLowHolds"
+             , v "hasLowHolds" `assign` (testImplies ((isNan $ v "fval") .||. (isInf $ v "fval") .||. (v "fval" .<. (cast (v "frange" .->. "lower") Double))) (not_ $ v "frange" .->. "hasInt32LowerBound"))
+
+             , declare (t Bool) "hasHighHolds"
+             , v "hasHighHolds" `assign` (testImplies ((isNan $ v "fval") .||. (isInf $ v "fval") .||. (v "fval" .>. (cast (v "frange" .->. "upper") Double))) (not_ $ v "frange" .->. "hasInt32UpperBound"))
+
+             , declare (t Bool) "underExp"
+             , v "underExp" `assign` ((fpExp $ v "fval") .<=. (v "frange" .->. "maxExponent"))
+
+             , return_ $ v "infHolds" .&&. v "negzHolds" .&&. v "fractHolds" .&&. v "hasLowHolds" .&&. v "hasHighHolds" .&&. v "underExp"
+
+             ]
+  in Function "fInRange" (t Bool) args body
+
+
+
+--
+-- Automatic testing infrastructure
+--
 
 data TestFunction = Binary { testName :: String
                            , binaryCppOp :: FunctionDef
@@ -109,7 +152,7 @@ testFract fn = do
 testExp :: TestFunction -> Codegen ()
 testExp fn = do
   setupAllFloat fn
-  genBodySMT [vcall "verifyExp" [v "result_range", v "result"]]
+  genBodySMT [ vcall "verifyExp" [v "result_range", v "result"] ]
 
 -- General setup functions
 
@@ -222,13 +265,19 @@ setupFloat op fnName fn = do
               , declare (t Double) "right"
               , declare (c "range") "result_range"
               , declare (t Double) "result"
-              , (v "left_range")   `assign` (call "newFloatInputRange" [])
-              , (v "right_range")  `assign` (call "newFloatInputRange" [])
+              , (v "left_range")   `assign` (call "wellFormedRange" [])
+              , (v "right_range")  `assign` (call "wellFormedRange" [])
               , (v "result_range") `assign` call fnName [v "left_range", v "right_range"]
                 -- Actually perform the JS operation
-              , (v "left")  `assign` (call "floatInRange" [v "left_range"])
-              , (v "right") `assign` (call "floatInRange" [v "right_range"])
-              , (v "result") `assign` (v "left" `fn` v "right")
+              , assert_ $ call "fInRange" [v "left", v "left_range"]
+              , assert_ $ call "fInRange" [v "right", v "right_range"]
+              , v "left" `assign` v "left"
+              , v "right" `assign` v "right"
+              , v "result" `assign` (v "left" `fn` v "right")
+              , declare (t Unsigned16) "testy"
+              , declare (t Double) "testy2"
+              , v "testy" `assign` (fpExp $ v "result")
+              , v "testy2" `assign` (v "result")
               , expect_ isSat (error "Has to start out SAT")
               ]
   genBodySMT verif
@@ -237,6 +286,8 @@ defineAll op = do
   class_ range
   define op
   define floatInRange
+  define wellFormedRange
+  define fInRange
   define newFloatInputRange
   define verifySaneRange
   define verifyNegZero
