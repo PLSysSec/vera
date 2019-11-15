@@ -64,6 +64,9 @@ fInRange =
              , declare (t Bool) "hasHighHolds"
              , v "hasHighHolds" `assign` (testImplies ((isNan $ v "fval") .||. (isInf $ v "fval") .||. (v "fval" .>. (cast (v "frange" .->. "upper") Double))) (not_ $ v "frange" .->. "hasInt32UpperBound"))
 
+             -- try to help out the solver
+             , assert_ $ (isInf $ v "fval") .||. (isNan $ v "fval") .||. (fpExp (v "fval") .<=. maxFiniteExponent)
+
              , declare (t Bool) "underExp"
              , v "underExp" `assign` ((fpExp $ v "fval") .<=. (v "frange" .->. "maxExponent"))
 
@@ -275,13 +278,32 @@ setupFloat op fnName fn = do
               , v "left" `assign` v "left"
               , v "right" `assign` v "right"
               , v "result" `assign` (v "left" `fn` v "right")
-              , declare (t Unsigned16) "testy"
-              , declare (t Double) "testy2"
-              , v "testy" `assign` (fpExp $ v "result")
-              , v "testy2" `assign` (v "result")
               , expect_ isSat (error "Has to start out SAT")
               ]
   genBodySMT verif
+
+-- setupFloat :: FunctionDef
+--            -> String
+--            -> (Codegen SExpr -> Codegen SExpr -> Codegen SExpr)
+--            -> Codegen ()
+-- setupRangeOp op fnName fn = do
+--   defineAll op
+--   let verif = [ declare (c "range") "left_range"
+--               , declare (t Double) "left"
+--               , declare (c "range") "right_range"
+--               , declare (t Double) "right"
+--               , declare (c "range") "result_range"
+--               , declare (t Double) "result"
+--               , (v "left_range")   `assign` (call "wellFormedRange" [])
+--               , (v "right_range")  `assign` (call "wellFormedRange" [])
+--               , (v "result_range") `assign` call fnName [v "left_range", v "right_range"]
+--                 -- Actually perform the JS operation
+--               , assert_ $ call "fInRange" [v "left", v "left_range"]
+--               , assert_ $ call "fInRange" [v "right", v "right_range"]
+--               , expect_ isSat (error "Has to start out SAT")
+--               , assert_ $ ()
+--               ]
+--   genBodySMT verif
 
 defineAll op = do
   class_ range

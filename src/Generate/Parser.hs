@@ -1,20 +1,20 @@
-{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE NamedFieldPuns    #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Generate.Parser where
+import           Data.Either                            (partitionEithers)
 import           Data.List
-import           Data.Either (partitionEithers)
-import           Data.Text (Text)
+import           Data.Text                              (Text)
 import           Data.Void
-import qualified DSL.DSL                    as D
-import qualified DSL.Typed                  as DT
-import qualified Generate.Lang as L
-import           Generate.State
+import qualified DSL.DSL                                as D
+import qualified DSL.Typed                              as DT
+import qualified Generate.Lang                          as L
 import           Generate.SMTAST
-import           Text.Parsec (Parsec)
-import           Text.ParserCombinators.Parsec hiding (Parser)
+import           Generate.State
+import           Text.Parsec                            (Parsec)
+import           Text.ParserCombinators.Parsec          hiding (Parser)
 import           Text.ParserCombinators.Parsec.Expr
 import           Text.ParserCombinators.Parsec.Language
-import qualified Text.ParserCombinators.Parsec.Token as Token
+import qualified Text.ParserCombinators.Parsec.Token    as Token
 
 
 type CStmt = Codegen SStmt
@@ -87,10 +87,10 @@ decl :: Parser CStmt
 decl = do
     ty <- decl_type
     i <- identifier
-    return $ L.declare ty i 
+    return $ L.declare ty i
 
 decl_type :: Parser STy
-decl_type = 
+decl_type =
     prim <|> void <|> clas
     where
         prim = PrimType <$> prim_type
@@ -134,7 +134,7 @@ if_stmt = do
     where
         single_stmt = return <$> stmt
 
--- Void 
+-- Void
 void_stmt :: Parser CStmt
 void_stmt = do
     i <- identifier
@@ -145,7 +145,7 @@ void_stmt = do
 return_stmt :: Parser CStmt
 return_stmt = do
     reserved "return"
-    e <- expr 
+    e <- expr
     return $ Return <$> e
 
 
@@ -309,7 +309,7 @@ member = do
 
 -- This list does its best to match: https://en.cppreference.com/w/cpp/language/operator_precedence
 operators = [[postfix $ member]
-            ,[prefix $ choice [prefixOp "!" L.not_, prefixOp "~" L.neg_, try cast]]
+            ,[prefix $ choice [prefixOp "!" L.not_, prefixOp "~" L.bitwise_neg_, try cast]]
             ,[binary "*" Mul AssocLeft]
             ,[binary "+" Add AssocLeft, binary "-" Sub AssocLeft]
             ,[binary "<<" Shl AssocLeft, binary ">>" Shr AssocLeft]
@@ -365,7 +365,7 @@ signedNaturalOrFloat = do
     s <- option 1 $ char '-' >> (return  (-1))
     n <- naturalOrFloat
     return $ case n of
-        Left i -> Left $ i * s
+        Left i  -> Left $ i * s
         Right f -> Right $ f * fromIntegral s
 
 reservedOp :: String -> Parser ()

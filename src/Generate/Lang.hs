@@ -140,11 +140,14 @@ tern_ c' b1' b2' = do
 
 
 
-neg_ :: Codegen SExpr -> Codegen SExpr
-neg_ ex = unaryOp ex Neg
+negative_ :: Codegen SExpr -> Codegen SExpr
+negative_ ex = unaryOp ex Neg
 
 not_ :: Codegen SExpr -> Codegen SExpr
 not_ ex = unaryOp ex Not
+
+bitwise_neg_ ::Codegen SExpr -> Codegen SExpr
+bitwise_neg_ ex = unaryOp ex Not
 
 jsNot :: Codegen SExpr -> Codegen SExpr
 jsNot ex = unaryOp ex JSNot

@@ -134,12 +134,12 @@ or =
                    , v "upper" `assign` (cast (uint32max .>>. (min_ (v "clzLhs") (v "clzRhs"))) Signed)
                    ]
                    [ if_ (v "lhs" .->. "upper" .<. n Signed 0)
-                     [ v "leadingOnes" `assign` call "countLeadingZeroes" [cast (not_ $ v "lhs" .->. "lower") Unsigned]
+                     [ v "leadingOnes" `assign` call "countLeadingZeroes" [cast (bitwise_neg_ $ v "lhs" .->. "lower") Unsigned]
                      , v "lower" `assign` (max_ (v "lower") (not_ $ cast (uint32max .>>. v "leadingOnes") Signed))
                      , v "upper" `assign` n Signed (-1)
                      ] []
                    , if_ (v "rhs" .->. "upper" .<. n Signed 0)
-                     [v "leadingOnes" `assign` call "countLeadingZeroes" [cast (not_ $ v "rhs" .->. "lower") Unsigned]
+                     [v "leadingOnes" `assign` call "countLeadingZeroes" [cast (bitwise_neg_ $ v "rhs" .->. "lower") Unsigned]
                      , v "lower" `assign` (max_ (v "lower") (not_ $ cast (uint32max .>>. v "leadingOnes") Signed))
                      , v "upper" `assign` n Signed (-1) ] []
                    ]
@@ -393,9 +393,9 @@ abs =
              , declare (t Signed) "u"
              , v "l" `assign` (v "op" .->. "lower")
              , v "u" `assign` (v "op" .->. "upper")
-             , return_ $ call "Range6" [ cast (max_ (max_ (n Signed 0) (v "l")) (tern_ (v "u" .==. int32min) int32max (neg_ $ v "u"))) Signed64
+             , return_ $ call "Range6" [ cast (max_ (max_ (n Signed 0) (v "l")) (tern_ (v "u" .==. int32min) int32max (negative_ $ v "u"))) Signed64
                                        , n Bool 1
-                                       , cast (max_ (max_ (n Signed 0) (v "u")) (tern_ (v "l" .==. int32min) int32max (neg_ $ v "l"))) Signed64
+                                       , cast (max_ (max_ (n Signed 0) (v "u")) (tern_ (v "l" .==. int32min) int32max (negative_ $ v "l"))) Signed64
                                        , (call "hasInt32Bounds" [v "op"]) .&&. (v "l" .!=. int32min)
                                        , v "op" .->. "canHaveFractionalPart"
                                        , excludesNegativeZero

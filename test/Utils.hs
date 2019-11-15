@@ -9,16 +9,16 @@ import           IonMonkeyGenerated.VerifyIndividual
 mkFloatTests :: String -> TestFunction -> BenchTest
 mkFloatTests testGroupName testFn =
   benchTestGroup testGroupName
-    [ makeTest (testGroupName ++ " lower i32") $ testLower testFn
-    , makeTest (testGroupName ++ " upper i32") $ testUpper testFn
-    , makeTest (testGroupName ++ " UB") $ testUB testFn
-    , makeTest (testGroupName ++ " low invariant") $ testLowInvariant testFn
-    , makeTest (testGroupName ++ " high invariant") $ testHighInvariant testFn
-    , makeTest (testGroupName ++ " negative zero") $ testNegZ testFn
-    , makeTest (testGroupName ++ " nan") $ testNan testFn
-    , makeTest (testGroupName ++ " inf") $ testInf testFn
-    , makeTest (testGroupName ++ " fract") $ testFract testFn
-    , makeTest (testGroupName ++ " exp") $ testExp testFn
+    [ -- makeTest (testGroupName ++ " lower i32") $ testLower testFn
+    -- , makeTest (testGroupName ++ " upper i32") $ testUpper testFn
+--      makeTest (testGroupName ++ " UB") $ testUB testFn
+    --  makeTest (testGroupName ++ " low invariant") $ testLowInvariant testFn
+    -- , makeTest (testGroupName ++ " high invariant") $ testHighInvariant testFn
+     makeTest (testGroupName ++ " negative zero") $ testNegZ testFn
+    -- , makeTest (testGroupName ++ " nan") $ testNan testFn
+    -- , makeTest (testGroupName ++ " inf") $ testInf testFn
+    -- , makeTest (testGroupName ++ " fract") $ testFract testFn
+    -- , makeTest (testGroupName ++ " exp") $ testExp testFn
     ]
   where makeTest str act = benchTestCase str $ evalCodegen Nothing act
 
