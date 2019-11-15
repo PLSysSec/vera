@@ -202,9 +202,10 @@ setupUnaryFloat op fnName fn = do
               , declare (t Double) "start"
               , declare (c "range") "result_range"
               , declare (t Double) "result"
-              , (v "start_range")  `assign` (call "newFloatInputRange" [])
+              , (v "start_range")  `assign` (call "wellFormedRange" [])
               , (v "result_range") `assign` call fnName [v "start_range"]
-              , (v "start")  `assign` (call "floatInRange" [v "start_range"])
+              , assert_ $ call "fInRange" [v "start", v "start_range"]
+              , v "start" `assign` v "start"
               , (v "result") `assign` (fn $ v "start")
               , expect_ isSat (error "Has to start out SAT")
               ]
