@@ -88,8 +88,8 @@ and =
       body = [ if_
                (((v "lhs" .->. "lower") .<. (n Signed 0)) .&&. ((v "rhs" .->. "lower") .<. (n Signed 0)))
                [return_ $ call "newInt32Range" [ int32min
-                                              , max_ (v "lhs" .->. "upper") (v "rhs" .->. "upper")
-                                              ] ] []
+                                               , max_ (v "lhs" .->. "upper") (v "rhs" .->. "upper")
+                                                ] ] []
              , declare (t Signed) "lower_"
              , declare (t Signed) "upper_"
              , (v "lower_") `assign` (n Signed 0)
@@ -230,6 +230,7 @@ not :: FunctionDef
 not = let args = [ ("op", c "range") ]
           body = [ declare (c "range") "result_range"
                  , declare (t Bool) "startIsUndef"
+                 , v "startIsUndef" `assign` (undef $ v "op" .->. "upper")
                  , (v "result_range") .->. "lower" `assign` (not_ $ (v "op") .->. "upper")
                  , (v "result_range") .->. "upper" `assign` (not_ $ (v "op") .->. "lower")
                  , return_ $ v "result_range"

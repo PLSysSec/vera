@@ -188,7 +188,12 @@ genAssignOpSMT result one two op = do
 genStmtSMT :: SStmt -> Codegen ()
 genStmtSMT stmt =
   case stmt of
-    Versioned{} -> return ()
+    Versioned varexpr -> do
+      let v = exprVar varexpr
+          ty = case v of
+                 SVar{} -> PrimType $ varTy v
+                 CVar{} -> Class $ varClass v
+      newVar ty (varName v)
     Expect resultPred act -> do
       result <- runSolverOnSMT
       unless (resultPred result) $ liftIO $ act result
@@ -214,10 +219,7 @@ genStmtSMT stmt =
       disjunction <- liftVerif $ T.cppOr e1SMT e2SMT
       liftVerif $ T.vassert disjunction
     VoidCall name expr -> void $ genCallSMT $ Call name expr
-    Decl var -> when (isPrimType var) $ do
-      varSMT <- genVarSMT var
-      liftVerif $ T.rawNot (T.vundef varSMT) >>= T.assert
-    -- Declaration is just important for variable tracking
+    Decl{} -> return () -- we handle making variables defined when they are declared in lang
     -- We are assigning to a class
     -- In this case, the RHS must either be another class or a call
     Assign (VarExpr var) expr | isClassType var ->

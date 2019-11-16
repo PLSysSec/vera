@@ -32,7 +32,6 @@ floatInRangeTest :: BenchTest
 floatInRangeTest = benchTestCase "float in range" $ do
   r <- evalCodegen Nothing $ do
     class_ range
-    define floatIsInRange
     genBodySMT [ declare (c "range") "testRange"
                , declare (t Bool) "inRange"
                -- , v "testRange" .->. "maxExponent" `assign` (n Unsigned16 3)

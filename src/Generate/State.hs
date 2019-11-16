@@ -5,7 +5,7 @@ import           Control.Monad.Reader
 import           Control.Monad.State.Strict
 import           Data.List                  (isInfixOf)
 import qualified Data.Map                   as M
-import           DSL.DSL                    hiding (vars)
+import qualified DSL.DSL                    as D
 import           DSL.Typed
 import           Generate.SMTAST
 import qualified Z3.Monad                   as Z
@@ -133,7 +133,15 @@ getFormalArgs :: FunctionName -> Codegen [SVar]
 getFormalArgs funName = do
   s0 <- get
   case M.lookup funName $ functions s0 of
-    Just (LazyFunction args _ _) -> forM args nextVar
+    Just (LazyFunction args _ _) -> do
+      forM args (\a -> do
+                   v <- nextVar a
+                   let ty = if isPrimType v
+                            then PrimType $ varTy v
+                            else Class $ varClass v
+                   makeDefined (varName v) ty
+                   return v
+                )
     Nothing  -> error $ unwords ["Function", funName, "undefined so has no formal args"]
 
 -- | Return the variable representing a function's return value
@@ -211,7 +219,7 @@ newVar ty str = do
       Class c     -> do
         fields <- getFields c
         fvs <- forM (M.toList fields) $ \(name, ty) -> return (str ++ "_" ++ name, PrimType ty)
-        return $ (str, ty):fvs
+        return $ fvs ++ [(str, ty)]
     forM_ varsToMake $ \(v, t) -> addVar v t
   where
     addVar :: VarName -> STy -> Codegen ()
@@ -220,10 +228,23 @@ newVar ty str = do
       let allVars = vars s0
           allTys = tys s0
       case M.lookup var allVars of
-        Just{} -> return ()
-        Nothing -> put $ s0 { vars = M.insert var 0 allVars
-                            , tys = M.insert var ty allTys
-                            }
+        Just ver -> return ()
+        Nothing -> do
+          put $ s0 { vars = M.insert var 0 allVars
+                   , tys = M.insert var ty allTys
+                   }
+      makeDefined var ty
+
+makeDefined :: VarName -> STy -> Codegen ()
+makeDefined var ty = do
+  when (isPrim ty) $ do
+    vname <- curVar var
+    v <- getVar vname
+    liftVerif $ D.not (vundef v) >>= D.assert
+  when (isClass ty) $ do
+    vars <- curVar var >>= getFieldVars >>= (mapM getVar)
+    forM_ vars (\v -> liftVerif $ D.not (vundef v) >>= D.assert)
+
 
 --
 -- Variables
@@ -244,7 +265,7 @@ varType str = do
   allTys <- tys `liftM` get
   case M.lookup str allTys of
     Just ty -> return ty
-    Nothing -> error $ unwords $ ["Undeclared variable:", str]
+    Nothing -> error $ unwords $ ["Undeclared variable ty:", str]
 
 curVar :: String -> Codegen SVar
 curVar str = do
@@ -254,7 +275,7 @@ curVar str = do
   else do
     s0 <- get
     case M.lookup str $ vars s0 of
-      Nothing  -> error $ unwords ["Undeclared variable", str]
+      Nothing  -> error $ unwords ["Undeclared variable curvar", str]
       Just ver -> return $ SVar (primTy ty) str ver
 
 nextVar :: String -> Codegen SVar
@@ -273,7 +294,7 @@ nextVar str = do
     updateVersion str = do
       s0 <- get
       case M.lookup str $ vars s0 of
-        Nothing -> error $ unwords ["Undeclared variable", str]
+        Nothing -> error $ unwords ["Undeclared variable updated version", str]
         Just v  -> do
           let nextVer = v + 1
           put $ s0 { vars = M.insert str nextVer $ vars s0 }

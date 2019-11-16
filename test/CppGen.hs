@@ -2,23 +2,24 @@ module CppGen (cppGenTests) where
 
 import           ActiveCode.Cpp
 import           BenchUtils
-import           Control.Monad.State.Strict    (liftIO)
-import           DSL.DSL                       (SMTResult (..))
-import           DSL.Typed                     (Type (..))
+import           Control.Monad.State.Strict          (liftIO)
+import           Data.List                           (intercalate)
+import           DSL.DSL                             (SMTResult (..))
+import           DSL.Typed                           (Type (..))
+import           Generate.CGen
 import           Generate.Lang
 import           Generate.SMTGen
 import           Generate.State
-import           Generate.CGen
 import           IonMonkeyGenerated.Helpers
 import           IonMonkeyGenerated.Objects
 import           IonMonkeyGenerated.Operations
 import           IonMonkeyGenerated.Verify
-import           Prelude                       hiding (abs, and, floor, max,
-                                                min, not, or)
+import           IonMonkeyGenerated.VerifyIndividual
+import           Prelude                             hiding (abs, and, floor,
+                                                      max, min, not, or)
+import           System.Directory                    (createDirectoryIfMissing)
 import           Test.Tasty.HUnit
 import           Utils
-import           Data.List                     (intercalate)
-import           System.Directory              (createDirectoryIfMissing)
 
 cppGenTests :: BenchTest
 cppGenTests = benchTestGroup "CPP Gen tests"
@@ -188,9 +189,9 @@ genAllFunctionsTest = benchTestCase "cpp gen all functions test" $ do
     define countLeadingZeroes
     define newInt32InputRange
     define newFloatInputRange
-    define intInRange
-    define floatInRange
-    define verifySaneRange
+--    define intInRange
+--    define floatInRange
+--    define verifySaneRange
     define verifyLower
     define verifyUpper
     define verifyNegZero
@@ -241,9 +242,9 @@ genAllFunctionsTest = benchTestCase "cpp gen all functions test" $ do
     compiledCountLeadingZeroes <- compileFunction countLeadingZeroes
     compiledNewInt32InputRange <- compileFunction newInt32InputRange
     compiledNewFloatInputRange <- compileFunction newFloatInputRange
-    compiledIntInRange <- compileFunction intInRange
-    compiledFloatInRange <- compileFunction floatInRange
-    compiledVerifySaneRange <- compileFunction verifySaneRange
+--    compiledIntInRange <- compileFunction intInRange
+--    compiledFloatInRange <- compileFunction floatInRange
+    -- compiledVerifySaneRange <- compileFunction verifySaneRange
     compiledVerifyLower <- compileFunction verifyLower
     compiledVerifyUpper <- compileFunction verifyUpper
     compiledVerifyNegZero <- compileFunction verifyNegZero
@@ -294,9 +295,9 @@ genAllFunctionsTest = benchTestCase "cpp gen all functions test" $ do
                           , compiledCountLeadingZeroes
                           , compiledNewInt32InputRange
                           , compiledNewFloatInputRange
-                          , compiledIntInRange
-                          , compiledFloatInRange
-                          , compiledVerifySaneRange
+                          -- , compiledIntInRange
+                          -- , compiledFloatInRange
+                          -- , compiledVerifySaneRange
                           , compiledVerifyLower
                           , compiledVerifyUpper
                           , compiledVerifyNegZero

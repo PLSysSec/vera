@@ -22,6 +22,10 @@ isVoid :: STy -> Bool
 isVoid Void = True
 isVoid _    = False
 
+isPrim :: STy -> Bool
+isPrim PrimType{} = True
+isPrim _          = False
+
 data SVar = SVar { varTy      :: Type
                  , varName    :: VarName
                  , varVersion :: Version
