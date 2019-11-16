@@ -290,7 +290,13 @@ lsh =
              ]
       body = [ declare (t Signed) "shift"
              , v "shift" `assign` (v "c" .&&. n Signed 31)
-             , if_ (((cast (((((cast (v "lhs" .->. "lower") Unsigned) .<<. v "shift")  .<<. n Signed 1) .>>. v "shift") .>>. n Signed 1) Signed) .==. ((cast (((((cast (v "lhs" .->. "upper") Unsigned) .<<. v "shift")  .<<. n Signed 1) .>>. v "shift") .>>. n Signed 1) Signed))))
+             , declare (t Unsigned) "lowerShifted"
+             , declare (t Unsigned) "upperShifted"
+             , v "lowerShifted" `assign` (((cast (v "lhs" .->. "lower") Unsigned) .<<. (v "shift") .<<. (n Signed 1)) .>>. (v "shift") .>>. (n Signed 1))
+             , v "upperShifted" `assign` (((cast (v "lhs" .->. "upper") Unsigned) .<<. (v "shift") .<<. (n Signed 1)) .>>. (v "shift") .>>. (n Signed 1))
+             , declare (t Bool) "canShift"
+             , v "canShift" `assign` (((cast (v "lowerShifted") Signed) .==. (v "lhs" .->. "lower")) .&&. (((cast (v "upperShifted") Signed) .==. (v "lhs" .->. "upper"))))
+             , if_ (v "canShift")
                [return_ $ call "newInt32Range" [ cast ((cast (v "lhs" .->. "lower") Unsigned) .<<. v "shift") Signed
                                                , cast ((cast (v "lhs" .->. "upper") Unsigned) .<<. v "shift") Signed
                                                ]

@@ -79,6 +79,23 @@ fInRange =
              ]
   in Function "fInRange" (t Bool) args body
 
+vInRange :: FunctionDef
+vInRange =
+  let args = [ ("fval", t Signed)
+             , ("frange", c "range")
+             ]
+      body = [
+              declare (t Bool) "hasLowHolds"
+             , v "hasLowHolds" `assign` (v "fval" .>. (v "frange" .->. "lower"))
+
+             , declare (t Bool) "hasHighHolds"
+             , v "hasHighHolds" `assign` (v "fval" .<. (v "frange" .->. "upper"))
+
+             , return_ $ (not_ $ v "frange" .->. "isEmpty") .&&. v "hasLowHolds" .&&. v "hasHighHolds"
+
+             ]
+  in Function "vInRange" (t Bool) args body
+
 --
 -- Automatic testing infrastructure
 --
@@ -219,10 +236,10 @@ setupUnaryi32 op fnName fn = do
               , declare (t Signed) "start"
               , declare (c "range") "result_range"
               , declare (t Signed) "result"
-              , (v "start_range")   `assign` (call "newInt32InputRange" [])
+              , (v "start_range")   `assign` (call "wellFormedRange" [])
               , (v "result_range") `assign` call fnName [v "start_range"]
                 -- Actually perform the JS operation
-              , (v "start")  `assign` (call "intInRange" [v "start_range"])
+              , assert_ $ call "vInRange" [v "start", v "start_range"]
               , (v "result") `assign` (fn $ v "start")
               , expect_ isSat (error "Has to start out SAT")
               ]
@@ -254,16 +271,16 @@ setupConstanti32 :: FunctionDef
                  -> Codegen ()
 setupConstanti32 op fnName fn = do
   defineAll op
-  let verif = [ declare (c "range") "left_range"
-              , declare (t Signed) "left"
+  let verif = [ declare (c "range") "start_range"
+              , declare (t Signed) "start"
               , declare (t Signed) "right"
               , declare (c "range") "result_range"
               , declare (t Signed) "result"
-              , (v "left_range")   `assign` (call "newInt32InputRange" [])
-              , (v "result_range") `assign` call fnName [v "left_range", v "right"]
+              , (v "start_range")   `assign` (call "wellFormedRange" [])
+              , (v "result_range") `assign` call fnName [v "start_range", v "right"]
                 -- Actually perform the JS operation
-              , (v "left")  `assign` (call "intInRange" [v "left_range"])
-              , (v "result") `assign` (v "left" `fn` v "right")
+              , assert_ $ call "vInRange" [v "start", v "start_range"]
+              , (v "result") `assign` (v "start" `fn` v "right")
               , expect_ isSat (error "Has to start out SAT")
               ]
   genBodySMT verif
@@ -280,12 +297,12 @@ setupi32 op fnName fn = do
               , declare (t Signed) "right"
               , declare (c "range") "result_range"
               , declare (t Signed) "result"
-              , (v "left_range")   `assign` (call "newInt32InputRange" [])
-              , (v "right_range")  `assign` (call "newInt32InputRange" [])
+              , (v "left_range")   `assign` (call "wellFormedRange" [])
+              , (v "right_range")  `assign` (call "wellFormedRange" [])
               , (v "result_range") `assign` call fnName [v "left_range", v "right_range"]
                 -- Actually perform the JS operation
-              , (v "left")  `assign` (call "intInRange" [v "left_range"])
-              , (v "right") `assign` (call "intInRange" [v "right_range"])
+              , assert_ $ call "vInRange" [v "left", v "left_range"]
+              , assert_ $ call "vInRange" [v "right", v "right_range"]
               , (v "result") `assign` (v "left" `fn` v "right")
               , expect_ isSat (error "Has to start out SAT")
               ]
@@ -347,7 +364,7 @@ setupSetOp op fnName = do
 defineAll op = do
   class_ range
   define op
-  define floatInRange
+  define vInRange
   define wellFormedRange
   define fInRange
   define newFloatInputRange
@@ -374,7 +391,6 @@ defineAll op = do
   define isFiniteNonNegative
   define isFiniteNegative
   define newUInt32Range
-  define intInRange
   define verifyLower
   define verifyUpper
   define verifyUB

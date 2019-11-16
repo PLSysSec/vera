@@ -23,25 +23,25 @@ genIonMonkeyTests = benchTestGroup "Generated IonMonkey tests"
                     [ -- unionTest
                     -- intersectTest
                     --  brokenIntersectTest
-                     addTests
-                    , subTests
-                    -- , mulTests
-                    -- ,  andTests
-                    -- , orTests
-                    -- , xorTests
-                    -- , notTests
-                    -- , lshTests
-                    -- , rshTests
+                    --  addTests
+                    -- , subTests
+                    -- -- , mulTests
+                      andTests
+                    , orTests
+                    , xorTests
+                    , notTests
+                    , lshTests
+                    , rshTests
                     -- , urshTests
-                    -- , lsh'Tests
-                    -- , rsh'Tests
+                    , lsh'Tests
+                    , rsh'Tests
                     -- , ursh'Tests
-                    , absTests
-                    , minTests
-                    , maxTests
+                    -- , absTests
+                    -- , minTests
+                    -- , maxTests
                     -- , floorTests
-                    -- , ceilTests
-                    , signTests
+                     -- ceilTests
+--                    , signTests
                     ]
 
 unionTest :: BenchTest
@@ -87,7 +87,7 @@ lsh'Tests :: BenchTest
 lsh'Tests = mki32Tests "Lsh'" $ Binary "lsh'" lsh' jsLsh
 
 rsh'Tests :: BenchTest
-rsh'Tests = mki32Tests "Lsh'" $ Binary "rsh'" rsh' jsRsh
+rsh'Tests = mki32Tests "Rsh'" $ Binary "rsh'" rsh' jsRsh
 
 ursh'Tests :: BenchTest
 ursh'Tests = mki32Tests "Ursh'" $ Binary "ursh'" ursh' jsRsh

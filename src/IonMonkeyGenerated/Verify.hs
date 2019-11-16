@@ -856,8 +856,10 @@ showInt32Result str result = error $ str ++ "\n" ++ (unlines $ getIntList $ exam
 getIntList :: M.Map String Double -> [String]
 getIntList fls = catMaybes $ map (\(str, fl) ->
                        case str of
-                         -- _ | "undef" `isInfixOf` str -> Nothing
+                         _ | "undef" `isInfixOf` str -> Nothing
                          _ | "elem" `isInfixOf` str -> sstr str fl
+                         _ | "jsShl" `isInfixOf` str -> sstr str fl
+                         _ | "shift" `isInfixOf` str -> sstr str fl
                          _ | "left_range_canHaveFractionalPart" `isInfixOf` str -> sstr str fl
                          _ | "right_range_canHaveFractionalPart" `isInfixOf` str -> sstr str fl
                          _ | "result_range_canHaveFractionalPart" `isInfixOf` str -> sstr str fl
@@ -878,9 +880,8 @@ getIntList fls = catMaybes $ map (\(str, fl) ->
                          _ | "start_range_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
                          _ | "result_1" `isInfixOf` str -> sstr str fl
                          _ | "right_1" `isInfixOf` str -> sstr str fl
-                         _ | "shift_1" `isInfixOf` str -> sstr str fl
                          _ | "left_1" `isInfixOf` str -> sstr str fl
-                         _ | "start_1" `isInfixOf` str -> sstr str fl
+                         _ | "start_" `isInfixOf` str -> sstr str fl
                          _ | "left_range_inter_lower" `isInfixOf` str -> sstr str fl
                          _ | "right_range_inter_lower" `isInfixOf` str -> sstr str fl
                          _ | "left_range_inter_upper" `isInfixOf` str -> sstr str fl

@@ -591,6 +591,10 @@ jsShl left right = do
   result <- D.safeSll (vnode left) shiftCount
   resultVar <- D.i32v "jsShlResult"
   D.assign result resultVar
+  constVar <- D.i32v "jsShlConst"
+  D.assign constVar $ vnode right
+  val <- D.i32v "jsShlVal"
+  D.assign val $ vnode left
   undef <- D.i1c 0
   return $ VNode undef result Signed
 
