@@ -20,26 +20,38 @@ import           Utils
 
 genIonMonkeyTests :: BenchTest
 genIonMonkeyTests = benchTestGroup "Generated IonMonkey tests"
-                    [-- --  addTests
-                    -- -- , subTests
-                    -- -- , mulTests
-                    -- --   andTests
-                    -- -- , orTests
-                    -- -- , xorTests
-                    -- -- , notTests
-                    -- -- , lshTests
-                    -- -- , rshTests
-                    -- -- , urshTests
-                    -- -- , lsh'Tests
-                    -- -- , rsh'Tests
-                    -- -- , ursh'Tests
-                    -- -- , absTests
-                    -- -- , minTests
-                    -- -- , maxTests
-                    --  floorTests
+                    [ -- unionTest
+                    -- intersectTest
+                    --  brokenIntersectTest
+                     addTests
+                    , subTests
+                    -- , mulTests
+                    -- ,  andTests
+                    -- , orTests
+                    -- , xorTests
+                    -- , notTests
+                    -- , lshTests
+                    -- , rshTests
+                    -- , urshTests
+                    -- , lsh'Tests
+                    -- , rsh'Tests
+                    -- , ursh'Tests
+                    , absTests
+                    , minTests
+                    , maxTests
+                    -- , floorTests
                     -- , ceilTests
-                    -- , signTests
+                    , signTests
                     ]
+
+unionTest :: BenchTest
+unionTest = benchTestCase "union" $ evalCodegen Nothing $ testUnion $ Set "union" union
+
+intersectTest :: BenchTest
+intersectTest = benchTestCase "intersect" $ evalCodegen Nothing $ testIntersection $ Set "intersect" intersect
+
+brokenIntersectTest :: BenchTest
+brokenIntersectTest = benchTestCase "broken intersect" $ evalCodegen Nothing $ testIntersection $ Set "intersect" brokenIntersect
 
 addTests :: BenchTest
 addTests = mkFloatTests "Add" $ Binary "add" add jsAdd

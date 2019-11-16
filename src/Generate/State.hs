@@ -17,6 +17,7 @@ data CodegenState = CodegenState { vars      :: M.Map VarName Version
                                  -- * For code generation
                                  , curClassVar :: [SVar]
                                  , retVals     :: [[VNode]]
+                                 , retConds    :: M.Map VNode [VNode]
                                  , syms        :: M.Map SVar VNode
                                  , functions   :: M.Map FunctionName LazyFunction
                                  }
@@ -44,7 +45,7 @@ instance MonadFail Codegen where
 --
 
 emptyCodegenState :: CodegenState
-emptyCodegenState = CodegenState M.empty M.empty M.empty M.empty [] [] M.empty M.empty
+emptyCodegenState = CodegenState M.empty M.empty M.empty M.empty [] [] M.empty M.empty M.empty
 
 liftVerif :: Verif a -> Codegen a
 liftVerif = Codegen . lift
@@ -98,6 +99,19 @@ clearRetVal = do
   s0 <- get
   let rvs = retVals s0
   put $ s0 { retVals = if null rvs then [] else tail rvs }
+
+addRetCond :: VNode -> VNode -> Codegen ()
+addRetCond rval cond = do
+  s0 <- get
+  let newConds = M.insertWith (++) rval [cond] $ retConds s0
+  put $ s0 { retConds = newConds }
+
+getRetConds :: VNode -> Codegen (Maybe VNode)
+getRetConds rval = do
+  s0 <- get
+  case M.lookup rval $ retConds s0 of
+    Just conds -> foldM (\eq node -> liftVerif $ cppOr eq node) (head conds) (tail conds) >>= return . Just
+    Nothing    -> return Nothing -- I think this is right but leaving it in this form for now
 
 -- | Make a new LazyFunction. Anytime we invoke it, it will re-version all of the
 -- variables within the function body automatically

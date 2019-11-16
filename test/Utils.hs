@@ -9,9 +9,9 @@ import           IonMonkeyGenerated.VerifyIndividual
 mkFloatTests :: String -> TestFunction -> BenchTest
 mkFloatTests testGroupName testFn =
   benchTestGroup testGroupName
-    [ makeTest (testGroupName ++ " lower i32") $ testLower testFn
-    , makeTest (testGroupName ++ " float lower i32") $ testFlLower testFn
-    , makeTest (testGroupName ++ " float upper i32") $ testFlUpper testFn
+    [makeTest (testGroupName ++ " lower i32") $ testLower testFn
+    -- , makeTest (testGroupName ++ " float lower i32") $ testFlLower testFn
+    -- , makeTest (testGroupName ++ " float upper i32") $ testFlUpper testFn
     , makeTest (testGroupName ++ " upper i32") $ testUpper testFn
     , makeTest (testGroupName ++ " UB") $ testUB testFn
     , makeTest (testGroupName ++ " low invariant") $ testLowInvariant testFn

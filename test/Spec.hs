@@ -19,13 +19,14 @@ allTests :: [BenchTest]
 allTests = [ -- ionMonkeyTests
            -- , notterminating
            -- , helpersTests
-       genIonMonkeyTests
+      genIonMonkeyTests
           -- genHelpersTests
            -- , inputTests
 --            cppTests
            -- , jsTests
 --           dslTests
---           , langTests
+--          , langTests
            -- , parserTests
            -- , cppGenTests
+--          , langTests
            ]

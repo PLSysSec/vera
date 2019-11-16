@@ -267,35 +267,6 @@ verifyFpUnaryFunction fnName jsOp fns = do
               ]
   genBodySMT verif
 
-verifyMetaUnion :: Codegen ()
-verifyMetaUnion = do
-  class_ range
-  define floatIsInRange
-  define verifyUnion
-  define verifyIntersection
-  define union
-  define intersect
-  define newFloatInputRange
-  let verif = [ declare (c "range") "left_range"
-              , declare (c "range") "right_range"
-              , declare (c "range") "result_range_union"
-              , declare (c "range") "result_range_intersection"
-              , (v "left_range")   `assign` (call "newFloatInputRange" [])
-              , (v "right_range")  `assign` (call "newFloatInputRange" [])
-              , (v "result_range_union") `assign` call "union" [v "left_range", v "right_range"]
-              -- , (v "result_range_intersection") `assign` call "intersect" [v "left_range", v "right_range"]
-              , expect_ isSat (error "Has to start out SAT")
-              -- , vcall "verifyUnion" [ v "right_range"
-              --                       , v "left_range"
-              --                       , v "result_range_union"
-              --                       ]
-              , vcall "verifyIntersection" [ v "left_range"
-                                           , v "right_range"
-                                           , v "result_range_intersection"
-                                           ]
-              ]
-  genBodySMT verif
-
 -- Setup
 
 intInRange :: FunctionDef
@@ -432,6 +403,8 @@ floatIsInRange =
 
 -- Union and intersection
 
+
+
 verifyUnion :: FunctionDef
 verifyUnion =
   let args = [ ("right_range_union", c "range")
@@ -440,13 +413,8 @@ verifyUnion =
              ]
       body = [ declare (t Double) "elem"
              , push_
-             , declare (t Bool) "in_right"
-             , declare (t Bool) "in_left"
-             , declare (t Bool) "in_result"
-             , v "in_right" `assign` call "floatIsInRange" [v "right_range_union", v "elem"]
-             , v "in_left" `assign` call "floatIsInRange" [v "left_range_union",  v "elem"]
-             , v "in_result" `assign` call "floatIsInRange" [v "result_range_union", v "elem"]
-             , assert_ $ ((v "in_right" .||. v "in_left") .&&. (not_ $ v "in_result")) .&&. (not_ $ v "result_range_union" .->. "isEmpty")
+              , assert_ $ ((call "fInRange" [v "elem", v "left_range_union"]) .||. (call "fInRange" [v "elem", v "right_range_union"])) .&&. (not_ $ call "fInRange" [v "elem", v "result_range_union"])
+             , v "elem" `assign` v "elem"
              , expect_ isUnsat $ \r -> showInt32Result "Failed to verify union" r
              , pop_
              ]
@@ -454,23 +422,33 @@ verifyUnion =
 
 verifyIntersection :: FunctionDef
 verifyIntersection =
-  let args = [ ("right_range_intersect", c "range")
-             , ("left_range_intersect", c "range")
-             , ("result_range_intersect", c "range")
+  let args = [ ("left_range_inter", c "range")
+             , ("right_range_inter", c "range")
+             , ("result_range_inter", c "range")
              ]
       body = [ declare (t Double) "elem"
              , push_
-             , declare (t Bool) "in_right"
-             , declare (t Bool) "in_left"
-             , declare (t Bool) "in_result"
-             , v "in_right" `assign` call "floatIsInRange" [v "right_range_intersect", v "elem"]
-             , v "in_left" `assign` call "floatIsInRange" [v "left_range_intersect",  v "elem"]
-             , v "in_result" `assign` call "floatIsInRange" [v "result_range_intersect", v "elem"]
-             , assert_ $ ((v "in_right" .&&. v "in_left") .&&. (not_ $ v "in_result")) .&&. (not_ $ v "result_range_intersect" .->. "isEmpty")
+             , declare (t Bool) "isInRight"
+             , declare (t Bool) "isInLeft"
+             , declare (t Bool) "isInResult"
+             , declare (t Signed) "leftUpper"
+
+             , v "leftUpper" `assign` (v "left_range_inter" .->. "upper")
+
+             , v "elem" `assign` (d Double (0/0))
+             , v "isInRight" `assign` (call "fInRange" [v "elem", v "right_range_inter"])
+             , v "isInLeft" `assign` (call "fInRange" [v "elem", v "left_range_inter"])
+             , v "isInResult" `assign` (call "fInRange" [v "elem", v "result_range_inter"])
+             , assert_ $ v "isInRight"
+             , assert_ $ v "isInRight"
              , expect_ isUnsat $ \r -> showInt32Result "Failed to verify union" r
+             -- , assert_ $ ((call "fInRange" [v "elem", v "left_range_inter"]) .&&. (call "fInRange" [v "elem", v "right_range_inter"])) .&&. (not_ $ call "fInRange" [v "elem", v "result_range_inter"])
+             -- , v "elem" `assign` v "elem"
+             -- , expect_ isUnsat $ \r -> showInt32Result "Failed to verify union" r
              , pop_
              ]
   in Function "verifyIntersection" Void args body
+
 
 -- Normal
 
@@ -878,17 +856,20 @@ showInt32Result str result = error $ str ++ "\n" ++ (unlines $ getIntList $ exam
 getIntList :: M.Map String Double -> [String]
 getIntList fls = catMaybes $ map (\(str, fl) ->
                        case str of
-                         _ | "undef" `isInfixOf` str -> Nothing
-                         _ | "startIsUndef" `isInfixOf` str -> sstr str fl
-                         _ | "subby" `isInfixOf` str -> sstr str fl
+                         -- _ | "undef" `isInfixOf` str -> Nothing
+                         _ | "elem" `isInfixOf` str -> sstr str fl
+                         _ | "left_range_canHaveFractionalPart" `isInfixOf` str -> sstr str fl
+                         _ | "right_range_canHaveFractionalPart" `isInfixOf` str -> sstr str fl
+                         _ | "result_range_canHaveFractionalPart" `isInfixOf` str -> sstr str fl
+                         _ | "range_inter" `isInfixOf` str -> sstr str fl
                          _ | "result_range_upper" `isInfixOf` str -> sstr str fl
                          _ | "result_range_lower" `isInfixOf` str -> sstr str fl
                          _ | "result_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
                          _ | "result_range_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
-                         _ | "result_range_union_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
-                         _ | "result_range_union_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
-                         _ | "result_range_intersection_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
-                         _ | "result_range_intersection_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
+                         _ | "right_range_upper" `isInfixOf` str -> sstr str fl
+                         _ | "right_range_lower" `isInfixOf` str -> sstr str fl
+                         _ | "left_range_upper" `isInfixOf` str -> sstr str fl
+                         _ | "left_range_lower" `isInfixOf` str -> sstr str fl
                          _ | "left_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
                          _ | "left_range_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
                          _ | "right_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
@@ -900,10 +881,10 @@ getIntList fls = catMaybes $ map (\(str, fl) ->
                          _ | "shift_1" `isInfixOf` str -> sstr str fl
                          _ | "left_1" `isInfixOf` str -> sstr str fl
                          _ | "start_1" `isInfixOf` str -> sstr str fl
-                         _ | "left_range_lower" `isInfixOf` str -> sstr str fl
-                         _ | "right_range_lower" `isInfixOf` str -> sstr str fl
-                         _ | "left_range_upper" `isInfixOf` str -> sstr str fl
-                         _ | "right_range_upper" `isInfixOf` str -> sstr str fl
+                         _ | "left_range_inter_lower" `isInfixOf` str -> sstr str fl
+                         _ | "right_range_inter_lower" `isInfixOf` str -> sstr str fl
+                         _ | "left_range_inter_upper" `isInfixOf` str -> sstr str fl
+                         _ | "right_range_inter_upper" `isInfixOf` str -> sstr str fl
                          _ | "start_range_lower" `isInfixOf` str -> sstr str fl
                          _ | "start_range_upper" `isInfixOf` str -> sstr str fl
                          _ -> Nothing

@@ -129,6 +129,7 @@ data SStmt = Decl SVar
            | Implies SExpr SExpr
            | NotIff SExpr SExpr
            | Iff SExpr SExpr
+           | Versioned SExpr
            | Expect (SMTResult -> Bool) (SMTResult -> IO ())
            | Push
            | Pop

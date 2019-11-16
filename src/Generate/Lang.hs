@@ -333,6 +333,13 @@ assign svar' sexpr' = do
   newVar <- nextVar (varName $ exprVar svar)
   return $ Assign (VarExpr newVar) sexpr
 
+version_ :: Codegen SExpr
+         -> Codegen SStmt
+version_ svar' = do
+  svar <- svar'
+  newVar <- nextVar (varName $ exprVar svar)
+  return $ Versioned (VarExpr newVar)
+
 assignOp :: Codegen SExpr
          -> Codegen SExpr
          -> (SExpr -> SExpr -> SExpr -> SStmt)

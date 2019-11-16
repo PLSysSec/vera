@@ -1,20 +1,21 @@
 module Lang where
 import           BenchUtils
-import qualified Data.Map        as Map
-import           DSL.DSL         (isUnsat)
-import           DSL.Typed       (Type (..))
-import           Generate.Lang   as L
+import qualified Data.Map                   as Map
+import           DSL.DSL                    (isUnsat)
+import           DSL.Typed                  (Type (..))
+import           Generate.Lang              as L
 import           Generate.SMTAST
 import           Generate.SMTGen
 import           Generate.State
+import           IonMonkeyGenerated.Objects
 import           Utils
 
 langTests :: BenchTest
-langTests = benchTestGroup "Lang" [ -- declTest
+langTests = benchTestGroup "Lang" [ returnComplexTest -- declTest
                                   -- , classTest
                                   -- , ifTest
-                                    ifTestTwo
-                                  -- , callTest
+                                    -- ifTestTwo
+                                  , callTest
                                   -- , returnTest
                                   -- , classArgTest
                                   -- , classMethodTest
@@ -135,8 +136,7 @@ callTest = benchTestCase "call" $ do
     define $ Function "fun" (t Signed) args body
     genBodySMT [ declare (t Signed) "result"
                , (v "result") `assign` call "fun" [n Signed 5, n Signed 10]
-               ]
-    genBodySMT [ declare (t Signed) "result2"
+               , declare (t Signed) "result2"
                , (v "result2") `assign` call "fun" [n Signed 2, n Signed 4]
                ]
     runSolverOnSMT
@@ -288,3 +288,23 @@ voidCallTest = benchTestCase "void call" $ do
     runSolverOnSMT
 
   unsatTest r
+
+returnComplexTest :: BenchTest
+returnComplexTest = benchTestCase "return complex" $ do
+
+  r <- evalCodegen Nothing $ do
+    class_ range
+    genBodySMT [ declare (c "range") "intersect_result1"
+               , declare (c "range") "intersect_result2"
+
+               , v "intersect_result1" .->. "hasInt32UpperBound" `assign` (n Bool 1)
+               , v "intersect_result2" .->. "hasInt32UpperBound" `assign` (n Bool 0)
+
+               , if_ (n Bool 1) [return_ $ v "intersect_result2"] []
+               , return_ $ v "intersect_result1"
+
+               ]
+
+    runSolverOnSMT
+  satTest r
+

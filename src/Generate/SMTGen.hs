@@ -57,7 +57,8 @@ genCallSMT expr =
       let newClassVar = exprVar $ head args
       setClassVar newClassVar
 
-      retValSyms <- getReturnVal name >>= mapM getVar
+      retVals <- getReturnVal name
+      retValSyms <- mapM getVar retVals
       setReturnValue retValSyms
 
       -- Execute the function. This will re-version all the variables in the function
@@ -187,6 +188,7 @@ genAssignOpSMT result one two op = do
 genStmtSMT :: SStmt -> Codegen ()
 genStmtSMT stmt =
   case stmt of
+    Versioned{} -> return ()
     Expect resultPred act -> do
       result <- runSolverOnSMT
       unless (resultPred result) $ liftIO $ act result
@@ -251,7 +253,7 @@ genStmtSMT stmt =
         [] -> return ()
         [rval] -> do
           exprSym <- genExprSMT expr
-          liftVerif $ T.vassign rval exprSym
+          assignToRet rval exprSym
         rvals -> do
           fields <- case expr of
                       _ | isClassExpr expr -> getFieldVars (exprVar expr) >>= mapM getVar
@@ -259,8 +261,16 @@ genStmtSMT stmt =
                       _ -> error $ unwords ["Malfored return expression", show expr]
           unless (length fields == length rvals) $
             error "Cannot assign variables of different types"
-          forM_ (zip fields rvals) $ \(f, r) -> liftVerif $ T.vassign f r
+          forM_ (zip fields rvals) $ \(f, r) -> assignToRet r f
   where
+    assignToRet :: T.VNode -> T.VNode -> Codegen ()
+    assignToRet lhs rhs = do
+      retConds <- getRetConds lhs
+      case retConds of
+        Just conds -> do
+          assigned <- liftVerif $ T.cppEq lhs rhs
+          liftVerif $ T.cppOr conds assigned >>= T.vassert
+        Nothing -> liftVerif $ T.vassign lhs rhs
     rewriteAssign :: T.VNode -> SVar -> T.VNode -> Codegen ()
     rewriteAssign cond var exprNode | isPrimType var = do
       when (varVersion var <= 1) $
@@ -273,9 +283,10 @@ genStmtSMT stmt =
       liftVerif $ T.vassign curVar conditional
     rewriteReturn :: T.VNode -> T.VNode -> T.VNode -> Codegen ()
     rewriteReturn cond retVal exprVal = do
-      conditionalFalse <- liftVerif $ T.cppNot cond
+      addRetCond retVal cond
+      notCond <- liftVerif $ T.cppNot cond
       rvalIsExpr <- liftVerif $ T.cppEq retVal exprVal
-      liftVerif $ T.cppOr conditionalFalse rvalIsExpr >>= T.vassert
+      liftVerif $ T.cppOr notCond rvalIsExpr >>= T.vassert
     -- Guard each assignment with the given condition
     rewriteConditional :: T.VNode -> SStmt -> Codegen ()
     rewriteConditional cond stmt =
@@ -322,7 +333,7 @@ genStmtSMT stmt =
                           _ -> error $ unwords ["Malfored return expression", show expr]
               unless (length fields == length rvals) $
                 error "Cannot assign variables of different types"
-              forM_ (zip fields rvals) $ \(f, r) -> rewriteReturn cond f r
+              forM_ (zip fields rvals) $ \(f, r) -> rewriteReturn cond r f
         _ -> genStmtSMT stmt
 
 genBodySMT :: [Codegen SStmt] -> Codegen ()

@@ -20,11 +20,15 @@ import           Prelude
 wellFormedRange :: FunctionDef
 wellFormedRange =
   let body = [ declare (c "range") "rvf"
+
+             , version_ $ v "rvf"
+             , assert_ $ not_ (v "rvf" .->. "isEmpty")
+
              , assert_ $ (v "rvf" .->. "lower") .=>. jsIntMin
              , assert_ $ (v "rvf" .->. "lower") .<=. jsIntMax
              , assert_ $ (v "rvf" .->. "upper") .=>. jsIntMin
              , assert_ $ (v "rvf" .->. "upper") .<=. jsIntMax
-             , assert_ $ (v "rvf" .->. "upper") .=>. (v "rvf" .->. "lower")
+            , assert_ $ (v "rvf" .->. "upper") .=>. (v "rvf" .->. "lower")
 
              , implies_ (not_ $ v "rvf" .->. "hasInt32LowerBound") (v "rvf" .->. "lower" .==. jsIntMin)
              , implies_ (not_ $ v "rvf" .->. "hasInt32UpperBound") (v "rvf" .->. "upper" .==. jsIntMax)
@@ -32,7 +36,9 @@ wellFormedRange =
              , implies_ (v "rvf" .->. "canBeNegativeZero") (call "contains" [v "rvf", n Signed 0])
              , assert_ $ (v "rvf" .->. "maxExponent" .==. includesInfinityAndNan) .||. (v "rvf" .->. "maxExponent" .==. includesInfinity) .||. (v "rvf" .->. "maxExponent" .<=. maxFiniteExponent)
              , implies_ (v "rvf" .->. "hasInt32LowerBound" .&&. (v "rvf" .->. "hasInt32UpperBound")) (v "rvf" .->. "maxExponent" .==. (fpExp (cast (max_ (abs_ $ v "rvf" .->. "lower") (abs_ $ v "rvf" .->. "upper")) Double)))
+
              , implies_ (v "rvf" .->. "hasInt32LowerBound") (v "rvf" .->. "maxExponent" .=>. (fpExp (cast (abs_ $ v "rvf" .->. "lower") Double)))
+
              , implies_ (v "rvf" .->. "hasInt32UpperBound") (v "rvf" .->. "maxExponent" .=>. (fpExp (cast (abs_ $ v "rvf" .->. "upper") Double)))
              , return_ $ v "rvf"
              ]
@@ -43,10 +49,7 @@ fInRange =
   let args = [ ("fval", t Double)
              , ("frange", c "range")
              ]
-      body = [ if_ (v "frange" .->. "isEmpty")
-                 [return_ $ n Bool 0] []
-
-             , declare (t Bool) "infHolds"
+      body = [ declare (t Bool) "infHolds"
              , v "infHolds" `assign` (testImplies (isInf $ v "fval") ((v "frange" .->. "maxExponent") .=>. includesInfinity))
 
              , declare (t Bool) "nanHolds"
@@ -56,13 +59,13 @@ fInRange =
              , v "negzHolds" `assign` (testImplies (isNegZero $ v "fval") (v "frange" .->. "canBeNegativeZero"))
 
              , declare (t Bool) "fractHolds"
-             , v "fractHolds" `assign` (testImplies (not_ $ v "fval" .==. (jsCeil $ v "fval")) (v "frange" .->. "canHaveFractionalPart"))
+             , v "fractHolds" `assign` (testImplies ((not_ $ isNan $ v "fval") .&&. (not_ $ v "fval" .==. (jsCeil $ v "fval"))) (v "frange" .->. "canHaveFractionalPart"))
 
              , declare (t Bool) "hasLowHolds"
-             , v "hasLowHolds" `assign` (testImplies ((isNan $ v "fval") .||. (isInf $ v "fval") .||. (v "fval" .<. (cast (v "frange" .->. "lower") Double))) (not_ $ v "frange" .->. "hasInt32LowerBound"))
+             , v "hasLowHolds" `assign` (testImplies ((v "fval" .<. (cast (v "frange" .->. "lower") Double)) .&&. (not_ $ isNan $ v "fval")) (not_ $ v "frange" .->. "hasInt32LowerBound"))
 
              , declare (t Bool) "hasHighHolds"
-             , v "hasHighHolds" `assign` (testImplies ((isNan $ v "fval") .||. (isInf $ v "fval") .||. (v "fval" .>. (cast (v "frange" .->. "upper") Double))) (not_ $ v "frange" .->. "hasInt32UpperBound"))
+             , v "hasHighHolds" `assign` (testImplies ((v "fval" .>. (cast (v "frange" .->. "upper") Double)) .&&. (not_ $ isNan $ v "fval")) (not_ $ v "frange" .->. "hasInt32UpperBound"))
 
              -- try to help out the solver
              , assert_ $ (isInf $ v "fval") .||. (isNan $ v "fval") .||. (fpExp (v "fval") .<=. maxFiniteExponent)
@@ -71,12 +74,10 @@ fInRange =
              , declare (t Bool) "underExp"
              , v "underExp" `assign` ((fpExp $ v "fval") .<=. (v "frange" .->. "maxExponent"))
 
-             , return_ $ v "infHolds" .&&. v "negzHolds" .&&. v "fractHolds" .&&. v "hasLowHolds" .&&. v "hasHighHolds" .&&. v "underExp"
+             , return_ $ (not_ $ v "frange" .->. "isEmpty") .&&. v "infHolds" .&&. v "nanHolds" .&&. v "negzHolds" .&&. v "fractHolds" .&&. v "hasLowHolds" .&&. v "hasHighHolds" .&&. v "underExp"
 
              ]
   in Function "fInRange" (t Bool) args body
-
-
 
 --
 -- Automatic testing infrastructure
@@ -94,6 +95,9 @@ data TestFunction = Binary { testName :: String
                           , unaryCppOp :: FunctionDef
                           , unaryJSOp  :: (Codegen SExpr -> Codegen SExpr)
                           }
+                  | Set { testName :: String
+                        , setOp    :: FunctionDef
+                        }
 
 isBinary :: TestFunction -> Bool
 isBinary Binary{} = True
@@ -103,6 +107,23 @@ isConstant :: TestFunction -> Bool
 isConstant Constant{} = True
 isConstant _          = False
 
+isSet :: TestFunction -> Bool
+isSet Set{} = True
+isSet _     = False
+
+
+-- union and intersection verification conditions
+
+testUnion :: TestFunction -> Codegen ()
+testUnion fn = do
+  setupAllFloat fn
+  genBodySMT [vcall "verifyUnion" [v "left_range", v "right_range", v "result_range"]]
+
+testIntersection :: TestFunction -> Codegen ()
+testIntersection fn = do
+  liftIO $ print "HERE"
+  setupAllFloat fn
+  -- genBodySMT [vcall "verifyIntersection" [v "left_range", v "right_range", v "result_range"]]
 
 -- Int32 verification conditions
 
@@ -182,7 +203,9 @@ setupAllFloat :: TestFunction -> Codegen ()
 setupAllFloat fn = do
   if isBinary fn
   then setupFloat (binaryCppOp fn) (testName fn) (binaryJSOp fn)
-  else setupUnaryFloat (unaryCppOp fn) (testName fn) (unaryJSOp fn)
+  else if isSet fn
+       then setupSetOp (setOp fn) (testName fn)
+       else setupUnaryFloat (unaryCppOp fn) (testName fn) (unaryJSOp fn)
 
 -- Individual setup functions
 
@@ -293,28 +316,33 @@ setupFloat op fnName fn = do
               ]
   genBodySMT verif
 
--- setupFloat :: FunctionDef
---            -> String
---            -> (Codegen SExpr -> Codegen SExpr -> Codegen SExpr)
---            -> Codegen ()
--- setupRangeOp op fnName fn = do
---   defineAll op
---   let verif = [ declare (c "range") "left_range"
---               , declare (t Double) "left"
---               , declare (c "range") "right_range"
---               , declare (t Double) "right"
---               , declare (c "range") "result_range"
---               , declare (t Double) "result"
---               , (v "left_range")   `assign` (call "wellFormedRange" [])
---               , (v "right_range")  `assign` (call "wellFormedRange" [])
---               , (v "result_range") `assign` call fnName [v "left_range", v "right_range"]
---                 -- Actually perform the JS operation
---               , assert_ $ call "fInRange" [v "left", v "left_range"]
---               , assert_ $ call "fInRange" [v "right", v "right_range"]
---               , expect_ isSat (error "Has to start out SAT")
---               , assert_ $ ()
---               ]
---   genBodySMT verif
+setupSetOp :: FunctionDef
+           -> String
+           -> Codegen ()
+setupSetOp op fnName = do
+  defineAll op
+  let combo = if fnName == "union" then (.||.) else (.&&.)
+      verif = [ declare (c "range") "left_rangey"
+              , declare (c "range") "right_rangey"
+              , (v "left_rangey")   `assign` (call "wellFormedRange" [])
+              , (v "right_rangey")  `assign` (call "wellFormedRange" [])
+
+              , declare (c "range") "result_rangey"
+              , (v "result_rangey") `assign` call "intersect" [v "left_rangey", v "right_rangey"]
+
+              , declare (t Double) "elem"
+              , declare (t Bool) "isInRight"
+              , declare (t Bool) "isInLeft"
+              , declare (t Bool) "isInResult"
+              , v "isInRight" `assign` (call "fInRange" [v "elem", v "right_rangey"])
+              , v "isInLeft" `assign` (call "fInRange" [v "elem", v "left_rangey"])
+              , v "isInResult" `assign` (call "fInRange" [v "elem", v "result_rangey"])
+              , expect_ isSat (error "Should be sat")
+
+              , assert_ $ (v "isInLeft" .&&. v "isInRight") .&&. (not_ $ v "isInResult")
+              , expect_ isUnsat (\r -> showInt32Result "Failed intersect" r )
+              ]
+  genBodySMT verif
 
 defineAll op = do
   class_ range
@@ -339,6 +367,7 @@ defineAll op = do
   define exponentImpliedByInt32Bounds
   define numBits
   define canBeNan
+  define nullRange
   define verifyFpBound
   define canBeZero
   define newInt32InputRange
@@ -361,4 +390,6 @@ defineAll op = do
   define verifyFract
   define verifyUpperFl
   define verifyLowerFl
+  define verifyUnion
+  define verifyIntersection
 
