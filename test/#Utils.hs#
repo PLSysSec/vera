@@ -17,7 +17,7 @@ mkFloatTests testGroupName testFn =
     , makeTest (testGroupName ++ " low invariant") $ testLowInvariant testFn
     , makeTest (testGroupName ++ " high invariant") $ testHighInvariant testFn
     -- , makeTest (testGroupName ++ " negative zero") $ testNegZ testFn
-    , makeTest (testGroupName ++ " nan") $ testNan testFn
+    -- , makeTest (testGroupName ++ " nan") $ testNan testFn
 --    , makeTest (testGroupName ++ " inf") $ testInf testFn
     --  makeTest (testGroupName ++ " fract") $ testFract testFn
     -- , makeTest (testGroupName ++ " exp") $ testExp testFn

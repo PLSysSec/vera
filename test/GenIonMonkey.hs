@@ -1,9 +1,9 @@
 module GenIonMonkey (genIonMonkeyTests) where
 
 import           BenchUtils
-import           Control.Monad.State.Strict          (liftIO)
-import           DSL.DSL                             (SMTResult (..))
-import           DSL.Typed                           (Type (..))
+import           Control.Monad.State.Strict    (liftIO)
+import           DSL.DSL                       (SMTResult (..))
+import           DSL.Typed                     (Type (..))
 import           Generate.Lang
 import           Generate.SMTGen
 import           Generate.State
@@ -12,9 +12,8 @@ import           IonMonkeyGenerated.Helpers
 import           IonMonkeyGenerated.Objects
 import           IonMonkeyGenerated.Operations
 import           IonMonkeyGenerated.Verify
-import           IonMonkeyGenerated.VerifyIndividual
-import           Prelude                             hiding (abs, and, floor,
-                                                      max, min, not, or)
+import           Prelude                       hiding (abs, and, floor, max,
+                                                min, not, or)
 import           Test.Tasty.HUnit
 import           Utils
 
