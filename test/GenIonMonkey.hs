@@ -24,7 +24,7 @@ genIonMonkeyTests = benchTestGroup "Generated IonMonkey tests"
                     --  brokenIntersectTest
                      addTests
                     , subTests
---                    , mulTests
+                    , mulTests
                     , andTests
                     , orTests
                     , xorTests

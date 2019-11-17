@@ -90,7 +90,7 @@ sub = [funcStr| range sub(range lhs, range rhs) {
   return Range4(l,
                 h,
                 lhs->canHaveFractionalPart | rhs->canHaveFractionalPart,
-                lhs->canBeNegativeZero & rhs->canBeNegativeZero,
+                lhs->canBeNegativeZero & canBeZero(rhs),
                 e);
 
 }|]
@@ -117,7 +117,7 @@ and = [funcStr| range and(range lhs, range rhs) {
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#834
 or :: FunctionDef
-or = [funcStr| range or(range lhs, range rhs){ 
+or = [funcStr| range or(range lhs, range rhs){
   if (lhs->lower == lhs->upper) {
     if (lhs->lower == (int32_t) 0) {
       return rhs;
@@ -135,7 +135,7 @@ or = [funcStr| range or(range lhs, range rhs){
       return rhs;
     }
   }
-  
+
   int32_t lower = #{int32minS};
   int32_t upper = #{int32maxS};
   uint32_t clzLhs = #{uint32minS};
@@ -169,7 +169,7 @@ xor :: FunctionDef
 xor = [funcStr| range xor(range lhs, range rhs) {
   int32_t lhsLower = lhs->lower;
   int32_t lhsUpper = lhs->upper;
-  
+
   int32_t rhsLower = rhs->lower;
   int32_t rhsUpper = rhs->upper;
 
@@ -196,7 +196,7 @@ xor = [funcStr| range xor(range lhs, range rhs) {
     rhsUpper = tmp;
     invertAfter = !invertAfter;
   }
-  
+
   int32_t lower   = #{int32minS};
   int32_t upper   = #{int32maxS};
   int32_t upOr    = #{int32minS};
@@ -300,7 +300,7 @@ mul = [funcStr| range mul(range lhs, range rhs){
       exponent = #{includesInfinityS};
     }
 
-  } else if(!canBeNan(lhs) & !canBeNan(rhs) & 
+  } else if(!canBeNan(lhs) & !canBeNan(rhs) &
             !(canBeZero(lhs) & canBeInfiniteOrNan(rhs)) &
             !(canBeZero(lhs) & canBeInfiniteOrNan(rhs))) {
     exponent = #{includesInfinityS};
@@ -398,7 +398,7 @@ rsh' = [funcStr| range rsh'(range lhs, range rhs) {
   }
 
   int32_t lhsLower = lhs->lower;
-  int32_t min = lhsLower < (int32_t) 0 ? 
+  int32_t min = lhsLower < (int32_t) 0 ?
                 lhsLower >> shiftLower :
                 lhsLower >> shiftUpper;
   int32_t lhsUpper = lhs->upper;
