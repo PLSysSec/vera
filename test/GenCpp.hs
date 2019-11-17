@@ -30,7 +30,7 @@ cppGenTests = benchTestGroup "CPP Gen tests"
               --, cppAddTest
               --, cppSubTest
               --, helloWorldTest
-              --, genAllFunctionsTest
+              , genAllFunctionsTest
               ]
 
 writeCompiled :: String -> [String] -> Codegen ()
@@ -361,6 +361,5 @@ helloWorldTest = benchTestCase "hello world" $ do
 
     let out = concat [[header], compiled, [main]]
 
-    writeCompiled "test/GenCpp/hello_world.cpp" out
-    error "test"
-  error "test1"
+    return $ writeCompiled "test/GenCpp/hello_world.cpp" out
+  return ()
