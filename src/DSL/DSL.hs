@@ -117,8 +117,8 @@ runVerif :: Maybe Integer -- ^ Optional timeout
          -> Verif a       -- ^ Verification computation
          -> IO (a, VerifState)
 runVerif mTimeout (Verif act) =
-  Z.evalZ3 $ runStateT act emptyVerifState
-  -- Z.evalZ3With Nothing (Z.opt "timeout" (10000 :: Int)) $ runStateT act emptyVerifState
+  -- Z.evalZ3 $ runStateT act emptyVerifState
+  Z.evalZ3With Nothing (Z.opt "timeout" (10000 :: Int)) $ runStateT act emptyVerifState
 
 evalVerif :: Maybe Integer -> Verif a -> IO a
 evalVerif mt act = fst <$> runVerif mt act
@@ -128,13 +128,14 @@ execVerif mt act = snd <$> runVerif mt act
 
 runSolver :: Verif SMTResult
 runSolver = do
-  z3result <- Z.solverCheckAndGetModel
+  z3result <- Z.solverCheck
   result <- case z3result of
-    (Z.Sat, Just model) -> do
+    Z.Sat -> do
+      model <- Z.solverGetModel
       strModel <- Z.modelToString model
       intModel <- liftIO $ getIntModel strModel
       return $ SolverSat intModel
-    (Z.Unsat, _) -> return SolverUnsat
+    Z.Unsat -> return SolverUnsat
     _ -> return SolverFailed
   s0 <- get
   put $ s0 { solverResult = result }
