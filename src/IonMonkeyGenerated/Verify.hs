@@ -133,13 +133,40 @@ isSet _     = False
 testUnion :: TestFunction -> Codegen ()
 testUnion fn = do
   setupAllFloat fn
-  genBodySMT [vcall "verifyUnion" [v "left_range", v "right_range", v "result_range"]]
+  genBodySMT [vcall "verifyUnion" [v "isInLeft", v "isInRight", v "isInResult"]]
+
+verifyUnion :: FunctionDef
+verifyUnion =
+  let args = [ ("in_left_union", t Bool)
+             , ("in_right_union", t Bool)
+             , ("in_result_union", t Bool)
+             ]
+      body = [ push_
+             , assert_ $ (v "in_left_union") .||. (v "in_right_union")
+             , assert_ $ not_ $ v "in_result_union"
+             , expect_ isUnsat $ \r -> showInt32Result "Failed to verify union" r
+             , pop_
+             ]
+  in Function "verifyUnion" Void args body
 
 testIntersection :: TestFunction -> Codegen ()
 testIntersection fn = do
-  liftIO $ print "HERE"
   setupAllFloat fn
-  -- genBodySMT [vcall "verifyIntersection" [v "left_range", v "right_range", v "result_range"]]
+  genBodySMT [vcall "verifyIntersection" [v "isInLeft", v "isInRight", v "isInResult"]]
+
+verifyIntersection :: FunctionDef
+verifyIntersection =
+  let args = [ ("in_left_inter", t Bool)
+             , ("in_right_inter", t Bool)
+             , ("in_result_inter", t Bool)
+             ]
+      body = [ push_
+             , assert_ $ (v "in_left_inter") .&&. (v "in_right_inter")
+             , assert_ $ not_ $ v "in_result_inter"
+             , expect_ isUnsat $ \r -> showInt32Result "Failed to verify union" r
+             , pop_
+             ]
+  in Function "verifyIntersection" Void args body
 
 -- Int32 verification conditions
 
@@ -313,8 +340,8 @@ verifyNan =
       body = [ push_
                -- It's Nan
              , declare (t Bool) "isNan"
-             , v "isNan" `assign` (isNan $ v "result_nan")
              , assert_ $ isNan $ v "result_nan"
+             , v "isNan" `assign` (isNan $ v "result_nan")
                -- ... but the Nan exponent is not correct
              , assert_ $ not_ $ (v "result_range_nan" .->. "maxExponent") .==. includesInfinityAndNan
              , expect_ isUnsat $ \r -> showNanResult "Failed to verify Nan" r
@@ -372,6 +399,8 @@ verifyExp =
              , ("result_exp", t Double)
              ]
       body = [ push_
+             , assert_ $ not_ $ isNan $ v "result_exp"
+             , assert_ $ not_ $ isInf $ v "result_exp"
              , assert_ $ (fpExp $ v "result_exp") .>. (v "result_range_exp" .->. "maxExponent")
              , expect_ isUnsat $ \r -> showExpResult "Failed to verify Exp" r
              , pop_
@@ -510,32 +539,31 @@ setupSetOp :: FunctionDef
            -> Codegen ()
 setupSetOp op fnName = do
   defineAll op
-  let combo = if fnName == "union" then (.||.) else (.&&.)
-      verif = [ declare (c "range") "left_rangey"
-              , declare (c "range") "right_rangey"
-              , (v "left_rangey")   `assign` (call "wellFormedRange" [])
-              , (v "right_rangey")  `assign` (call "wellFormedRange" [])
+  let verif = [ declare (c "range") "left_range"
+              , declare (c "range") "right_range"
+              , (v "left_range")   `assign` (call "wellFormedRange" [])
+              , (v "right_range")  `assign` (call "wellFormedRange" [])
 
-              , declare (c "range") "result_rangey"
-              , (v "result_rangey") `assign` call "intersect" [v "left_rangey", v "right_rangey"]
+              , declare (c "range") "result_range"
+              , (v "result_range") `assign` call fnName [v "left_range", v "right_range"]
 
               , declare (t Double) "elem"
+--              , (v "elem") `assign` (d Double (0/0))
               , declare (t Bool) "isInRight"
               , declare (t Bool) "isInLeft"
               , declare (t Bool) "isInResult"
-              , v "isInRight" `assign` (call "fInRange" [v "elem", v "right_rangey"])
-              , v "isInLeft" `assign` (call "fInRange" [v "elem", v "left_rangey"])
-              , v "isInResult" `assign` (call "fInRange" [v "elem", v "result_rangey"])
+              , v "isInRight" `assign` (call "fInRange" [v "elem", v "right_range"])
+              , v "isInLeft" `assign` (call "fInRange" [v "elem", v "left_range"])
+              , v "isInResult" `assign` (call "fInRange" [v "elem", v "result_range"])
               , expect_ isSat (error "Should be sat")
-
-              , assert_ $ (v "isInLeft" .&&. v "isInRight") .&&. (not_ $ v "isInResult")
-              , expect_ isUnsat (\r -> showInt32Result "Failed intersect" r )
               ]
   genBodySMT verif
 
 defineAll op = do
   class_ range
   define op
+  define verifyIntersection
+  define verifyUnion
   define vInRange
   define wellFormedRange
   define fInRange
@@ -667,15 +695,17 @@ getNanList fls = catMaybes $ map (\(str, fl) ->
                          _ | "start_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
                          _ | "result_range_maxExponent" `isInfixOf` str -> sstr str fl
                          _ | "right_1" `isInfixOf` str -> sstr str fl
-                         _ | "left_1" `isInfixOf` str -> sstr str fl
+                         _ | "isNan" `isInfixOf` str -> sstr str fl
+                         _ | "jsSign" `isInfixOf` str -> sstr str fl
                          _ | "start_1" `isInfixOf` str -> sstr str fl
                          _ | "result_1" `isInfixOf` str -> sstr str fl
+                         _ | "result_" `isInfixOf` str -> sstr str fl
                          _ -> Nothing
                        ) $ M.toList fls
   where
     sstr str fl = Just $ unwords [str, ":", if fl /= fl
                                             then "NaN"
-                                            else show (round fl :: Integer)
+                                            else show fl --(round fl :: Integer)
                                  ]
 
 showInfResult :: String -> SMTResult -> IO ()
@@ -786,12 +816,20 @@ getIntList fls = catMaybes $ map (\(str, fl) ->
                        case str of
                          _ | "undef" `isInfixOf` str -> Nothing
                          _ | "elem" `isInfixOf` str -> sstr str fl
-                         _ | "jsShl" `isInfixOf` str -> sstr str fl
                          _ | "shift" `isInfixOf` str -> sstr str fl
                          _ | "startIsUndef" `isInfixOf` str -> sstr str fl
                          _ | "left_range_canHaveFractionalPart" `isInfixOf` str -> sstr str fl
                          _ | "right_range_canHaveFractionalPart" `isInfixOf` str -> sstr str fl
                          _ | "result_range_canHaveFractionalPart" `isInfixOf` str -> sstr str fl
+                         _ | "left_range_isEmpty" `isInfixOf` str -> sstr str fl
+                         _ | "right_range_isEmpty" `isInfixOf` str -> sstr str fl
+                         _ | "result_range_isEmpty" `isInfixOf` str -> sstr str fl
+                         _ | "isInLeft" `isInfixOf` str -> sstr str fl
+                         _ | "isInRight" `isInfixOf` str -> sstr str fl
+                         _ | "isInResult" `isInfixOf` str -> sstr str fl
+                         _ | "left_range_maxExponent" `isInfixOf` str -> sstr str fl
+                         _ | "right_range_maxExponent" `isInfixOf` str -> sstr str fl
+                         _ | "result_range_maxExponent" `isInfixOf` str -> sstr str fl
                          _ | "range_inter" `isInfixOf` str -> sstr str fl
                          _ | "result_range_upper" `isInfixOf` str -> sstr str fl
                          _ | "result_range_lower" `isInfixOf` str -> sstr str fl

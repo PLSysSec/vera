@@ -649,6 +649,7 @@ union =
              , v "unionRet" .->. "canHaveFractionalPart" `assign` v "newCanHaveFractionalPart"
              , v "unionRet" .->. "canBeNegativeZero" `assign` v "newMayIncludeNegativeZero"
              , v "unionRet" .->. "maxExponent" `assign` v "newExponent"
+             , v "unionRet" .->. "isEmpty" `assign` (n Bool 0)
              , return_ $ v "unionRet"
 
              ]

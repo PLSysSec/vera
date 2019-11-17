@@ -19,10 +19,10 @@ import           Utils
 
 genIonMonkeyTests :: BenchTest
 genIonMonkeyTests = benchTestGroup "Generated IonMonkey tests"
-                    [ -- unionTest
-                    -- intersectTest
-                    --  brokenIntersectTest
-                     addTests
+                    [ unionTest
+                    , intersectTest
+                    , brokenIntersectTest
+                    , addTests
                     , subTests
                     , mulTests
                     , andTests

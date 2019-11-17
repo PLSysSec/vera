@@ -804,6 +804,9 @@ jsSign op =
     _negZero <- D.fpzero True
     correctZero <- D.cond _isPos _posZero _negZero
     result <- D.cond _isZero correctZero result'
+    -- no result for nan
+    _isNan <- D.isNan $ vnode op
+    D.not _isNan >>= D.assert
     newDefinedNode result Double
   
 --
