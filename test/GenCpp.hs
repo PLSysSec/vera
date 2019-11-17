@@ -1,4 +1,4 @@
-module CppGen (cppGenTests) where
+module GenCpp (cppGenTests) where
 
 import           ActiveCode.Cpp
 import           BenchUtils
@@ -362,6 +362,5 @@ helloWorldTest = benchTestCase "hello world" $ do
     let out = concat [[header], compiled, [main]]
 
     writeCompiled "test/GenCpp/hello_world.cpp" out
-
     error "test"
   error "test1"
