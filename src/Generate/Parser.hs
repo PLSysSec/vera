@@ -71,23 +71,31 @@ func_arg_decl = do
 
 -- Statements
 block :: Parser [CStmt]
-block = braces $ many stmt
+block = do
+    ss <- braces $ many stmt
+    return $ concat ss
 
-stmt :: Parser CStmt
+stmt :: Parser [CStmt]
 stmt = choice [
-    try if_stmt <?> "if statement",
+    pure <$> try if_stmt <?> "if statement",
     try decl <* semi <?> "variable declaration",
-    try assign <* semi <?> "assignment",
-    try opAssigns <* semi <?> "operater assignment",
-    try void_stmt <* semi <?> "void call",
-    try return_stmt <* semi <?> "return"] <?> "statement"
+    pure <$> try assign <* semi <?> "assignment",
+    pure <$> try opAssigns <* semi <?> "operater assignment",
+    pure <$> try void_stmt <* semi <?> "void call",
+    pure <$> return_stmt <* semi <?> "return"] <?> "statement"
 
 -- Decl
-decl :: Parser CStmt
+decl :: Parser [CStmt]
 decl = do
     ty <- decl_type
     i <- identifier
-    return $ L.declare ty i
+    opt_expr <- optionMaybe $ do
+        reservedOp "="
+        expr
+
+    case opt_expr of
+        Just e -> return [L.declare ty i, L.assign (L.v i) e]
+        Nothing -> return [L.declare ty i]
 
 decl_type :: Parser STy
 decl_type =
@@ -106,9 +114,9 @@ assign = do
     return $ L.assign lval rval
 
 -- Operator Assigner (+=, -=, |=, &=)
-opAssigns :: Parser (CStmt)
+opAssigns :: Parser CStmt
 opAssigns = do
-    lval <- var
+    lval <- expr
     op <- choice $ map opParser [
         ("+", Add),
         ("-", Sub),
@@ -125,14 +133,12 @@ if_stmt :: Parser CStmt
 if_stmt = do
     reserved "if"
     cond <- parens expr
-    t_branch <- choice [try single_stmt, block]
+    t_branch <- choice [stmt, block]
     f_branch <- option [] $ do
         reserved "else"
-        choice [try single_stmt, block]
+        choice [stmt, block]
 
     return $ If <$> cond <*> sequence t_branch <*> sequence f_branch
-    where
-        single_stmt = return <$> stmt
 
 -- Void
 void_stmt :: Parser CStmt
@@ -287,10 +293,9 @@ cast = do
 
 typed_lit :: Parser CExpr
 typed_lit = do
-    t <- parens int_type
+    t <- parens prim_type
     n <- signedNaturalOrFloat
     case (n, t) of
-        (Left i, DT.Bool) -> fail "Integer needs a fixed type before cast to bool"
         (Left i, DT.Double) -> return $ L.d DT.Double $ fromIntegral i
         (Left i, _) -> return $ L.n t i
         (Right f, _) -> return $ L.cast (L.d DT.Double f) t
@@ -309,7 +314,7 @@ member = do
 
 -- This list does its best to match: https://en.cppreference.com/w/cpp/language/operator_precedence
 operators = [[postfix $ member]
-            ,[prefix $ choice [prefixOp "!" L.not_, prefixOp "~" L.bitwise_neg_, try cast]]
+            ,[prefix $ choice [prefixOp "-" L.negative_, prefixOp "!" L.not_, prefixOp "~" L.bitwise_neg_, try cast]]
             ,[binary "*" Mul AssocLeft]
             ,[binary "+" Add AssocLeft, binary "-" Sub AssocLeft]
             ,[binary "<<" Shl AssocLeft, binary ">>" Shr AssocLeft]
@@ -338,7 +343,7 @@ languageDef =
             , Token.commentEnd      = "*/"
             , Token.commentLine     = "//"
             , Token.identStart      = letter <|> char '_'
-            , Token.identLetter     = alphaNum <|> char '_'
+            , Token.identLetter     = alphaNum <|> char '_' <|> char '\''
             , Token.reservedNames   = ["this", "js", "math", "if", "else", "return", "class"
                                       , "uint8_t", "uint16_t", "uint32_t", "uint64_t"
                                       , "int8_t", "int16_t", "int32_t", "int64_t"

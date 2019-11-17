@@ -75,6 +75,13 @@ funTest = benchTestCase "fun" $ do
     }
   |]
   L.fName p @=? "doThing"
+
+assgnEq :: BenchTest
+assgnEq = benchTestCase "assgnEq" $ do
+  let p = [func|uint8_t doThing() {
+    uint8_t x = (uint8_t) 4;
+  }|]
+  L.fName p @=? "doThing"
   
 progFileTest :: BenchTest
 progFileTest = benchTestCase "progFile" $ do
