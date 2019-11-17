@@ -134,7 +134,7 @@ cppCompile function mainBody = do
 
   -- compile
   (ccode, cout) <- readCommand "c++" ["-o", fp, fp ++ ".cpp"] ""
-  --removeFile $ fp ++ ".cpp"
+  removeFile $ fp ++ ".cpp"
   return $ ccode == ExitSuccess
 
 cpp :: Read a => String -> String -> IO a
