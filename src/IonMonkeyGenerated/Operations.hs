@@ -411,15 +411,9 @@ rsh' = [funcStr| range rsh'(range lhs, range rhs) {
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1079
 ursh' :: FunctionDef
-ursh' =
-  let args = [ ("lhs", c "range")
-             , ("rhs", c "range")
-             ]
-      body = [return_ $ call "newUInt32Range" [ n Unsigned 0
-                                              , tern_ (call "isFiniteNonNegative" [v "lhs"]) (cast (v "lhs" .->. "upper") Unsigned) uint32max
-                                              ]
-             ]
-  in Function "ursh'" (c "range") args body
+ursh' = [funcStr| range ursh'(range lhs, range rhs) {
+  return newUInt32Range((uint32_t) 0, isFiniteNonNegative(lhs) ?  (uint32_t) lhs->upper : #{uint32maxS});
+}|]
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1089
 abs :: FunctionDef
