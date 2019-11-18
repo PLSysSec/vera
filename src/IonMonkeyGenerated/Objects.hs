@@ -7,11 +7,8 @@ newInt32InputRange :: FunctionDef
 newInt32InputRange =
   let body = [ declare (c "range") "rvir"
              , (v "rvir") .->. "hasInt32LowerBound" `assign` (n Bool 1)
-             , assert_ $ not_ $ undef $ v "rvir" .->. "hasInt32LowerBound"
              , (v "rvir") .->. "hasInt32UpperBound" `assign` (n Bool 1)
              , (v "rvir") .->. "canHaveFractionalPart" `assign` (n Bool 1)
-             , assert_ $ not_ $ undef $ v "rvir" .->. "hasInt32UpperBound"
-             , assert_ $ ((v "rvir") .->. "lower") .<=. ((v "rvir") .->. "upper")
              , return_ $ v "rvir"
              ]
   in Function "newInt32InputRange" (c "range") [] body
@@ -22,9 +19,6 @@ newFloatInputRange =
   -- // 1) hasInt32LowerBound_ == false implies lower_ == JSVAL_INT_MIN
   -- // 2) hasInt32UpperBound_ == false implies upper_ == JSVAL_INT_MAX
   let body = [ declare (c "range") "rvfl"
-             , assert_ $ ((v "rvfl") .->. "lower") .<=. ((v "rvfl") .->. "upper")
-             , assert_ $ (((v "rvfl" .->. "lower") .==. n Signed (-2147483648)) .||. (v "rvfl" .->. "hasInt32LowerBound"))
-             , assert_ $ (((v "rvfl" .->. "upper") .==. n Signed 2147483647) .||. (v "rvfl" .->. "hasInt32LowerBound"))
              ]
   in Function "newFloatInputRange" (c "range") [] body
 

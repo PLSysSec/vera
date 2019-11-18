@@ -37,17 +37,17 @@ add = [funcStr| range add(range lhs, range rhs) {
   int64_t h;
   uint16_t e;
 
-  l = (int64_t) lhs->lower + (int64_t) rhs->lower;
-  if(!lhs->hasInt32LowerBound | !rhs->hasInt32LowerBound) {
+  l = (int64_t) lhs.lower + (int64_t) rhs.lower;
+  if(!lhs.hasInt32LowerBound | !rhs.hasInt32LowerBound) {
     l = #{noInt32LowerBoundS};
   }
 
-  h = (int64_t) lhs->upper + (int64_t) rhs->upper;
-  if(!lhs->hasInt32UpperBound | !rhs->hasInt32UpperBound) {
+  h = (int64_t) lhs.upper + (int64_t) rhs.upper;
+  if(!lhs.hasInt32UpperBound | !rhs.hasInt32UpperBound) {
     h = #{noInt32UpperBoundS};
   }
 
-  e = math::max(lhs->maxExponent, rhs->maxExponent);
+  e = math::max(lhs.maxExponent, rhs.maxExponent);
   if(e <= #{maxFiniteExponentS}) {
     e += (uint16_t) 1;
   }
@@ -58,8 +58,8 @@ add = [funcStr| range add(range lhs, range rhs) {
 
   return Range4(l,
                 h,
-                lhs->canHaveFractionalPart | rhs->canHaveFractionalPart,
-                lhs->canBeNegativeZero & rhs->canBeNegativeZero,
+                lhs.canHaveFractionalPart | rhs.canHaveFractionalPart,
+                lhs.canBeNegativeZero & rhs.canBeNegativeZero,
                 e);
 
 }|]
@@ -68,17 +68,17 @@ add = [funcStr| range add(range lhs, range rhs) {
 sub :: FunctionDef
 sub = [funcStr| range sub(range lhs, range rhs) {
 
-  int64_t l = (int64_t) lhs->lower - (int64_t) rhs->upper;
-  if(!lhs->hasInt32LowerBound | !rhs->hasInt32LowerBound) {
+  int64_t l = (int64_t) lhs.lower - (int64_t) rhs.upper;
+  if(!lhs.hasInt32LowerBound | !rhs.hasInt32LowerBound) {
     l = #{noInt32LowerBoundS};
   }
 
-  int64_t h = (int64_t) lhs->upper - (int64_t) rhs->lower;
-  if(!lhs->hasInt32UpperBound | !rhs->hasInt32UpperBound) {
+  int64_t h = (int64_t) lhs.upper - (int64_t) rhs.lower;
+  if(!lhs.hasInt32UpperBound | !rhs.hasInt32UpperBound) {
     h = #{noInt32UpperBoundS};
   }
 
-  uint16_t e = math::max(lhs->maxExponent, rhs->maxExponent);
+  uint16_t e = math::max(lhs.maxExponent, rhs.maxExponent);
   if(e <= #{maxFiniteExponentS}) {
     e += (uint16_t) 1;
   }
@@ -89,8 +89,8 @@ sub = [funcStr| range sub(range lhs, range rhs) {
 
   return Range4(l,
                 h,
-                lhs->canHaveFractionalPart | rhs->canHaveFractionalPart,
-                lhs->canBeNegativeZero & canBeZero(rhs),
+                lhs.canHaveFractionalPart | rhs.canHaveFractionalPart,
+                lhs.canBeNegativeZero & canBeZero(rhs),
                 e);
 
 }|]
@@ -99,17 +99,17 @@ sub = [funcStr| range sub(range lhs, range rhs) {
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#805
 and :: FunctionDef
 and = [funcStr| range and(range lhs, range rhs) {
-  if (lhs->lower < (int32_t) 0 & rhs->lower < (int32_t) 0) {
-      return newInt32Range(#{int32minS}, math::max(lhs->upper, rhs->upper));
+  if (lhs.lower < (int32_t) 0 & rhs.lower < (int32_t) 0) {
+      return newInt32Range(#{int32minS}, math::max(lhs.upper, rhs.upper));
   }
 
   int32_t lower_ = (int32_t) 0;
-  int32_t upper_ = math::min(lhs->upper, rhs->upper);
-  if (lhs->lower < (int32_t) 0) {
-    upper_ = rhs->upper;
+  int32_t upper_ = math::min(lhs.upper, rhs.upper);
+  if (lhs.lower < (int32_t) 0) {
+    upper_ = rhs.upper;
   }
-  if (rhs->lower < (int32_t) 0) {
-    upper_ = lhs->upper;
+  if (rhs.lower < (int32_t) 0) {
+    upper_ = lhs.upper;
   }
 
   return newInt32Range(lower_, upper_);
@@ -118,20 +118,20 @@ and = [funcStr| range and(range lhs, range rhs) {
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#834
 or :: FunctionDef
 or = [funcStr| range or(range lhs, range rhs){
-  if (lhs->lower == lhs->upper) {
-    if (lhs->lower == (int32_t) 0) {
+  if (lhs.lower == lhs.upper) {
+    if (lhs.lower == (int32_t) 0) {
       return rhs;
     }
-    if (lhs->lower == (int32_t) -1) {
+    if (lhs.lower == (int32_t) -1) {
       return lhs;
     }
   }
 
-  if (rhs->lower == rhs->upper) {
-    if (rhs->lower == (int32_t) 0) {
+  if (rhs.lower == rhs.upper) {
+    if (rhs.lower == (int32_t) 0) {
       return lhs;
     }
-    if (rhs->lower == (int32_t) -1) {
+    if (rhs.lower == (int32_t) -1) {
       return rhs;
     }
   }
@@ -142,20 +142,20 @@ or = [funcStr| range or(range lhs, range rhs){
   uint32_t clzRhs = #{uint32minS};
   uint32_t leadingOnes = (uint32_t) 0;
 
-  if(lhs->lower >= (int32_t) 0 & rhs->lower >= (int32_t) 0) {
-    lower = math::max(lhs->lower, rhs->lower);
-    clzLhs = countLeadingZeroes((uint32_t) lhs->upper);
-    clzRhs = countLeadingZeroes((uint32_t) rhs->upper);
+  if(lhs.lower >= (int32_t) 0 & rhs.lower >= (int32_t) 0) {
+    lower = math::max(lhs.lower, rhs.lower);
+    clzLhs = countLeadingZeroes((uint32_t) lhs.upper);
+    clzRhs = countLeadingZeroes((uint32_t) rhs.upper);
     upper = (int32_t) (#{uint32maxS} >> math::min(clzLhs, clzRhs));
   } else {
-    if (lhs->upper < (int32_t) 0) {
-      leadingOnes = countLeadingZeroes((uint32_t) ~lhs->lower);
+    if (lhs.upper < (int32_t) 0) {
+      leadingOnes = countLeadingZeroes((uint32_t) ~lhs.lower);
       lower = math::max(lower, ~((int32_t) (#{uint32maxS} >> leadingOnes)));
       upper = (int32_t) -1;
     }
 
-    if (rhs->upper < (int32_t) 0) {
-      leadingOnes = countLeadingZeroes((uint32_t) ~rhs->lower);
+    if (rhs.upper < (int32_t) 0) {
+      leadingOnes = countLeadingZeroes((uint32_t) ~rhs.lower);
       lower = math::max(lower, ~((int32_t) (#{uint32maxS} >> leadingOnes)));
       upper = (int32_t) -1;
     }
@@ -167,11 +167,11 @@ or = [funcStr| range or(range lhs, range rhs){
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#893
 xor :: FunctionDef
 xor = [funcStr| range xor(range lhs, range rhs) {
-  int32_t lhsLower = lhs->lower;
-  int32_t lhsUpper = lhs->upper;
+  int32_t lhsLower = lhs.lower;
+  int32_t lhsUpper = lhs.upper;
 
-  int32_t rhsLower = rhs->lower;
-  int32_t rhsUpper = rhs->upper;
+  int32_t rhsLower = rhs.lower;
+  int32_t rhsUpper = rhs.upper;
 
   bool invertAfter = (bool) 0;
 
@@ -228,13 +228,13 @@ xor = [funcStr| range xor(range lhs, range rhs) {
 
   return newInt32Range(lower, upper);
 }|]
--- Two trys (neg -> not)
+-- Two trys (neg . not)
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#955
 not :: FunctionDef
 not = [funcStr| range not(range op) {
     range result_range;
-    result_range->lower = ~op->upper;
-    result_range->upper = ~op->lower;
+    result_range.lower = ~op.upper;
+    result_range.upper = ~op.lower;
 
     return result_range;
 }|]
@@ -311,19 +311,19 @@ mul = [funcStr| range mul(range lhs, range rhs){
   if (missingAnyInt32Bounds(lhs, rhs)) {
     return Range4(#{noInt32LowerBoundS},
                   #{noInt32UpperBoundS},
-                  lhs->canHaveFractionalPart | rhs->canHaveFractionalPart,
+                  lhs.canHaveFractionalPart | rhs.canHaveFractionalPart,
                   newMayIncludeNegativeZero,
                   exponent);
   }
 
-  int64_t a = (int64_t) lhs->lower * (int64_t) rhs->lower;
-  int64_t b = (int64_t) lhs->lower * (int64_t) rhs->upper;
-  int64_t c = (int64_t) lhs->upper * (int64_t) rhs->lower;
-  int64_t d = (int64_t) lhs->upper * (int64_t) rhs->upper;
+  int64_t a = (int64_t) lhs.lower * (int64_t) rhs.lower;
+  int64_t b = (int64_t) lhs.lower * (int64_t) rhs.upper;
+  int64_t c = (int64_t) lhs.upper * (int64_t) rhs.lower;
+  int64_t d = (int64_t) lhs.upper * (int64_t) rhs.upper;
 
   return Range4(math::min(math::min(a, b), math::min(c,d)),
                 math::max(math::max(a,b), math::max(c,d)),
-                lhs -> canHaveFractionalPart | rhs->canHaveFractionalPart,
+                lhs . canHaveFractionalPart | rhs.canHaveFractionalPart,
                 newMayIncludeNegativeZero,
                 exponent);
 
@@ -333,14 +333,14 @@ mul = [funcStr| range mul(range lhs, range rhs){
 lsh :: FunctionDef
 lsh = [funcStr| range lsh(range lhs, int32_t c) {
   int32_t shift = c & (int32_t) 31;
-  uint32_t lowerShifted = ((uint32_t) lhs->lower << shift << (uint32_t) 1) >> shift >> (int32_t) 1;
-  uint32_t upperShifted = ((uint32_t) lhs->upper << shift << (uint32_t) 1) >> shift >> (int32_t) 1;
+  uint32_t lowerShifted = ((uint32_t) lhs.lower << shift << (uint32_t) 1) >> shift >> (int32_t) 1;
+  uint32_t upperShifted = ((uint32_t) lhs.upper << shift << (uint32_t) 1) >> shift >> (int32_t) 1;
 
-  bool canShift = (int32_t) lowerShifted == lhs->lower & (int32_t) upperShifted == lhs->upper;
+  bool canShift = (int32_t) lowerShifted == lhs.lower & (int32_t) upperShifted == lhs.upper;
 
   if(canShift) {
-    return newInt32Range((int32_t) ((uint32_t) lhs->lower << shift),
-                         (int32_t) ((uint32_t) lhs->upper << shift));
+    return newInt32Range((int32_t) ((uint32_t) lhs.lower << shift),
+                         (int32_t) ((uint32_t) lhs.upper << shift));
   }
 
   return newInt32Range(#{int32minS}, #{int32maxS});
@@ -350,8 +350,8 @@ lsh = [funcStr| range lsh(range lhs, int32_t c) {
 rsh :: FunctionDef
 rsh = [funcStr| range rsh(range lhs, int32_t c) {
   int32_t shift = c & (int32_t) 31;
-  return newInt32Range(lhs->lower >> shift,
-                       lhs->upper >> shift);
+  return newInt32Range(lhs.lower >> shift,
+                       lhs.upper >> shift);
 }|]
 
 
@@ -383,8 +383,8 @@ lsh' = [funcStr| range lsh'(range lhs, range rhs) {
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1048
 rsh' :: FunctionDef
 rsh' = [funcStr| range rsh'(range lhs, range rhs) {
-  int32_t shiftLower = rhs->lower;
-  int32_t shiftUpper = rhs->upper;
+  int32_t shiftLower = rhs.lower;
+  int32_t shiftUpper = rhs.upper;
   if ((int64_t) shiftUpper - (int64_t) shiftLower >= (int64_t) 31) {
     shiftLower = (int32_t) 0;
     shiftUpper = (int32_t) 31;
@@ -397,11 +397,11 @@ rsh' = [funcStr| range rsh'(range lhs, range rhs) {
     }
   }
 
-  int32_t lhsLower = lhs->lower;
+  int32_t lhsLower = lhs.lower;
   int32_t min = lhsLower < (int32_t) 0 ?
                 lhsLower >> shiftLower :
                 lhsLower >> shiftUpper;
-  int32_t lhsUpper = lhs->upper;
+  int32_t lhsUpper = lhs.upper;
   int32_t max = lhsUpper >= (int32_t) 0 ?
                 lhsUpper >> shiftLower :
                 lhsUpper >> shiftUpper;
@@ -424,16 +424,16 @@ ursh' =
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1089
 abs :: FunctionDef
 abs = [funcStr| range abs(range op) {
-  int32_t l = op->lower;
-  int32_t u = op->upper;
+  int32_t l = op.lower;
+  int32_t u = op.upper;
   return Range6(
     (int64_t) math::max(math::max((int32_t) 0, l), u == #{int32minS} ? #{int32maxS} : -u),
     (bool) 1,
     (int64_t) math::max(math::max((int32_t) 0, u), l == #{int32minS} ? #{int32maxS} : -l),
     hasInt32Bounds(op) & l != #{int32minS},
-    op->canHaveFractionalPart,
+    op.canHaveFractionalPart,
     #{excludesNegativeZeroS},
-    op->maxExponent
+    op.maxExponent
   );
 }|]
 
@@ -442,13 +442,13 @@ abs = [funcStr| range abs(range op) {
 min :: FunctionDef
 min = [funcStr| range min(range lhs, range rhs) {
   return Range6(
-    (int64_t) math::min(lhs->lower, rhs->lower),
-    lhs->hasInt32LowerBound & rhs->hasInt32LowerBound,
-    (int64_t) math::min(lhs->upper, rhs->upper),
-    lhs->hasInt32UpperBound | rhs->hasInt32UpperBound,
-    lhs->canHaveFractionalPart | rhs->canHaveFractionalPart,
-    lhs->canBeNegativeZero | rhs->canBeNegativeZero,
-    math::max(lhs->maxExponent, rhs->maxExponent)
+    (int64_t) math::min(lhs.lower, rhs.lower),
+    lhs.hasInt32LowerBound & rhs.hasInt32LowerBound,
+    (int64_t) math::min(lhs.upper, rhs.upper),
+    lhs.hasInt32UpperBound | rhs.hasInt32UpperBound,
+    lhs.canHaveFractionalPart | rhs.canHaveFractionalPart,
+    lhs.canBeNegativeZero | rhs.canBeNegativeZero,
+    math::max(lhs.maxExponent, rhs.maxExponent)
   );
 }|]
 
@@ -456,13 +456,13 @@ min = [funcStr| range min(range lhs, range rhs) {
 max :: FunctionDef
 max = [funcStr| range max(range lhs, range rhs){
   return Range6(
-    (int64_t) math::max(lhs->lower, rhs->lower),
-    lhs->hasInt32LowerBound | rhs->hasInt32LowerBound,
-    (int64_t) math::max(lhs->upper, rhs->upper),
-    lhs->hasInt32UpperBound & rhs->hasInt32UpperBound,
-    lhs->canHaveFractionalPart | rhs->canHaveFractionalPart,
-    lhs->canBeNegativeZero | rhs->canBeNegativeZero,
-    math::max(lhs->maxExponent, rhs->maxExponent)
+    (int64_t) math::max(lhs.lower, rhs.lower),
+    lhs.hasInt32LowerBound | rhs.hasInt32LowerBound,
+    (int64_t) math::max(lhs.upper, rhs.upper),
+    lhs.hasInt32UpperBound & rhs.hasInt32UpperBound,
+    lhs.canHaveFractionalPart | rhs.canHaveFractionalPart,
+    lhs.canBeNegativeZero | rhs.canBeNegativeZero,
+    math::max(lhs.maxExponent, rhs.maxExponent)
   );
 }|]
 
@@ -473,17 +473,17 @@ floor = [funcStr| range floor(range op) {
   range copy = op;
   range tmp = op;
 
-  if(op->canHaveFractionalPart & op->hasInt32LowerBound) {
-    copy = setLowerInit((int64_t) copy->lower - (int64_t) 1, tmp);
+  if(op.canHaveFractionalPart & op.hasInt32LowerBound) {
+    copy = setLowerInit((int64_t) copy.lower - (int64_t) 1, tmp);
   }
 
   if (hasInt32Bounds(copy)) {
-    copy->maxExponent = exponentImpliedByInt32Bounds(copy);
-  } else if (copy->maxExponent < #{maxFiniteExponentS}) {
-    copy->maxExponent += (uint16_t) 1;
+    copy.maxExponent = exponentImpliedByInt32Bounds(copy);
+  } else if (copy.maxExponent < #{maxFiniteExponentS}) {
+    copy.maxExponent += (uint16_t) 1;
   }
 
-  copy->canHaveFractionalPart = #{excludesFractionalPartsS};
+  copy.canHaveFractionalPart = #{excludesFractionalPartsS};
   return copy;
 }|]
 
@@ -495,12 +495,12 @@ ceil = [funcStr| range ceil(range op) {
   // missing fract check
 
   if (hasInt32Bounds(copy)) {
-    copy->maxExponent = exponentImpliedByInt32Bounds(copy);
-  } else if (copy->maxExponent < #{maxFiniteExponentS}) {
-    copy->maxExponent += (uint16_t) 1;
+    copy.maxExponent = exponentImpliedByInt32Bounds(copy);
+  } else if (copy.maxExponent < #{maxFiniteExponentS}) {
+    copy.maxExponent += (uint16_t) 1;
   }
 
-  copy->canHaveFractionalPart = #{excludesFractionalPartsS};
+  copy.canHaveFractionalPart = #{excludesFractionalPartsS};
   return copy;
 }|]
 -- Not doing nan thing
@@ -518,10 +518,10 @@ sign :: FunctionDef
 --   in Function "sign" (c "range") args body
 sign = [funcStr| range sign(range op) {
   return Range4(
-    (int64_t) math::max(math::min(op->lower, (int32_t) 1), (int32_t) -1),
-    (int64_t) math::max(math::min(op->upper, (int32_t) 1), (int32_t) -1),
+    (int64_t) math::max(math::min(op.lower, (int32_t) 1), (int32_t) -1),
+    (int64_t) math::max(math::min(op.upper, (int32_t) 1), (int32_t) -1),
     #{excludesFractionalPartsS},
-    op->canBeNegativeZero,
+    op.canBeNegativeZero,
     (uint16_t) 0
   );
 }|]

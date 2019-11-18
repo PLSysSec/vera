@@ -39,8 +39,8 @@ parseClass = parse classDef ""
 
 classDef :: Parser (L.ClassDef)
 classDef = do
-    reserved "class"
-    i <- identifier <?> "class name"
+    reserved "struct"
+    i <- identifier <?> "struct name"
     els <- braces $ many $ parseEither (classField <* semi) func
     let (fields, fns) = partitionEithers els
     return $ L.ClassDef i fields fns
@@ -103,7 +103,10 @@ decl_type =
     where
         prim = PrimType <$> prim_type
         void = return Void <$> reserved "void"
-        clas = Class <$> identifier
+        clas = Class <$> do
+            i <- identifier
+            optional $ reservedOp "&"
+            return i
 
 -- Assign
 assign :: Parser CStmt
@@ -308,7 +311,7 @@ prefixOp p f = do
 
 member :: Parser(CExpr -> CExpr)
 member = do
-    reservedOp "->"
+    reservedOp "."
     i <- identifier
     return $ (L..->. i)
 
@@ -344,12 +347,12 @@ languageDef =
             , Token.commentLine     = "//"
             , Token.identStart      = letter <|> char '_'
             , Token.identLetter     = alphaNum <|> char '_' <|> char '\''
-            , Token.reservedNames   = ["this", "js", "math", "if", "else", "return", "class"
+            , Token.reservedNames   = ["this", "js", "math", "if", "else", "return", "struct"
                                       , "uint8_t", "uint16_t", "uint32_t", "uint64_t"
                                       , "int8_t", "int16_t", "int32_t", "int64_t"
                                       ]
             , Token.reservedOpNames = ["!", "~", "+", "-", "*", "==", "!=", "?", ":", ">>",  "<<", "<=", ">=", "+=", "-=", "*=", "|=", "&=", "^="
-                                      , "<", ">", "&", "|", "->"
+                                      , "<", ">", "&", "|", "->", "."
                                       ]
             }
 
