@@ -357,22 +357,14 @@ rsh = [funcStr| range rsh(range lhs, int32_t c) {
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1023
 ursh :: FunctionDef
-ursh =
-  let args = [ ("lhs", c "range")
-             , ("c", t Signed)
-             ]
-      body = [ declare (t Signed) "shift"
-             , v "shift" `assign` (v "c" .&&. n Signed 31)
-             , if_ ((call "isFiniteNonNegative" [v "lhs"]) .||. (call "isFiniteNegative" [v "lhs"]))
-               [ return_ $ call "newUInt32Range" [ cast ((v "lhs" .->. "lower") .>>. v "shift") Unsigned
-                                                 , cast ((v "lhs" .->. "upper") .>>. v "shift") Unsigned
-                                                 ]
-               ] []
-             , return_ $ call "newUInt32Range" [ n Unsigned 0
-                                               , uint32max .>>. v "shift"
-                                               ]
-             ]
-  in Function "ursh" (c "range") args body
+ursh = [funcStr| range ursh(range lhs, int32_t c) {
+  int32_t shift = c & (int32_t) 31;
+  if (isFiniteNonNegative(lhs) | isFiniteNegative(lhs)) {
+    return newUInt32Range((uint32_t)(lhs->lower) >> shift,
+                          (uint32_t)(lhs->upper) >> shift);
+  }
+  return newUInt32Range((uint32_t) 0, #{uint32maxS} >> shift);
+}|]
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1042
 lsh' :: FunctionDef
@@ -411,15 +403,9 @@ rsh' = [funcStr| range rsh'(range lhs, range rhs) {
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1079
 ursh' :: FunctionDef
-ursh' =
-  let args = [ ("lhs", c "range")
-             , ("rhs", c "range")
-             ]
-      body = [return_ $ call "newUInt32Range" [ n Unsigned 0
-                                              , tern_ (call "isFiniteNonNegative" [v "lhs"]) (cast (v "lhs" .->. "upper") Unsigned) uint32max
-                                              ]
-             ]
-  in Function "ursh'" (c "range") args body
+ursh' = [funcStr| range ursh'(range lhs, range rhs) {
+  return newUInt32Range((uint32_t) 0, isFiniteNonNegative(lhs) ?  (uint32_t) lhs->upper : #{uint32maxS});
+}|]
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1089
 abs :: FunctionDef
