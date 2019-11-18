@@ -459,7 +459,7 @@ max = [funcStr| range max(range lhs, range rhs){
     (int64_t) math::max(lhs->lower, rhs->lower),
     lhs->hasInt32LowerBound | rhs->hasInt32LowerBound,
     (int64_t) math::max(lhs->upper, rhs->upper),
-    lhs->hasInt32UpperBound | rhs->hasInt32UpperBound,
+    lhs->hasInt32UpperBound & rhs->hasInt32UpperBound,
     lhs->canHaveFractionalPart | rhs->canHaveFractionalPart,
     lhs->canBeNegativeZero | rhs->canBeNegativeZero,
     math::max(lhs->maxExponent, rhs->maxExponent)

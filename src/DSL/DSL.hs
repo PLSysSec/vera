@@ -118,7 +118,7 @@ runVerif :: Maybe Integer -- ^ Optional timeout
          -> IO (a, VerifState)
 runVerif mTimeout (Verif act) =
   -- Z.evalZ3 $ runStateT act emptyVerifState
-  Z.evalZ3With Nothing (Z.opt "timeout" (5000 :: Int)) $ runStateT act emptyVerifState
+  Z.evalZ3With Nothing (Z.opt "timeout" (50000 :: Int)) $ runStateT act emptyVerifState
 
 evalVerif :: Maybe Integer -> Verif a -> IO a
 evalVerif mt act = fst <$> runVerif mt act
