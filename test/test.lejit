@@ -51,7 +51,7 @@ bool contains(range crange, int64_t cval) {
     return cval >= crange. lower & cval <= crange.upper;
 }
 
-class Range {
+struct range {
     range optimize(range opt_range) {
         range optrv;
         optrv = opt_range;

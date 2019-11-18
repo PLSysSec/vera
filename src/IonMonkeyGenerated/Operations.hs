@@ -360,8 +360,8 @@ ursh :: FunctionDef
 ursh = [funcStr| range ursh(range lhs, int32_t c) {
   int32_t shift = c & (int32_t) 31;
   if (isFiniteNonNegative(lhs) | isFiniteNegative(lhs)) {
-    return newUInt32Range((uint32_t)(lhs->lower) >> shift,
-                          (uint32_t)(lhs->upper) >> shift);
+    return newUInt32Range((uint32_t)(lhs.lower) >> shift,
+                          (uint32_t)(lhs.upper) >> shift);
   }
   return newUInt32Range((uint32_t) 0, #{uint32maxS} >> shift);
 }|]
@@ -404,7 +404,7 @@ rsh' = [funcStr| range rsh'(range lhs, range rhs) {
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1079
 ursh' :: FunctionDef
 ursh' = [funcStr| range ursh'(range lhs, range rhs) {
-  return newUInt32Range((uint32_t) 0, isFiniteNonNegative(lhs) ?  (uint32_t) lhs->upper : #{uint32maxS});
+  return newUInt32Range((uint32_t) 0, isFiniteNonNegative(lhs) ?  (uint32_t) lhs.upper : #{uint32maxS});
 }|]
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1089

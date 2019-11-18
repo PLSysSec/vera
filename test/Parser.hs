@@ -92,7 +92,7 @@ progFileTest = benchTestCase "progFile" $ do
 progTest :: BenchTest
 progTest = benchTestCase "prog" $ do
   let Program fs cs = [prog|
-    class Foo {
+    struct Foo {
       uint8_t bar(uint8_t x) {
 
       }
