@@ -609,34 +609,23 @@ brokenIntersect =
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#579
 union :: FunctionDef
-union =
-  let args = [ ("lhs", c "range")
-             , ("rhs", c "range")
-             ]
-      body = [ declare (t Signed) "newLower"
-             , declare (t Signed) "newUpper"
-             , v "newLower" `assign` (min_ (v "lhs" .->. "lower") (v "rhs" .->. "lower"))
-             , v "newUpper" `assign` (max_ (v "lhs" .->. "upper") (v "rhs" .->. "upper"))
-             , declare (t Bool) "newHasInt32LowerBound"
-             , declare (t Bool) "newHasInt32UpperBound"
-             , declare (t Bool) "newCanHaveFractionalPart"
-             , declare (t Bool) "newMayIncludeNegativeZero"
-             , declare (t Unsigned16) "newExponent"
-             , v "newHasInt32LowerBound" `assign` ((v "lhs" .->. "hasInt32LowerBound") .&&. (v "rhs" .->. "hasInt32LowerBound"))
-             , v "newHasInt32UpperBound" `assign` ((v "lhs" .->. "hasInt32UpperBound") .&&. (v "rhs" .->. "hasInt32UpperBound"))
-             , v "newCanHaveFractionalPart" `assign` ((v "lhs" .->. "canHaveFractionalPart") .||. (v "rhs" .->. "canHaveFractionalPart"))
-             , v "newMayIncludeNegativeZero" `assign` ((v "lhs" .->. "canBeNegativeZero") .||. (v "rhs" .->. "canBeNegativeZero"))
-             , v "newExponent" `assign` (max_ (v "lhs" .->. "maxExponent") (v "rhs" .->. "maxExponent"))
-             , declare (c "range") "unionRet"
-             , v "unionRet" .->. "lower" `assign` v "newLower"
-             , v "unionRet" .->. "hasInt32LowerBound" `assign` v "newHasInt32LowerBound"
-             , v "unionRet" .->. "upper" `assign` v "newUpper"
-             , v "unionRet" .->. "hasInt32UpperBound" `assign` v "newHasInt32UpperBound"
-             , v "unionRet" .->. "canHaveFractionalPart" `assign` v "newCanHaveFractionalPart"
-             , v "unionRet" .->. "canBeNegativeZero" `assign` v "newMayIncludeNegativeZero"
-             , v "unionRet" .->. "maxExponent" `assign` v "newExponent"
-             , v "unionRet" .->. "isEmpty" `assign` (n Bool 0)
-             , return_ $ v "unionRet"
+union = [funcStr| range union(range& lhs, range& rhs){
+  int32_t newLower = math::min(lhs.lower, rhs.lower);
+  int32_t newUpper = math::max(lhs.upper, rhs.upper);
+  bool newHasInt32LowerBound = lhs.hasInt32LowerBound & rhs.hasInt32LowerBound;
+  bool newHasInt32UpperBound = lhs.hasInt32UpperBound & rhs.hasInt32UpperBound;
+  bool newCanHaveFractionalPart = lhs.canHaveFractionalPart | rhs.canHaveFractionalPart;
+  bool newMayIncludeNegativeZero = lhs.canBeNegativeZero |rhs.canBeNegativeZero;
+  uint16_t newExponent = math::max(lhs.maxExponent, rhs.maxExponent);
 
-             ]
-  in Function "union" (c "range") args body
+  range unionRet;
+  unionRet.lower = newLower;
+  unionRet.hasInt32LowerBound = newHasInt32LowerBound;
+  unionRet.upper = newUpper;
+  unionRet.hasInt32UpperBound = newHasInt32UpperBound;
+  unionRet.canHaveFractionalPart = newCanHaveFractionalPart;
+  unionRet.canBeNegativeZero = newMayIncludeNegativeZero;
+  unionRet.maxExponent = newExponent;
+  unionRet.isEmpty = (bool) 0;
+  return unionRet;
+}|]
