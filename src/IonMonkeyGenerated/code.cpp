@@ -87,7 +87,7 @@ range setLowerInit(int64_t sli_x, range& sli_range) {
     sli_range.lower = jsIntMinS;
     sli_range.hasInt32LowerBound = (bool)0;
   } else {
-    sli_range.lower = (int64_t)sli_x;
+    sli_range.lower = (int32_t)sli_x;
     sli_range.hasInt32LowerBound = (bool)1;
   }
 
@@ -188,7 +188,7 @@ bool missingAnyInt32Bounds(range& mibs1, range& mibs2) {
 }
 
 // -------------------
-// Operations 
+// Operations
 // -------------------
 range add(range &lhs, range &rhs)
 {
