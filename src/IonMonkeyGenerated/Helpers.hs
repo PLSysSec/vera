@@ -136,19 +136,28 @@ optimize =
   in Function "optimize" (c "range") args body
 
 newUInt32Range :: FunctionDef
-newUInt32Range = let args = [ ("u_lower_bound", t Unsigned)
-                            , ("u_upper_bound", t Unsigned)
-                            ]
-                     body = [ declare (c "range") "rv"
-                            , declare (t Signed) "lower_u"
-                            , declare (t Signed) "upper_u"
-                            , v "lower_u" `assign` (cast (v "u_lower_bound") Signed)
-                            , v "upper_u" `assign` (cast (v "u_upper_bound") Signed)
-                            , (v "rv") .->. "lower" `assign` (v "lower_u")
-                            , (v "rv") .->. "upper" `assign` (v "upper_u")
-                            , return_ (v "rv")
-                            ]
-                 in Function "newUInt32Range" (c "range") args body
+newUInt32Range = [funcStr| range newUInt32Range(uint32_t u_lower_bound, uint32_t u_upper_bound) {
+   range rv;
+   int32_t lower_u = (int32_t) u_lower_bound;
+   int32_t upper_u = (int32_t) u_upper_bound;
+   rv.lower = lower_u;
+   rv.upper = upper_u;
+   return rv;
+}|]
+
+-- newUInt32Range = let args = [ ("u_lower_bound", t Unsigned)
+--                             , ("u_upper_bound", t Unsigned)
+--                             ]
+--                      body = [ declare (c "range") "rv"
+--                             , declare (t Signed) "lower_u"
+--                             , declare (t Signed) "upper_u"
+--                             , v "lower_u" `assign` (cast (v "u_lower_bound") Signed)
+--                             , v "upper_u" `assign` (cast (v "u_upper_bound") Signed)
+--                             , (v "rv") .->. "lower" `assign` (v "lower_u")
+--                             , (v "rv") .->. "upper" `assign` (v "upper_u")
+--                             , return_ (v "rv")
+--                             ]
+--                  in Function "newUInt32Range" (c "range") args body
 
 setLowerInit :: FunctionDef
 setLowerInit =
