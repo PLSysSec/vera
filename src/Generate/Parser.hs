@@ -43,6 +43,7 @@ classDef = do
     i <- identifier <?> "struct name"
     els <- braces $ many $ parseEither (classField <* semi) func
     let (fields, fns) = partitionEithers els
+    semi
     return $ L.ClassDef i fields fns
 
 classField :: Parser (FieldName, DT.Type)

@@ -19,13 +19,13 @@ import           Utils
 
 genIonMonkeyTests :: BenchTest
 genIonMonkeyTests = benchTestGroup "Generated IonMonkey tests"
-                    [ unionTest
-                    , intersectTest
-                    , brokenIntersectTest
-                    , addTests
-                    , subTests
-                    , mulTests
-                    , andTests
+                    -- [ unionTest
+                    -- , intersectTest
+                    -- , brokenIntersectTest
+                    -- [ addTests
+                    -- , subTests
+                   -- [ mulTests
+                    [ andTests
                     , orTests
                     , xorTests
                     , notTests
@@ -62,16 +62,16 @@ mulTests :: BenchTest
 mulTests = mkFloatTests "Mul" $ Binary "mul" mul jsMul
 
 andTests :: BenchTest
-andTests = mki32Tests "And" $ Binary "and" and jsAnd
+andTests = mki32Tests "And" $ Binary "and_" and jsAnd
 
 orTests :: BenchTest
-orTests = mki32Tests "Or" $ Binary "or" or jsOr
+orTests = mki32Tests "Or" $ Binary "or_" or jsOr
 
 xorTests :: BenchTest
-xorTests = mki32Tests "Xor" $ Binary "xor" xor jsXOr
+xorTests = mki32Tests "Xor" $ Binary "xor_" xor jsXOr
 
 notTests :: BenchTest
-notTests = mki32Tests "Not" $ Unary "not" not jsNot
+notTests = mki32Tests "Not" $ Unary "not_" not jsNot
 
 lshTests :: BenchTest
 lshTests = mki32Tests "Lsh" $ Constant "lsh" lsh jsLsh
@@ -83,13 +83,13 @@ urshTests :: BenchTest
 urshTests = mki32Tests "Ursh" $ Constant "ursh" ursh jsUrsh
 
 lsh'Tests :: BenchTest
-lsh'Tests = mki32Tests "Lsh'" $ Binary "lsh'" lsh' jsLsh
+lsh'Tests = mki32Tests "Lsh'" $ Binary "lsh_p" lsh' jsLsh
 
 rsh'Tests :: BenchTest
-rsh'Tests = mki32Tests "Rsh'" $ Binary "rsh'" rsh' jsRsh
+rsh'Tests = mki32Tests "Rsh'" $ Binary "rsh_p" rsh' jsRsh
 
 ursh'Tests :: BenchTest
-ursh'Tests = mki32Tests "Ursh'" $ Binary "ursh'" ursh' jsRsh
+ursh'Tests = mki32Tests "Ursh'" $ Binary "ursh_p" ursh' jsRsh
 
 absTests :: BenchTest
 absTests = mkFloatTests "abs" $ Unary "abs" abs jsAbs

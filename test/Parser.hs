@@ -96,7 +96,7 @@ progTest = benchTestCase "prog" $ do
       uint8_t bar(uint8_t x) {
 
       }
-    } 
+    };
   |]
   length fs @=? 0
   length cs @=? 1

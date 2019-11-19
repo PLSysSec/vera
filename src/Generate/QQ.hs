@@ -12,6 +12,7 @@ import Text.Parsec
 import Text.Parsec.Pos
 import Text.Parsec.Token
 import Data.String.Interpolate
+import System.Process
 
 
 -- Reads in a file rather than an inline string
@@ -109,6 +110,15 @@ quoteFileWithPos :: (Q SourcePos -> String -> Q Exp) -> QuasiQuoter
 quoteFileWithPos qe = QuasiQuoter { quoteExp = get qe, quotePat = undefined, quoteType = undefined, quoteDec = undefined}
   where
    get :: (Q SourcePos -> String -> Q a) -> String -> Q a
-   get old_quoter file_name = do { file_cts <- runIO (readFile file_name) 
+   get old_quoter file_name = do { file_cts <- runIO (preprocess file_name)
                                  ; addDependentFile file_name
                                  ; old_quoter (pure $ initialPos file_name) file_cts }
+
+
+preprocess :: FilePath -> IO String
+preprocess f = do
+    ls <- lines <$> contents
+    let gls = dropWhile ("#" `isPrefixOf`) ls
+    return $ unlines gls
+    where
+        contents = readProcess "g++" ["-E", f] []
