@@ -568,6 +568,7 @@ defineAll op = do
   define wellFormedRange
   define fInRange
   define newFloatInputRange
+  define canBeFiniteNegative
   define verifyNegZero
   define verifyNan
   define verifyInf

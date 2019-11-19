@@ -2,11 +2,11 @@
 module IonMonkeyGenerated.Helpers where
 import           Data.List
 import           Data.String.Interpolate
-import           DSL.Typed       (Type (..))
+import           DSL.Typed               (Type (..))
 import           Generate.Lang
+import           Generate.QQ
 import           Generate.SMTAST
 import           Generate.State
-import           Generate.QQ
 
 p :: Program
 p = [progFile|src/IonMonkeyGenerated/code.cpp|]
@@ -175,6 +175,9 @@ numBits = fn "numBits"
 
 canBeFiniteNonNegative :: FunctionDef
 canBeFiniteNonNegative = fn "canBeFiniteNonNegative"
+
+canBeFiniteNegative :: FunctionDef
+canBeFiniteNegative = fn "canBeFiniteNegative"
 
 isFiniteNonNegative :: FunctionDef
 isFiniteNonNegative = fn "isFiniteNonNegative"

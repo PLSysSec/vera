@@ -62,6 +62,10 @@ bool canBeFiniteNonNegative(range& fnn2) {
   return fnn2.upper >= (int32_t) 0;
 }
 
+bool canBeFiniteNegative(range& fnn3) {
+  return fnn3.lower < (int32_t) 0;
+}
+
 bool canBeNan(range& nannan) {
   return nannan.maxExponent == includesInfinityAndNanS;
 }
@@ -95,8 +99,8 @@ uint32_t countLeadingZeroes(uint32_t x) {
 }
 
 // https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#566
-bool canHaveSignBitSet(range& sbs_range) {
-  return (!sbs_range.hasInt32LowerBound) | canBeFiniteNonNegative(sbs_range) | sbs_range.canBeNegativeZero;
+bool canHaveSignBitSet(range& csbs_range) {
+  return (!csbs_range.hasInt32LowerBound) | canBeFiniteNegative(csbs_range) | csbs_range.canBeNegativeZero;
 }
 
 // https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#566
@@ -426,9 +430,9 @@ range not_(range& op) {
 
 range mul(range& lhs, range& rhs){
   bool sbs = canHaveSignBitSet(lhs);
-  bool newMayIncludeNegativeZero = (bool) 0;
-    //(canHaveSignBitSet(lhs) & canBeFiniteNonNegative(rhs)) |
-    //(canHaveSignBitSet(rhs) & canBeFiniteNonNegative(lhs));
+  bool newMayIncludeNegativeZero = 
+    (canHaveSignBitSet(lhs) & canBeFiniteNonNegative(rhs)) |
+    (canHaveSignBitSet(rhs) & canBeFiniteNonNegative(lhs));
 
   uint16_t exponent = (uint16_t) 0;
 
