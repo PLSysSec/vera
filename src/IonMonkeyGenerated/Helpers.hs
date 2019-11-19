@@ -1,11 +1,23 @@
 {-# LANGUAGE QuasiQuotes #-}
 module IonMonkeyGenerated.Helpers where
+import           Data.List
 import           Data.String.Interpolate
 import           DSL.Typed       (Type (..))
 import           Generate.Lang
 import           Generate.SMTAST
 import           Generate.State
 import           Generate.QQ
+
+p :: Program
+p = [progFile|src/IonMonkeyGenerated/code.cpp|]
+
+prog_func :: Program -> String -> FunctionDef
+prog_func (Program fs _) s = case find (\fd -> fName fd == s) fs of
+                                      Just func -> func
+                                      Nothing -> error "Couldn't find function"
+
+fn :: String -> FunctionDef
+fn = prog_func p
 
 range3 :: FunctionDef
 range3 =
@@ -100,6 +112,10 @@ range6 =
              ]
   in Function "Range6" (c "range") args body
 
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#394
+newInt32Range :: FunctionDef
+newInt32Range = fn "newInt32Range"
+
 optimize :: FunctionDef
 optimize =
   let args = [ ("opt_range", c "range") ]
@@ -122,6 +138,9 @@ optimize =
              , return_ $ v "optrv"
              ]
   in Function "optimize" (c "range") args body
+
+newUInt32Range :: FunctionDef
+newUInt32Range = fn "newUInt32Range"
 
 setLowerInit :: FunctionDef
 setLowerInit =
@@ -165,6 +184,10 @@ setUpperInit =
              ]
   in Function "setUpperInit" (c "range") args body
 
+-- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#566
+canHaveSignBitSet :: FunctionDef
+canHaveSignBitSet = fn "canHaveSignBitSet"
+
 exponentImpliedByInt32Bounds :: FunctionDef
 exponentImpliedByInt32Bounds =
   let args = [ ("eib_range", c "range") ]
@@ -184,6 +207,21 @@ exponentImpliedByInt32Bounds =
              ]
 
   in Function "exponentImpliedByInt32Bounds" (t Unsigned16) args body
+
+
+nullRange :: FunctionDef
+nullRange = [funcStr| range nullRange(bool emptyR) {
+  range nrRet;
+  nrRet.lower = #{jsIntMinS};
+  nrRet.hasInt32UpperBound = (bool) 0;
+  nrRet.upper = #{jsIntMinS};
+  nrRet.hasInt32LowerBound = (bool) 0;
+  nrRet.canHaveFractionalPart = (bool) 1;
+  nrRet.canBeNegativeZero = (bool) 1;
+  nrRet.maxExponent = #{includesInfinityAndNanS};
+  nrRet.isEmpty = emptyR;
+  return nrRet;
+}|]
 
 --- Less complicated stuff
 
@@ -291,6 +329,13 @@ numBits =
       body = [ return_ $ ((v "nbs" .->. "maxExponent") .+. n Unsigned16 1)
              ]
   in Function "numBits" (t Unsigned16) args body
+
+canBeFiniteNonNegative :: FunctionDef
+canBeFiniteNonNegative =
+  let args = [ ("fnn2", c "range") ]
+      body = [ return_ $ (v "fnn2" .->. "upper" .=>. n Signed 0) -- finish this
+             ]
+  in Function "canBeFiniteNonNegative" (t Bool) args body
 
 isFiniteNonNegative :: FunctionDef
 isFiniteNonNegative =

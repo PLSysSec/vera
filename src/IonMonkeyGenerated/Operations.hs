@@ -31,17 +31,6 @@ import           IonMonkeyGenerated.Helpers
 import           Prelude                    hiding (abs, and, div, floor, max,
                                              min, mod, not, or)
 
-p :: Program
-p = [progFile|src/IonMonkeyGenerated/code.cpp|]
-
-prog_func :: Program -> String -> FunctionDef
-prog_func (Program fs _) s = case find (\fd -> fName fd == s) fs of
-                                      Just func -> func
-                                      Nothing -> error "Couldn't find function"
-
-fn :: String -> FunctionDef
-fn = prog_func p
-
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#744
 add :: FunctionDef
 add = fn "add"
