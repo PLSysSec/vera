@@ -110,6 +110,8 @@ range Range4(
   rv.canHaveFractionalPart = fract_flag;
   rv.canBeNegativeZero = nz_flag;
   rv.maxExponent = exp_set;
+
+  return rv;
 }
 
 range setUpperInit(int64_t sui_x, range& sui_range) {
