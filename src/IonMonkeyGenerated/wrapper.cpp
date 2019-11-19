@@ -1,7 +1,13 @@
 #include <stdint.h>
 #include <algorithm>
+#include <cmath>
 namespace math {
     using namespace std;
+    int32_t exp(double x) {
+        int32_t e;
+        frexp(x, &e);
+        return e;
+    }
 }
 struct range;
 

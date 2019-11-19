@@ -113,12 +113,12 @@ range Range4(
 }
 
 range setUpperInit(int64_t sui_x, range& sui_range) {
-   if (sui_x > jsIntMax64) {
-    sui_range.upper = jsIntMax;
+   if (sui_x > jsIntMax64S) {
+    sui_range.upper = jsIntMaxS;
     sui_range.hasInt32UpperBound = (bool) 0;
    } else {
-      if (sui_x < jsIntMin64) {
-        sui_range.upper = jsIntMin;
+      if (sui_x < jsIntMin64S) {
+        sui_range.upper = jsIntMinS;
         sui_range.hasInt32UpperBound = (bool) 1;
       } else  {
         sui_range.upper = (int32_t) sui_x;
