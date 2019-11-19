@@ -168,55 +168,25 @@ jsIntMin64 = n Signed64 (-2147483648)
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#489
 hasInt32Bounds :: FunctionDef
-hasInt32Bounds =
-  let args = [ ("bnds", c "range") ]
-      body = [ return_ $ (v "bnds" .->. "hasInt32LowerBound")  .&&. (v "bnds" .->. "hasInt32UpperBound")
-             ]
-  in Function "hasInt32Bounds" (t Bool) args body
+hasInt32Bounds = fn "hasInt32Bounds"
 
 numBits :: FunctionDef
-numBits =
-  let args = [ ("nbs", c "range") ]
-      body = [ return_ $ ((v "nbs" .->. "maxExponent") .+. n Unsigned16 1)
-             ]
-  in Function "numBits" (t Unsigned16) args body
+numBits = fn "numBits"
 
 canBeFiniteNonNegative :: FunctionDef
-canBeFiniteNonNegative =
-  let args = [ ("fnn2", c "range") ]
-      body = [ return_ $ (v "fnn2" .->. "upper" .=>. n Signed 0) -- finish this
-             ]
-  in Function "canBeFiniteNonNegative" (t Bool) args body
+canBeFiniteNonNegative = fn "canBeFiniteNonNegative"
 
 isFiniteNonNegative :: FunctionDef
-isFiniteNonNegative =
-  let args = [ ("fnn", c "range") ]
-      body = [ return_ $ (v "fnn" .->. "lower" .>. n Signed 0) -- finish this
-             ]
-  in Function "isFiniteNonNegative" (t Bool) args body
+isFiniteNonNegative = fn "isFiniteNonNegative"
 
 isFiniteNegative :: FunctionDef
-isFiniteNegative =
-  let args = [ ("fn", c "range") ]
-      body = [ return_ $ (v "fn" .->. "upper" .<. n Signed 0) -- finish this
-             ]
-  in Function "isFiniteNegative" (t Bool) args body
+isFiniteNegative = fn "isFiniteNegative"
 
 canBeInfiniteOrNan :: FunctionDef
-canBeInfiniteOrNan =
-  let args = [ ("fnan", c "range") ]
-      body = [ return_ $ (v "fnan" .->. "maxExponent" .=>. includesInfinity)
-             ]
-  in Function "canBeInfiniteOrNan" (t Bool) args body
+canBeInfiniteOrNan = fn "canBeInfiniteOrNan"
 
 missingAnyInt32Bounds :: FunctionDef
-missingAnyInt32Bounds =
-  let args = [ ("mibs1", c "range")
-             , ("mibs2", c "range")
-             ]
-      body = [ return_ $ (not_ $ call "hasInt32Bounds" [v "mibs1"]) .||. (not_ $ call "hasInt32Bounds" [v "mibs2"])
-             ]
-  in Function "missingAnyInt32Bounds" (t Bool) args body
+missingAnyInt32Bounds = fn "missingAnyInt32Bounds"
 
 canBeNan :: FunctionDef
 canBeNan =

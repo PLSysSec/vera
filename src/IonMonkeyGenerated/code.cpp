@@ -163,6 +163,30 @@ range setUpperInit(int64_t sui_x, range& sui_range) {
    return sui_range;
 }
 
+bool hasInt32Bounds(range& bnds) {
+  return bnds.hasInt32LowerBound & bnds.hasInt32UpperBound;
+}
+
+uint16_t numBits(range& nbs) {
+ return nbs.maxExponent + ((uint16_t) 1);
+}
+
+bool isFiniteNonNegative(range& fnn) {
+  return fnn.lower > ((int32_t) 0);
+}
+
+bool isFiniteNegative(range& fn) {
+  return fn.upper < ((int32_t) 0);
+}
+
+bool canBeInfiniteOrNan(range& fnan) {
+  return fnan.maxExponent >= includesInfinityS;
+}
+
+bool missingAnyInt32Bounds(range& mibs1, range& mibs2) {
+  return (!hasInt32Bounds(mibs1)) | (!hasInt32Bounds(mibs2));
+}
+
 // -------------------
 // Operations 
 // -------------------
