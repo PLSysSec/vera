@@ -118,7 +118,7 @@ quoteFileWithPos qe = QuasiQuoter { quoteExp = get qe, quotePat = undefined, quo
 preprocess :: FilePath -> IO String
 preprocess f = do
     ls <- lines <$> contents
-    let gls = dropWhile ("#" `isPrefixOf`) ls
+    let gls = filter (not . ("#" `isPrefixOf`)) ls
     return $ unlines gls
     where
         contents = readProcess "g++" ["-E", f] []
