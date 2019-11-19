@@ -5,6 +5,7 @@ import           DSL.Typed       (Type (..))
 import           Generate.Lang
 import           Generate.SMTAST
 import           Generate.State
+import           Generate.QQ
 
 range3 :: FunctionDef
 range3 =
@@ -220,21 +221,19 @@ exponentImpliedByInt32Bounds =
 
 
 nullRange :: FunctionDef
-nullRange =
-  let args = [ ("emptyR", t Bool) ]
-      body = [ declare (c "range") "nrRet"
-             , v "nrRet" .->. "lower" `assign` jsIntMin
-             , v "nrRet" .->. "hasInt32UpperBound" `assign` (n Bool 0)
-             , v "nrRet" .->. "upper" `assign` jsIntMin
-             , v "nrRet" .->. "hasInt32LowerBound" `assign` (n Bool 0)
-             , v "nrRet" .->. "canHaveFractionalPart" `assign` (n Bool 1)
-             , v "nrRet" .->. "canBeNegativeZero" `assign` (n Bool 1)
-             , v "nrRet" .->. "maxExponent" `assign` includesInfinityAndNan
-             , v "nrRet" .->. "isEmpty" `assign` (v "emptyR")
-             , return_ $ v "nrRet"
-             ]
+nullRange = [funcStr| range nullRange(bool emptyR) {
+  range nrRet;
+  nrRet.lower = #{jsIntMinS};
+  nrRet.hasInt32UpperBound = (bool) 0;
+  nrRet.upper = #{jsIntMinS};
+  nrRet.hasInt32LowerBound = (bool) 0;
+  nrRet.canHaveFractionalPart = (bool) 1;
+  nrRet.canBeNegativeZero = (bool) 1;
+  nrRet.maxExponent = #{includesInfinityAndNanS};
+  nrRet.isEmpty = emptyR;
+  return nrRet;
+}|]
 
-  in Function "nullRange" (c "range") args body
 --- Less complicated stuff
 
 range_constructor :: FunctionDef
