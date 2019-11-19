@@ -186,10 +186,9 @@ setUpperInit =
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#566
 canHaveSignBitSet :: FunctionDef
-canHaveSignBitSet =
-  let args = [ ("sbs_range", c "range") ]
-      body = [ return_ $ (not_ $ v "sbs_range" .->. "hasInt32LowerBound") .||. (call "canBeFiniteNonNegative" [v "sbs_range"]) .||. (v "sbs_range" .->. "canBeNegativeZero")]
-  in Function "canHaveSignBitSet" (t Bool) args body
+canHaveSignBitSet = [funcStr| bool canHaveSignBitSet(range& sbs_range) {
+  return (!sbs_range.hasInt32LowerBound) | canBeFiniteNonNegative(sbs_range) | sbs_range.canBeNegativeZero;
+}|]
 
 exponentImpliedByInt32Bounds :: FunctionDef
 exponentImpliedByInt32Bounds =
