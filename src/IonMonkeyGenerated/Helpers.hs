@@ -102,15 +102,12 @@ range6 =
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#394
 newInt32Range :: FunctionDef
-newInt32Range = let args = [ ("lower_bound_vv", t Signed)
-                           , ("upper_bound_vv", t Signed)
-                           ]
-                    body = [ declare (c "range") "rvvv"
-                           , (v "rvvv") .->. "lower" `assign` (v "lower_bound_vv")
-                           , (v "rvvv") .->. "upper" `assign` (v "upper_bound_vv")
-                           , return_ (v "rvvv")
-                           ]
-                in Function "newInt32Range" (c "range") args body
+newInt32Range = [funcStr| range newInt32Range(int32_t lower_bound_vv, int32_t upper_bound_vv) {
+   range rvvv;
+   rvvv.lower = lower_bound_vv;
+   rvvv.upper = upper_bound_vv;
+   return rvvv;
+}|]
 
 optimize :: FunctionDef
 optimize =
@@ -144,20 +141,6 @@ newUInt32Range = [funcStr| range newUInt32Range(uint32_t u_lower_bound, uint32_t
    rv.upper = upper_u;
    return rv;
 }|]
-
--- newUInt32Range = let args = [ ("u_lower_bound", t Unsigned)
---                             , ("u_upper_bound", t Unsigned)
---                             ]
---                      body = [ declare (c "range") "rv"
---                             , declare (t Signed) "lower_u"
---                             , declare (t Signed) "upper_u"
---                             , v "lower_u" `assign` (cast (v "u_lower_bound") Signed)
---                             , v "upper_u" `assign` (cast (v "u_upper_bound") Signed)
---                             , (v "rv") .->. "lower" `assign` (v "lower_u")
---                             , (v "rv") .->. "upper" `assign` (v "upper_u")
---                             , return_ (v "rv")
---                             ]
---                  in Function "newUInt32Range" (c "range") args body
 
 setLowerInit :: FunctionDef
 setLowerInit =
