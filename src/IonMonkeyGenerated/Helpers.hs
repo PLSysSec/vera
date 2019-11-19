@@ -26,39 +26,7 @@ range4 :: FunctionDef
 range4 = fn "Range4"
 
 range6 :: FunctionDef
-range6 =
-  let args = [ ("lower_bound", t Signed64)
-             , ("has_lower", t Bool)
-             , ("upper_bound", t Signed64)
-             , ("has_upper", t Bool)
-             , ("fract_flag", t Bool)
-             , ("nz_flag", t Bool)
-             , ("exp_set", t Unsigned16)
-             ]
-      body = [ declare (c "range") "rv"
-             , declare (c "range") "tmp"
-             , v "tmp" `assign` v "rv"
-             , assert_ $ not_ $ undef $ v "tmp" .->. "lower"
-             , assert_ $ not_ $ undef $ v "tmp" .->. "upper"
-             , assert_ $ not_ $ undef $ v "rv" .->. "lower"
-             , assert_ $ not_ $ undef $ v "rv" .->. "upper"
-             , v "rv" `assign` call "setLowerInit" [ v "lower_bound"
-                                                   , v "tmp"
-                                                   ]
-             , v "rv" .->. "hasInt32LowerBound" `assign` v "has_lower"
-             , declare (c "range") "tmp2"
-             , v "tmp2" `assign` v "rv"
-             , v "rv" `assign` call "setUpperInit" [ v "upper_bound"
-                                                   , v "tmp2"
-                                                   ]
-             , v "rv" .->. "hasInt32UpperBound" `assign` v "has_upper"
-             , v "rv" .->. "canHaveFractionalPart" `assign` (v "fract_flag")
-             , v "rv" .->. "canBeNegativeZero" `assign` (v "nz_flag")
-             , v "rv" .->. "maxExponent" `assign` (v "exp_set")
-             , return_ $ v "rv"
-             -- , return_ $ call "optimize" [v "rv"]
-             ]
-  in Function "Range6" (c "range") args body
+range6 = fn "Range6"
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#394
 newInt32Range :: FunctionDef

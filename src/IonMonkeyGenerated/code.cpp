@@ -104,7 +104,6 @@ range Range3(int64_t lower_bound, int64_t upper_bound, bool nz_flag) {
    tmp2 = rv;
    rv = setUpperInit(upper_bound, tmp2);
    rv.canBeNegativeZero = nz_flag;
-   //TODO: return optimize(rv);
    return rv;
 }
 
@@ -121,6 +120,26 @@ range Range4(
 
   range tmp2 = rv;
   rv = setUpperInit(upper_bound, tmp2);
+  rv.canHaveFractionalPart = fract_flag;
+  rv.canBeNegativeZero = nz_flag;
+  rv.maxExponent = exp_set;
+
+  return rv;
+}
+
+range Range6(int64_t lower_bound, bool has_lower,
+             int64_t upper_bound, bool has_upper,
+             bool fract_flag, bool nz_flag, uint16_t exp_set) {
+  range rv;
+  range tmp = rv;
+
+  rv = setLowerInit(lower_bound, tmp);
+
+  rv.hasInt32LowerBound = has_lower;
+
+  range tmp2 = rv;
+  rv = setUpperInit(upper_bound, tmp2);
+  rv.hasInt32UpperBound = has_upper;
   rv.canHaveFractionalPart = fract_flag;
   rv.canBeNegativeZero = nz_flag;
   rv.maxExponent = exp_set;
