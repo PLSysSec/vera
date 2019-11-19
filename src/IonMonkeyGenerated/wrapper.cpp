@@ -20,6 +20,7 @@ bool canBeInfiniteOrNan(range &r);
 bool missingAnyInt32Bounds(range &, range &);
 uint16_t numBits(range &);
 bool canHaveSignBitSet(range &);
+range Range3(int64_t, int64_t, bool);
 range Range4(int64_t, int64_t, bool, bool, uint16_t);
 range Range6(int64_t, bool, int64_t, bool, bool, bool, uint16_t);
 bool canBeZero(range &r);

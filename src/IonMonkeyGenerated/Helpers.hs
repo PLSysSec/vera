@@ -20,31 +20,7 @@ fn :: String -> FunctionDef
 fn = prog_func p
 
 range3 :: FunctionDef
-range3 =
-  let args = [ ("lower_bound", t Signed64)
-             , ("upper_bound", t Signed64)
-             , ("nz_flag", t Bool)
-             ]
-      body = [ declare (c "range") "rv" -- You have to do this shit now.
-             , declare (c "range") "tmp" -- Can't assign and pass thing into class
-             , assert_ $ not_ $ undef $ v "tmp" .->. "lower"
-             , assert_ $ not_ $ undef $ v "tmp" .->. "upper"
-             , assert_ $ not_ $ undef $ v "rv" .->. "lower"
-             , assert_ $ not_ $ undef $ v "rv" .->. "upper"
-             , v "tmp" `assign` v "rv"
-             , v "rv" `assign` call "setLowerInit" [ v "lower_bound"
-                                                   , v "tmp"
-                                                   ]
-             , declare (c "range") "tmp2"
-             , v "tmp2" `assign` v "rv"
-             , v "rv" `assign` call "setUpperInit" [ v "upper_bound"
-                                                   , v "tmp2"
-                                                   ]
-             , v "rv" .->. "canBeNegativeZero" `assign` (v "nz_flag")
-             , return_ $ call "optimize" [v "rv"]
-             -- , return_ $ v "rv"
-             ]
-  in Function "Range3" (c "range") args body
+range3 = fn "Range3"
 
 range4 :: FunctionDef
 range4 = fn "Range4"

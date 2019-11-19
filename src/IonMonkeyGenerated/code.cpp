@@ -94,6 +94,20 @@ range setLowerInit(int64_t sli_x, range& sli_range) {
   return sli_range;
 }
 
+
+range Range3(int64_t lower_bound, int64_t upper_bound, bool nz_flag) {
+   range rv;
+   range tmp = rv;
+   rv = setLowerInit(lower_bound, tmp);
+
+   range tmp2;
+   tmp2 = rv;
+   rv = setUpperInit(upper_bound, tmp2);
+   rv.canBeNegativeZero = nz_flag;
+   //TODO: return optimize(rv);
+   return rv;
+}
+
 range Range4(
   int64_t lower_bound,
   int64_t upper_bound,
