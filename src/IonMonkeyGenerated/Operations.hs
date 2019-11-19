@@ -68,13 +68,14 @@ add = [funcStr| range add(range lhs, range rhs) {
 sub :: FunctionDef
 sub = [funcStr| range sub(range lhs, range rhs) {
 
+
   int64_t l = (int64_t) lhs.lower - (int64_t) rhs.upper;
-  if(!lhs.hasInt32LowerBound | !rhs.hasInt32LowerBound) {
+  if(!lhs.hasInt32LowerBound | !rhs.hasInt32UpperBound) {
     l = #{noInt32LowerBoundS};
   }
 
   int64_t h = (int64_t) lhs.upper - (int64_t) rhs.lower;
-  if(!lhs.hasInt32UpperBound | !rhs.hasInt32UpperBound) {
+  if(!lhs.hasInt32UpperBound | !rhs.hasInt32LowerBound) {
     h = #{noInt32UpperBoundS};
   }
 
