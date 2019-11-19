@@ -112,6 +112,22 @@ range Range4(
   rv.maxExponent = exp_set;
 }
 
+range setUpperInit(int64_t sui_x, range& sui_range) {
+   if (sui_x > jsIntMax64) {
+    sui_range.upper = jsIntMax;
+    sui_range.hasInt32UpperBound = (bool) 0;
+   } else {
+      if (sui_x < jsIntMin64) {
+        sui_range.upper = jsIntMin;
+        sui_range.hasInt32UpperBound = (bool) 1;
+      } else  {
+        sui_range.upper = (int32_t) sui_x;
+        sui_range.hasInt32UpperBound = (bool) 1;
+      }
+   }
+   return sui_range;
+}
+
 // -------------------
 // Operations 
 // -------------------

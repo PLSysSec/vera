@@ -118,25 +118,7 @@ setLowerInit :: FunctionDef
 setLowerInit = fn "setLowerInit"
 
 setUpperInit :: FunctionDef
-setUpperInit =
-  let args = [ ("sui_x", t Signed64)
-             , ("sui_range", c "range")
-             ]  -- Do this so it doesnt stamp out previous assign when it gets prev var in if
-      body = [ if_ (v "sui_x" .>. jsIntMax64)
-                   [ v "sui_range" .->. "upper" `assign` jsIntMax
-                   , v "sui_range" .->. "hasInt32UpperBound" `assign` n Bool 0
-                   ]
-                   [ if_ (v "sui_x" .<. jsIntMin64)
-                     [ v "sui_range" .->. "upper" `assign` jsIntMin
-                     , v "sui_range" .->. "hasInt32UpperBound" `assign` n Bool 1
-                     ]
-                     [ v "sui_range" .->. "upper" `assign` (cast (v "sui_x") Signed)
-                     , v "sui_range" .->. "hasInt32UpperBound" `assign` n Bool 1
-                     ]
-                   ]
-             , return_ $ v "sui_range"
-             ]
-  in Function "setUpperInit" (c "range") args body
+setUpperInit = fn "setUpperInit"
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#566
 canHaveSignBitSet :: FunctionDef
