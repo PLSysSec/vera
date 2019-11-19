@@ -62,6 +62,38 @@ bool canBeFiniteNonNegative(range& fnn2) {
   return fnn2.upper >= (int32_t) 0;
 }
 
+bool canBeNan(range& nannan) {
+  return nannan.maxExponent == includesInfinityAndNanS;
+}
+
+bool contains(range& crange, int32_t cval) {
+  return cval >= crange.lower & cval <= crange.upper;
+}
+
+bool canBeZero(range& zrange) {
+  return contains(zrange, (int32_t)0);
+}
+
+uint32_t countOnes(uint32_t y) {
+  y -= (y >> (int32_t)1) & (uint32_t) 1431655765;
+  y = ((y >> (uint32_t)2) & (uint32_t)858993459) + (y & (uint32_t)858993459);
+  y = ((y >> (uint32_t)4) + y) & (uint32_t)252645135;
+  y += y >> (uint32_t)8;
+  y += y >> (uint32_t)16;
+  return y & (uint32_t)63;
+}
+
+uint32_t countLeadingZeroes(uint32_t x) {
+  x |= x >> (uint32_t)1;
+  x |= x >> (uint32_t)2;
+  x |= x >> (uint32_t)4;
+  x |= x >> (uint32_t)8;
+  x |= x >> (uint32_t)16;
+
+  uint32_t ones = countOnes(x);
+  return (uint32_t)32 - ones;
+}
+
 // https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#566
 bool canHaveSignBitSet(range& sbs_range) {
   return (!sbs_range.hasInt32LowerBound) | canBeFiniteNonNegative(sbs_range) | sbs_range.canBeNegativeZero;

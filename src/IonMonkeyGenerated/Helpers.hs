@@ -189,51 +189,17 @@ missingAnyInt32Bounds :: FunctionDef
 missingAnyInt32Bounds = fn "missingAnyInt32Bounds"
 
 canBeNan :: FunctionDef
-canBeNan =
-  let args = [ ("nannan", c "range") ]
-      body = [ return_ $ (v "nannan" .->. "maxExponent" .==. includesInfinityAndNan)
-             ]
-  in Function "canBeNan" (t Bool) args body
+canBeNan = fn "canBeNan"
 
 canBeZero :: FunctionDef
-canBeZero =
-  let args = [ ("zrange", c "range") ]
-      body = [ return_ $ call "contains" [v "zrange", n Signed 0]
-             ]
-  in Function "canBeZero" (t Bool) args body
+canBeZero = fn "canBeZero"
 
 contains :: FunctionDef
-contains =
-  let args = [ ("crange", c "range")
-             , ("cval", t Signed)
-             ]
-      body = [ return_ $ (v "cval" .=>. (v "crange" .->. "lower")) .&&. (v "cval" .<=. (v "crange" .->. "upper"))
-             ]
-  in Function "contains" (t Bool) args body
+contains = fn "contains"
 
 -- | http://aggregate.org/MAGIC/#Population%20Count%20(Ones%20Count)
 countOnes :: FunctionDef
-countOnes =
-  let args = [ ("y", t Unsigned) ]
-      body = [ v "y" .-=. ((v "y" .>>. n Signed 1) .&&. n Unsigned 1431655765)
-             , v "y" `assign` (((v "y" .>>. n Unsigned 2) .&&. n Unsigned 858993459) .+. (v "y" .&&. n Unsigned 858993459))
-             , v "y" `assign` (((v "y" .>>. n Unsigned 4) .+. v "y").&&. n Unsigned 252645135)
-             , v "y" .+=. (v "y" .>>. n Unsigned 8)
-             , v "y" .+=. (v "y" .>>. n Unsigned 16)
-             , return_ $ v "y" .&&. n Unsigned 63
-             ]
-  in Function "countOnes" (t Unsigned) args body
+countOnes = fn "countOnes"
 
 countLeadingZeroes :: FunctionDef
-countLeadingZeroes =
-  let args = [ ("x", t Unsigned) ]
-      body = [ v "x" .|=. (v "x" .>>. n Unsigned 1)
-             , v "x" .|=. (v "x" .>>. n Unsigned 2)
-             , v "x" .|=. (v "x" .>>. n Unsigned 4)
-             , v "x" .|=. (v "x" .>>. n Unsigned 8)
-             , v "x" .|=. (v "x" .>>. n Unsigned 16)
-             , declare (t Unsigned) "ones"
-             , v "ones" `assign` call "countOnes" [v "x"]
-             , return_ $ n Unsigned 32 .-. v "ones"
-             ]
-  in Function "countLeadingZeroes" (t Unsigned) args body
+countLeadingZeroes = fn "countLeadingZeroes"
