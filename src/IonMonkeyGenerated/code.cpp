@@ -65,6 +65,31 @@ bool canBeFiniteNonNegative(range& fnn2) {
 bool canHaveSignBitSet(range& sbs_range) {
   return (!sbs_range.hasInt32LowerBound) | canBeFiniteNonNegative(sbs_range) | sbs_range.canBeNegativeZero;
 }
+
+// https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#566
+uint16_t exponentImpliedByInt32Bounds(range& eib_range) {
+  int32_t ua = eib_range.upper;
+  int32_t la = eib_range.lower;
+  int32_t abs_upper = math::abs(ua);
+  int32_t abs_lower = math::abs(la);
+  int32_t themax = (int32_t) math::max((uint32_t) abs_lower, (uint32_t) abs_upper);
+  uint16_t eib_ret = math::exp((double) themax);
+  return eib_ret;
+}
+
+range nullRange(bool emptyR) {
+  range nrRet;
+  nrRet.lower = jsIntMinS;
+  nrRet.hasInt32UpperBound = (bool) 0;
+  nrRet.upper = jsIntMinS;
+  nrRet.hasInt32LowerBound = (bool) 0;
+  nrRet.canHaveFractionalPart = (bool) 1;
+  nrRet.canBeNegativeZero = (bool) 1;
+  nrRet.maxExponent = includesInfinityAndNanS;
+  nrRet.isEmpty = emptyR;
+  return nrRet;
+}
+
 // -------------------
 // Operations 
 // -------------------

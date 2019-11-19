@@ -189,39 +189,10 @@ canHaveSignBitSet :: FunctionDef
 canHaveSignBitSet = fn "canHaveSignBitSet"
 
 exponentImpliedByInt32Bounds :: FunctionDef
-exponentImpliedByInt32Bounds =
-  let args = [ ("eib_range", c "range") ]
-      body = [ declare (t Unsigned16) "eib_ret"
-             , declare (t Signed) "themax"
-             , declare (t Signed) "abs_lower"
-             , declare (t Signed) "abs_upper"
-             , declare (t Signed) "ua"
-             , declare (t Signed) "la"
-             , v "la" `assign` (v "eib_range" .->. "lower")
-             , v "ua" `assign` (v "eib_range" .->. "upper")
-             , v "abs_lower" `assign` (abs_ $ v "la")
-             , v "abs_upper" `assign` (abs_ $ v "ua")
-             , v "themax" `assign` (cast (max_ (cast (v "abs_lower") Unsigned) (cast (v "abs_upper")Unsigned)) Signed)
-             , v "eib_ret" `assign` (fpExp $ cast (v "themax") Double)
-             , return_ $ v "eib_ret"
-             ]
-
-  in Function "exponentImpliedByInt32Bounds" (t Unsigned16) args body
-
+exponentImpliedByInt32Bounds = fn "exponentImpliedByInt32Bounds"
 
 nullRange :: FunctionDef
-nullRange = [funcStr| range nullRange(bool emptyR) {
-  range nrRet;
-  nrRet.lower = #{jsIntMinS};
-  nrRet.hasInt32UpperBound = (bool) 0;
-  nrRet.upper = #{jsIntMinS};
-  nrRet.hasInt32LowerBound = (bool) 0;
-  nrRet.canHaveFractionalPart = (bool) 1;
-  nrRet.canBeNegativeZero = (bool) 1;
-  nrRet.maxExponent = #{includesInfinityAndNanS};
-  nrRet.isEmpty = emptyR;
-  return nrRet;
-}|]
+nullRange = fn "nullRange"
 
 --- Less complicated stuff
 
