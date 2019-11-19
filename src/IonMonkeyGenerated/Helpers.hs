@@ -47,35 +47,7 @@ range3 =
   in Function "Range3" (c "range") args body
 
 range4 :: FunctionDef
-range4 =
-  let args = [ ("lower_bound", t Signed64)
-             , ("upper_bound", t Signed64)
-             , ("fract_flag", t Bool)
-             , ("nz_flag", t Bool)
-             , ("exp_set", t Unsigned16)
-             ]
-      body = [ declare (c "range") "rv"
-             , declare (c "range") "tmp"
-             , assert_ $ not_ $ undef $ v "tmp" .->. "lower"
-             , assert_ $ not_ $ undef $ v "tmp" .->. "upper"
-             , assert_ $ not_ $ undef $ v "rv" .->. "lower"
-             , assert_ $ not_ $ undef $ v "rv" .->. "upper"
-              , v "tmp" `assign` v "rv"
-             , v "rv" `assign` call "setLowerInit" [ v "lower_bound"
-                                                   , v "tmp"
-                                                   ]
-             , declare (c "range") "tmp2"
-             , v "tmp2" `assign` v "rv"
-             , v "rv" `assign` call "setUpperInit" [ v "upper_bound"
-                                                   , v "tmp2"
-                                                   ]
-             , v "rv" .->. "canHaveFractionalPart" `assign` (v "fract_flag")
-             , v "rv" .->. "canBeNegativeZero" `assign` (v "nz_flag")
-             , v "rv" .->. "maxExponent" `assign` (v "exp_set")
-             , return_ $ v "rv"
-             -- , return_ $ call "optimize" [v "rv"]
-             ]
-  in Function "Range4" (c "range") args body
+range4 = fn "Range4"
 
 range6 :: FunctionDef
 range6 =

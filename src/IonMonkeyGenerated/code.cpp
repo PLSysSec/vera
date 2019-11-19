@@ -11,6 +11,7 @@
 #define noInt32UpperBoundS ((int64_t) jsIntMaxS + (int64_t) 1)
 #define jsIntMaxS ((int32_t) 0x7fffffff)
 #define jsIntMinS ((int32_t) 0x80000000)
+#define jsIntMin64S ((int64_t) -2147483648)
 #define jsIntMax64S ((int64_t) 2147483647)
 
 struct range {
@@ -77,17 +78,38 @@ uint16_t exponentImpliedByInt32Bounds(range& eib_range) {
   return eib_ret;
 }
 
-range nullRange(bool emptyR) {
-  range nrRet;
-  nrRet.lower = jsIntMinS;
-  nrRet.hasInt32UpperBound = (bool) 0;
-  nrRet.upper = jsIntMinS;
-  nrRet.hasInt32LowerBound = (bool) 0;
-  nrRet.canHaveFractionalPart = (bool) 1;
-  nrRet.canBeNegativeZero = (bool) 1;
-  nrRet.maxExponent = includesInfinityAndNanS;
-  nrRet.isEmpty = emptyR;
-  return nrRet;
+range setLowerInit(int64_t sli_x, range& sli_range) {
+
+  if (sli_x > jsIntMax64S) {
+    sli_range.lower = jsIntMaxS;
+    sli_range.hasInt32LowerBound = (bool)1;
+  } else if(sli_x < jsIntMin64S) {
+    sli_range.lower = jsIntMinS;
+    sli_range.hasInt32LowerBound = (bool)0;
+  } else {
+    sli_range.lower = (int64_t)sli_x;
+    sli_range.hasInt32LowerBound = (bool)1;
+  }
+
+  return sli_range;
+}
+
+range Range4(
+  int64_t lower_bound,
+  int64_t upper_bound,
+  bool fract_flag,
+  bool nz_flag,
+  uint16_t exp_set) {
+
+  range rv;
+  range tmp = rv;
+  rv = setLowerInit(lower_bound, tmp);
+
+  range tmp2 = rv;
+  rv = setUpperInit(upper_bound, tmp2);
+  rv.canHaveFractionalPart = fract_flag;
+  rv.canBeNegativeZero = nz_flag;
+  rv.maxExponent = exp_set;
 }
 
 // -------------------
