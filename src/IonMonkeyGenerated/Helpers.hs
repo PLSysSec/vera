@@ -115,25 +115,7 @@ newUInt32Range :: FunctionDef
 newUInt32Range = fn "newUInt32Range"
 
 setLowerInit :: FunctionDef
-setLowerInit =
-  let args = [ ("sli_x", t Signed64)
-             , ("sli_range", c "range")
-             ]
-      body = [ if_ (v "sli_x" .>. jsIntMax64)
-               [ v "sli_range" .->. "lower" `assign` jsIntMax
-               , v "sli_range" .->. "hasInt32LowerBound" `assign` n Bool 1
-               ]
-               [ if_ (v "sli_x" .<. jsIntMin64)
-                 [ v "sli_range" .->. "lower" `assign` jsIntMin
-                 , v "sli_range" .->. "hasInt32LowerBound" `assign` n Bool 0
-                 ]
-                 [ v "sli_range" .->. "lower" `assign` (cast (v "sli_x") Signed)
-                 , v "sli_range" .->. "hasInt32LowerBound" `assign` n Bool 1
-                 ]
-               ]
-             , return_ $ v "sli_range"
-             ]
-  in Function "setLowerInit" (c "range") args body
+setLowerInit = fn "setLowerInit"
 
 setUpperInit :: FunctionDef
 setUpperInit =
