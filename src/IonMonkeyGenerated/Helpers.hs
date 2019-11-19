@@ -100,15 +100,6 @@ range6 =
              ]
   in Function "Range6" (c "range") args body
 
--- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#394
-newInt32Range :: FunctionDef
-newInt32Range = [funcStr| range newInt32Range(int32_t lower_bound_vv, int32_t upper_bound_vv) {
-   range rvvv;
-   rvvv.lower = lower_bound_vv;
-   rvvv.upper = upper_bound_vv;
-   return rvvv;
-}|]
-
 optimize :: FunctionDef
 optimize =
   let args = [ ("opt_range", c "range") ]
@@ -131,16 +122,6 @@ optimize =
              , return_ $ v "optrv"
              ]
   in Function "optimize" (c "range") args body
-
-newUInt32Range :: FunctionDef
-newUInt32Range = [funcStr| range newUInt32Range(uint32_t u_lower_bound, uint32_t u_upper_bound) {
-   range rv;
-   int32_t lower_u = (int32_t) u_lower_bound;
-   int32_t upper_u = (int32_t) u_upper_bound;
-   rv.lower = lower_u;
-   rv.upper = upper_u;
-   return rv;
-}|]
 
 setLowerInit :: FunctionDef
 setLowerInit =
@@ -184,12 +165,6 @@ setUpperInit =
              ]
   in Function "setUpperInit" (c "range") args body
 
--- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#566
-canHaveSignBitSet :: FunctionDef
-canHaveSignBitSet = [funcStr| bool canHaveSignBitSet(range& sbs_range) {
-  return (!sbs_range.hasInt32LowerBound) | canBeFiniteNonNegative(sbs_range) | sbs_range.canBeNegativeZero;
-}|]
-
 exponentImpliedByInt32Bounds :: FunctionDef
 exponentImpliedByInt32Bounds =
   let args = [ ("eib_range", c "range") ]
@@ -209,21 +184,6 @@ exponentImpliedByInt32Bounds =
              ]
 
   in Function "exponentImpliedByInt32Bounds" (t Unsigned16) args body
-
-
-nullRange :: FunctionDef
-nullRange = [funcStr| range nullRange(bool emptyR) {
-  range nrRet;
-  nrRet.lower = #{jsIntMinS};
-  nrRet.hasInt32UpperBound = (bool) 0;
-  nrRet.upper = #{jsIntMinS};
-  nrRet.hasInt32LowerBound = (bool) 0;
-  nrRet.canHaveFractionalPart = (bool) 1;
-  nrRet.canBeNegativeZero = (bool) 1;
-  nrRet.maxExponent = #{includesInfinityAndNanS};
-  nrRet.isEmpty = emptyR;
-  return nrRet;
-}|]
 
 --- Less complicated stuff
 
@@ -331,13 +291,6 @@ numBits =
       body = [ return_ $ ((v "nbs" .->. "maxExponent") .+. n Unsigned16 1)
              ]
   in Function "numBits" (t Unsigned16) args body
-
-canBeFiniteNonNegative :: FunctionDef
-canBeFiniteNonNegative =
-  let args = [ ("fnn2", c "range") ]
-      body = [ return_ $ (v "fnn2" .->. "upper" .=>. n Signed 0) -- finish this
-             ]
-  in Function "canBeFiniteNonNegative" (t Bool) args body
 
 isFiniteNonNegative :: FunctionDef
 isFiniteNonNegative =

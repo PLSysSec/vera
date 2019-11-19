@@ -24,6 +24,50 @@ struct range {
     bool isEmpty;
 };
 
+// -------------------
+// Helpers
+// -------------------
+range nullRange(bool emptyR) {
+  range nrRet;
+  nrRet.lower = jsIntMinS;
+  nrRet.hasInt32UpperBound = (bool) 0;
+  nrRet.upper = jsIntMinS;
+  nrRet.hasInt32LowerBound = (bool) 0;
+  nrRet.canHaveFractionalPart = (bool) 1;
+  nrRet.canBeNegativeZero = (bool) 1;
+  nrRet.maxExponent = includesInfinityAndNanS;
+  nrRet.isEmpty = emptyR;
+  return nrRet;
+}
+
+// https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#394
+range newInt32Range(int32_t lower_bound_vv, int32_t upper_bound_vv) {
+   range rvvv;
+   rvvv.lower = lower_bound_vv;
+   rvvv.upper = upper_bound_vv;
+   return rvvv;
+}
+
+range newUInt32Range(uint32_t u_lower_bound, uint32_t u_upper_bound) {
+   range rv;
+   int32_t lower_u = (int32_t) u_lower_bound;
+   int32_t upper_u = (int32_t) u_upper_bound;
+   rv.lower = lower_u;
+   rv.upper = upper_u;
+   return rv;
+}
+
+bool canBeFiniteNonNegative(range& fnn2) {
+  return fnn2.upper >= (int32_t) 0;
+}
+
+// https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#566
+bool canHaveSignBitSet(range& sbs_range) {
+  return (!sbs_range.hasInt32LowerBound) | canBeFiniteNonNegative(sbs_range) | sbs_range.canBeNegativeZero;
+}
+// -------------------
+// Operations 
+// -------------------
 range add(range &lhs, range &rhs)
 {
     int64_t l;
@@ -482,154 +526,3 @@ range union_(range& lhs, range& rhs){
   unionRet.isEmpty = (bool) 0;
   return unionRet;
 }
-/*
-// https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#485
-brokenIntersect :: FunctionDef
-brokenIntersect =
-  let args = [ ("lhs", c "range")
-             , ("rhs", c "range")
-             ]
-      body = [ declare (t Signed) "newLower"
-             , declare (t Signed) "newUpper"
-             , declare (t Bool) "emptyRange"
-             , v "emptyRange" `assign` n Bool 0
-             , v "newLower" `assign` max_ (v "lhs" .->. "lower") (v "rhs" .->. "lower")
-             , v "newUpper" `assign` min_ (v "lhs" .->. "upper") (v "rhs" .->. "upper")
-             , if_ (v "newUpper" .<. v "newLower")
-               [ v "emptyRange" `assign` n Bool 1
-               , return_ $ call "nullRange" [v "emptyRange"]
-               ]  []
-             , declare (t Bool) "newHasInt32LowerBound"
-             , declare (t Bool) "newHasInt32UpperBound"
-             , declare (t Bool) "newMayIncludeNegativeZero"
-             , declare (t Bool) "newCanHaveFractionalPart"
-             , declare (t Unsigned16) "newExponent"
-
-             , v "newHasInt32LowerBound" `assign` ((v "lhs" .->. "hasInt32LowerBound") .||. (v "rhs" .->. "hasInt32LowerBound"))
-             , v "newHasInt32UpperBound" `assign` ((v "lhs" .->. "hasInt32UpperBound") .||. (v "rhs" .->. "hasInt32UpperBound"))
-
-             , v "newCanHaveFractionalPart" `assign` ((v "lhs" .->. "canHaveFractionalPart") .&&. (v "rhs" .->. "canHaveFractionalPart"))
-             , v "newMayIncludeNegativeZero" `assign` ( (v "lhs" .->. "canBeNegativeZero") .&&. (v "lhs" .->. "canBeNegativeZero") )
-
-             , v "newExponent" `assign` min_ (v "lhs" .->. "maxExponent") (v "rhs" .->. "maxExponent")
-
-             , if_ (v "newHasInt32LowerBound" .&&. v "newHasInt32UpperBound" .&&. (v "newExponent" .==. includesInfinityAndNan)) [return_ $ call "nullRange" [v "emptyRange"]] []
-
-             , declare (c "range") "intersect_result"
-             , v "intersect_result" .->. "lower" `assign` v "newLower"
-             , v "intersect_result" .->. "hasInt32LowerBound" `assign` v "newHasInt32LowerBound"
-             , v "intersect_result" .->. "upper" `assign` v "newUpper"
-             , v "intersect_result" .->. "hasInt32UpperBound" `assign` v "newHasInt32UpperBound"
-             , v "intersect_result" .->. "canBeNegativeZero" `assign` v "newMayIncludeNegativeZero"
-             , v "intersect_result" .->. "canHaveFractionalPart" `assign` v "newCanHaveFractionalPart"
-             , v "intersect_result" .->. "maxExponent" `assign` v "newExponent"
-             , v "intersect_result" .->. "isEmpty" `assign` v "emptyRange"
-             , return_ $ v "intersect_result"
-             ]
-   in Function "intersect" (c "range") args body
-
-
-// https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#579
-union :: FunctionDef
-union =
-  let args = [ ("lhs", c "range")
-             , ("rhs", c "range")
-             ]
-      body = [ declare (t Signed) "newLower"
-             , declare (t Signed) "newUpper"
-             , v "newLower" `assign` (min_ (v "lhs" .->. "lower") (v "rhs" .->. "lower"))
-             , v "newUpper" `assign` (max_ (v "lhs" .->. "upper") (v "rhs" .->. "upper"))
-             , declare (t Bool) "newHasInt32LowerBound"
-             , declare (t Bool) "newHasInt32UpperBound"
-             , declare (t Bool) "newCanHaveFractionalPart"
-             , declare (t Bool) "newMayIncludeNegativeZero"
-             , declare (t Unsigned16) "newExponent"
-             , v "newHasInt32LowerBound" `assign` ((v "lhs" .->. "hasInt32LowerBound") .&&. (v "rhs" .->. "hasInt32LowerBound"))
-             , v "newHasInt32UpperBound" `assign` ((v "lhs" .->. "hasInt32UpperBound") .&&. (v "rhs" .->. "hasInt32UpperBound"))
-             , v "newCanHaveFractionalPart" `assign` ((v "lhs" .->. "canHaveFractionalPart") .||. (v "rhs" .->. "canHaveFractionalPart"))
-             , v "newMayIncludeNegativeZero" `assign` ((v "lhs" .->. "canBeNegativeZero") .||. (v "rhs" .->. "canBeNegativeZero"))
-             , v "newExponent" `assign` (max_ (v "lhs" .->. "maxExponent") (v "rhs" .->. "maxExponent"))
-             , declare (c "range") "unionRet"
-             , v "unionRet" .->. "lower" `assign` v "newLower"
-             , v "unionRet" .->. "hasInt32LowerBound" `assign` v "newHasInt32LowerBound"
-             , v "unionRet" .->. "upper" `assign` v "newUpper"
-             , v "unionRet" .->. "hasInt32UpperBound" `assign` v "newHasInt32UpperBound"
-             , v "unionRet" .->. "canHaveFractionalPart" `assign` v "newCanHaveFractionalPart"
-             , v "unionRet" .->. "canBeNegativeZero" `assign` v "newMayIncludeNegativeZero"
-             , v "unionRet" .->. "maxExponent" `assign` v "newExponent"
-             , v "unionRet" .->. "isEmpty" `assign` (n Bool 0)
-             , return_ $ v "unionRet"
-
-             ]
-  in Function "union" (c "range") args body
-
-
-range xor_ (range& lhs, range& rhs) {
-    int32_t lhsLower = lhs.lower;
-    int32_t lhsUpper = lhs.upper;
-
-    int32_t rhsLower = rhs.lower;
-    int32_t rhsUpper = rhs.upper;
-
-    bool invertAfter = (bool)0;
-
-    int32_t tmp = (int32_t)0;
-    uint32_t lhsLeadingZeroes = (uint32_t)0;
-    uint32_t rhsLeadingZeroes = (uint32_t)0;
-
-    if (lhsUpper < (int32_t)0)
-    {
-        lhsLower = ~lhsLower;
-        lhsUpper = ~lhsUpper;
-        tmp = lhsLower;
-        lhsLower = lhsUpper;
-        lhsUpper = tmp;
-        invertAfter = !invertAfter;
-    }
-
-    if (rhsUpper < (int32_t)0)
-    {
-        rhsLower = ~rhsLower;
-        rhsUpper = ~rhsUpper;
-        tmp = rhsLower;
-        rhsLower = rhsUpper;
-        rhsUpper = tmp;
-        invertAfter = !invertAfter;
-    }
-
-    int32_t lower = int32minS;
-    int32_t upper = int32maxS;
-    int32_t upOr = int32minS;
-    int32_t downOr = int32maxS;
-
-    if (lhsLower == (int32_t)0 & lhsUpper == (int32_t)0)
-    {
-        upper = rhsUpper;
-        lower = rhsLower;
-    } else if (rhsLower == (int32_t) 0 & rhsUpper == (int32_t) 0)
-    {
-        upper = lhsUpper;
-        lower = lhsLower;
-    } else if (lhsLower >= (int32_t) 0 & rhsLower >= (int32_t) 0)
-    {
-        lower = (int32_t)0;
-        lhsLeadingZeroes = countLeadingZeroes((uint32_t)lhsUpper);
-        rhsLeadingZeroes = countLeadingZeroes((uint32_t)rhsUpper);
-
-        upOr = rhsUpper | (int32_t)(uint32maxS >> lhsLeadingZeroes);
-        downOr = lhsUpper | (int32_t)(uint32maxS >> rhsLeadingZeroes);
-        upper = std::min(upOr, downOr);
-    }
-
-    if (invertAfter)
-    {
-        lower = ~lower;
-        upper = ~upper;
-        tmp = lower;
-        lower = upper;
-        upper = tmp;
-    }
-
-    return newInt32Range(lower, upper);
-};
-*/
