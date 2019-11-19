@@ -815,7 +815,9 @@ getIntList :: M.Map String Double -> [String]
 getIntList fls = catMaybes $ map (\(str, fl) ->
                        case str of
                          _ | "undef" `isInfixOf` str -> Nothing
+                         _ | "l_1"  `isInfixOf` str -> sstr str fl
                          _ | "elem" `isInfixOf` str -> sstr str fl
+                         _ | "subResult" `isInfixOf` str -> sstr str fl
                          _ | "shift" `isInfixOf` str -> sstr str fl
                          _ | "startIsUndef" `isInfixOf` str -> sstr str fl
                          _ | "left_range_canHaveFractionalPart" `isInfixOf` str -> sstr str fl

@@ -125,52 +125,7 @@ sign = fn "sign"
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#485
 intersect :: FunctionDef
-intersect =
-  let args = [ ("lhs", c "range")
-             , ("rhs", c "range")
-             ]
-      body = [ declare (t Signed) "newLower"
-             , declare (t Signed) "newUpper"
-             , declare (t Bool) "emptyRange"
-             , declare (t Bool) "welter"
-             , v "emptyRange" `assign` n Bool 0
-             , v "newLower" `assign` max_ (v "lhs" .->. "lower") (v "rhs" .->. "lower")
-             , v "newUpper" `assign` min_ (v "lhs" .->. "upper") (v "rhs" .->. "upper")
-             , if_ (v "newUpper" .<. v "newLower")
-               [ if_ ((not_ $ call "canBeNan" [v "lhs"]) .&&. (not_ $ call "canBeNan" [v "rhs"]))
-                 [v "emptyRange" `assign` n Bool 1] []
-               , return_ $ call "nullRange" [v "emptyRange"]
-               ]  []
-             , declare (t Bool) "newHasInt32LowerBound"
-             , declare (t Bool) "newHasInt32UpperBound"
-             , declare (t Bool) "newMayIncludeNegativeZero"
-             , declare (t Bool) "newCanHaveFractionalPart"
-             , declare (t Unsigned16) "newExponent"
-
-             , v "newHasInt32LowerBound" `assign` ((v "lhs" .->. "hasInt32LowerBound") .||. (v "rhs" .->. "hasInt32LowerBound"))
-             , v "newHasInt32UpperBound" `assign` ((v "lhs" .->. "hasInt32UpperBound") .||. (v "rhs" .->. "hasInt32UpperBound"))
-
-             , v "newCanHaveFractionalPart" `assign` ((v "lhs" .->. "canHaveFractionalPart") .&&. (v "rhs" .->. "canHaveFractionalPart"))
-
-             , v "newMayIncludeNegativeZero" `assign` ( (v "lhs" .->. "canBeNegativeZero") .&&. (v "lhs" .->. "canBeNegativeZero") )
-
-             , v "newExponent" `assign` min_ (v "lhs" .->. "maxExponent") (v "rhs" .->. "maxExponent")
-
-
-             , if_ (v "newHasInt32LowerBound" .&&. v "newHasInt32UpperBound" .&&. (v "newExponent" .==. includesInfinityAndNan)) [return_ $ call "nullRange" [v "emptyRange"]] []
-
-             , declare (c "range") "intersect_result"
-             , v "intersect_result" .->. "lower" `assign` v "newLower"
-             , v "intersect_result" .->. "hasInt32LowerBound" `assign` v "newHasInt32LowerBound"
-             , v "intersect_result" .->. "upper" `assign` v "newUpper"
-             , v "intersect_result" .->. "hasInt32UpperBound" `assign` v "newHasInt32UpperBound"
-             , v "intersect_result" .->. "canBeNegativeZero" `assign` v "newMayIncludeNegativeZero"
-             , v "intersect_result" .->. "canHaveFractionalPart" `assign` v "newCanHaveFractionalPart"
-             , v "intersect_result" .->. "maxExponent" `assign` v "newExponent"
-             , v "intersect_result" .->. "isEmpty" `assign` v "emptyRange"
-             , return_ $ v "intersect_result"
-             ]
-   in Function "intersect" (c "range") args body
+intersect = fn "intersect"
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#485
 brokenIntersect :: FunctionDef
@@ -220,34 +175,4 @@ brokenIntersect =
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#579
 union :: FunctionDef
-union =
-  let args = [ ("lhs", c "range")
-             , ("rhs", c "range")
-             ]
-      body = [ declare (t Signed) "newLower"
-             , declare (t Signed) "newUpper"
-             , v "newLower" `assign` (min_ (v "lhs" .->. "lower") (v "rhs" .->. "lower"))
-             , v "newUpper" `assign` (max_ (v "lhs" .->. "upper") (v "rhs" .->. "upper"))
-             , declare (t Bool) "newHasInt32LowerBound"
-             , declare (t Bool) "newHasInt32UpperBound"
-             , declare (t Bool) "newCanHaveFractionalPart"
-             , declare (t Bool) "newMayIncludeNegativeZero"
-             , declare (t Unsigned16) "newExponent"
-             , v "newHasInt32LowerBound" `assign` ((v "lhs" .->. "hasInt32LowerBound") .&&. (v "rhs" .->. "hasInt32LowerBound"))
-             , v "newHasInt32UpperBound" `assign` ((v "lhs" .->. "hasInt32UpperBound") .&&. (v "rhs" .->. "hasInt32UpperBound"))
-             , v "newCanHaveFractionalPart" `assign` ((v "lhs" .->. "canHaveFractionalPart") .||. (v "rhs" .->. "canHaveFractionalPart"))
-             , v "newMayIncludeNegativeZero" `assign` ((v "lhs" .->. "canBeNegativeZero") .||. (v "rhs" .->. "canBeNegativeZero"))
-             , v "newExponent" `assign` (max_ (v "lhs" .->. "maxExponent") (v "rhs" .->. "maxExponent"))
-             , declare (c "range") "unionRet"
-             , v "unionRet" .->. "lower" `assign` v "newLower"
-             , v "unionRet" .->. "hasInt32LowerBound" `assign` v "newHasInt32LowerBound"
-             , v "unionRet" .->. "upper" `assign` v "newUpper"
-             , v "unionRet" .->. "hasInt32UpperBound" `assign` v "newHasInt32UpperBound"
-             , v "unionRet" .->. "canHaveFractionalPart" `assign` v "newCanHaveFractionalPart"
-             , v "unionRet" .->. "canBeNegativeZero" `assign` v "newMayIncludeNegativeZero"
-             , v "unionRet" .->. "maxExponent" `assign` v "newExponent"
-             , v "unionRet" .->. "isEmpty" `assign` (n Bool 0)
-             , return_ $ v "unionRet"
-
-             ]
-  in Function "union" (c "range") args body
+union = fn "union_"

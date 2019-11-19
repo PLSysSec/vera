@@ -19,13 +19,13 @@ import           Utils
 
 genIonMonkeyTests :: BenchTest
 genIonMonkeyTests = benchTestGroup "Generated IonMonkey tests"
-                    -- [ unionTest
-                    -- , intersectTest
-                    -- , brokenIntersectTest
-                    -- [ addTests
-                    -- , subTests
-                   -- [ mulTests
-                    [ andTests
+                    [ unionTest
+                    , intersectTest
+                    , brokenIntersectTest
+                    , addTests
+                    , subTests
+                    , mulTests
+                    , andTests
                     , orTests
                     , xorTests
                     , notTests
@@ -44,7 +44,7 @@ genIonMonkeyTests = benchTestGroup "Generated IonMonkey tests"
                     ]
 
 unionTest :: BenchTest
-unionTest = benchTestCase "union" $ evalCodegen Nothing $ testUnion $ Set "union" union
+unionTest = benchTestCase "union_" $ evalCodegen Nothing $ testUnion $ Set "union_" union
 
 intersectTest :: BenchTest
 intersectTest = benchTestCase "intersect" $ evalCodegen Nothing $ testIntersection $ Set "intersect" intersect

@@ -5,6 +5,7 @@ import           DSL.Typed       (Type (..))
 import           Generate.Lang
 import           Generate.SMTAST
 import           Generate.State
+import           Generate.QQ
 
 range3 :: FunctionDef
 range3 =
@@ -101,15 +102,12 @@ range6 =
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#394
 newInt32Range :: FunctionDef
-newInt32Range = let args = [ ("lower_bound_vv", t Signed)
-                           , ("upper_bound_vv", t Signed)
-                           ]
-                    body = [ declare (c "range") "rvvv"
-                           , (v "rvvv") .->. "lower" `assign` (v "lower_bound_vv")
-                           , (v "rvvv") .->. "upper" `assign` (v "upper_bound_vv")
-                           , return_ (v "rvvv")
-                           ]
-                in Function "newInt32Range" (c "range") args body
+newInt32Range = [funcStr| range newInt32Range(int32_t lower_bound_vv, int32_t upper_bound_vv) {
+   range rvvv;
+   rvvv.lower = lower_bound_vv;
+   rvvv.upper = upper_bound_vv;
+   return rvvv;
+}|]
 
 optimize :: FunctionDef
 optimize =
@@ -135,19 +133,14 @@ optimize =
   in Function "optimize" (c "range") args body
 
 newUInt32Range :: FunctionDef
-newUInt32Range = let args = [ ("u_lower_bound", t Unsigned)
-                            , ("u_upper_bound", t Unsigned)
-                            ]
-                     body = [ declare (c "range") "rv"
-                            , declare (t Signed) "lower_u"
-                            , declare (t Signed) "upper_u"
-                            , v "lower_u" `assign` (cast (v "u_lower_bound") Signed)
-                            , v "upper_u" `assign` (cast (v "u_upper_bound") Signed)
-                            , (v "rv") .->. "lower" `assign` (v "lower_u")
-                            , (v "rv") .->. "upper" `assign` (v "upper_u")
-                            , return_ (v "rv")
-                            ]
-                 in Function "newUInt32Range" (c "range") args body
+newUInt32Range = [funcStr| range newUInt32Range(uint32_t u_lower_bound, uint32_t u_upper_bound) {
+   range rv;
+   int32_t lower_u = (int32_t) u_lower_bound;
+   int32_t upper_u = (int32_t) u_upper_bound;
+   rv.lower = lower_u;
+   rv.upper = upper_u;
+   return rv;
+}|]
 
 setLowerInit :: FunctionDef
 setLowerInit =
@@ -193,10 +186,9 @@ setUpperInit =
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#566
 canHaveSignBitSet :: FunctionDef
-canHaveSignBitSet =
-  let args = [ ("sbs_range", c "range") ]
-      body = [ return_ $ (not_ $ v "sbs_range" .->. "hasInt32LowerBound") .||. (call "canBeFiniteNonNegative" [v "sbs_range"]) .||. (v "sbs_range" .->. "canBeNegativeZero")]
-  in Function "canHaveSignBitSet" (t Bool) args body
+canHaveSignBitSet = [funcStr| bool canHaveSignBitSet(range& sbs_range) {
+  return (!sbs_range.hasInt32LowerBound) | canBeFiniteNonNegative(sbs_range) | sbs_range.canBeNegativeZero;
+}|]
 
 exponentImpliedByInt32Bounds :: FunctionDef
 exponentImpliedByInt32Bounds =
@@ -220,21 +212,19 @@ exponentImpliedByInt32Bounds =
 
 
 nullRange :: FunctionDef
-nullRange =
-  let args = [ ("emptyR", t Bool) ]
-      body = [ declare (c "range") "nrRet"
-             , v "nrRet" .->. "lower" `assign` jsIntMin
-             , v "nrRet" .->. "hasInt32UpperBound" `assign` (n Bool 0)
-             , v "nrRet" .->. "upper" `assign` jsIntMin
-             , v "nrRet" .->. "hasInt32LowerBound" `assign` (n Bool 0)
-             , v "nrRet" .->. "canHaveFractionalPart" `assign` (n Bool 1)
-             , v "nrRet" .->. "canBeNegativeZero" `assign` (n Bool 1)
-             , v "nrRet" .->. "maxExponent" `assign` includesInfinityAndNan
-             , v "nrRet" .->. "isEmpty" `assign` (v "emptyR")
-             , return_ $ v "nrRet"
-             ]
+nullRange = [funcStr| range nullRange(bool emptyR) {
+  range nrRet;
+  nrRet.lower = #{jsIntMinS};
+  nrRet.hasInt32UpperBound = (bool) 0;
+  nrRet.upper = #{jsIntMinS};
+  nrRet.hasInt32LowerBound = (bool) 0;
+  nrRet.canHaveFractionalPart = (bool) 1;
+  nrRet.canBeNegativeZero = (bool) 1;
+  nrRet.maxExponent = #{includesInfinityAndNanS};
+  nrRet.isEmpty = emptyR;
+  return nrRet;
+}|]
 
-  in Function "nullRange" (c "range") args body
 --- Less complicated stuff
 
 range_constructor :: FunctionDef

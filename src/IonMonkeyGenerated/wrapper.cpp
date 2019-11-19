@@ -21,4 +21,6 @@ bool isFiniteNonNegative(range &);
 bool isFiniteNegative(range &);
 bool hasInt32Bounds(range &);
 uint16_t exponentImpliedByInt32Bounds(range &);
+range nullRange(bool);
+
 #include "code.cpp"
