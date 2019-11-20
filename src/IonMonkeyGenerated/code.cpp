@@ -13,6 +13,8 @@
 #define jsIntMinS ((int32_t) 0x80000000)
 #define jsIntMin64S ((int64_t) -2147483648)
 #define jsIntMax64S ((int64_t) 2147483647)
+#define maxInt32ExponentS ((uint16_t) 31)
+#define maxUInt32ExponentS ((uint16_t) 31)
 
 struct range {
     int32_t lower;
