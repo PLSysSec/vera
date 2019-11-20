@@ -122,7 +122,7 @@ maxFiniteExponentS :: String
 maxFiniteExponentS = [i| ((uint16_t) 1023) |]
 
 includesInfinity :: Codegen SExpr
-includesInfinity = n Unsigned16 1
+includesInfinity = n Unsigned16 1024
 
 includesInfinityS :: String
 includesInfinityS = [i| ((uint16_t) 1 + #{maxFiniteExponentS}) |]

@@ -23,18 +23,21 @@ wellFormedRange =
              , version_ $ v "rvf"
              , assert_ $ not_ (v "rvf" .->. "isEmpty")
 
-             , assert_ $ (v "rvf" .->. "lower") .=>. jsIntMin
-             , assert_ $ (v "rvf" .->. "lower") .<=. jsIntMax
-             , assert_ $ (v "rvf" .->. "upper") .=>. jsIntMin
-             , assert_ $ (v "rvf" .->. "upper") .<=. jsIntMax
+             , assert_ $ (v "rvf" .->. "lower") .=>. jsIntMin -- done
+             , assert_ $ (v "rvf" .->. "lower") .<=. jsIntMax -- done
+             , assert_ $ (v "rvf" .->. "upper") .=>. jsIntMin -- done
+             , assert_ $ (v "rvf" .->. "upper") .<=. jsIntMax -- done
              , assert_ $ (v "rvf" .->. "upper") .=>. (v "rvf" .->. "lower")
 
-             , implies_ (not_ $ v "rvf" .->. "hasInt32LowerBound") (v "rvf" .->. "lower" .==. jsIntMin)
-             , implies_ (not_ $ v "rvf" .->. "hasInt32UpperBound") (v "rvf" .->. "upper" .==. jsIntMax)
+             , implies_ (not_ $ v "rvf" .->. "hasInt32LowerBound") (v "rvf" .->. "lower" .==. jsIntMin) -- done
+             , implies_ (not_ $ v "rvf" .->. "hasInt32UpperBound") (v "rvf" .->. "upper" .==. jsIntMax) -- done
 
              , implies_ (v "rvf" .->. "canBeNegativeZero") (call "contains" [v "rvf", n Signed 0])
+               -- cant do
+
              , assert_ $ (v "rvf" .->. "maxExponent" .==. includesInfinityAndNan) .||. (v "rvf" .->. "maxExponent" .==. includesInfinity) .||. (v "rvf" .->. "maxExponent" .<=. maxFiniteExponent)
-             , implies_ (v "rvf" .->. "hasInt32LowerBound" .&&. (v "rvf" .->. "hasInt32UpperBound")) (v "rvf" .->. "maxExponent" .==. (fpExp (cast (max_ (abs_ $ v "rvf" .->. "lower") (abs_ $ v "rvf" .->. "upper")) Double)))
+
+             , implies_ (v "rvf" .->. "hasInt32LowerBound" .&&. (v "rvf" .->. "hasInt32UpperBound")) (v "rvf" .->. "maxExponent" .==. (fpExp (cast (max_ (abs_ $ v "rvf" .->. "lower") (abs_ $ v "rvf" .->. "upper")) Double))) -- cant do
 
              , implies_ (v "rvf" .->. "hasInt32LowerBound") (v "rvf" .->. "maxExponent" .=>. (fpExp (cast (abs_ $ v "rvf" .->. "lower") Double)))
 
@@ -267,13 +270,13 @@ verifyLowerFl =
              ]
   in Function "verifyFlLower" Void args body
 
-testLowInvariant :: TestFunction -> Codegen ()
-testLowInvariant fn = do
+testBoundInvariants :: TestFunction -> Codegen ()
+testBoundInvariants fn = do
   setupAllFloat fn
-  genBodySMT [vcall "verifyLowBoundInvariant" [v "result_range", v "result"]]
+  genBodySMT [vcall "verifyBoundInvariants" [v "result_range", v "result"]]
 
-verifyLowBoundInvariant :: FunctionDef
-verifyLowBoundInvariant =
+verifyBoundInvariants :: FunctionDef
+verifyBoundInvariants =
   let args = [ ("result_range_bi", c "range")
              , ("result_bi", t Double)
              ]
@@ -284,28 +287,14 @@ verifyLowBoundInvariant =
              , assert_ $ not_ $ (v "result_range_bi" .->. "lower") .==. jsIntMin
              , expect_ isUnsat $ \r -> showInt32Result "Failed to verify low bound invariant" r
              , pop_
-             ]
-  in Function "verifyLowBoundInvariant" Void args body
-
-testHighInvariant :: TestFunction -> Codegen ()
-testHighInvariant fn = do
-  setupAllFloat fn
-  genBodySMT [vcall "verifyUpBoundInvariant" [v "result_range", v "result"]]
-
-verifyUpBoundInvariant :: FunctionDef
-verifyUpBoundInvariant =
-  let args = [ ("result_range_biu", c "range")
-             , ("result_biu", t Double)
-             ]
-      body = [ push_
-              -- It has no int32 lower bound...
-             , assert_ $ not_ $ v "result_range_biu" .->. "hasInt32UpperBound"
+             , push_
+             , assert_ $ not_ $ v "result_range_bi" .->. "hasInt32UpperBound"
                -- ...but the int32 lower bound isnt intmax
-             , assert_ $ not_ $ (v "result_range_biu" .->. "upper") .==. jsIntMax
+             , assert_ $ not_ $ (v "result_range_bi" .->. "upper") .==. jsIntMax
              , expect_ isUnsat $ \r -> showInt32Result "Failed to verify high bound invariant" r
              , pop_
              ]
-  in Function "verifyUpBoundInvariant" Void args body
+  in Function "verifyBoundInvariants" Void args body
 
 testNegZ :: TestFunction -> Codegen ()
 testNegZ fn = do
@@ -406,6 +395,71 @@ verifyExp =
              , pop_
              ]
   in Function "verifyExp" Void args body
+
+testBoundForm :: TestFunction -> Codegen ()
+testBoundForm fn = do
+  setupAllFloat fn
+  genBodySMT [ vcall "verifyBoundForm" [v "result_range", v "result"] ]
+
+verifyForm :: FunctionDef
+verifyForm =
+  let args = [ ("result_range_form", c "range")
+             , ("result_form", t Double)
+             ]
+      body = [ push_
+             , assert_ $ ((v "result_range_form" .->. "lower") .<. jsIntMin) .||. ((v "result_range_form" .->. "lower") .>. jsIntMax)
+             , expect_ isUnsat $ \r -> showExpResult "Failed to verify bound form" r
+             , pop_
+             , push_
+             , assert_ $ ((v "result_range_form" .->. "upper") .<. jsIntMin) .||. ((v "result_range_form" .->. "upper") .>. jsIntMax)
+             , expect_ isUnsat $ \r -> showExpResult "Failed to verify bound form" r
+             , pop_
+             ]
+  in Function "verifyBoundForm" Void args body
+
+testExpForm :: TestFunction -> Codegen ()
+testExpForm fn = do
+  setupAllFloat fn
+  genBodySMT [ vcall "verifyExpForm" [v "result_range", v "result"] ]
+
+verifyExpForm :: FunctionDef
+verifyExpForm =
+  let args = [ ("result_range_bexp", c "range")
+             , ("result_bexp", t Double)
+             ]
+      body = [ push_
+             , assert_ $ v "result_range_bexp" .->. "maxExponent" .>. includesInfinity
+             , assert_ $ v "result_range_bexp" .->. "maxExponent" .<. includesInfinityAndNan
+             , expect_ isUnsat $ \r -> showExpResult "Failed to verify bound form" r
+             , pop_
+             ]
+  in Function "verifyExpForm" Void args body
+
+testExpBounds :: TestFunction -> Codegen ()
+testExpBounds fn = do
+  setupAllFloat fn
+  genBodySMT [ vcall "verifyExpBounds" [v "result_range", v "result"] ]
+
+verifyExpBounds :: FunctionDef
+verifyExpBounds =
+  let args = [ ("result_range_bexp2", c "range")
+             , ("result_bexp2", t Double)
+             ]
+      body = [ push_
+             , assert_ $ v "result_range_bexp2" .->. "hasInt32LowerBound"
+             , assert_ $ (fpExp (cast (abs_ $ v "result_range_bexp2" .->. "lower") Double)) .>. (v "result_range_bexp2" .->. "maxExponent")
+             , expect_ isUnsat $ \r -> showExpResult "Failed to verify bound form" r
+             , pop_
+             , push_
+             , assert_ $ v "result_range_bexp2" .->. "hasInt32UpperBound"
+             , assert_ $ (fpExp (cast (abs_ $ v "result_range_bexp2" .->. "upper") Double)) .>. (v "result_range_bexp2" .->. "maxExponent")
+             , expect_ isUnsat $ \r -> showExpResult "Failed to verify bound form" r
+             , pop_
+             ]
+  in Function "verifyExpBounds" Void args body
+
+
+
 
 -- General setup functions
 
@@ -548,10 +602,10 @@ setupSetOp op fnName = do
               , (v "result_range") `assign` call fnName [v "left_range", v "right_range"]
 
               , declare (t Double) "elem"
---              , (v "elem") `assign` (d Double (0/0))
               , declare (t Bool) "isInRight"
               , declare (t Bool) "isInLeft"
               , declare (t Bool) "isInResult"
+
               , v "isInRight" `assign` (call "fInRange" [v "elem", v "right_range"])
               , v "isInLeft" `assign` (call "fInRange" [v "elem", v "left_range"])
               , v "isInResult" `assign` (call "fInRange" [v "elem", v "result_range"])
@@ -563,10 +617,13 @@ defineAll op = do
   class_ range
   define op
   define verifyIntersection
+  define verifyExpForm
   define verifyUnion
+  define verifyExpBounds
   define vInRange
   define wellFormedRange
   define fInRange
+  define verifyForm
   define newFloatInputRange
   define canBeFiniteNegative
   define verifyNegZero
@@ -596,8 +653,7 @@ defineAll op = do
   define contains
   define hasInt32Bounds
   define missingAnyInt32Bounds
-  define verifyLowBoundInvariant
-  define verifyUpBoundInvariant
+  define verifyBoundInvariants
   define newInt32Range
   define countLeadingZeroes
   define countOnes

@@ -14,13 +14,15 @@ mkFloatTests testGroupName testFn =
     , makeTest (testGroupName ++ " float upper i32") $ testFlUpper testFn
     , makeTest (testGroupName ++ " upper i32") $ testUpper testFn
     , makeTest (testGroupName ++ " UB") $ testUB testFn
-    , makeTest (testGroupName ++ " low invariant") $ testLowInvariant testFn
-    , makeTest (testGroupName ++ " high invariant") $ testHighInvariant testFn
     , makeTest (testGroupName ++ " negative zero") $ testNegZ testFn
     , makeTest (testGroupName ++ " nan") $ testNan testFn
     , makeTest (testGroupName ++ " inf") $ testInf testFn
     , makeTest (testGroupName ++ " fract") $ testFract testFn
     , makeTest (testGroupName ++ " exp") $ testExp testFn
+    , makeTest (testGroupName ++ " WF hasBound invariant") $ testBoundInvariants testFn
+    , makeTest (testGroupName ++ " WF bounds between min max") $ testBoundForm testFn
+    , makeTest (testGroupName ++ " WF valid exp") $ testExpForm testFn
+    , makeTest (testGroupName ++ " WF valid exp/bound pair") $ testExpBounds testFn
     ]
   where makeTest str act = benchTestCase str $ evalCodegen Nothing act
 
