@@ -1,9 +1,11 @@
 #define excludesFractionalPartsS ((bool) 0)
+#define includesFractionalPartsS ((bool) 1)
 #define int32minS ((int32_t) -2147483648)
 #define int32maxS ((int32_t) 2147483647)
 #define uint32maxS ((uint32_t) 4294967295)
 #define uint32minS ((uint32_t) 0)
 #define excludesNegativeZeroS ((bool) 0)
+#define includesNegativeZeroS ((bool) 1)
 #define maxFiniteExponentS ((uint16_t) 1023)
 #define includesInfinityS ((uint16_t) 1 + maxFiniteExponentS)
 #define includesInfinityAndNanS ((uint16_t) 65535)
@@ -15,6 +17,7 @@
 #define jsIntMax64S ((int64_t) 2147483647)
 #define maxInt32ExponentS ((uint16_t) 31)
 #define maxUInt32ExponentS ((uint16_t) 31)
+#define maxTruncatableExponentS ((uint16_t) 52)
 
 struct range {
     int32_t lower;
@@ -42,6 +45,74 @@ range nullRange(bool emptyR) {
   nrRet.isEmpty = (bool) emptyR;
   return nrRet;
 }
+
+uint16_t exponentImpliedByDouble(double eid) {
+  // Handle the special values.
+  if (math::isnan(eid)) {
+    return includesInfinityAndNanS;
+  }
+  if (math::isinf(eid)) {
+    return includesInfinityS;
+  }
+
+  // Otherwise take the exponent part and clamp it at zero, since the Range
+  // class doesn't track fractional ranges.
+  return math::max((int16_t)0, math::exp(eid));
+}
+
+range newDoubleRange(double l, double h) {
+  range rvdr;
+  // Infer lower, upper, hasInt32LowerBound, and hasInt32UpperBound.
+  if (l >= int32minS & l <= int32maxS) {
+    rvdr.lower = (int32_t) floor(l);
+    rvdr.hasInt32LowerBound = (bool) 1;
+  } else if (l >= int32maxS) {
+    rvdr.lower = int32maxS;
+    rvdr.hasInt32LowerBound = (bool) 1;
+  } else {
+    rvdr.lower = int32minS;
+    rvdr.hasInt32LowerBound = (bool) 0;
+  }
+  if (h >= int32minS & h <= int32maxS) {
+    rvdr.upper = (int32_t) ceil(h);
+    rvdr.hasInt32UpperBound = (bool) 1;
+  } else if (h <= int32minS) {
+    rvdr.upper = int32minS;
+    rvdr.hasInt32UpperBound = (bool) 1;
+  } else {
+    rvdr.upper = int32maxS;
+    rvdr.hasInt32UpperBound = (bool) 0;
+  }
+
+  // Infer max_exponent.
+  uint16_t lExp = exponentImpliedByDouble(l);
+  uint16_t hExp = exponentImpliedByDouble(h);
+  rvdr.maxExponent = math::max(lExp, hExp);
+
+  rvdr.canHaveFractionalPart = excludesFractionalPartsS;
+  rvdr.canBeNegativeZero = excludesNegativeZeroS;
+
+  // Infer the canHaveFractionalPart setting. We can have a
+  // fractional part if the range crosses through the neighborhood of zero. We
+  // won't have a fractional value if the value is always beyond the point at
+  // which double precision can't represent fractional values.
+  uint16_t minExp = math::min(lExp, hExp);
+  bool includesNegative = math::isnan(l) | (l < (double) 0);
+  bool includesPositive = math::isnan(h) | (h > (double) 0);
+  bool crossesZero = includesNegative & includesPositive;
+  if (crossesZero | minExp < maxTruncatableExponentS) {
+    rvdr.canHaveFractionalPart = includesFractionalPartsS;
+  }
+
+  // Infer the canBeNegativeZero setting. We can have a negative zero if
+  // either bound is zero.
+  if (!(l > (double) 0) & !(h < (double)0)) {
+    rvdr.canBeNegativeZero = includesNegativeZeroS;
+  }
+
+  return rvdr;
+}
+
 
 // https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#394
 range newInt32Range(int32_t lower_bound_vv, int32_t upper_bound_vv) {
@@ -683,4 +754,22 @@ range union_(range const& lhs, range const& rhs){
   unionRet.maxExponent = newExponent;
   unionRet.isEmpty = (bool) 0;
   return unionRet;
+}
+
+range NaNToZero(range const& opnz) {
+  range copy = opnz;
+  if (canBeNan(copy))
+  {
+    copy.maxExponent = includesInfinityS;
+    if (!canBeZero(copy)) {
+      range zero = newDoubleRange((double)0, (double)0);
+      copy = union_(zero, copy);
+    }
+  }
+  copy.canBeNegativeZero = excludesNegativeZeroS;
+  return copy;
+}
+
+range toIntegerInt32(range const& optii) {
+  return NaNToZero(ceil(optii));
 }
