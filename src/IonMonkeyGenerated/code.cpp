@@ -39,7 +39,7 @@ range nullRange(bool emptyR) {
   nrRet.canHaveFractionalPart = (bool) 1;
   nrRet.canBeNegativeZero = (bool) 1;
   nrRet.maxExponent = includesInfinityAndNanS;
-  nrRet.isEmpty = (bool) emptyR;
+  nrRet.isEmpty = emptyR;
   return nrRet;
 }
 
@@ -633,11 +633,11 @@ range sign(range const& op) {
 range intersect(range const& lhs, range const& rhs){
    int32_t newLower = math::max(lhs.lower, rhs.lower);
    int32_t newUpper = math::min(lhs.upper, rhs.upper);
-   bool  emptyRange = (bool) 0;
+   bool  emptyRange = (bool)0;
 
    if (newUpper < newLower) {
      if (!canBeNan(lhs) | !canBeNan(rhs)) {
-       emptyRange = (bool) 1;
+       emptyRange = (bool)1;
      }
      return nullRange(emptyRange);
    }
