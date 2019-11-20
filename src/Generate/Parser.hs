@@ -67,6 +67,9 @@ func = do
 func_arg_decl :: Parser (VarName, STy)
 func_arg_decl = do
     ty <- decl_type
+    optional $ do
+        reserved "const"
+        reservedOp "&"
     n <- identifier
     return (n, ty)
 
@@ -104,10 +107,7 @@ decl_type =
     where
         prim = PrimType <$> prim_type
         void = return Void <$> reserved "void"
-        clas = Class <$> do
-            i <- identifier
-            optional $ reservedOp "&"
-            return i
+        clas = Class <$> identifier
 
 -- Assign
 assign :: Parser CStmt
@@ -348,7 +348,7 @@ languageDef =
             , Token.commentLine     = "//"
             , Token.identStart      = letter <|> char '_'
             , Token.identLetter     = alphaNum <|> char '_' <|> char '\''
-            , Token.reservedNames   = ["this", "js", "math", "if", "else", "return", "struct"
+            , Token.reservedNames   = ["this", "js", "math", "if", "else", "return", "struct", "const"
                                       , "uint8_t", "uint16_t", "uint32_t", "uint64_t"
                                       , "int8_t", "int16_t", "int32_t", "int64_t"
                                       ]

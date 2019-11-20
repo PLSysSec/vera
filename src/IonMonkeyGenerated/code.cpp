@@ -34,12 +34,12 @@ range nullRange(bool emptyR) {
   range nrRet;
   nrRet.lower = jsIntMinS;
   nrRet.hasInt32UpperBound = (bool) 0;
-  nrRet.upper = jsIntMinS;
+  nrRet.upper = jsIntMaxS;
   nrRet.hasInt32LowerBound = (bool) 0;
   nrRet.canHaveFractionalPart = (bool) 1;
   nrRet.canBeNegativeZero = (bool) 1;
   nrRet.maxExponent = includesInfinityAndNanS;
-  nrRet.isEmpty = emptyR;
+  nrRet.isEmpty = (bool) emptyR;
   return nrRet;
 }
 
@@ -48,35 +48,37 @@ range newInt32Range(int32_t lower_bound_vv, int32_t upper_bound_vv) {
    range rvvv;
    rvvv.lower = lower_bound_vv;
    rvvv.upper = upper_bound_vv;
+   rvvv.hasInt32UpperBound = (bool) 1;
+   rvvv.hasInt32LowerBound = (bool) 1;
+   rvvv.canHaveFractionalPart = excludesFractionalPartsS;
+   rvvv.canBeNegativeZero = excludesNegativeZeroS;
+   rvvv.maxExponent = maxInt32ExponentS;
+   rvvv.isEmpty = (bool) 0;
    return rvvv;
 }
 
 range newUInt32Range(uint32_t u_lower_bound, uint32_t u_upper_bound) {
-   range rv;
-   int32_t lower_u = (int32_t) u_lower_bound;
-   int32_t upper_u = (int32_t) u_upper_bound;
-   rv.lower = lower_u;
-   rv.upper = upper_u;
-   return rv;
+   return Range4((int64_t) u_lower_bound, (int64_t) u_upper_bound,
+                  excludesFractionalPartsS, excludesNegativeZeroS, maxUInt32ExponentS);
 }
 
-bool canBeFiniteNonNegative(range& fnn2) {
+bool canBeFiniteNonNegative(range const& fnn2) {
   return fnn2.upper >= (int32_t) 0;
 }
 
-bool canBeFiniteNegative(range& fnn3) {
+bool canBeFiniteNegative(range const& fnn3) {
   return fnn3.lower < (int32_t) 0;
 }
 
-bool canBeNan(range& nannan) {
+bool canBeNan(range const& nannan) {
   return nannan.maxExponent == includesInfinityAndNanS;
 }
 
-bool contains(range& crange, int32_t cval) {
+bool contains(range const& crange, int32_t cval) {
   return cval >= crange.lower & cval <= crange.upper;
 }
 
-bool canBeZero(range& zrange) {
+bool canBeZero(range const& zrange) {
   return contains(zrange, (int32_t)0);
 }
 
@@ -101,12 +103,12 @@ uint32_t countLeadingZeroes(uint32_t x) {
 }
 
 // https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#566
-bool canHaveSignBitSet(range& csbs_range) {
+bool canHaveSignBitSet(range const& csbs_range) {
   return (!csbs_range.hasInt32LowerBound) | canBeFiniteNegative(csbs_range) | csbs_range.canBeNegativeZero;
 }
 
 // https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#566
-uint16_t exponentImpliedByInt32Bounds(range& eib_range) {
+uint16_t exponentImpliedByInt32Bounds(range const& eib_range) {
   int32_t ua = eib_range.upper;
   int32_t la = eib_range.lower;
   int32_t abs_upper = math::abs(ua);
@@ -116,7 +118,7 @@ uint16_t exponentImpliedByInt32Bounds(range& eib_range) {
   return eib_ret;
 }
 
-range setLowerInit(int64_t sli_x, range& sli_range) {
+range setLowerInit(int64_t sli_x, range sli_range) {
 
   if (sli_x > jsIntMax64S) {
     sli_range.lower = jsIntMaxS;
@@ -161,7 +163,7 @@ range Range4(
   rv.canHaveFractionalPart = fract_flag;
   rv.canBeNegativeZero = nz_flag;
   rv.maxExponent = exp_set;
-
+  rv.isEmpty = (bool) 0;
   return rv;
 }
 
@@ -181,11 +183,12 @@ range Range6(int64_t lower_bound, bool has_lower,
   rv.canHaveFractionalPart = fract_flag;
   rv.canBeNegativeZero = nz_flag;
   rv.maxExponent = exp_set;
+  rv.isEmpty = (bool) 0;
 
   return rv;
 }
 
-range setUpperInit(int64_t sui_x, range& sui_range) {
+range setUpperInit(int64_t sui_x, range sui_range) {
    if (sui_x > jsIntMax64S) {
     sui_range.upper = jsIntMaxS;
     sui_range.hasInt32UpperBound = (bool) 0;
@@ -201,34 +204,34 @@ range setUpperInit(int64_t sui_x, range& sui_range) {
    return sui_range;
 }
 
-bool hasInt32Bounds(range& bnds) {
+bool hasInt32Bounds(range const& bnds) {
   return bnds.hasInt32LowerBound & bnds.hasInt32UpperBound;
 }
 
-uint16_t numBits(range& nbs) {
+uint16_t numBits(range const& nbs) {
  return nbs.maxExponent + ((uint16_t) 1);
 }
 
-bool isFiniteNonNegative(range& fnn) {
+bool isFiniteNonNegative(range const& fnn) {
   return fnn.lower > ((int32_t) 0);
 }
 
-bool isFiniteNegative(range& fn) {
+bool isFiniteNegative(range const& fn) {
   return fn.upper < ((int32_t) 0);
 }
 
-bool canBeInfiniteOrNan(range& fnan) {
+bool canBeInfiniteOrNan(range const& fnan) {
   return fnan.maxExponent >= includesInfinityS;
 }
 
-bool missingAnyInt32Bounds(range& mibs1, range& mibs2) {
+bool missingAnyInt32Bounds(range const& mibs1, range const& mibs2) {
   return (!hasInt32Bounds(mibs1)) | (!hasInt32Bounds(mibs2));
 }
 
 // -------------------
 // Operations
 // -------------------
-range add(range &lhs, range &rhs)
+range add(range const& lhs, range const& rhs)
 {
     int64_t l;
     int64_t h;
@@ -265,7 +268,7 @@ range add(range &lhs, range &rhs)
 
 }
 
-range sub(range& lhs, range& rhs) {
+range sub(range const& lhs, range const& rhs) {
 
   int64_t l = (int64_t) lhs.lower - (int64_t) rhs.upper;
   if(!lhs.hasInt32LowerBound | !rhs.hasInt32UpperBound) {
@@ -295,7 +298,7 @@ range sub(range& lhs, range& rhs) {
 }
 
 
-range and_(range& lhs, range& rhs) {
+range and_(range const& lhs, range const& rhs) {
   if (lhs.lower < (int32_t) 0 & rhs.lower < (int32_t) 0) {
       return newInt32Range(int32minS, math::max(lhs.upper, rhs.upper));
   }
@@ -312,7 +315,7 @@ range and_(range& lhs, range& rhs) {
   return newInt32Range(lower_, upper_);
 }
 
-range or_(range& lhs, range& rhs){
+range or_(range const& lhs, range const& rhs){
   if (lhs.lower == lhs.upper) {
     if (lhs.lower == (int32_t) 0) {
       return rhs;
@@ -359,7 +362,7 @@ range or_(range& lhs, range& rhs){
   return newInt32Range(lower, upper);
 }
 
-range xor_(range& lhs, range& rhs) {
+range xor_(range const& lhs, range const& rhs) {
   int32_t lhsLower = lhs.lower;
   int32_t lhsUpper = lhs.upper;
 
@@ -422,16 +425,11 @@ range xor_(range& lhs, range& rhs) {
   return newInt32Range(lower, upper);
 }
 
-range not_(range& op) {
-    range result_range;
-    result_range.lower = ~op.upper;
-    result_range.upper = ~op.lower;
-
-    return result_range;
+range not_(range const& op) {
+    return newInt32Range(~op.upper, ~op.lower);
 }
 
-range mul(range& lhs, range& rhs){
-  bool sbs = canHaveSignBitSet(lhs);
+range mul(range const& lhs, range const& rhs){
   bool newMayIncludeNegativeZero = 
     (canHaveSignBitSet(lhs) & canBeFiniteNonNegative(rhs)) |
     (canHaveSignBitSet(rhs) & canBeFiniteNonNegative(lhs));
@@ -475,7 +473,7 @@ range mul(range& lhs, range& rhs){
 }
 
 // https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#999
-range lsh(range& lhs, int32_t c) {
+range lsh(range const& lhs, int32_t c) {
   int32_t shift = c & (int32_t) 31;
   uint32_t lowerShifted = ((uint32_t) lhs.lower << shift << (uint32_t) 1) >> shift >> (int32_t) 1;
   uint32_t upperShifted = ((uint32_t) lhs.upper << shift << (uint32_t) 1) >> shift >> (int32_t) 1;
@@ -491,14 +489,14 @@ range lsh(range& lhs, int32_t c) {
 }
 
 // https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1016
-range rsh(range& lhs, int32_t c) {
+range rsh(range const& lhs, int32_t c) {
   int32_t shift = c & (int32_t) 31;
   return newInt32Range(lhs.lower >> shift,
                        lhs.upper >> shift);
 }
 
 // https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1023
-range ursh(range& lhs, int32_t c) {
+range ursh(range const& lhs, int32_t c) {
   int32_t shift = c & (int32_t) 31;
   if (isFiniteNonNegative(lhs) | isFiniteNegative(lhs)) {
     return newUInt32Range((uint32_t)(lhs.lower) >> shift,
@@ -508,12 +506,12 @@ range ursh(range& lhs, int32_t c) {
 }
 
 // https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1042
-range lsh_p(range& lhs, range& rhs) {
+range lsh_p(range const& lhs, range const& rhs) {
   return newInt32Range(int32minS, int32maxS);
 }
 
 // https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1048
-range rsh_p(range& lhs, range& rhs) {
+range rsh_p(range const& lhs, range const& rhs) {
   int32_t shiftLower = rhs.lower;
   int32_t shiftUpper = rhs.upper;
   if ((int64_t) shiftUpper - (int64_t) shiftLower >= (int64_t) 31) {
@@ -541,19 +539,19 @@ range rsh_p(range& lhs, range& rhs) {
 }
 
 // https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1079
-range ursh_p(range& lhs, range& rhs) {
+range ursh_p(range const& lhs, range const& rhs) {
   return newUInt32Range((uint32_t) 0, isFiniteNonNegative(lhs) ?  (uint32_t) lhs.upper : uint32maxS);
 }
 
 // https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1089
-range abs(range& op) {
+range abs(range const& op) {
   int32_t l = op.lower;
   int32_t u = op.upper;
   return Range6(
     (int64_t) math::max(math::max((int32_t) 0, l), u == int32minS ? int32maxS : -u),
     (bool) 1,
     (int64_t) math::max(math::max((int32_t) 0, u), l == int32minS ? int32maxS : -l),
-    hasInt32Bounds(op) & l != int32minS,
+    hasInt32Bounds(op) & (l != int32minS),
     op.canHaveFractionalPart,
     excludesNegativeZeroS,
     op.maxExponent
@@ -561,7 +559,7 @@ range abs(range& op) {
 }
 
 // https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1104
-range min(range& lhs, range& rhs) {
+range min(range const& lhs, range const& rhs) {
   return Range6(
     (int64_t) math::min(lhs.lower, rhs.lower),
     lhs.hasInt32LowerBound & rhs.hasInt32LowerBound,
@@ -574,7 +572,7 @@ range min(range& lhs, range& rhs) {
 }
 
 // https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1123
-range max(range& lhs, range& rhs){
+range max(range const& lhs, range const& rhs){
   return Range6(
     (int64_t) math::max(lhs.lower, rhs.lower),
     lhs.hasInt32LowerBound | rhs.hasInt32LowerBound,
@@ -587,7 +585,7 @@ range max(range& lhs, range& rhs){
 }
 
 // https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1142
-range floor(range& op) {
+range floor(range const& op) {
   range copy = op;
   range tmp = op;
 
@@ -606,7 +604,7 @@ range floor(range& op) {
 }
 
 // https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1166
-range ceil(range& op) {
+range ceil(range const& op) {
   range copy = op;
 
   // missing fract check
@@ -621,7 +619,7 @@ range ceil(range& op) {
   return copy;
 }
 // https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1184
-range sign(range& op) {
+range sign(range const& op) {
   return Range4(
     (int64_t) math::max(math::min(op.lower, (int32_t) 1), (int32_t) -1),
     (int64_t) math::max(math::min(op.upper, (int32_t) 1), (int32_t) -1),
@@ -632,7 +630,7 @@ range sign(range& op) {
 }
 
 // https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#485
-range intersect(range& lhs, range& rhs){
+range intersect(range const& lhs, range const& rhs){
    int32_t newLower = math::max(lhs.lower, rhs.lower);
    int32_t newUpper = math::min(lhs.upper, rhs.upper);
    bool  emptyRange = (bool) 0;
@@ -666,7 +664,7 @@ range intersect(range& lhs, range& rhs){
 }
 
 // https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#579
-range union_(range& lhs, range& rhs){
+range union_(range const& lhs, range const& rhs){
   int32_t newLower = math::min(lhs.lower, rhs.lower);
   int32_t newUpper = math::max(lhs.upper, rhs.upper);
   bool newHasInt32LowerBound = lhs.hasInt32LowerBound & rhs.hasInt32LowerBound;
