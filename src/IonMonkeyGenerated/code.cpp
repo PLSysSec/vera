@@ -445,7 +445,7 @@ range mul(range const& lhs, range const& rhs){
 
   } else if(!canBeNan(lhs) & !canBeNan(rhs) &
             !(canBeZero(lhs) & canBeInfiniteOrNan(rhs)) &
-            !(canBeZero(lhs) & canBeInfiniteOrNan(rhs))) {
+            !(canBeZero(rhs) & canBeInfiniteOrNan(lhs))) {
     exponent = includesInfinityS;
   } else {
     exponent = includesInfinityAndNanS;

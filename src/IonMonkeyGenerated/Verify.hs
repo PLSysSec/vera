@@ -575,6 +575,7 @@ setupFloat op fnName fn = do
               , declare (t Double) "right"
               , declare (c "range") "result_range"
               , declare (t Double) "result"
+              , declare (t Double) "lefty"
               , (v "left_range")   `assign` (call "wellFormedRange" [])
               , (v "right_range")  `assign` (call "wellFormedRange" [])
               , (v "result_range") `assign` call fnName [v "left_range", v "right_range"]
@@ -582,6 +583,7 @@ setupFloat op fnName fn = do
               , assert_ $ call "fInRange" [v "left", v "left_range"]
               , assert_ $ call "fInRange" [v "right", v "right_range"]
               , v "left" `assign` v "left"
+              , v "lefty" `assign` v "left"
               , v "right" `assign` v "right"
               , v "result" `assign` (v "left" `fn` v "right")
               , expect_ isSat (error "Has to start out SAT")
@@ -703,8 +705,7 @@ getExpList fls = catMaybes $ map (\(str, fl) ->
                        case str of
                          _ | "undef" `isInfixOf` str -> Nothing
                          _ | "start_range_hasInt32LowerBound" `isInfixOf` str -> sstr str fl
-                         _ | "fuppy" `isInfixOf` str -> sstr str fl
-                         _ | "testy2" `isInfixOf` str -> sstr str fl
+                         _ | "left" `isInfixOf` str -> sstr str fl
                          _ | "start_range_hasInt32UpperBound" `isInfixOf` str -> sstr str fl
                          _ | "start_range_canHaveFractionalPart" `isInfixOf` str -> sstr str fl
                          _ | "start_range_lower" `isInfixOf` str -> sstr str fl
@@ -756,6 +757,7 @@ getNanList fls = catMaybes $ map (\(str, fl) ->
                          _ | "jsSign" `isInfixOf` str -> sstr str fl
                          _ | "start_1" `isInfixOf` str -> sstr str fl
                          _ | "result_1" `isInfixOf` str -> sstr str fl
+                         _ | "left_1" `isInfixOf` str -> sstr str fl
                          _ | "result_" `isInfixOf` str -> sstr str fl
                          _ -> Nothing
                        ) $ M.toList fls
