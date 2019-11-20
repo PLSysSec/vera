@@ -21,10 +21,12 @@ module IonMonkeyGenerated.Operations ( add -- FRACT
                                      , intersect -- ish
                                      , brokenIntersect
                                      , union
+                                     , ntz
+                                     , toint
                                      ) where
 import           Control.Monad
-import           DSL.Typed                  (Type (..))
 import           Data.List                  (find)
+import           DSL.Typed                  (Type (..))
 import           Generate.Lang
 import           Generate.QQ
 import           IonMonkeyGenerated.Helpers
@@ -51,7 +53,7 @@ or = fn "or_"
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#893
 xor :: FunctionDef
 xor = fn "xor_"
-  
+
 -- Two trys (neg . not)
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#955
 not :: FunctionDef
@@ -63,7 +65,7 @@ mul = fn "mul"
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#999
 lsh :: FunctionDef
-lsh = fn "lsh" 
+lsh = fn "lsh"
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1016
 rsh :: FunctionDef
@@ -71,7 +73,7 @@ rsh = fn "rsh"
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1023
 ursh :: FunctionDef
-ursh = fn "ursh" 
+ursh = fn "ursh"
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1042
 lsh' :: FunctionDef
@@ -87,7 +89,7 @@ ursh' = fn "ursh_p"
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1089
 abs :: FunctionDef
-abs = fn "abs" 
+abs = fn "abs"
 
 -- Nan thing
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1104
@@ -101,12 +103,12 @@ max = fn "max"
 -- Add fractional part
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1142
 floor :: FunctionDef
-floor = fn "floor" 
+floor = fn "floor"
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1166
 ceil :: FunctionDef
 ceil =  fn "ceil"
-  
+
 -- Not doing nan thing
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1184
 sign :: FunctionDef
@@ -165,3 +167,11 @@ brokenIntersect =
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#579
 union :: FunctionDef
 union = fn "union_"
+
+ntz :: FunctionDef
+ntz = fn "NaNToZero"
+
+toint :: FunctionDef
+toint = fn "toIntegerInt32"
+
+

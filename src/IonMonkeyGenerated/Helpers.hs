@@ -28,6 +28,9 @@ range4 = fn "Range4"
 range6 :: FunctionDef
 range6 = fn "Range6"
 
+newDoubleRange :: FunctionDef
+newDoubleRange = fn "newDoubleRange"
+
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#394
 newInt32Range :: FunctionDef
 newInt32Range = fn "newInt32Range"

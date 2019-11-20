@@ -19,28 +19,30 @@ import           Utils
 
 genIonMonkeyTests :: BenchTest
 genIonMonkeyTests = benchTestGroup "Generated IonMonkey tests"
-                    [ unionTest
-                    , intersectTest
-                    , brokenIntersectTest
-                    , addTests
-                    , subTests
-                    , mulTests
-                    , andTests
-                    , orTests
-                    , xorTests
-                    , notTests
-                    , lshTests
-                    , rshTests
-                    , urshTests
-                    , lsh'Tests
-                    , rsh'Tests
-                    , ursh'Tests
-                    , absTests
-                    , minTests
-                    , maxTests
-                    , floorTests
-                    , ceilTests
-                    , signTests
+                    [ -- unionTest
+                    -- , intersectTest
+                    -- , brokenIntersectTest
+                     ntzTests
+                    , tointTests
+                    -- , addTests
+                    -- , subTests
+                    -- , mulTests
+                    -- , andTests
+                    -- , orTests
+                    -- , xorTests
+                    -- , notTests
+                    -- , lshTests
+                    -- , rshTests
+                    -- , urshTests
+                    -- , lsh'Tests
+                    -- , rsh'Tests
+                    -- , ursh'Tests
+                    -- , absTests
+                    -- , minTests
+                    -- , maxTests
+                    -- , floorTests
+                    -- , ceilTests
+                    -- , signTests
                     ]
 
 unionTest :: BenchTest
@@ -51,6 +53,12 @@ intersectTest = benchTestCase "intersect" $ evalCodegen Nothing $ testIntersecti
 
 brokenIntersectTest :: BenchTest
 brokenIntersectTest = benchTestCase "broken intersect" $ evalCodegen Nothing $ testIntersection $ Set "intersect" brokenIntersect
+
+ntzTests :: BenchTest
+ntzTests = mkFloatTests "NaNToZero" $ Unary "NaNToZero" ntz jsAbs
+
+tointTests :: BenchTest
+tointTests = mkFloatTests "toInt" $ Unary "toIntegerInt32" toint jsAbs
 
 addTests :: BenchTest
 addTests = mkFloatTests "Add" $ Binary "add" add jsAdd
