@@ -3,10 +3,10 @@
 #include <cmath>
 namespace math {
     using namespace std;
-    int16_t exp(double x) {
+    int32_t exp(double x) {
         int32_t e;
         frexp(x, &e);
-        return (int16_t)e;
+        return e;
     }
 }
 struct range;
@@ -14,8 +14,8 @@ struct range;
 uint32_t countLeadingZeroes(uint32_t x);
 range newInt32Range(int32_t l, int32_t u);
 range newUInt32Range(uint32_t l, uint32_t u);
-range setLowerInit(int64_t, range);
-range setUpperInit(int64_t, range);
+range setLowerInit(int64_t, range &);
+range setUpperInit(int64_t, range &);
 bool canBeInfiniteOrNan(range &r);
 bool missingAnyInt32Bounds(range &, range &);
 uint16_t numBits(range &);

@@ -215,8 +215,8 @@ math_builtins_1 = [
     , ("exp", GetExp)
     , ("is_neg", IsNegative)
     , ("is_zero", IsZero)
-    , ("isnan", IsNan)
-    , ("isinf", IsInf)]
+    , ("is_nan", IsNan)
+    , ("is_inf", IsInf)]
 
 math_builtins_2 :: [(String, SExpr -> SExpr -> SExpr)]
 math_builtins_2 = [
