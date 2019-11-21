@@ -618,8 +618,6 @@ setupSetOp op fnName = do
 defineAll op = do
   class_ range
   define op
-  define newDoubleRange
-  define ceil
   define verifyIntersection
   define verifyExpForm
   define verifyUnion
