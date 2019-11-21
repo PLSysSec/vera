@@ -1,7 +1,6 @@
 import           BenchUtils
 import           Cpp
 import           DSL
-import           GenCpp
 import           GenHelpers
 import           GenIonMonkey
 import           Helpers
