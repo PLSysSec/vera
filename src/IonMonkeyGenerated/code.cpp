@@ -620,6 +620,11 @@ range ceil(range const& op) {
 }
 // https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1184
 range sign(range const& op) {
+
+  if (canBeNan(op)) {
+    return nullRange((bool) 1);
+  }
+
   return Range4(
     (int64_t) math::max(math::min(op.lower, (int32_t) 1), (int32_t) -1),
     (int64_t) math::max(math::min(op.upper, (int32_t) 1), (int32_t) -1),
@@ -643,7 +648,7 @@ range intersect(range const& lhs, range const& rhs){
    }
    bool newHasInt32LowerBound = lhs.hasInt32LowerBound | rhs.hasInt32LowerBound;
    bool newHasInt32UpperBound = lhs.hasInt32UpperBound | rhs.hasInt32UpperBound;
-   bool newMayIncludeNegativeZero = lhs.canBeNegativeZero & lhs.canBeNegativeZero;
+   bool newMayIncludeNegativeZero = lhs.canBeNegativeZero & rhs.canBeNegativeZero;
    bool newCanHaveFractionalPart = lhs.canHaveFractionalPart & rhs.canHaveFractionalPart;
    uint16_t newExponent = math::min(lhs.maxExponent, rhs.maxExponent);
 
