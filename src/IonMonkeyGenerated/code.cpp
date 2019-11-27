@@ -615,6 +615,12 @@ range ceil(range const& op) {
     copy.maxExponent += (uint16_t) 1;
   }
 
+// FIXED:
+//   copy.canBeNegativeZero =
+//     ((copy.lower > (int32_t) 0) | (copy.upper <= (int32_t) -1)) ?
+//     copy.canBeNegativeZero :
+//     (bool) 1;
+
   copy.canHaveFractionalPart = excludesFractionalPartsS;
   return copy;
 }
