@@ -26,10 +26,11 @@ def parse_file(fname):
                 test_number = 0
             # a verification condition for the current operator
             if words[0] == "XXX":
-                # todo distinguish between verification failure and timeout
-                verification_result = "FAIL"
+                verification_result = "\oo"
                 # verification succeeded
                 if "OK" in words: verification_result = my_round(words[len(words) - 1])
+                # fix this
+                if "Failed to verify" in line: verification_result = "X"
                 verif_results[operator][test_number] = verification_result
                 test_number += 1
     return verif_results
@@ -42,7 +43,9 @@ def make_table(verif_results):
     for operator, results in verif_results.items():
         line = tex_cmd("texttt", operator)
         for i in range(14):
+            # all VCs apply
             if len(results) == 14: line = line + " & " + str(results[i])
+            # just three VCs apply
             elif i == 4:  line = line + " & " + str(results[0])
             elif i == 6:  line = line + " & " + str(results[1])
             elif i == 13: line = line + " & " + str(results[2])
