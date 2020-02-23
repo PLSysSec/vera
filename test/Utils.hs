@@ -6,9 +6,9 @@ import qualified DSL.DSL                   as D
 import           Generate.State
 import           IonMonkeyGenerated.Verify
 
-mkFloatTests :: String -> TestFunction -> BenchTest
-mkFloatTests testGroupName testFn =
-  benchTestGroup testGroupName
+mkFloatTests :: String -> String -> TestFunction -> BenchTest
+mkFloatTests outerName testGroupName testFn =
+  benchTestGroup outerName
     [ makeTest (testGroupName ++ " lower i32") $ testLower testFn
     , makeTest (testGroupName ++ " float lower i32") $ testFlLower testFn
     , makeTest (testGroupName ++ " float upper i32") $ testFlUpper testFn
@@ -26,9 +26,9 @@ mkFloatTests testGroupName testFn =
     ]
   where makeTest str act = benchTestCase str $ evalCodegen Nothing act
 
-mki32Tests :: String -> TestFunction -> BenchTest
-mki32Tests testGroupName testFn =
-  benchTestGroup testGroupName
+mki32Tests :: String -> String -> TestFunction -> BenchTest
+mki32Tests outerName testGroupName testFn =
+  benchTestGroup outerName
     [ makeTest (testGroupName ++ " lower i32") $ testLower testFn
     , makeTest (testGroupName ++ " upper i32") $ testUpper testFn
     , makeTest (testGroupName ++ " UB") $ testUB testFn

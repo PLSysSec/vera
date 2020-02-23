@@ -69,7 +69,8 @@ fInRange =
              , declare (t Bool) "hasHighHolds"
              , v "hasHighHolds" `assign` (testImplies ((v "fval" .>. (cast (v "frange" .->. "upper") Double)) .&&. (not_ $ isNan $ v "fval")) (not_ $ v "frange" .->. "hasInt32UpperBound"))
 
-             -- try to help out the solver
+               -- this is not asserting that the actual exponent bits of the
+               -- number are under 1023
              , assert_ $ (isInf $ v "fval") .||. (isNan $ v "fval") .||. (fpExp (v "fval") .<=. maxFiniteExponent)
              , implies_ ((v "fval" .<=. d Double 1) .&&. (v "fval" .=>. d Double (-1))) (fpExp (v "fval") .==. n Unsigned16 0)
 
@@ -868,7 +869,13 @@ getFractList fls = catMaybes $ map (\(str, fl) ->
                                  ]
 
 showInt32Result :: String -> SMTResult -> IO ()
-showInt32Result str result = error $ str ++ "\n" ++ (unlines $ getIntList $ example result)
+showInt32Result str result =
+  case result of
+    SolverSat e ->
+      let list = unlines $ getIntList $ e
+      in error $ str ++ "\n" ++ list
+    SolverUnsat -> error "Unsat result"
+    SolverFailed -> error "Solver failed (e.g., due to timeout)"
 
 getIntList :: M.Map String Double -> [String]
 getIntList fls = catMaybes $ map (\(str, fl) ->

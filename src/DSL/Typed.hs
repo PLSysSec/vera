@@ -108,7 +108,7 @@ module DSL.Typed ( vassert
                  , rawNot
                  , D.assert
                  ) where
-import           Control.Monad.State.Strict (unless, when, liftIO)
+import           Control.Monad.State.Strict (unless, when)
 import qualified DSL.DSL                    as D
 import           Prelude                    hiding (compare, exp)
 
@@ -1162,9 +1162,11 @@ instance CppCast VNode where
                             exted <- case fromTy of
                               Signed   -> D.sext (vnode node) 32
                               Unsigned -> D.uext (vnode node) 32
+                              _        -> error "Unexpected type in cast"
                             result <- case fromTy of
                               Signed   -> D.castSBv exted
-                              Unsigned -> D.castUBv exted 
+                              Unsigned -> D.castUBv exted
+                              _        -> error "Unexpected type in cast"
                             return $ VNode (vundef node) result Double
                           _          -> error "Illegal cast types"
     | is64Bits fromTy = case toTy of
@@ -1180,6 +1182,7 @@ instance CppCast VNode where
                             result <- case fromTy of
                               Unsigned64 -> D.castUBv (vnode node)
                               Signed64   -> D.castSBv (vnode node)
+                              _          -> error "Unexpected type in cast"
                             return $ VNode (vundef node) result Double
                           _          -> error "Illegal cast types"
     | otherwise = error "Illegal cast types"

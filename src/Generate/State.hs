@@ -220,6 +220,7 @@ newVar ty str = do
         fields <- getFields c
         fvs <- forM (M.toList fields) $ \(name, ty) -> return (str ++ "_" ++ name, PrimType ty)
         return $ fvs ++ [(str, ty)]
+      _ -> error "Unexpected type in newVar"
     forM_ varsToMake $ \(v, t) -> addVar v t
   where
     addVar :: VarName -> STy -> Codegen ()

@@ -19,28 +19,28 @@ import           Utils
 
 genIonMonkeyTests :: BenchTest
 genIonMonkeyTests = benchTestGroup "Generated IonMonkey tests"
-                    [ unionTest
-                    , intersectTest
-                    , brokenIntersectTest
-                    , addTests
+                    [ -- unionTest
+                    -- , intersectTest
+                    -- , brokenIntersectTest
+                     addTests
                     , subTests
-                    , mulTests
-                    , andTests
-                    , orTests
-                    , xorTests
-                    , notTests
-                    , lshTests
-                    , rshTests
-                    , urshTests
-                    , lsh'Tests
-                    , rsh'Tests
-                    , ursh'Tests
-                    , absTests
-                    , minTests
-                    , maxTests
-                    , floorTests
-                    , ceilTests
-                    , signTests
+                    -- , mulTests
+                    -- , andTests
+                    -- , orTests
+                    -- , xorTests
+                    -- , notTests
+                    -- , lshTests
+                    -- , rshTests
+                    -- , urshTests
+                    -- , lsh'Tests
+                    -- , rsh'Tests
+                    -- , ursh'Tests
+                    -- , absTests
+                    -- , minTests
+                    -- , maxTests
+                    -- , floorTests
+                    -- , ceilTests
+                    -- , signTests
                     ]
 
 unionTest :: BenchTest
@@ -53,61 +53,61 @@ brokenIntersectTest :: BenchTest
 brokenIntersectTest = benchTestCase "broken intersect" $ evalCodegen Nothing $ testIntersection $ Set "intersect" brokenIntersect
 
 addTests :: BenchTest
-addTests = mkFloatTests "Add" $ Binary "add" add jsAdd
+addTests = mkFloatTests "XX Add" "XXX Add" $ Binary "add" add jsAdd
 
 subTests :: BenchTest
-subTests = mkFloatTests "Sub" $ Binary "sub" sub jsSub
+subTests = mkFloatTests "XX Sub" "XXX Sub" $ Binary "sub" sub jsSub
 
 mulTests :: BenchTest
-mulTests = mkFloatTests "Mul" $ Binary "mul" mul jsMul
+mulTests = mkFloatTests "XX Mul" "XXX Mul" $ Binary "mul" mul jsMul
 
 andTests :: BenchTest
-andTests = mki32Tests "And" $ Binary "and_" and jsAnd
+andTests = mki32Tests "XX And" "XXX And" $ Binary "and_" and jsAnd
 
 orTests :: BenchTest
-orTests = mki32Tests "Or" $ Binary "or_" or jsOr
+orTests = mki32Tests "XX Or" "XXX Or" $ Binary "or_" or jsOr
 
 xorTests :: BenchTest
-xorTests = mki32Tests "Xor" $ Binary "xor_" xor jsXOr
+xorTests = mki32Tests "XX Xor" "XXX Xor" $ Binary "xor_" xor jsXOr
 
 notTests :: BenchTest
-notTests = mki32Tests "Not" $ Unary "not_" not jsNot
+notTests = mki32Tests "XX Not" "XXX Not" $ Unary "not_" not jsNot
 
 lshTests :: BenchTest
-lshTests = mki32Tests "Lsh" $ Constant "lsh" lsh jsLsh
+lshTests = mki32Tests "XX Lsh" "XXX Lsh" $ Constant "lsh" lsh jsLsh
 
 rshTests :: BenchTest
-rshTests = mki32Tests "Rsh" $ Constant "rsh" rsh jsRsh
+rshTests = mki32Tests "XX Rsh" "XXX Rsh" $ Constant "rsh" rsh jsRsh
 
 urshTests :: BenchTest
-urshTests = mki32Tests "Ursh" $ Constant "ursh" ursh jsUrsh
+urshTests = mki32Tests "XX Ursh" "XXX Ursh" $ Constant "ursh" ursh jsUrsh
 
 lsh'Tests :: BenchTest
-lsh'Tests = mki32Tests "Lsh'" $ Binary "lsh_p" lsh' jsLsh
+lsh'Tests = mki32Tests "XX Lsh'" "XXX Lsh'" $ Binary "lsh_p" lsh' jsLsh
 
 rsh'Tests :: BenchTest
-rsh'Tests = mki32Tests "Rsh'" $ Binary "rsh_p" rsh' jsRsh
+rsh'Tests = mki32Tests "XX Rsh'" "XXX Rsh'" $ Binary "rsh_p" rsh' jsRsh
 
 ursh'Tests :: BenchTest
-ursh'Tests = mki32Tests "Ursh'" $ Binary "ursh_p" ursh' jsRsh
+ursh'Tests = mki32Tests "XX Ursh'" "XXX Ursh'" $ Binary "ursh_p" ursh' jsRsh
 
 absTests :: BenchTest
-absTests = mkFloatTests "abs" $ Unary "abs" abs jsAbs
+absTests = mkFloatTests "XX Abs" "XXX Abs" $ Unary "abs" abs jsAbs
 
 minTests :: BenchTest
-minTests = mkFloatTests "min" $ Binary "min" min jsMin
+minTests = mkFloatTests "XX Min" "XXX Min" $ Binary "min" min jsMin
 
 maxTests :: BenchTest
-maxTests = mkFloatTests "max" $ Binary "max" max jsMax
+maxTests = mkFloatTests "XX Max" "XXX Max" $ Binary "max" max jsMax
 
 floorTests :: BenchTest
-floorTests = mkFloatTests "floor" $ Unary "floor" floor jsFloor
+floorTests = mkFloatTests "XX Floor" "XXX Floor" $ Unary "floor" floor jsFloor
 
 ceilTests :: BenchTest
-ceilTests = mkFloatTests "ceil" $ Unary "ceil" ceil jsCeil
+ceilTests = mkFloatTests "XX Ceil" "XXX Ceil" $ Unary "ceil" ceil jsCeil
 
 signTests :: BenchTest
-signTests = mkFloatTests "sign" $ Unary "sign" sign jsSign
+signTests = mkFloatTests "XX Sign" "XXX Sign" $ Unary "sign" sign jsSign
 
 
 -- Union and intersection
