@@ -43,7 +43,10 @@ def make_table(verif_results):
         line = tex_cmd("texttt", operator)
         for i in range(14):
             if len(results) == 14: line = line + " & " + str(results[i])
-            elif i == 4 or i == 6 or i == 13: line = line + " & " + str(results[i])
+            elif i == 4:  line = line + " & " + str(results[0])
+            elif i == 6:  line = line + " & " + str(results[1])
+            elif i == 13: line = line + " & " + str(results[2])
+            else:         line = line + " & - "
         line = line + " \\\\"
         all_lines.append(line)
     print(all_lines)
@@ -55,7 +58,6 @@ def make_table(verif_results):
 #     exit()
 results = parse_file("verif_file.txt")
 make_table(results)
-print(results)
 
 
 

@@ -31,7 +31,7 @@ genIonMonkeyTests = benchTestGroup "Generated IonMonkey tests"
                     -- , notTests
                     -- , lshTests
                     -- , rshTests
-                    -- , urshTests
+                    , urshTests
                     -- , lsh'Tests
                     -- , rsh'Tests
                     -- , ursh'Tests
