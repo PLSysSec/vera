@@ -34,8 +34,19 @@ def parse_file(fname):
                 test_number += 1
     return verif_results
 
-
-
+def tex_cmd(cmd, contents): return '\\' + cmd + "{" + contents + "}"
+    
+def make_table(verif_results):
+    inf = "\oo"
+    all_lines = []
+    for operator, results in verif_results.items():
+        line = tex_cmd("texttt", operator)
+        for i in range(14):
+            if len(results) == 14: line = line + " & " + str(results[i])
+            elif i == 4 or i == 6 or i == 13: line = line + " & " + str(results[i])
+        line = line + " \\\\"
+        all_lines.append(line)
+    print(all_lines)
 
 # cmd = "stack test > verif_file.txt"
 # result = os.system(cmd)
@@ -43,6 +54,7 @@ def parse_file(fname):
 #     print("Verification failed with error code " + str(result))
 #     exit()
 results = parse_file("verif_file.txt")
+make_table(results)
 print(results)
 
 
