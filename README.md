@@ -22,8 +22,8 @@ From the main lejit directory, type ``python repro_all.py` to reproduce all
 results in the paper. Expecte this to take XXXX.
 
 The results will all be generated in the results directory, in the following order:
-1. Can VeRA prove Firefox range analysis correctness? *results/verify_table.txt*
-2. Can VeRA proofs catch real correctness bugs? *results/bug_examples.txt*
+1. Can VeRA prove Firefox range analysis correctness? **results/verify_table.txt**
+2. Can VeRA proofs catch real correctness bugs? **results/bug_examples.txt**
 3. Are the VeRA proofs correct?
 4. Do the verified routines work correctly in Firefox?
 5. How do the verified routines perform in Firefox?
