@@ -24,8 +24,8 @@ dependencies:
 
 library:
   source-dirs: src
-  ghc-options:
-  - -Wall
+#  ghc-options:
+#  - -Wall
   dependencies:
   - z3 >= 4.3.1
   - containers >= 0.6
@@ -51,7 +51,7 @@ executables:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
-    - -Wall
+#    - -Wall
     dependencies:
     - lejit
 
@@ -59,8 +59,8 @@ tests:
   lejit-test:
     main:                Spec.hs
     source-dirs:         test
-    ghc-options:
-    - -Wall
+ #   ghc-options:
+ #   - -Wall
     dependencies:
     - lejit
     - tasty
