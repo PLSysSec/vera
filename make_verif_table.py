@@ -16,7 +16,7 @@ def parse_file(fname):
         operator    = None
         test_number = 0
         verif_results     = {}
-        for line in lines:
+        for i, line in enumerate(lines):
             words = line.split()
             if not words: continue
             # a new operator to verify 
@@ -29,8 +29,7 @@ def parse_file(fname):
                 verification_result = "\oo"
                 # verification succeeded
                 if "OK" in words: verification_result = my_round(words[len(words) - 1])
-                # fix this
-                if "Failed to verify" in line: verification_result = "X"
+                if "Failed to verify" in lines[i+1]: verification_result = "X"
                 verif_results[operator][test_number] = verification_result
                 test_number += 1
     return verif_results
