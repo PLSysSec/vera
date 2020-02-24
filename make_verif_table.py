@@ -51,10 +51,12 @@ def make_table(verif_results):
             else:         line = line + " & - "
         line = line + " \\\\"
         all_lines.append(line)
-    print(all_lines)
+    for line in all_lines: print line 
 
-# cmd = "stack test > verif_file.txt"
-# result = os.system(cmd)
+print("About to run all verification routines and pipe result to file")    
+cmd = "stack test > verif_file.txt"
+result = os.system(cmd)
+print("Done verifying. About to generate a table of the results")
 # if result > 0:
 #     print("Verification failed with error code " + str(result))
 #     exit()

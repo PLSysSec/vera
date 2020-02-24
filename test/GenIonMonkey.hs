@@ -24,23 +24,23 @@ genIonMonkeyTests = benchTestGroup "Generated IonMonkey tests"
                     -- , brokenIntersectTest
                      addTests
                     , subTests
-                    -- , mulTests
-                    -- , andTests
-                    -- , orTests
-                    -- , xorTests
-                    -- , notTests
-                    -- , lshTests
-                    -- , rshTests
+                    , mulTests
+                    , andTests
+                    , orTests
+                    , xorTests
+                    , notTests
+                    , lshTests
+                    , rshTests
                     , urshTests
-                    -- , lsh'Tests
-                    -- , rsh'Tests
-                    -- , ursh'Tests
-                    -- , absTests
-                    -- , minTests
-                    -- , maxTests
-                    -- , floorTests
-                    -- , ceilTests
-                    -- , signTests
+                    , lsh'Tests
+                    , rsh'Tests
+                    , ursh'Tests
+                    , absTests
+                    , minTests
+                    , maxTests
+                    , floorTests
+                    , ceilTests
+                    , signTests
                     ]
 
 unionTest :: BenchTest

@@ -1,20 +1,46 @@
-# Lejit
+# VeRA Artifact Evaluation 
 
-A DSL and helper framework for range analysis for JavaScript JIT compilers.
+Hello, and thanks for evaluating this artifact!
 
-Code tour:
+The evaluation has six parts:
+(1) Can VeRA prove Firefox range analysis correctness?
+(2) Can VeRA proofs catch real correctness bugs?
+(3) Are the VeRA proofs correct?
+(4) Do the verified routines work correctly in Firefox?
+(5) How do the verified routines perform in Firefox?
+(6) How hard is it to integrate the verified routines into Firefox?
 
-src/DSL/ is the directory where a DSL that makes it easier to generate Boolector
-constraints lives. BoolectorWrapper.hs wraps some tricky Btor operations, while
-DSL.hs provides the bare-bones DSL.
+We are able to reproduce the results from points 1-5, and additionally
+reproduce the LOC counts for the different components of the system.
 
-src/IonMonkey contains IonMonkey-specific objects and operations.
-In Objects.hs, you will find our representation of the IonMonkey Range object, as
-well as operations that make it easier to create ranges and verify their properties.
-Operations.hs contains the actual optimizations that we want to verify. Right now,
-just starting with int32 operations (our bindings don't support FP).
+You can use the script WHAT to generate results for all parts of the paper
+(expect this to take XXXX).
 
-test/IonMonkey contains the verification code for the operations in IonMonkey/Operations.
+Alternatively, to generate results for each portion individually, follow
+the following instructions.
 
+## (1) Can VeRA prove Firefox range analysis correctness?
+
+The script for generating Figure 8 is called make_verif_table.py
+This script calls `stack test,` which verifies each range analysis
+operator correct wrt to JavaScript semantics. It will generate a
+standalone PDF of the time it took each verification condition
+to verify in verify_table.pdf
+
+## (2) Can VeRA proofs catch real correctness bugs?
+
+The script for generating the examples in 6.1's "A new Firefox bug" and
+"An old Firefox bug" are in generate_bugs.py
+This script runs verification routines for both buggy operators and displays
+(1) a counterexample showing that each operator is buggy and (2) the time
+it took to generate that example. 
+
+## (3) Are the VeRA proofs correct?
+
+DS
+
+## (4) Do the verified routines work correctly in Firefox?
+
+## (5) How do the verified routines perform in Firefox?
 
 
