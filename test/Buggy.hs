@@ -1,4 +1,6 @@
-module Buggy (buggyTests) where
+module Buggy ( brokenIntersectTest
+             , brokenCeilTest
+             ) where
 import           BenchUtils
 import           Control.Monad.State.Strict    (liftIO)
 import           DSL.DSL                       (SMTResult (..))
@@ -16,14 +18,10 @@ import           Prelude                       hiding (abs, and, floor, max,
 import           Test.Tasty.HUnit
 import           Utils
 
-buggyTests = benchTestGroup "Bugs"
-             [ brokenIntersectTest
-             , brokenCeilTest
-             ]
 
 brokenIntersectTest :: BenchTest
-brokenIntersectTest = benchTestCase "Broken intersect" $ evalCodegen Nothing $ testIntersection $ Set "intersect" brokenIntersect
+brokenIntersectTest = benchTestCase "Broken_intersect" $ evalCodegen Nothing $ testIntersection $ Set "intersect" brokenIntersect
 
 brokenCeilTest :: BenchTest
-brokenCeilTest = makeTest "Broken ceil" $ testNegZ $ Unary "ceil" ceil jsCeil
+brokenCeilTest = makeTest "Broken_ceil" $ testNegZ $ Unary "ceil" ceil jsCeil
   where makeTest str act = benchTestCase str $ evalCodegen Nothing act

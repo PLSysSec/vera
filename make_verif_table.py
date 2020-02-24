@@ -49,15 +49,16 @@ def make_table(verif_results):
             elif i == 6:  line = line + " & " + str(results[1])
             elif i == 13: line = line + " & " + str(results[2])
             else:         line = line + " & - "
-        line = line + " \\\\"
+        line = line + " \\\\\n"
         all_lines.append(line)
-    for line in all_lines: print line 
+    with open("results/verify_table.txt", 'w') as f: f.writelines(all_lines)
 
 print("About to run all verification routines and pipe result to file")    
 cmd = "stack test --ta '-p Verification' > verif_file.txt"
 os.system(cmd)
 print("Done verifying. About to generate a table of the results")
 results = parse_file("verif_file.txt")
+os.system("touch results/verify_table.txt")
 make_table(results) 
 
 

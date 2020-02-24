@@ -18,8 +18,17 @@ the solver chooses to display for buggy routines.
 
 ## Generate results for the entire paper at once
 
-You can use the script WHAT to generate results for all parts of the paper
-(expect this to take XXXX).
+From the main lejit directory, type ``python repro_all.py` to reproduce all
+results in the paper. Expecte this to take XXXX.
+
+The results will all be generated in the results directory, in the following order:
+1. Can VeRA prove Firefox range analysis correctness? *results/verify_table.txt*
+2. Can VeRA proofs catch real correctness bugs? *results/bug_examples.txt*
+3. Are the VeRA proofs correct?
+4. Do the verified routines work correctly in Firefox?
+5. How do the verified routines perform in Firefox?
+Extra. How many lines of code are in the various VeRA components? *results/cloc.txt*
+
 
 Alternatively, to generate results for each claim individually, use the
 following instructions
@@ -28,7 +37,7 @@ following instructions
 
 Run: make_verif_table.py
 
-Look at: verify_table.pdf
+Look at: results/verify_table.txt
 
 The script for generating Figure 8 is called make_verif_table.py This
 script uses command `stack test --ta '-p Verification',` which verifies
@@ -40,7 +49,7 @@ condition to verify in verify_table.pdf
 
 Run: generate_bugs.py
 
-Look at: bug_examples.txt
+Look at: results/bug_examples.txt
 
 The script for generating the examples in 6.1's "A new Firefox bug" and
 "An old Firefox bug" are in generate_bugs.py This script uses command

@@ -16,8 +16,9 @@ main :: IO ()
 main = defaultMain $ testGroup "All tests" $ map getTest allTests
 
 allTests :: [BenchTest]
-allTests = [ genIonMonkeyTests
-           , buggyTests
+allTests = [ brokenIntersectTest
+           , brokenCeilTest
+           , genIonMonkeyTests
            ]
 
 
