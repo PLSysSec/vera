@@ -54,14 +54,11 @@ def make_table(verif_results):
     for line in all_lines: print line 
 
 print("About to run all verification routines and pipe result to file")    
-cmd = "stack test > verif_file.txt"
-result = os.system(cmd)
+cmd = "stack test --ta '-p Verification' > verif_file.txt"
+os.system(cmd)
 print("Done verifying. About to generate a table of the results")
-# if result > 0:
-#     print("Verification failed with error code " + str(result))
-#     exit()
 results = parse_file("verif_file.txt")
-make_table(results)
+make_table(results) 
 
 
 

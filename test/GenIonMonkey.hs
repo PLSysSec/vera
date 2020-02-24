@@ -18,7 +18,7 @@ import           Test.Tasty.HUnit
 import           Utils
 
 genIonMonkeyTests :: BenchTest
-genIonMonkeyTests = benchTestGroup "Generated IonMonkey tests"
+genIonMonkeyTests = benchTestGroup "Verification"
                     [ -- unionTest
                     -- , intersectTest
                     -- , brokenIntersectTest
