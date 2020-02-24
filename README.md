@@ -27,7 +27,7 @@ The results will all be generated in the results directory, in the following ord
 3. Are the VeRA proofs correct?
 4. Do the verified routines work correctly in Firefox?
 5. How do the verified routines perform in Firefox?
-Extra. How many lines of code are in the various VeRA components? *results/cloc.txt*
+Extra. How many lines of code are in the various VeRA components? **results/cloc.txt**
 
 
 Alternatively, to generate results for each claim individually, use the
@@ -66,4 +66,8 @@ DS
 
 ### (5) How do the verified routines perform in Firefox?
 
+### Extra. How many lines of code are in the various VeRA components?
 
+Run: generate_cloc.py
+
+Look at: results/cloc.txt
