@@ -22,7 +22,7 @@ This is for reference, and should be removed
 
 ## Generate results for the entire paper at once
 
-From the main lejit directory, type ``python repro_all.py` to reproduce all
+From the **results** directory, type `python repro_all.py` to reproduce all
 results in the paper. Expecte this to take XXXX.
 
 The results will all be generated in the results directory, in the following order:
