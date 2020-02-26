@@ -1,32 +1,39 @@
 All tests
   Verification
     XX Add
-      XXX Add lower i32:                   OK (2.27s)
+      XXX Add inf:                         FAIL
+        message threw an exception: No match in record selector example
+      XXX Add nan:                         OK (3.38s)
+      XXX Add negative zero:               FAIL
+        message threw an exception: No match in record selector example
+      XXX Add fract:                       FAIL
+        message threw an exception: No match in record selector example
+      XXX Add lower i32:                   OK (2.29s)
       XXX Add float lower i32:             FAIL
         Exception: Solver failed (e.g., due to timeout)
         CallStack (from HasCallStack):
           error, called at src/IonMonkeyGenerated/Verify.hs:878:21 in lejit-0.1.0.0-FFtpRLueRlT9bTIAtJakeN:IonMonkeyGenerated.Verify
+      XXX Add upper i32:                   OK (3.04s)
       XXX Add float upper i32:             FAIL
         Exception: Solver failed (e.g., due to timeout)
         CallStack (from HasCallStack):
           error, called at src/IonMonkeyGenerated/Verify.hs:878:21 in lejit-0.1.0.0-FFtpRLueRlT9bTIAtJakeN:IonMonkeyGenerated.Verify
-      XXX Add upper i32:                   OK (2.73s)
-      XXX Add UB:                          OK (1.21s)
-      XXX Add negative zero:               FAIL
-        message threw an exception: No match in record selector example
-      XXX Add nan:                         OK (4.75s)
-      XXX Add inf:                         FAIL
-        message threw an exception: No match in record selector example
-      XXX Add fract:                       FAIL
-        message threw an exception: No match in record selector example
       XXX Add exp:                         FAIL
         message threw an exception: No match in record selector example
-      XXX Add WF hasBound invariant:       OK (1.67s)
-      XXX Add WF bounds between min max:   OK (1.48s)
-      XXX Add WF valid exp:                OK (4.06s)
+      XXX Add WF hasBound invariant:       OK (2.34s)
+      XXX Add WF bounds between min max:   OK (2.31s)
+      XXX Add WF valid exp:                OK (3.56s)
       XXX Add WF valid exp/bound pair:     FAIL
         message threw an exception: No match in record selector example
+      XXX Add UB:                          OK (0.98s)
     XX Sub
+      XXX Sub inf:                         FAIL
+        message threw an exception: No match in record selector example
+      XXX Sub nan:                         OK (3.38s)
+      XXX Sub negative zero:               FAIL
+        message threw an exception: No match in record selector example
+      XXX Sub fract:                       FAIL
+        message threw an exception: No match in record selector example
       XXX Sub lower i32:                   FAIL
         Exception: Solver failed (e.g., due to timeout)
         CallStack (from HasCallStack):
@@ -35,46 +42,47 @@ All tests
         Exception: Solver failed (e.g., due to timeout)
         CallStack (from HasCallStack):
           error, called at src/IonMonkeyGenerated/Verify.hs:878:21 in lejit-0.1.0.0-FFtpRLueRlT9bTIAtJakeN:IonMonkeyGenerated.Verify
-      XXX Sub float upper i32:             FAIL
-        Exception: Solver failed (e.g., due to timeout)
-        CallStack (from HasCallStack):
-          error, called at src/IonMonkeyGenerated/Verify.hs:878:21 in lejit-0.1.0.0-FFtpRLueRlT9bTIAtJakeN:IonMonkeyGenerated.Verify
       XXX Sub upper i32:                   FAIL
         Exception: Solver failed (e.g., due to timeout)
         CallStack (from HasCallStack):
           error, called at src/IonMonkeyGenerated/Verify.hs:878:21 in lejit-0.1.0.0-FFtpRLueRlT9bTIAtJakeN:IonMonkeyGenerated.Verify
-      XXX Sub UB:                          OK (0.86s)
-      XXX Sub negative zero:               FAIL
-        message threw an exception: No match in record selector example
-      XXX Sub nan:                         OK (3.29s)
-      XXX Sub inf:                         FAIL
-        message threw an exception: No match in record selector example
-      XXX Sub fract:                       FAIL
-        message threw an exception: No match in record selector example
+      XXX Sub float upper i32:             FAIL
+        Exception: Solver failed (e.g., due to timeout)
+        CallStack (from HasCallStack):
+          error, called at src/IonMonkeyGenerated/Verify.hs:878:21 in lejit-0.1.0.0-FFtpRLueRlT9bTIAtJakeN:IonMonkeyGenerated.Verify
       XXX Sub exp:                         FAIL
         message threw an exception: No match in record selector example
-      XXX Sub WF hasBound invariant:       OK (1.53s)
-      XXX Sub WF bounds between min max:   OK (2.31s)
-      XXX Sub WF valid exp:                OK (1.59s)
+      XXX Sub WF hasBound invariant:       OK (2.36s)
+      XXX Sub WF bounds between min max:   OK (2.30s)
+      XXX Sub WF valid exp:                OK (2.38s)
       XXX Sub WF valid exp/bound pair:     FAIL
         message threw an exception: No match in record selector example
+      XXX Sub UB:                          OK (1.00s)
     XX And
-      XXX And lower i32:                   OK (1.27s)
-      XXX And upper i32:                   OK (1.33s)
-      XXX And UB:                          OK (1.10s)
+      XXX And lower i32:                   OK (1.10s)
+      XXX And upper i32:                   OK (1.31s)
+      XXX And UB:                          OK (1.11s)
     XX Or
-      XXX Or lower i32:                    OK (1.53s)
-      XXX Or upper i32:                    OK (1.71s)
-      XXX Or UB:                           OK (0.90s)
+      XXX Or lower i32:                    OK (1.60s)
+      XXX Or upper i32:                    OK (2.13s)
+      XXX Or UB:                           OK (0.87s)
     XX Xor
-      XXX Xor lower i32:                   OK (1.71s)
-      XXX Xor upper i32:                   OK (2.19s)
-      XXX Xor UB:                          OK (1.25s)
+      XXX Xor lower i32:                   OK (1.97s)
+      XXX Xor upper i32:                   OK (2.01s)
+      XXX Xor UB:                          OK (1.20s)
     XX Not
       XXX Not lower i32:                   OK (0.49s)
-      XXX Not upper i32:                   OK (0.44s)
-      XXX Not UB:                          OK (0.40s)
+      XXX Not upper i32:                   OK (0.42s)
+      XXX Not UB:                          OK (0.39s)
     XX Mul
+      XXX Mul inf:                         FAIL
+        message threw an exception: No match in record selector example
+      XXX Mul nan:                         FAIL
+        message threw an exception: No match in record selector example
+      XXX Mul negative zero:               FAIL
+        message threw an exception: No match in record selector example
+      XXX Mul fract:                       FAIL
+        message threw an exception: No match in record selector example
       XXX Mul lower i32:                   FAIL
         Exception: Solver failed (e.g., due to timeout)
         CallStack (from HasCallStack):
@@ -83,38 +91,30 @@ All tests
         Exception: Solver failed (e.g., due to timeout)
         CallStack (from HasCallStack):
           error, called at src/IonMonkeyGenerated/Verify.hs:878:21 in lejit-0.1.0.0-FFtpRLueRlT9bTIAtJakeN:IonMonkeyGenerated.Verify
-      XXX Mul float upper i32:             FAIL
-        Exception: Solver failed (e.g., due to timeout)
-        CallStack (from HasCallStack):
-          error, called at src/IonMonkeyGenerated/Verify.hs:878:21 in lejit-0.1.0.0-FFtpRLueRlT9bTIAtJakeN:IonMonkeyGenerated.Verify
       XXX Mul upper i32:                   FAIL
         Exception: Solver failed (e.g., due to timeout)
         CallStack (from HasCallStack):
           error, called at src/IonMonkeyGenerated/Verify.hs:878:21 in lejit-0.1.0.0-FFtpRLueRlT9bTIAtJakeN:IonMonkeyGenerated.Verify
-      XXX Mul UB:                          OK (2.31s)
-      XXX Mul negative zero:               FAIL
-        message threw an exception: No match in record selector example
-      XXX Mul nan:                         FAIL
-        message threw an exception: No match in record selector example
-      XXX Mul inf:                         FAIL
-        message threw an exception: No match in record selector example
-      XXX Mul fract:                       FAIL
-        message threw an exception: No match in record selector example
+      XXX Mul float upper i32:             FAIL
+        Exception: Solver failed (e.g., due to timeout)
+        CallStack (from HasCallStack):
+          error, called at src/IonMonkeyGenerated/Verify.hs:878:21 in lejit-0.1.0.0-FFtpRLueRlT9bTIAtJakeN:IonMonkeyGenerated.Verify
       XXX Mul exp:                         FAIL
         message threw an exception: No match in record selector example
-      XXX Mul WF hasBound invariant:       OK (4.38s)
-      XXX Mul WF bounds between min max:   OK (4.26s)
+      XXX Mul WF hasBound invariant:       OK (4.27s)
+      XXX Mul WF bounds between min max:   OK (4.06s)
       XXX Mul WF valid exp:                FAIL
         message threw an exception: No match in record selector example
       XXX Mul WF valid exp/bound pair:     FAIL
         message threw an exception: No match in record selector example
+      XXX Mul UB:                          OK (2.46s)
     XX Lsh
-      XXX Lsh lower i32:                   OK (0.95s)
+      XXX Lsh lower i32:                   OK (0.77s)
       XXX Lsh upper i32:                   OK (0.63s)
-      XXX Lsh UB:                          OK (0.41s)
+      XXX Lsh UB:                          OK (0.40s)
     XX Rsh
-      XXX Rsh lower i32:                   OK (0.61s)
-      XXX Rsh upper i32:                   OK (0.59s)
+      XXX Rsh lower i32:                   OK (0.59s)
+      XXX Rsh upper i32:                   OK (0.57s)
       XXX Rsh UB:                          OK (0.40s)
     XX Ursh
       XXX Ursh lower i32:                  FAIL
@@ -123,8 +123,8 @@ All tests
         cval_1 : 0.0
         isFiniteNegative_return_val_1 : 0.0
         isFiniteNonNegative_return_val_1 : 0.0
-        result_1 : 2.147483649e9
-        result_l_1 : 2.147483649e9
+        result_1 : 4.294967169e9
+        result_l_1 : 4.294967169e9
         result_range_canHaveFractionalPart_1 : 0.0
         result_range_hasInt32LowerBound_1 : 1.0
         result_range_hasInt32UpperBound_1 : 1.0
@@ -133,17 +133,17 @@ All tests
         result_range_maxExponent_1 : 31.0
         result_range_upper_1 : 4.294967295e9
         shift_1 : 0.0
-        start_0 : 2.147483649e9
+        start_0 : 4.294967169e9
         start_range_canBeNegativeZero_1 : 0.0
         start_range_canHaveFractionalPart_1 : 0.0
-        start_range_hasInt32LowerBound_1 : 0.0
+        start_range_hasInt32LowerBound_1 : 1.0
         start_range_hasInt32UpperBound_1 : 1.0
         start_range_isEmpty_1 : 0.0
-        start_range_lower_1 : 2.147483648e9
-        start_range_maxExponent_1 : 32.0
+        start_range_lower_1 : 4.294967168e9
+        start_range_maxExponent_1 : 7.0
         start_range_upper_1 : 0.0
         vInRange_return_val_1 : 1.0
-        vval_1 : 2.147483649e9
+        vval_1 : 4.294967169e9
         
         CallStack (from HasCallStack):
           error, called at src/IonMonkeyGenerated/Verify.hs:876:10 in lejit-0.1.0.0-FFtpRLueRlT9bTIAtJakeN:IonMonkeyGenerated.Verify
@@ -153,7 +153,7 @@ All tests
         cval_1 : 0.0
         isFiniteNegative_return_val_1 : 0.0
         isFiniteNonNegative_return_val_1 : 0.0
-        result_1 : 1.9935316e7
+        result_1 : 20718.0
         result_range_canHaveFractionalPart_1 : 0.0
         result_range_hasInt32LowerBound_1 : 1.0
         result_range_hasInt32UpperBound_1 : 1.0
@@ -162,29 +162,29 @@ All tests
         result_range_maxExponent_1 : 31.0
         result_range_upper_1 : 4.294967295e9
         shift_1 : 0.0
-        start_0 : 1.9935316e7
+        start_0 : 20718.0
         start_range_canBeNegativeZero_1 : 0.0
         start_range_canHaveFractionalPart_1 : 0.0
         start_range_hasInt32LowerBound_1 : 1.0
         start_range_hasInt32UpperBound_1 : 1.0
         start_range_isEmpty_1 : 0.0
         start_range_lower_1 : 0.0
-        start_range_maxExponent_1 : 27.0
-        start_range_upper_1 : 7.1323733e7
+        start_range_maxExponent_1 : 15.0
+        start_range_upper_1 : 32768.0
         vInRange_return_val_1 : 1.0
-        vval_1 : 1.9935316e7
+        vval_1 : 20718.0
         
         CallStack (from HasCallStack):
           error, called at src/IonMonkeyGenerated/Verify.hs:876:10 in lejit-0.1.0.0-FFtpRLueRlT9bTIAtJakeN:IonMonkeyGenerated.Verify
       XXX Ursh UB:                         OK (0.49s)
     XX Lsh'
-      XXX Lsh' lower i32:                  OK (0.72s)
-      XXX Lsh' upper i32:                  OK (0.79s)
-      XXX Lsh' UB:                         OK (0.77s)
+      XXX Lsh' lower i32:                  OK (0.71s)
+      XXX Lsh' upper i32:                  OK (0.77s)
+      XXX Lsh' UB:                         OK (1.09s)
     XX Rsh'
-      XXX Rsh' lower i32:                  OK (1.40s)
-      XXX Rsh' upper i32:                  OK (1.34s)
-      XXX Rsh' UB:                         OK (1.13s)
+      XXX Rsh' lower i32:                  OK (1.47s)
+      XXX Rsh' upper i32:                  OK (1.32s)
+      XXX Rsh' UB:                         OK (0.81s)
     XX Ursh'
       XXX Ursh' lower i32:                 FAIL
         Exception: Solver failed (e.g., due to timeout)
@@ -194,146 +194,161 @@ All tests
         Exception: Solver failed (e.g., due to timeout)
         CallStack (from HasCallStack):
           error, called at src/IonMonkeyGenerated/Verify.hs:878:21 in lejit-0.1.0.0-FFtpRLueRlT9bTIAtJakeN:IonMonkeyGenerated.Verify
-      XXX Ursh' UB:                        OK (0.82s)
+      XXX Ursh' UB:                        OK (0.83s)
     XX Abs
-      XXX Abs lower i32:                   OK (0.73s)
+      XXX Abs inf:                         OK (0.72s)
+      XXX Abs nan:                         OK (0.74s)
+      XXX Abs negative zero:               OK (0.70s)
+      XXX Abs fract:                       FAIL
+        message threw an exception: No match in record selector example
+      XXX Abs lower i32:                   OK (0.70s)
       XXX Abs float lower i32:             FAIL
         Exception: Solver failed (e.g., due to timeout)
         CallStack (from HasCallStack):
           error, called at src/IonMonkeyGenerated/Verify.hs:878:21 in lejit-0.1.0.0-FFtpRLueRlT9bTIAtJakeN:IonMonkeyGenerated.Verify
+      XXX Abs upper i32:                   OK (1.05s)
       XXX Abs float upper i32:             FAIL
         Exception: Solver failed (e.g., due to timeout)
         CallStack (from HasCallStack):
           error, called at src/IonMonkeyGenerated/Verify.hs:878:21 in lejit-0.1.0.0-FFtpRLueRlT9bTIAtJakeN:IonMonkeyGenerated.Verify
-      XXX Abs upper i32:                   OK (0.93s)
-      XXX Abs UB:                          OK (0.42s)
-      XXX Abs negative zero:               OK (0.98s)
-      XXX Abs nan:                         OK (1.06s)
-      XXX Abs inf:                         OK (0.71s)
-      XXX Abs fract:                       FAIL
+      XXX Abs exp:                         OK (0.79s)
+      XXX Abs WF hasBound invariant:       OK (0.75s)
+      XXX Abs WF bounds between min max:   OK (0.70s)
+      XXX Abs WF valid exp:                FAIL
         message threw an exception: No match in record selector example
-      XXX Abs exp:                         OK (1.09s)
-      XXX Abs WF hasBound invariant:       OK (0.77s)
-      XXX Abs WF bounds between min max:   OK (0.69s)
-      XXX Abs WF valid exp:                OK (2.70s)
       XXX Abs WF valid exp/bound pair:     FAIL
         message threw an exception: No match in record selector example
+      XXX Abs UB:                          OK (0.51s)
     XX Min
-      XXX Min lower i32:                   OK (1.40s)
+      XXX Min inf:                         OK (4.22s)
+      XXX Min nan:                         FAIL
+        message threw an exception: No match in record selector example
+      XXX Min negative zero:               OK (1.47s)
+      XXX Min fract:                       OK (1.54s)
+      XXX Min lower i32:                   OK (1.45s)
       XXX Min float lower i32:             FAIL
         Exception: Solver failed (e.g., due to timeout)
         CallStack (from HasCallStack):
           error, called at src/IonMonkeyGenerated/Verify.hs:878:21 in lejit-0.1.0.0-FFtpRLueRlT9bTIAtJakeN:IonMonkeyGenerated.Verify
+      XXX Min upper i32:                   OK (1.38s)
       XXX Min float upper i32:             FAIL
         Exception: Solver failed (e.g., due to timeout)
         CallStack (from HasCallStack):
           error, called at src/IonMonkeyGenerated/Verify.hs:878:21 in lejit-0.1.0.0-FFtpRLueRlT9bTIAtJakeN:IonMonkeyGenerated.Verify
-      XXX Min upper i32:                   OK (1.41s)
-      XXX Min UB:                          OK (1.14s)
-      XXX Min negative zero:               OK (1.63s)
-      XXX Min nan:                         FAIL
-        message threw an exception: No match in record selector example
-      XXX Min inf:                         FAIL
-        message threw an exception: No match in record selector example
-      XXX Min fract:                       OK (1.56s)
-      XXX Min exp:                         OK (4.14s)
-      XXX Min WF hasBound invariant:       OK (3.17s)
-      XXX Min WF bounds between min max:   OK (1.47s)
+      XXX Min exp:                         OK (3.73s)
+      XXX Min WF hasBound invariant:       OK (2.42s)
+      XXX Min WF bounds between min max:   OK (1.42s)
       XXX Min WF valid exp:                FAIL
         message threw an exception: No match in record selector example
       XXX Min WF valid exp/bound pair:     FAIL
         message threw an exception: No match in record selector example
+      XXX Min UB:                          OK (1.26s)
     XX Max
-      XXX Max lower i32:                   OK (1.12s)
+      XXX Max inf:                         OK (3.61s)
+      XXX Max nan:                         FAIL
+        message threw an exception: No match in record selector example
+      XXX Max negative zero:               OK (2.54s)
+      XXX Max fract:                       OK (2.24s)
+      XXX Max lower i32:                   OK (1.06s)
       XXX Max float lower i32:             FAIL
         Exception: Solver failed (e.g., due to timeout)
         CallStack (from HasCallStack):
           error, called at src/IonMonkeyGenerated/Verify.hs:878:21 in lejit-0.1.0.0-FFtpRLueRlT9bTIAtJakeN:IonMonkeyGenerated.Verify
+      XXX Max upper i32:                   OK (1.15s)
       XXX Max float upper i32:             FAIL
         Exception: Solver failed (e.g., due to timeout)
         CallStack (from HasCallStack):
           error, called at src/IonMonkeyGenerated/Verify.hs:878:21 in lejit-0.1.0.0-FFtpRLueRlT9bTIAtJakeN:IonMonkeyGenerated.Verify
-      XXX Max upper i32:                   OK (1.18s)
-      XXX Max UB:                          OK (1.15s)
-      XXX Max negative zero:               OK (1.39s)
-      XXX Max nan:                         FAIL
+      XXX Max exp:                         OK (4.58s)
+      XXX Max WF hasBound invariant:       OK (2.35s)
+      XXX Max WF bounds between min max:   OK (1.52s)
+      XXX Max WF valid exp:                FAIL
         message threw an exception: No match in record selector example
-      XXX Max inf:                         OK (3.67s)
-      XXX Max fract:                       OK (2.49s)
-      XXX Max exp:                         OK (5.16s)
-      XXX Max WF hasBound invariant:       OK (2.58s)
-      XXX Max WF bounds between min max:   OK (1.44s)
-      XXX Max WF valid exp:                OK (5.21s)
       XXX Max WF valid exp/bound pair:     FAIL
         message threw an exception: No match in record selector example
+      XXX Max UB:                          OK (0.97s)
     XX Floor
-      XXX Floor lower i32:                 OK (1.01s)
+      XXX Floor inf:                       OK (3.30s)
+      XXX Floor nan:                       FAIL
+        message threw an exception: No match in record selector example
+      XXX Floor negative zero:             OK (1.36s)
+      XXX Floor fract:                     FAIL
+        message threw an exception: No match in record selector example
+      XXX Floor lower i32:                 OK (0.87s)
       XXX Floor float lower i32:           FAIL
         Exception: Solver failed (e.g., due to timeout)
         CallStack (from HasCallStack):
           error, called at src/IonMonkeyGenerated/Verify.hs:878:21 in lejit-0.1.0.0-FFtpRLueRlT9bTIAtJakeN:IonMonkeyGenerated.Verify
+      XXX Floor upper i32:                 OK (0.86s)
       XXX Floor float upper i32:           FAIL
         Exception: Solver failed (e.g., due to timeout)
         CallStack (from HasCallStack):
           error, called at src/IonMonkeyGenerated/Verify.hs:878:21 in lejit-0.1.0.0-FFtpRLueRlT9bTIAtJakeN:IonMonkeyGenerated.Verify
-      XXX Floor upper i32:                 OK (0.87s)
-      XXX Floor UB:                        OK (0.76s)
-      XXX Floor negative zero:             FAIL
-        message threw an exception: No match in record selector example
-      XXX Floor nan:                       OK (1.93s)
-      XXX Floor inf:                       FAIL
-        message threw an exception: No match in record selector example
-      XXX Floor fract:                     FAIL
-        message threw an exception: No match in record selector example
       XXX Floor exp:                       FAIL
         message threw an exception: No match in record selector example
-      XXX Floor WF hasBound invariant:     OK (1.47s)
+      XXX Floor WF hasBound invariant:     OK (1.03s)
       XXX Floor WF bounds between min max: OK (0.85s)
       XXX Floor WF valid exp:              FAIL
         message threw an exception: No match in record selector example
       XXX Floor WF valid exp/bound pair:   FAIL
         message threw an exception: No match in record selector example
+      XXX Floor UB:                        OK (0.86s)
     XX Ceil
-      XXX Ceil lower i32:                  OK (0.86s)
+      XXX Ceil inf:                        FAIL
+        message threw an exception: No match in record selector example
+      XXX Ceil nan:                        OK (1.66s)
+      XXX Ceil negative zero:              FAIL
+        Exception: Failed to verify NZ
+        result_1 : negz
+        result_range_canBeNegativeZero_1 : 0.0
+        result_range_hasInt32LowerBound_1 : 0.0
+        result_range_hasInt32UpperBound_1 : 1.0
+        result_range_lower_1 : 2.147483648e9
+        result_range_upper_1 : 0.0
+        start_1 : -9.136378512e-314
+        start_range_canBeNegativeZero_1 : 0.0
+        start_range_hasInt32LowerBound_1 : 0.0
+        start_range_hasInt32UpperBound_1 : 1.0
+        start_range_lower_1 : 2.147483648e9
+        start_range_upper_1 : 0.0
+        
+        CallStack (from HasCallStack):
+          error, called at src/IonMonkeyGenerated/Verify.hs:803:29 in lejit-0.1.0.0-FFtpRLueRlT9bTIAtJakeN:IonMonkeyGenerated.Verify
+      XXX Ceil fract:                      FAIL
+        message threw an exception: No match in record selector example
+      XXX Ceil lower i32:                  OK (0.78s)
       XXX Ceil float lower i32:            FAIL
         Exception: Solver failed (e.g., due to timeout)
         CallStack (from HasCallStack):
           error, called at src/IonMonkeyGenerated/Verify.hs:878:21 in lejit-0.1.0.0-FFtpRLueRlT9bTIAtJakeN:IonMonkeyGenerated.Verify
+      XXX Ceil upper i32:                  OK (0.79s)
       XXX Ceil float upper i32:            FAIL
         Exception: Solver failed (e.g., due to timeout)
         CallStack (from HasCallStack):
           error, called at src/IonMonkeyGenerated/Verify.hs:878:21 in lejit-0.1.0.0-FFtpRLueRlT9bTIAtJakeN:IonMonkeyGenerated.Verify
-      XXX Ceil upper i32:                  OK (0.81s)
-      XXX Ceil UB:                         OK (0.73s)
-      XXX Ceil negative zero:              FAIL
-        message threw an exception: No match in record selector example
-      XXX Ceil nan:                        OK (1.76s)
-      XXX Ceil inf:                        FAIL
-        message threw an exception: No match in record selector example
-      XXX Ceil fract:                      FAIL
-        message threw an exception: No match in record selector example
       XXX Ceil exp:                        FAIL
         message threw an exception: No match in record selector example
-      XXX Ceil WF hasBound invariant:      OK (1.27s)
-      XXX Ceil WF bounds between min max:  OK (1.22s)
+      XXX Ceil WF hasBound invariant:      OK (0.82s)
+      XXX Ceil WF bounds between min max:  OK (1.18s)
       XXX Ceil WF valid exp:               FAIL
         message threw an exception: No match in record selector example
       XXX Ceil WF valid exp/bound pair:    FAIL
         message threw an exception: No match in record selector example
+      XXX Ceil UB:                         OK (0.79s)
     XX Sign
-      XXX Sign lower i32:                  OK (0.94s)
-      XXX Sign float lower i32:            OK (3.27s)
-      XXX Sign float upper i32:            OK (3.68s)
-      XXX Sign upper i32:                  OK (0.67s)
-      XXX Sign UB:                         OK (0.58s)
-      XXX Sign negative zero:              OK (0.67s)
-      XXX Sign nan:                        OK (0.75s)
-      XXX Sign inf:                        OK (0.70s)
-      XXX Sign fract:                      OK (0.80s)
-      XXX Sign exp:                        OK (0.74s)
-      XXX Sign WF hasBound invariant:      OK (0.69s)
-      XXX Sign WF bounds between min max:  OK (0.71s)
-      XXX Sign WF valid exp:               OK (0.73s)
-      XXX Sign WF valid exp/bound pair:    OK (1.53s)
+      XXX Sign inf:                        OK (0.68s)
+      XXX Sign nan:                        OK (0.73s)
+      XXX Sign negative zero:              OK (0.70s)
+      XXX Sign fract:                      OK (0.84s)
+      XXX Sign lower i32:                  OK (0.86s)
+      XXX Sign float lower i32:            OK (3.20s)
+      XXX Sign upper i32:                  OK (0.65s)
+      XXX Sign float upper i32:            OK (2.00s)
+      XXX Sign exp:                        OK (0.72s)
+      XXX Sign WF hasBound invariant:      OK (0.71s)
+      XXX Sign WF bounds between min max:  OK (0.70s)
+      XXX Sign WF valid exp:               OK (0.68s)
+      XXX Sign WF valid exp/bound pair:    OK (1.52s)
+      XXX Sign UB:                         OK (0.64s)
 
-61 out of 156 tests failed (436.30s)
+61 out of 156 tests failed (429.28s)

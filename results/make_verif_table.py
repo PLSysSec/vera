@@ -96,10 +96,10 @@ def make_table(v):
         f.writelines(all_lines)
         f.writelines(end_tex)
 
-# print("About to run all verification routines and pipe result to file")    
-# cmd = "stack test --ta '-p Verification' > verif_file.txt"
-# os.system(cmd)
-# print("Done verifying. About to generate a table of the results")
+print("About to run all verification routines and pipe result to file")    
+cmd = "stack test --ta '-p Verification' > verif_file.txt"
+os.system(cmd)
+print("Done verifying. About to generate a table of the results")
 results = parse_file("verif_file.txt")
 make_table(results)
 # now make the pdf

@@ -9,22 +9,42 @@ import           IonMonkeyGenerated.Verify
 mkFloatTests :: String -> String -> TestFunction -> BenchTest
 mkFloatTests outerName testGroupName testFn =
   benchTestGroup outerName
-    [ makeTest (testGroupName ++ " lower i32") $ testLower testFn
-    , makeTest (testGroupName ++ " float lower i32") $ testFlLower testFn
-    , makeTest (testGroupName ++ " float upper i32") $ testFlUpper testFn
-    , makeTest (testGroupName ++ " upper i32") $ testUpper testFn
-    , makeTest (testGroupName ++ " UB") $ testUB testFn
-    , makeTest (testGroupName ++ " negative zero") $ testNegZ testFn
+    [ makeTest (testGroupName ++ " inf") $ testInf testFn
     , makeTest (testGroupName ++ " nan") $ testNan testFn
-    , makeTest (testGroupName ++ " inf") $ testInf testFn
+    , makeTest (testGroupName ++ " negative zero") $ testNegZ testFn
     , makeTest (testGroupName ++ " fract") $ testFract testFn
+    , makeTest (testGroupName ++ " lower i32") $ testLower testFn
+    , makeTest (testGroupName ++ " float lower i32") $ testFlLower testFn
+    , makeTest (testGroupName ++ " upper i32") $ testUpper testFn
+    , makeTest (testGroupName ++ " float upper i32") $ testFlUpper testFn
     , makeTest (testGroupName ++ " exp") $ testExp testFn
     , makeTest (testGroupName ++ " WF hasBound invariant") $ testBoundInvariants testFn
     , makeTest (testGroupName ++ " WF bounds between min max") $ testBoundForm testFn
     , makeTest (testGroupName ++ " WF valid exp") $ testExpForm testFn
     , makeTest (testGroupName ++ " WF valid exp/bound pair") $ testExpBounds testFn
+    , makeTest (testGroupName ++ " UB") $ testUB testFn
     ]
   where makeTest str act = benchTestCase str $ evalCodegen Nothing act
+
+-- mkFloatTests :: String -> String -> TestFunction -> BenchTest
+-- mkFloatTests outerName testGroupName testFn =
+--   benchTestGroup outerName
+--     [ makeTest (testGroupName ++ " lower i32") $ testLower testFn
+--     , makeTest (testGroupName ++ " float lower i32") $ testFlLower testFn
+--     , makeTest (testGroupName ++ " float upper i32") $ testFlUpper testFn
+--     , makeTest (testGroupName ++ " upper i32") $ testUpper testFn
+--     , makeTest (testGroupName ++ " UB") $ testUB testFn
+--     , makeTest (testGroupName ++ " negative zero") $ testNegZ testFn
+--     , makeTest (testGroupName ++ " nan") $ testNan testFn
+--     , makeTest (testGroupName ++ " inf") $ testInf testFn
+--     , makeTest (testGroupName ++ " fract") $ testFract testFn
+--     , makeTest (testGroupName ++ " exp") $ testExp testFn
+--     , makeTest (testGroupName ++ " WF hasBound invariant") $ testBoundInvariants testFn
+--     , makeTest (testGroupName ++ " WF bounds between min max") $ testBoundForm testFn
+--     , makeTest (testGroupName ++ " WF valid exp") $ testExpForm testFn
+--     , makeTest (testGroupName ++ " WF valid exp/bound pair") $ testExpBounds testFn
+--     ]
+--   where makeTest str act = benchTestCase str $ evalCodegen Nothing act
 
 mki32Tests :: String -> String -> TestFunction -> BenchTest
 mki32Tests outerName testGroupName testFn =
