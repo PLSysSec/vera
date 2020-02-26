@@ -1,19 +1,19 @@
 module JavaScript (jsTests) where
+import           ActiveCode.JavaScript
 import           BenchUtils
 import           Data.Int
+import qualified Data.Map                as M
 import           Data.Word
-import qualified Data.Map   as M
-import           DSL.DSL    as D
-import qualified DSL.Typed  as T
-import           Prelude    hiding (and, max, min, not, pi)
-import           Utils
-import           ActiveCode.JavaScript
-import qualified Test.QuickCheck.Monadic      as Q
+import           DSL.DSL                 as D
+import qualified DSL.Typed               as T
+import           Prelude                 hiding (and, max, min, not, pi)
+import qualified Test.QuickCheck.Monadic as Q
 import           Test.Tasty.HUnit
-import qualified Test.Tasty.QuickCheck        as Q
+import qualified Test.Tasty.QuickCheck   as Q
+import           Utils
 
 jsTests :: BenchTest
-jsTests = benchTestGroup "JavaScript tests" [
+jsTests = benchTestGroup "JS" [
     benchTestGroup "Arithmetic binary ops" [ jsBinOpTest JSAdd
                                            , jsBinOpTest JSSub
                                            , jsBinOpTest JSMul

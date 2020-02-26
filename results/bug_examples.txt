@@ -4,9 +4,9 @@ All tests
     CallStack (from HasCallStack):
       error, called at src/IonMonkeyGenerated/Verify.hs:878:21 in lejit-0.1.0.0-FFtpRLueRlT9bTIAtJakeN:IonMonkeyGenerated.Verify
 
-1 out of 1 tests failed (4.31s)
+1 out of 1 tests failed (4.61s)
 All tests
   Broken_ceil: FAIL
     message threw an exception: No match in record selector example
 
-1 out of 1 tests failed (3.63s)
+1 out of 1 tests failed (4.20s)

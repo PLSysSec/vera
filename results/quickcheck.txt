@@ -1,0 +1,215 @@
+All tests
+  JS
+    Arithmetic binary ops
+      QuickCheck JSAdd:   OK (13.95s)
+        +++ OK, passed 100 tests.
+      QuickCheck JSSub:   OK (13.77s)
+        +++ OK, passed 100 tests.
+      QuickCheck JSMul:   OK (13.52s)
+        +++ OK, passed 100 tests.
+      QuickCheck JSMin:   OK (13.77s)
+        +++ OK, passed 100 tests.
+      QuickCheck JSMax:   OK (13.33s)
+        +++ OK, passed 100 tests.
+    Bitwise ops
+      QuickCheck JSAnd:   OK (13.39s)
+        +++ OK, passed 100 tests.
+      QuickCheck JSOr:    OK (12.61s)
+        +++ OK, passed 100 tests.
+      QuickCheck JSXor:   OK (13.68s)
+        +++ OK, passed 100 tests.
+      QuickCheck JSShl:   OK (13.93s)
+        +++ OK, passed 100 tests.
+      QuickCheck JSShr:   OK (13.79s)
+        +++ OK, passed 100 tests.
+      QuickCheck JSUshr:  OK (13.45s)
+        +++ OK, passed 100 tests.
+      QuickCheck JSNot:   OK (13.71s)
+        +++ OK, passed 100 tests.
+    Unary ops
+      QuickCheck JSAbs:   OK (13.80s)
+        +++ OK, passed 100 tests.
+      QuickCheck JSFloor: OK (13.30s)
+        +++ OK, passed 100 tests.
+      QuickCheck JSCeil:  OK (13.96s)
+        +++ OK, passed 100 tests.
+      QuickCheck JSSign:  OK (13.34s)
+        +++ OK, passed 100 tests.
+
+All 16 tests passed (217.30s)
+All tests
+  Cpp
+    QuickCheck tests on doubles
+      Arithmetic binary ops
+        QuickCheck CppAdd: OK (30.11s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppSub: OK (30.66s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppMul: OK (30.70s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppMin: OK (30.67s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppMax: OK (30.48s)
+          +++ OK, passed 100 tests.
+      Comparison ops
+        QuickCheck CppGt:  OK (30.58s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppGte: OK (30.38s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppLt:  OK (29.66s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppLte: OK (29.85s)
+          +++ OK, passed 100 tests.
+      Unary ops
+        QuickCheck CppAbs: OK (31.00s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppNeg: OK (30.53s)
+          +++ OK, passed 100 tests.
+    QuickCheck tests on int32s
+      Arithmetic binary ops
+        QuickCheck CppAdd: OK (28.17s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppSub: OK (30.02s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppMul: OK (30.84s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppMin: OK (30.27s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppMax: OK (30.79s)
+          +++ OK, passed 100 tests.
+      Comparison ops
+        QuickCheck CppGt:  OK (30.46s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppGte: OK (31.12s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppLt:  OK (30.80s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppLte: OK (30.61s)
+          +++ OK, passed 100 tests.
+      Unary ops
+        QuickCheck CppAbs: OK (31.25s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppNeg: OK (30.22s)
+          +++ OK, passed 100 tests.
+    QuickCheck tests on int16s
+      Arithmetic binary ops
+        QuickCheck CppAdd: OK (30.49s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppSub: OK (30.70s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppMul: OK (30.49s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppMin: OK (30.63s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppMax: OK (29.83s)
+          +++ OK, passed 100 tests.
+      Comparison ops
+        QuickCheck CppGt:  OK (30.62s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppGte: OK (30.45s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppLt:  OK (32.91s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppLte: OK (30.01s)
+          +++ OK, passed 100 tests.
+      Unary ops
+        QuickCheck CppNeg: OK (30.18s)
+          +++ OK, passed 100 tests.
+    QuickCheck tests on int8s
+      Arithmetic binary ops
+        QuickCheck CppAdd: OK (30.26s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppSub: OK (30.40s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppMul: OK (30.40s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppMin: OK (30.78s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppMax: OK (30.71s)
+          +++ OK, passed 100 tests.
+      Comparison ops
+        QuickCheck CppGt:  OK (30.77s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppGte: OK (30.84s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppLt:  OK (30.82s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppLte: OK (30.73s)
+          +++ OK, passed 100 tests.
+      Unary ops
+        QuickCheck CppNeg: OK (30.63s)
+          +++ OK, passed 100 tests.
+    QuickCheck tests on uint32s
+      Arithmetic binary ops
+        QuickCheck CppAdd: OK (30.15s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppSub: OK (30.65s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppMul: OK (30.80s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppMin: OK (30.88s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppMax: OK (30.75s)
+          +++ OK, passed 100 tests.
+      Comparison ops
+        QuickCheck CppGt:  OK (30.49s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppGte: OK (30.60s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppLt:  OK (30.82s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppLte: OK (30.77s)
+          +++ OK, passed 100 tests.
+      Unary ops
+        QuickCheck CppNeg: OK (30.44s)
+          +++ OK, passed 100 tests.
+    QuickCheck tests on uint16s
+      Arithmetic binary ops
+        QuickCheck CppAdd: OK (30.50s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppSub: OK (30.51s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppMul: OK (30.48s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppMin: OK (30.73s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppMax: OK (30.74s)
+          +++ OK, passed 100 tests.
+      Comparison ops
+        QuickCheck CppGt:  OK (30.71s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppGte: OK (30.41s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppLt:  OK (30.86s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppLte: OK (30.29s)
+          +++ OK, passed 100 tests.
+      Unary ops
+        QuickCheck CppNeg: OK (31.01s)
+          +++ OK, passed 100 tests.
+    QuickCheck tests on uint8s
+      Arithmetic binary ops
+        QuickCheck CppAdd: OK (30.47s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppSub: OK (30.43s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppMul: OK (29.83s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppMin: OK (30.86s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppMax: OK (30.69s)
+          +++ OK, passed 100 tests.
+      Comparison ops
+        QuickCheck CppGt:  OK (30.28s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppGte: OK (30.70s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppLt:  OK (30.63s)
+          +++ OK, passed 100 tests.
+        QuickCheck CppLte: OK (30.20s)
+          +++ OK, passed 100 tests.
+      Unary ops
+        QuickCheck CppNeg: OK (30.21s)
+          +++ OK, passed 100 tests.
+
+All 72 tests passed (2198.75s)

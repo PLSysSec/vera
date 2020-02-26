@@ -19,6 +19,8 @@ allTests :: [BenchTest]
 allTests = [ brokenIntersectTest
            , brokenCeilTest
            , genIonMonkeyTests
+           , jsTests
+           , cppTests
            ]
 
 
