@@ -63,7 +63,7 @@ Look at: results/bug_examples.txt
 
 The script for generating the examples in 6.1's "A new Firefox bug" and
 "An old Firefox bug" are in generate_bugs.py This script uses command
-`stack test --ta '-p <test>'`, where <test> is brokenIntersectTest of
+`stack test --ta '-p <test>'`, where `test` is brokenIntersectTest of
 brokenCeilTest. This runs verification rountines for
 either buggy operator () and displays (1) a counterexample showing that each
 operator is buggy and (2) the time it took to generate that example. The
