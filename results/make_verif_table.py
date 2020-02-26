@@ -54,13 +54,11 @@ end_tex = [ "\\end{tabular}\n",
             "\\caption{Reproduced table}\n", 
             "\\end{figure}\n",
             "\\end{document}\n" ]
-              
-def make_table(verif_results):
-    inf = "\oo"
-    all_lines = []
-    for operator, results in verif_results.items():
-        line = tex_cmd("texttt", operator)
-        for i in range(14):
+
+def pr(operator, m):
+    line = tex_cmd("texttt", operator)
+    results = m[operator]
+    for i in range(14):
             # all VCs apply
             if len(results) == 14: line = line + " & " + str(results[i])
             # just three VCs apply
@@ -68,17 +66,40 @@ def make_table(verif_results):
             elif i == 6:  line = line + " & " + str(results[1])
             elif i == 13: line = line + " & " + str(results[2])
             else:         line = line + " & - "
-        line = line + " \\\\\n"
-        all_lines.append(line)
-    with open("results/verify_table.tex", 'w') as f:
+    line = line + " \\\\\n"
+    return line
+
+def make_table(v):
+    inf = "\\oo"
+    all_lines = []
+    all_lines.append(pr("Add", v)) 
+    all_lines.append(pr("Sub", v))
+    all_lines.append(pr("And", v)) 
+    all_lines.append(pr("Or", v))
+    all_lines.append(pr("Xor", v))
+    all_lines.append(pr("Not", v))
+    all_lines.append(pr("Mul", v))
+    all_lines.append(pr("Lsh", v))
+    all_lines.append(pr("Rsh", v))
+    all_lines.append(pr("Ursh", v))
+    all_lines.append(pr("Lsh'", v))
+    all_lines.append(pr("Rsh'", v))
+    all_lines.append(pr("Ursh'", v))
+    all_lines.append(pr("Abs", v))
+    all_lines.append(pr("Min", v))
+    all_lines.append(pr("Max", v))
+    all_lines.append(pr("Floor", v))
+    all_lines.append(pr("Ceil", v))
+    all_lines.append(pr("Sign", v))
+    with open("verify_table.tex", 'w') as f:
         f.writelines(start_tex)
         f.writelines(all_lines)
         f.writelines(end_tex)
 
-print("About to run all verification routines and pipe result to file")    
-cmd = "stack test --ta '-p Verification' > verif_file.txt"
-os.system(cmd)
-print("Done verifying. About to generate a table of the results")
+# print("About to run all verification routines and pipe result to file")    
+# cmd = "stack test --ta '-p Verification' > verif_file.txt"
+# os.system(cmd)
+# print("Done verifying. About to generate a table of the results")
 results = parse_file("verif_file.txt")
 make_table(results)
 # now make the pdf

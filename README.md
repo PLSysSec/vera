@@ -16,13 +16,17 @@ reproduce the LOC counts for the different components of the system.  Note
 that all timing results may vary slightly, as will the counterexamples
 the solver chooses to display for buggy routines.
 
+## Install
+This is for reference, and should be removed 
+
+
 ## Generate results for the entire paper at once
 
 From the main lejit directory, type ``python repro_all.py` to reproduce all
 results in the paper. Expecte this to take XXXX.
 
 The results will all be generated in the results directory, in the following order:
-1. Can VeRA prove Firefox range analysis correctness? **results/verify_table.txt**
+1. Can VeRA prove Firefox range analysis correctness? **results/verify_table.pdf**
 2. Can VeRA proofs catch real correctness bugs? **results/bug_examples.txt**
 3. Are the VeRA proofs correct?
 4. Do the verified routines work correctly in Firefox?
@@ -37,7 +41,7 @@ following instructions
 
 Run: make_verif_table.py
 
-Look at: results/verify_table.txt
+Look at: results/verify_table.pdf
 
 The script for generating Figure 8 is called make_verif_table.py This
 script uses command `stack test --ta '-p Verification',` which verifies
@@ -71,3 +75,5 @@ DS
 Run: generate_cloc.py
 
 Look at: results/cloc.txt
+
+## Other source code information for the interested 

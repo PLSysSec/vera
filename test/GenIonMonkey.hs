@@ -24,11 +24,11 @@ genIonMonkeyTests = benchTestGroup "Verification"
                     -- , brokenIntersectTest
                      addTests
                     , subTests
-                    , mulTests
                     , andTests
                     , orTests
                     , xorTests
                     , notTests
+                    , mulTests
                     , lshTests
                     , rshTests
                     , urshTests
@@ -41,6 +41,24 @@ genIonMonkeyTests = benchTestGroup "Verification"
                     , floorTests
                     , ceilTests
                     , signTests
+
+                    -- , mulTests
+                    -- , andTests
+                    -- , orTests
+                    -- , xorTests
+                    -- , notTests
+                    -- , lshTests
+                    -- , rshTests
+                    -- , urshTests
+                    -- , lsh'Tests
+                    -- , rsh'Tests
+                    -- , ursh'Tests
+                    -- , absTests
+                    -- , minTests
+                    -- , maxTests
+                    -- , floorTests
+                    -- , ceilTests
+                    -- , signTests
                     ]
 
 unionTest :: BenchTest
