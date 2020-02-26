@@ -28,10 +28,10 @@ The results will all be generated in the results directory, in the following ord
 1. Can VeRA prove Firefox range analysis correctness?
    Compare **results/verify_table.pdf** to Figure 8 in the paper.
 2. Can VeRA proofs catch real correctness bugs?
-   Compare **results/bug_examples.txt** to 6.1's \textbf{An old Firefox bug} and
-   \textbf{A new Firefox bug} bug examples. 
+   Compare **results/bug_examples.txt** to 6.1's **An old Firefox bug** and
+   **A new Firefox bug** bug examples. 
 3. Are the VeRA proofs correct?
-   Compare **results/quickcheck.txt* to 6.1's \textbf{Are VeRA proofs correct?}.
+   Compare **results/quickcheck.txt* to 6.1's **Are VeRA proofs correct?**.
    Note that by default, our script runs quickcheck only 100 times per operator,
    while for the paper we ran 1,000 times per operator. This is configureable (see
    section 3 below), but we don't reccomend increasing it for time reasons. 
