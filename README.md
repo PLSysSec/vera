@@ -65,7 +65,7 @@ The script for generating the examples in 6.1's "A new Firefox bug" and
 "An old Firefox bug" are in generate_bugs.py This script uses command
 `stack test --ta '-p <test>'`, where `test` is brokenIntersectTest of
 brokenCeilTest. This runs verification rountines for
-either buggy operator () and displays (1) a counterexample showing that each
+either buggy operator and displays (1) a counterexample showing that each
 operator is buggy and (2) the time it took to generate that example. The
 output will be in bug_examples.txt
 
@@ -80,7 +80,8 @@ It runs the command `stack test --ta -p JS/Cpp`.
 By default, the script runs **100** random tests for each JS or C++ operator.
 In the paper, we run quickcheck tests 1,000 times per operator---we do not
 do so for time reasons in the artifact eval. If you would like to run quickcheck
-for longer, you can configure it by WHATTTTT:DS. 
+for longer, you can configure it by WHATTTTT:DS. Still, it will not be the exact
+result from the paper, since each run of quickcheck produces new random tests.
 
 ### (4) Do the verified routines work correctly in Firefox?
 
