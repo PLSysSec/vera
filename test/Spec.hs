@@ -10,6 +10,7 @@ import           IonMonkey
 import           JavaScript
 import           Lang
 import           Parser
+import           Sanity
 import           Test.Tasty
 
 main :: IO ()
@@ -21,6 +22,7 @@ allTests = [ brokenIntersectTest
            , genIonMonkeyTests
            , jsTests
            , cppTests
+           , sanityCheck
            ]
 
 

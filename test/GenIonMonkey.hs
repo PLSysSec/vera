@@ -1,4 +1,6 @@
-module GenIonMonkey (genIonMonkeyTests) where
+module GenIonMonkey ( genIonMonkeyTests
+                    , signTests
+                    ) where
 
 import           BenchUtils
 import           Control.Monad.State.Strict    (liftIO)

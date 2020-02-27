@@ -30,7 +30,21 @@ Need pdflatex and python2 !!
 
 ## Start with a clean slate
 
-## Sanity check that everything is working 
+From the **results** directory, run `python clean.py`. This will get rid of all results
+and all intermediate files.
+
+## Sanity check that everything is working
+
+Run: From the **results** directory, `python sanity.py`
+
+Expected result: Two files show up, verif_sanity.txt and ff_sanity.txt
+verif_sanity.txt should have a bunch of output followed by **1 out of 16 tests failed**.
+ff_sanity.txt should have....
+
+Expected time: under a minute
+
+This does a single run of a number of tests and verification routines. If the output
+differs from the expected output, please indicate so on HotCRP so we can quickly fix it. 
 
 ## Generate results for the entire paper at once
 

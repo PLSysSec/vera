@@ -1,4 +1,4 @@
-module JavaScript (jsTests) where
+module JavaScript (jsTests, jsBinOpTest) where
 import           ActiveCode.JavaScript
 import           BenchUtils
 import           Data.Int
