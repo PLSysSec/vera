@@ -31,7 +31,8 @@ Need pdflatex and python2 !!
 ## Start with a clean slate
 
 From the **results** directory, run `python clean.py`. This will get rid of all results
-and all intermediate files.
+and all intermediate files (there shouldn't be any to begin with, but you can use this
+anytime to clean up the directory).
 
 ## Sanity check that everything is working
 
