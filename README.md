@@ -15,9 +15,19 @@ We are able to reproduce the results from points 1-5.
 Note that all timing results may vary slightly, as will the counterexamples the
 solver chooses to display for buggy routines.
 
+## TODOS
+
+1. make sanitycheck
+2. make clean
+3. put it all in a vm
+4. all firefox
+5. time estimates for everything
+6. re-run verification overnight for extra sanity
+
 ## Install
 This is for reference setting up the vm, and should be removed probably.
 Need pdflatex and python2 !!
+
 
 ## Generate results for the entire paper at once
 
@@ -49,6 +59,10 @@ Run: make_verif_table.py
 
 Look at: results/verify_table.pdf
 
+Compare to: Figure 8
+
+Expected time:
+
 The script for generating Figure 8 is called make_verif_table.py This
 script uses command `stack test --ta '-p Verification',` which verifies
 each range analysis operator correct wrt to JavaScript semantics. It
@@ -60,6 +74,10 @@ condition to verify in verify_table.pdf
 Run: generate_bugs.py
 
 Look at: results/bug_examples.txt
+
+Compare to: 6.1's **An old Firefox bug** and **A new Firefox bug** bug examples
+
+Expected time: 2-3 minutes 
 
 The script for generating the examples in 6.1's "A new Firefox bug" and
 "An old Firefox bug" are in generate_bugs.py This script uses command
@@ -74,6 +92,10 @@ output will be in bug_examples.txt
 Run: quickcheck.py
 
 Look at: quickcheck.txt
+
+Compare to: 6.1's **Are VeRA proofs correct?**
+
+Expected time: ~30 minutes 
 
 The script for generating the quickcheck tests in 6.1 is in quickcheck.py.
 It runs the command `stack test --ta -p JS/Cpp`. 

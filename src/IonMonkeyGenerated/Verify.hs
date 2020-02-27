@@ -167,7 +167,7 @@ verifyIntersection =
       body = [ push_
              , assert_ $ (v "in_left_inter") .&&. (v "in_right_inter")
              , assert_ $ not_ $ v "in_result_inter"
-             , expect_ isUnsat $ \r -> showInt32Result "Failed to verify union" r
+             , expect_ isUnsat $ \r -> showInt32Result "Failed to verify intersection" r
              , pop_
              ]
   in Function "verifyIntersection" Void args body
