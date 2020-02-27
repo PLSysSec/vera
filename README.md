@@ -2,7 +2,7 @@
 
 Hello, and thanks for evaluating this artifact!
 
-The evaluation has six parts:
+Our paper evaluation (Section 6) has six parts:
 
 1. Can VeRA prove Firefox range analysis correctness?
 2. Can VeRA proofs catch real correctness bugs?
@@ -11,7 +11,7 @@ The evaluation has six parts:
 5. How do the verified routines perform in Firefox?
 6. How hard is it to integrate the verified routines into Firefox?
 
-We are able to reproduce the results from points 1-5.
+We are able to reproduce the results from points 1-5 (the sixth is a bit more subjective).
 Note that all timing results may vary slightly, as will the counterexamples the
 solver chooses to display for buggy routines.
 
@@ -28,11 +28,16 @@ solver chooses to display for buggy routines.
 This is for reference setting up the vm, and should be removed probably.
 Need pdflatex and python2 !!
 
+## Start with a clean slate
+
+## Sanity check that everything is working 
 
 ## Generate results for the entire paper at once
 
 From the **results** directory, type `python repro_all.py` to reproduce all
-results in the paper. Expecte this to take XXXX.
+results in the paper.
+
+Expected time: XXXX
 
 The results will all be generated in the results directory, in the following order:
 1. Can VeRA prove Firefox range analysis correctness?
@@ -51,7 +56,7 @@ The results will all be generated in the results directory, in the following ord
    TBD
 
 Alternatively, to generate results for each claim individually, use the
-following instructions
+following instructions:
 
 ### (1) Can VeRA prove Firefox range analysis correctness?
 
