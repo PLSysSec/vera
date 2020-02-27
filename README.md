@@ -38,7 +38,7 @@ anytime to clean up the directory).
 
 Run: From the **results** directory, `python sanity.py`
 
-Expected result: Two files show up, verif_sanity.txt and ff_sanity.txt
+Expected result: Two files show up, verif_sanity.txt and ff_sanity.txt.
 verif_sanity.txt should have a bunch of output followed by **1 out of 16 tests failed**.
 ff_sanity.txt should have....
 
@@ -101,7 +101,7 @@ Expected time: 2-3 minutes
 
 The script for generating the examples in 6.1's "A new Firefox bug" and
 "An old Firefox bug" are in generate_bugs.py This script uses command
-`stack test --ta '-p <test>'`, where `test` is brokenIntersectTest of
+`stack test --ta '-p <test>'`, where `test` is brokenIntersectTest or
 brokenCeilTest. This runs verification rountines for
 either buggy operator and displays (1) a counterexample showing that each
 operator is buggy and (2) the time it took to generate that example. The
@@ -129,5 +129,4 @@ result from the paper, since each run of quickcheck produces new random tests.
 
 ### (5) How do the verified routines perform in Firefox?
 
-## Other source code information for the interested
 
