@@ -17,14 +17,14 @@
 #define maxUInt32ExponentS ((uint16_t) 31)
 
 struct range {
-    int32_t lower;
-    int32_t upper;
-    bool hasInt32LowerBound;
-    bool hasInt32UpperBound;
-    bool canHaveFractionalPart;
-    bool canBeNegativeZero;
-    uint16_t maxExponent;
-    bool isEmpty;
+  int32_t lower;
+  int32_t upper;
+  bool hasInt32LowerBound;
+  bool hasInt32UpperBound;
+  bool canHaveFractionalPart;
+  bool canBeNegativeZero;
+  uint16_t maxExponent;
+  bool isEmpty;
 };
 
 // -------------------
@@ -45,21 +45,21 @@ range nullRange(bool emptyR) {
 
 // https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#394
 range newInt32Range(int32_t lower_bound_vv, int32_t upper_bound_vv) {
-   range rvvv;
-   rvvv.lower = lower_bound_vv;
-   rvvv.upper = upper_bound_vv;
-   rvvv.hasInt32UpperBound = (bool) 1;
-   rvvv.hasInt32LowerBound = (bool) 1;
-   rvvv.canHaveFractionalPart = excludesFractionalPartsS;
-   rvvv.canBeNegativeZero = excludesNegativeZeroS;
-   rvvv.maxExponent = maxInt32ExponentS;
-   rvvv.isEmpty = (bool) 0;
-   return rvvv;
+  range rvvv;
+  rvvv.lower = lower_bound_vv;
+  rvvv.upper = upper_bound_vv;
+  rvvv.hasInt32UpperBound = (bool) 1;
+  rvvv.hasInt32LowerBound = (bool) 1;
+  rvvv.canHaveFractionalPart = excludesFractionalPartsS;
+  rvvv.canBeNegativeZero = excludesNegativeZeroS;
+  rvvv.maxExponent = maxInt32ExponentS;
+  rvvv.isEmpty = (bool) 0;
+  return rvvv;
 }
 
 range newUInt32Range(uint32_t u_lower_bound, uint32_t u_upper_bound) {
-   return Range4((int64_t) u_lower_bound, (int64_t) u_upper_bound,
-                  excludesFractionalPartsS, excludesNegativeZeroS, maxUInt32ExponentS);
+  return Range4((int64_t) u_lower_bound, (int64_t) u_upper_bound,
+		excludesFractionalPartsS, excludesNegativeZeroS, maxUInt32ExponentS);
 }
 
 bool canBeFiniteNonNegative(range const& fnn2) {
@@ -136,23 +136,23 @@ range setLowerInit(int64_t sli_x, range sli_range) {
 
 
 range Range3(int64_t lower_bound, int64_t upper_bound, bool nz_flag) {
-   range rv;
-   range tmp = rv;
-   rv = setLowerInit(lower_bound, tmp);
+  range rv;
+  range tmp = rv;
+  rv = setLowerInit(lower_bound, tmp);
 
-   range tmp2;
-   tmp2 = rv;
-   rv = setUpperInit(upper_bound, tmp2);
-   rv.canBeNegativeZero = nz_flag;
-   return rv;
+  range tmp2;
+  tmp2 = rv;
+  rv = setUpperInit(upper_bound, tmp2);
+  rv.canBeNegativeZero = nz_flag;
+  return rv;
 }
 
 range Range4(
-  int64_t lower_bound,
-  int64_t upper_bound,
-  bool fract_flag,
-  bool nz_flag,
-  uint16_t exp_set) {
+	     int64_t lower_bound,
+	     int64_t upper_bound,
+	     bool fract_flag,
+	     bool nz_flag,
+	     uint16_t exp_set) {
 
   range rv;
   range tmp = rv;
@@ -168,8 +168,8 @@ range Range4(
 }
 
 range Range6(int64_t lower_bound, bool has_lower,
-             int64_t upper_bound, bool has_upper,
-             bool fract_flag, bool nz_flag, uint16_t exp_set) {
+	     int64_t upper_bound, bool has_upper,
+	     bool fract_flag, bool nz_flag, uint16_t exp_set) {
   range rv;
   range tmp = rv;
 
@@ -189,19 +189,19 @@ range Range6(int64_t lower_bound, bool has_lower,
 }
 
 range setUpperInit(int64_t sui_x, range sui_range) {
-   if (sui_x > jsIntMax64S) {
+  if (sui_x > jsIntMax64S) {
     sui_range.upper = jsIntMaxS;
     sui_range.hasInt32UpperBound = (bool) 0;
-   } else {
-      if (sui_x < jsIntMin64S) {
-        sui_range.upper = jsIntMinS;
-        sui_range.hasInt32UpperBound = (bool) 1;
-      } else  {
-        sui_range.upper = (int32_t) sui_x;
-        sui_range.hasInt32UpperBound = (bool) 1;
-      }
-   }
-   return sui_range;
+  } else {
+    if (sui_x < jsIntMin64S) {
+      sui_range.upper = jsIntMinS;
+      sui_range.hasInt32UpperBound = (bool) 1;
+    } else  {
+      sui_range.upper = (int32_t) sui_x;
+      sui_range.hasInt32UpperBound = (bool) 1;
+    }
+  }
+  return sui_range;
 }
 
 bool hasInt32Bounds(range const& bnds) {
@@ -209,7 +209,7 @@ bool hasInt32Bounds(range const& bnds) {
 }
 
 uint16_t numBits(range const& nbs) {
- return nbs.maxExponent + ((uint16_t) 1);
+  return nbs.maxExponent + ((uint16_t) 1);
 }
 
 bool isFiniteNonNegative(range const& fnn) {
@@ -233,38 +233,38 @@ bool missingAnyInt32Bounds(range const& mibs1, range const& mibs2) {
 // -------------------
 range add(range const& lhs, range const& rhs)
 {
-    int64_t l;
-    int64_t h;
-    uint16_t e;
+  int64_t l;
+  int64_t h;
+  uint16_t e;
 
-    l = (int64_t)lhs.lower + (int64_t)rhs.lower;
-    if (!lhs.hasInt32LowerBound | !rhs.hasInt32LowerBound)
+  l = (int64_t)lhs.lower + (int64_t)rhs.lower;
+  if (!lhs.hasInt32LowerBound | !rhs.hasInt32LowerBound)
     {
-        l = noInt32LowerBoundS;
+      l = noInt32LowerBoundS;
     }
 
-    h = (int64_t)lhs.upper + (int64_t)rhs.upper;
-    if (!lhs.hasInt32UpperBound | !rhs.hasInt32UpperBound)
+  h = (int64_t)lhs.upper + (int64_t)rhs.upper;
+  if (!lhs.hasInt32UpperBound | !rhs.hasInt32UpperBound)
     {
-        h = noInt32UpperBoundS;
+      h = noInt32UpperBoundS;
     }
 
-    e = math::max(lhs.maxExponent, rhs.maxExponent);
-    if (e <= maxFiniteExponentS)
+  e = math::max(lhs.maxExponent, rhs.maxExponent);
+  if (e <= maxFiniteExponentS)
     {
-        e += (uint16_t)1;
+      e += (uint16_t)1;
     }
 
-    if (canBeInfiniteOrNan(lhs) & canBeInfiniteOrNan(rhs))
+  if (canBeInfiniteOrNan(lhs) & canBeInfiniteOrNan(rhs))
     {
-        e = includesInfinityAndNanS;
+      e = includesInfinityAndNanS;
     }
 
-    return Range4(l,
-                  h,
-                  lhs.canHaveFractionalPart | rhs.canHaveFractionalPart,
-                  lhs.canBeNegativeZero & rhs.canBeNegativeZero,
-                  e);
+  return Range4(l,
+		h,
+		lhs.canHaveFractionalPart | rhs.canHaveFractionalPart,
+		lhs.canBeNegativeZero & rhs.canBeNegativeZero,
+		e);
 
 }
 
@@ -290,17 +290,17 @@ range sub(range const& lhs, range const& rhs) {
   }
 
   return Range4(l,
-                h,
-                lhs.canHaveFractionalPart | rhs.canHaveFractionalPart,
-                lhs.canBeNegativeZero & canBeZero(rhs),
-                e);
+		h,
+		lhs.canHaveFractionalPart | rhs.canHaveFractionalPart,
+		lhs.canBeNegativeZero & canBeZero(rhs),
+		e);
 
 }
 
 
 range and_(range const& lhs, range const& rhs) {
   if (lhs.lower < (int32_t) 0 & rhs.lower < (int32_t) 0) {
-      return newInt32Range(int32minS, math::max(lhs.upper, rhs.upper));
+    return newInt32Range(int32minS, math::max(lhs.upper, rhs.upper));
   }
 
   int32_t lower_ = (int32_t) 0;
@@ -426,49 +426,49 @@ range xor_(range const& lhs, range const& rhs) {
 }
 
 range not_(range const& op) {
-    return newInt32Range(~op.upper, ~op.lower);
+  return newInt32Range(~op.upper, ~op.lower);
 }
 
 range mul(range const& lhs, range const& rhs){
-  bool newMayIncludeNegativeZero = 
-    (canHaveSignBitSet(lhs) & canBeFiniteNonNegative(rhs)) |
-    (canHaveSignBitSet(rhs) & canBeFiniteNonNegative(lhs));
+    bool newMayIncludeNegativeZero =
+      (canHaveSignBitSet(lhs) & canBeFiniteNonNegative(rhs)) |
+      (canHaveSignBitSet(rhs) & canBeFiniteNonNegative(lhs));
 
-  uint16_t exponent = (uint16_t) 0;
+    uint16_t exponent = (uint16_t) 0;
 
-  if (!canBeInfiniteOrNan(lhs) & !canBeInfiniteOrNan(rhs)) {
-    exponent = numBits(lhs) + numBits(rhs) - (uint16_t) 1;
+    if (!canBeInfiniteOrNan(lhs) & !canBeInfiniteOrNan(rhs)) {
+      exponent = numBits(lhs) + numBits(rhs) - (uint16_t) 1;
 
-    if (exponent > maxFiniteExponentS) {
+      if (exponent > maxFiniteExponentS) {
+	exponent = includesInfinityS;
+      }
+
+    } else if(!canBeNan(lhs) & !canBeNan(rhs) &
+	      !(canBeZero(lhs) & canBeInfiniteOrNan(rhs)) &
+	      !(canBeZero(rhs) & canBeInfiniteOrNan(lhs))) {
       exponent = includesInfinityS;
+    } else {
+      exponent = includesInfinityAndNanS;
     }
 
-  } else if(!canBeNan(lhs) & !canBeNan(rhs) &
-            !(canBeZero(lhs) & canBeInfiniteOrNan(rhs)) &
-            !(canBeZero(rhs) & canBeInfiniteOrNan(lhs))) {
-    exponent = includesInfinityS;
-  } else {
-    exponent = includesInfinityAndNanS;
-  }
+    if (missingAnyInt32Bounds(lhs, rhs)) {
+      return Range4(noInt32LowerBoundS,
+		    noInt32UpperBoundS,
+		    lhs.canHaveFractionalPart | rhs.canHaveFractionalPart,
+		    newMayIncludeNegativeZero,
+		    exponent);
+    }
 
-  if (missingAnyInt32Bounds(lhs, rhs)) {
-    return Range4(noInt32LowerBoundS,
-                  noInt32UpperBoundS,
-                  lhs.canHaveFractionalPart | rhs.canHaveFractionalPart,
-                  newMayIncludeNegativeZero,
-                  exponent);
-  }
+    int64_t a = (int64_t) lhs.lower * (int64_t) rhs.lower;
+    int64_t b = (int64_t) lhs.lower * (int64_t) rhs.upper;
+    int64_t c = (int64_t) lhs.upper * (int64_t) rhs.lower;
+    int64_t d = (int64_t) lhs.upper * (int64_t) rhs.upper;
 
-  int64_t a = (int64_t) lhs.lower * (int64_t) rhs.lower;
-  int64_t b = (int64_t) lhs.lower * (int64_t) rhs.upper;
-  int64_t c = (int64_t) lhs.upper * (int64_t) rhs.lower;
-  int64_t d = (int64_t) lhs.upper * (int64_t) rhs.upper;
-
-  return Range4(math::min(math::min(a, b), math::min(c,d)),
-                math::max(math::max(a,b), math::max(c,d)),
-                lhs . canHaveFractionalPart | rhs.canHaveFractionalPart,
-                newMayIncludeNegativeZero,
-                exponent);
+    return Range4(math::min(math::min(a, b), math::min(c,d)),
+		  math::max(math::max(a,b), math::max(c,d)),
+		  lhs . canHaveFractionalPart | rhs.canHaveFractionalPart,
+		  newMayIncludeNegativeZero,
+		  exponent);
 
 }
 
@@ -482,7 +482,7 @@ range lsh(range const& lhs, int32_t c) {
 
   if(canShift) {
     return newInt32Range((int32_t) ((uint32_t) lhs.lower << shift),
-                         (int32_t) ((uint32_t) lhs.upper << shift));
+			 (int32_t) ((uint32_t) lhs.upper << shift));
   }
 
   return newInt32Range(int32minS, int32maxS);
@@ -492,7 +492,7 @@ range lsh(range const& lhs, int32_t c) {
 range rsh(range const& lhs, int32_t c) {
   int32_t shift = c & (int32_t) 31;
   return newInt32Range(lhs.lower >> shift,
-                       lhs.upper >> shift);
+		       lhs.upper >> shift);
 }
 
 // https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1023
@@ -500,7 +500,7 @@ range ursh(range const& lhs, int32_t c) {
   int32_t shift = c & (int32_t) 31;
   if (isFiniteNonNegative(lhs) | isFiniteNegative(lhs)) {
     return newUInt32Range((uint32_t)(lhs.lower) >> shift,
-                          (uint32_t)(lhs.upper) >> shift);
+			  (uint32_t)(lhs.upper) >> shift);
   }
   return newUInt32Range((uint32_t) 0, uint32maxS >> shift);
 }
@@ -528,12 +528,12 @@ range rsh_p(range const& lhs, range const& rhs) {
 
   int32_t lhsLower = lhs.lower;
   int32_t min = lhsLower < (int32_t) 0 ?
-                lhsLower >> shiftLower :
-                lhsLower >> shiftUpper;
+			   lhsLower >> shiftLower :
+    lhsLower >> shiftUpper;
   int32_t lhsUpper = lhs.upper;
   int32_t max = lhsUpper >= (int32_t) 0 ?
-                lhsUpper >> shiftLower :
-                lhsUpper >> shiftUpper;
+    lhsUpper >> shiftLower :
+    lhsUpper >> shiftUpper;
 
   return newInt32Range(min, max);
 }
@@ -548,40 +548,40 @@ range abs(range const& op) {
   int32_t l = op.lower;
   int32_t u = op.upper;
   return Range6(
-    (int64_t) math::max(math::max((int32_t) 0, l), u == int32minS ? int32maxS : -u),
-    (bool) 1,
-    (int64_t) math::max(math::max((int32_t) 0, u), l == int32minS ? int32maxS : -l),
-    hasInt32Bounds(op) & (l != int32minS),
-    op.canHaveFractionalPart,
-    excludesNegativeZeroS,
-    op.maxExponent
-  );
+		(int64_t) math::max(math::max((int32_t) 0, l), u == int32minS ? int32maxS : -u),
+		(bool) 1,
+		(int64_t) math::max(math::max((int32_t) 0, u), l == int32minS ? int32maxS : -l),
+		hasInt32Bounds(op) & (l != int32minS),
+		op.canHaveFractionalPart,
+		excludesNegativeZeroS,
+		    op.maxExponent
+		);
 }
 
 // https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1104
 range min(range const& lhs, range const& rhs) {
   return Range6(
-    (int64_t) math::min(lhs.lower, rhs.lower),
-    lhs.hasInt32LowerBound & rhs.hasInt32LowerBound,
-    (int64_t) math::min(lhs.upper, rhs.upper),
-    lhs.hasInt32UpperBound | rhs.hasInt32UpperBound,
-    lhs.canHaveFractionalPart | rhs.canHaveFractionalPart,
-    lhs.canBeNegativeZero | rhs.canBeNegativeZero,
-    math::max(lhs.maxExponent, rhs.maxExponent)
-  );
+		(int64_t) math::min(lhs.lower, rhs.lower),
+		lhs.hasInt32LowerBound & rhs.hasInt32LowerBound,
+		(int64_t) math::min(lhs.upper, rhs.upper),
+		lhs.hasInt32UpperBound | rhs.hasInt32UpperBound,
+		lhs.canHaveFractionalPart | rhs.canHaveFractionalPart,
+		lhs.canBeNegativeZero | rhs.canBeNegativeZero,
+		math::max(lhs.maxExponent, rhs.maxExponent)
+		);
 }
 
 // https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1123
 range max(range const& lhs, range const& rhs){
   return Range6(
-    (int64_t) math::max(lhs.lower, rhs.lower),
-    lhs.hasInt32LowerBound | rhs.hasInt32LowerBound,
-    (int64_t) math::max(lhs.upper, rhs.upper),
-    lhs.hasInt32UpperBound & rhs.hasInt32UpperBound,
-    lhs.canHaveFractionalPart | rhs.canHaveFractionalPart,
-    lhs.canBeNegativeZero | rhs.canBeNegativeZero,
-    math::max(lhs.maxExponent, rhs.maxExponent)
-  );
+		(int64_t) math::max(lhs.lower, rhs.lower),
+		lhs.hasInt32LowerBound | rhs.hasInt32LowerBound,
+		(int64_t) math::max(lhs.upper, rhs.upper),
+		lhs.hasInt32UpperBound & rhs.hasInt32UpperBound,
+		lhs.canHaveFractionalPart | rhs.canHaveFractionalPart,
+		lhs.canBeNegativeZero | rhs.canBeNegativeZero,
+		math::max(lhs.maxExponent, rhs.maxExponent)
+		);
 }
 
 // https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1142
@@ -620,47 +620,52 @@ range ceil(range const& op) {
 }
 // https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1184
 range sign(range const& op) {
+
+  if (canBeNan(op)) {
+    return nullRange((bool) 1);
+  }
+
   return Range4(
-    (int64_t) math::max(math::min(op.lower, (int32_t) 1), (int32_t) -1),
-    (int64_t) math::max(math::min(op.upper, (int32_t) 1), (int32_t) -1),
-    excludesFractionalPartsS,
-    op.canBeNegativeZero,
-    (uint16_t) 0
-  );
+		(int64_t) math::max(math::min(op.lower, (int32_t) 1), (int32_t) -1),
+		(int64_t) math::max(math::min(op.upper, (int32_t) 1), (int32_t) -1),
+		excludesFractionalPartsS,
+		op.canBeNegativeZero,
+		(uint16_t) 0
+		);
 }
 
 // https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#485
 range intersect(range const& lhs, range const& rhs){
-   int32_t newLower = math::max(lhs.lower, rhs.lower);
-   int32_t newUpper = math::min(lhs.upper, rhs.upper);
-   bool  emptyRange = (bool)0;
+  int32_t newLower = math::max(lhs.lower, rhs.lower);
+  int32_t newUpper = math::min(lhs.upper, rhs.upper);
+  bool  emptyRange = (bool)0;
 
-   if (newUpper < newLower) {
-     if (!canBeNan(lhs) | !canBeNan(rhs)) {
-       emptyRange = (bool)1;
-     }
-     return nullRange(emptyRange);
-   }
-   bool newHasInt32LowerBound = lhs.hasInt32LowerBound | rhs.hasInt32LowerBound;
-   bool newHasInt32UpperBound = lhs.hasInt32UpperBound | rhs.hasInt32UpperBound;
-   bool newMayIncludeNegativeZero = lhs.canBeNegativeZero & lhs.canBeNegativeZero;
-   bool newCanHaveFractionalPart = lhs.canHaveFractionalPart & rhs.canHaveFractionalPart;
-   uint16_t newExponent = math::min(lhs.maxExponent, rhs.maxExponent);
+  if (newUpper < newLower) {
+    if (!canBeNan(lhs) | !canBeNan(rhs)) {
+      emptyRange = (bool)1;
+    }
+    return nullRange(emptyRange);
+  }
+  bool newHasInt32LowerBound = lhs.hasInt32LowerBound | rhs.hasInt32LowerBound;
+  bool newHasInt32UpperBound = lhs.hasInt32UpperBound | rhs.hasInt32UpperBound;
+  bool newMayIncludeNegativeZero = lhs.canBeNegativeZero & rhs.canBeNegativeZero;
+  bool newCanHaveFractionalPart = lhs.canHaveFractionalPart & rhs.canHaveFractionalPart;
+  uint16_t newExponent = math::min(lhs.maxExponent, rhs.maxExponent);
 
-   if (newHasInt32LowerBound & newHasInt32UpperBound & (newExponent == includesInfinityAndNanS)) {
-       return nullRange(emptyRange);
-   }
+  if (newHasInt32LowerBound & newHasInt32UpperBound & (newExponent == includesInfinityAndNanS)) {
+    return nullRange(emptyRange);
+  }
 
-   range intersect_result;
-   intersect_result.lower = newLower;
-   intersect_result.hasInt32LowerBound = newHasInt32LowerBound;
-   intersect_result.upper = newUpper;
-   intersect_result.hasInt32UpperBound = newHasInt32UpperBound;
-   intersect_result.canBeNegativeZero = newMayIncludeNegativeZero;
-   intersect_result.canHaveFractionalPart = newCanHaveFractionalPart;
-   intersect_result.maxExponent = newExponent;
-   intersect_result.isEmpty = emptyRange;
-   return intersect_result;
+  range intersect_result;
+  intersect_result.lower = newLower;
+  intersect_result.hasInt32LowerBound = newHasInt32LowerBound;
+  intersect_result.upper = newUpper;
+  intersect_result.hasInt32UpperBound = newHasInt32UpperBound;
+  intersect_result.canBeNegativeZero = newMayIncludeNegativeZero;
+  intersect_result.canHaveFractionalPart = newCanHaveFractionalPart;
+  intersect_result.maxExponent = newExponent;
+  intersect_result.isEmpty = emptyRange;
+  return intersect_result;
 }
 
 // https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#579
