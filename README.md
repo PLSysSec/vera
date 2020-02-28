@@ -118,7 +118,7 @@ Compare to: 6.1's **Are VeRA proofs correct?**
 Expected time: ~30 minutes 
 
 The script for generating the quickcheck tests in 6.1 is in quickcheck.py.
-It runs the command `stack test --ta -p JS100/Cpp100`. 
+It runs the command `stack test --ta -p JS_Fast/Cpp_Fast`. 
 By default, the script runs **100** random tests for each JS or C++ operator.
 In the paper, we run quickcheck tests 1,000 times per operator---we do not
 do so for time reasons in the artifact eval. If you would like to run quickcheck
