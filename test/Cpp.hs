@@ -11,6 +11,14 @@ import qualified Test.QuickCheck.Monadic as Q
 import qualified Test.Tasty.QuickCheck   as Q
 import           Utils
 
+-- | QC tests to run
+nrTests :: Int
+nrTests = 1000
+
+-- | Wrapper for runnign QC more than 100 times
+benchTestPropertyQ name prop = benchTestProperty name $ Q.withMaxSuccess nrTests prop
+
+
 cppTests :: BenchTest
 cppTests = benchTestGroup "Cpp" [
   benchTestGroup "QuickCheck tests on doubles" [
@@ -422,7 +430,7 @@ fpTest = benchTestCase "fp test" $ do
 
   vtest r $ M.fromList []
 
-cppBinDoubleOpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
+cppBinDoubleOpTest bop = benchTestPropertyQ ("QuickCheck " ++ show bop) cppT
   where cppT :: Double -> Double -> Q.Property
         cppT x y = Q.monadicIO $ do
           cppRes <- Q.run $ cppBin bop (x, y)
@@ -434,7 +442,7 @@ cppBinDoubleOpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
           let (Just smtRes) = M.lookup "result" vars
           Q.assert $ smtRes == cppRes
 
-cppCmpDoubleOpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
+cppCmpDoubleOpTest bop = benchTestPropertyQ ("QuickCheck " ++ show bop) cppT
   where cppT :: Double -> Double -> Q.Property
         cppT x y = Q.monadicIO $ do
           cppRes <- Q.run $ cppBin bop (x, y)
@@ -447,7 +455,7 @@ cppCmpDoubleOpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
           Q.assert $ (smtRes == 1) == cppRes
 
 
-cppUniDoubleOpTest uop = benchTestProperty ("QuickCheck " ++ show uop) cppT
+cppUniDoubleOpTest uop = benchTestPropertyQ ("QuickCheck " ++ show uop) cppT
   where cppT :: Double -> Q.Property
         cppT x = Q.monadicIO $ do
           cppRes <- Q.run $ cppUni uop x
@@ -458,7 +466,7 @@ cppUniDoubleOpTest uop = benchTestProperty ("QuickCheck " ++ show uop) cppT
           let (Just smtRes) = M.lookup "result" vars
           Q.assert $ smtRes == cppRes
 
-cppBinI32OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
+cppBinI32OpTest bop = benchTestPropertyQ ("QuickCheck " ++ show bop) cppT
   where cppT :: Int32 -> Int32 -> Q.Property
         cppT x y = Q.monadicIO $ do
           cppRes <- Q.run $ cppBin bop (x, y)
@@ -473,7 +481,7 @@ cppBinI32OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
           let (Just ok) = M.lookup "ok" vars
           Q.assert $ ok == 1
 
-cppCmpI32OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
+cppCmpI32OpTest bop = benchTestPropertyQ ("QuickCheck " ++ show bop) cppT
   where cppT :: Int32 -> Int32 -> Q.Property
         cppT x y = Q.monadicIO $ do
           cppRes <- Q.run $ cppBin bop (x, y)
@@ -486,7 +494,7 @@ cppCmpI32OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
           Q.assert $ (smtRes == 1) == cppRes
 
 
-cppUniI32OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
+cppUniI32OpTest bop = benchTestPropertyQ ("QuickCheck " ++ show bop) cppT
   where cppT :: Int32 -> Int32 -> Q.Property
         cppT x y = Q.monadicIO $ do
           cppRes <- Q.run $ cppBin bop (x, y)
@@ -500,7 +508,7 @@ cppUniI32OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
           let (Just ok) = M.lookup "ok" vars
           Q.assert $ ok == 1
 
-cppBinI16OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
+cppBinI16OpTest bop = benchTestPropertyQ ("QuickCheck " ++ show bop) cppT
   where cppT :: Int16 -> Int16 -> Q.Property
         cppT x y = Q.monadicIO $ do
           cppRes <- Q.run $ cppBin bop (x, y)
@@ -515,7 +523,7 @@ cppBinI16OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
           let (Just ok) = M.lookup "ok" vars
           Q.assert $ ok == 1
 
-cppCmpI16OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
+cppCmpI16OpTest bop = benchTestPropertyQ ("QuickCheck " ++ show bop) cppT
   where cppT :: Int16 -> Int16 -> Q.Property
         cppT x y = Q.monadicIO $ do
           cppRes <- Q.run $ cppBin bop (x, y)
@@ -528,7 +536,7 @@ cppCmpI16OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
           Q.assert $ (smtRes == 1) == cppRes
 
 
-cppUniI16OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
+cppUniI16OpTest bop = benchTestPropertyQ ("QuickCheck " ++ show bop) cppT
   where cppT :: Int16 -> Int16 -> Q.Property
         cppT x y = Q.monadicIO $ do
           cppRes <- Q.run $ cppBin bop (x, y)
@@ -542,7 +550,7 @@ cppUniI16OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
           let (Just ok) = M.lookup "ok" vars
           Q.assert $ ok == 1
 
-cppBinI8OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
+cppBinI8OpTest bop = benchTestPropertyQ ("QuickCheck " ++ show bop) cppT
   where cppT :: Int8 -> Int8 -> Q.Property
         cppT x y = Q.monadicIO $ do
           cppRes <- Q.run $ cppBin bop (x, y)
@@ -557,7 +565,7 @@ cppBinI8OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
           let (Just ok) = M.lookup "ok" vars
           Q.assert $ ok == 1
 
-cppCmpI8OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
+cppCmpI8OpTest bop = benchTestPropertyQ ("QuickCheck " ++ show bop) cppT
   where cppT :: Int8 -> Int8 -> Q.Property
         cppT x y = Q.monadicIO $ do
           cppRes <- Q.run $ cppBin bop (x, y)
@@ -570,7 +578,7 @@ cppCmpI8OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
           Q.assert $ (smtRes == 1) == cppRes
 
 
-cppUniI8OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
+cppUniI8OpTest bop = benchTestPropertyQ ("QuickCheck " ++ show bop) cppT
   where cppT :: Int8 -> Int8 -> Q.Property
         cppT x y = Q.monadicIO $ do
           cppRes <- Q.run $ cppBin bop (x, y)
@@ -585,7 +593,7 @@ cppUniI8OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
           Q.assert $ ok == 1
 
 
-cppBinW32OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
+cppBinW32OpTest bop = benchTestPropertyQ ("QuickCheck " ++ show bop) cppT
   where cppT :: Word32 -> Word32 -> Q.Property
         cppT x y = Q.monadicIO $ do
           cppRes <- Q.run $ cppBin bop (x, y)
@@ -600,7 +608,7 @@ cppBinW32OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
           let (Just ok) = M.lookup "ok" vars
           Q.assert $ ok == 1
 
-cppCmpW32OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
+cppCmpW32OpTest bop = benchTestPropertyQ ("QuickCheck " ++ show bop) cppT
   where cppT :: Word32 -> Word32 -> Q.Property
         cppT x y = Q.monadicIO $ do
           cppRes <- Q.run $ cppBin bop (x, y)
@@ -613,7 +621,7 @@ cppCmpW32OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
           Q.assert $ (smtRes == 1) == cppRes
 
 
-cppUniW32OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
+cppUniW32OpTest bop = benchTestPropertyQ ("QuickCheck " ++ show bop) cppT
   where cppT :: Word32 -> Word32 -> Q.Property
         cppT x y = Q.monadicIO $ do
           cppRes <- Q.run $ cppBin bop (x, y)
@@ -627,7 +635,7 @@ cppUniW32OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
           let (Just ok) = M.lookup "ok" vars
           Q.assert $ ok == 1
 
-cppBinW16OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
+cppBinW16OpTest bop = benchTestPropertyQ ("QuickCheck " ++ show bop) cppT
   where cppT :: Word16 -> Word16 -> Q.Property
         cppT x y = Q.monadicIO $ do
           cppRes <- Q.run $ cppBin bop (x, y)
@@ -642,7 +650,7 @@ cppBinW16OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
           let (Just ok) = M.lookup "ok" vars
           Q.assert $ ok == 1
 
-cppCmpW16OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
+cppCmpW16OpTest bop = benchTestPropertyQ ("QuickCheck " ++ show bop) cppT
   where cppT :: Word16 -> Word16 -> Q.Property
         cppT x y = Q.monadicIO $ do
           cppRes <- Q.run $ cppBin bop (x, y)
@@ -655,7 +663,7 @@ cppCmpW16OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
           Q.assert $ (smtRes == 1) == cppRes
 
 
-cppUniW16OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
+cppUniW16OpTest bop = benchTestPropertyQ ("QuickCheck " ++ show bop) cppT
   where cppT :: Word16 -> Word16 -> Q.Property
         cppT x y = Q.monadicIO $ do
           cppRes <- Q.run $ cppBin bop (x, y)
@@ -669,7 +677,7 @@ cppUniW16OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
           let (Just ok) = M.lookup "ok" vars
           Q.assert $ ok == 1
 
-cppBinW8OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
+cppBinW8OpTest bop = benchTestPropertyQ ("QuickCheck " ++ show bop) cppT
   where cppT :: Word8 -> Word8 -> Q.Property
         cppT x y = Q.monadicIO $ do
           cppRes <- Q.run $ cppBin bop (x, y)
@@ -684,7 +692,7 @@ cppBinW8OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
           let (Just ok) = M.lookup "ok" vars
           Q.assert $ ok == 1
 
-cppCmpW8OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
+cppCmpW8OpTest bop = benchTestPropertyQ ("QuickCheck " ++ show bop) cppT
   where cppT :: Word8 -> Word8 -> Q.Property
         cppT x y = Q.monadicIO $ do
           cppRes <- Q.run $ cppBin bop (x, y)
@@ -697,7 +705,7 @@ cppCmpW8OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
           Q.assert $ (smtRes == 1) == cppRes
 
 
-cppUniW8OpTest bop = benchTestProperty ("QuickCheck " ++ show bop) cppT
+cppUniW8OpTest bop = benchTestPropertyQ ("QuickCheck " ++ show bop) cppT
   where cppT :: Word8 -> Word8 -> Q.Property
         cppT x y = Q.monadicIO $ do
           cppRes <- Q.run $ cppBin bop (x, y)

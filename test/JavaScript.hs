@@ -12,6 +12,13 @@ import           Test.Tasty.HUnit
 import qualified Test.Tasty.QuickCheck   as Q
 import           Utils
 
+-- | QC tests to run
+nrTests :: Int
+nrTests = 1000
+
+-- | Wrapper for runnign QC more than 100 times
+benchTestPropertyQ name prop = benchTestProperty name $ Q.withMaxSuccess nrTests prop
+
 jsTests :: BenchTest
 jsTests = benchTestGroup "JS" [
     benchTestGroup "Arithmetic binary ops" [ jsBinOpTest JSAdd
@@ -32,7 +39,8 @@ jsTests = benchTestGroup "JS" [
                                , jsUniOpTest JSSign  ]
   ]
 
-jsBitI32Test bop = benchTestProperty ("QuickCheck " ++ show bop) jsT
+
+jsBitI32Test bop = benchTestPropertyQ ("QuickCheck " ++ show bop) jsT
   where jsT :: Int32 -> Word32 -> Q.Property
         jsT x y = Q.monadicIO $ do
           jsRes <- Q.run $ js bop (x, y)
@@ -47,7 +55,7 @@ jsBitI32Test bop = benchTestProperty ("QuickCheck " ++ show bop) jsT
           let (Just ok) = M.lookup "ok" vars
           Q.assert $ ok == 1
 
-jsShrTest = benchTestProperty ("QuickCheck " ++ show bop) jsT
+jsShrTest = benchTestPropertyQ ("QuickCheck " ++ show bop) jsT
   where jsT :: Int32 -> Word32 -> Q.Property
         jsT x y = Q.monadicIO $ do
           jsRes <- Q.run $ js bop (x, y)
@@ -63,7 +71,7 @@ jsShrTest = benchTestProperty ("QuickCheck " ++ show bop) jsT
           Q.assert $ ok == 1
         bop = JSShr
 
-jsUshrTest = benchTestProperty ("QuickCheck " ++ show bop) jsT
+jsUshrTest = benchTestPropertyQ ("QuickCheck " ++ show bop) jsT
   where jsT :: Word32 -> Word32 -> Q.Property
         jsT x y = Q.monadicIO $ do
           jsRes <- Q.run $ js bop (x, y)
@@ -79,7 +87,7 @@ jsUshrTest = benchTestProperty ("QuickCheck " ++ show bop) jsT
           Q.assert $ ok == 1
         bop = JSUshr
 
-jsNotTest = benchTestProperty ("QuickCheck " ++ show uop) jsT
+jsNotTest = benchTestPropertyQ ("QuickCheck " ++ show uop) jsT
   where jsT :: Int32 -> Q.Property
         jsT x = Q.monadicIO $ do
           jsRes <- Q.run $ js uop x
@@ -95,7 +103,7 @@ jsNotTest = benchTestProperty ("QuickCheck " ++ show uop) jsT
         uop = JSNot
 
 
-jsUniOpTest uop = benchTestProperty ("QuickCheck " ++ show uop) jsT
+jsUniOpTest uop = benchTestPropertyQ ("QuickCheck " ++ show uop) jsT
   where jsT :: Double -> Q.Property
         jsT x = Q.monadicIO $ do
           jsRes <- Q.run $ js uop x
@@ -106,7 +114,7 @@ jsUniOpTest uop = benchTestProperty ("QuickCheck " ++ show uop) jsT
           let (Just smtRes) = M.lookup "result" vars
           Q.assert $ smtRes == jsRes
 
-jsBinOpTest bop = benchTestProperty ("QuickCheck " ++ show bop) jsT
+jsBinOpTest bop = benchTestPropertyQ ("QuickCheck " ++ show bop) jsT
   where jsT :: Double -> Double -> Q.Property
         jsT x y = Q.monadicIO $ do
           jsRes <- Q.run $ js bop (x, y)
