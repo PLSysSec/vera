@@ -13,7 +13,7 @@ import           Utils
 
 -- | QC tests to run
 nrTests :: Int
-nrTests = 1000
+nrTests = 100
 
 -- | Wrapper for runnign QC more than 100 times
 benchTestPropertyQ name prop = benchTestProperty name $ Q.withMaxSuccess nrTests prop

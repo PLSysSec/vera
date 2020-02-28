@@ -1,11 +1,11 @@
 import os
 
 print("About to run verification on buggy operators")
-print("Intersect")
-cmd = "stack test --ta '-p Broken_intersect' > bug_examples.txt"
+print("Buggy Intersect")
+cmd = "stack test --ta '-p Broken_intersect' >& bug_examples.txt"
 os.system(cmd)
-print("Ceil")
-cmd = "stack test --ta '-p Broken_ceil' >> bug_examples.txt"
+print("Buggy Ceil")
+cmd = "stack test --ta '-p Broken_ceil' &>> bug_examples.txt"
 os.system(cmd)
-print("Wrote buggy examples to bug_examples.txt")
+print("---> Wrote buggy examples to results/bug_examples.txt")
 
