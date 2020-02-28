@@ -171,7 +171,7 @@ genExprSMT expr =
       case result of
         [rval] -> return rval
         _      -> error $ unwords ["Cannot return a class variable for use in greater expression", show result]
-    _ -> error $ unwords $ ["Don't support", show expr]
+--    _ -> error $ unwords $ ["Don't support", show expr]
 
 genAssignOpSMT :: SExpr
                -> SExpr

@@ -64,7 +64,7 @@ The results will all be generated in the results directory, in the following ord
    Compare **results/quickcheck.txt** to 6.1's **Are VeRA proofs correct?**.
    Note that by default, our script runs quickcheck only 100 times per operator,
    while for the paper we ran 1,000 times per operator. We provide an optional
-   way of running 1,000 quickcheck tests per operator.
+   way of running 1,000 quickcheck tests per operator below.
 4. Do the verified routines work correctly in Firefox?
    TBD   
 5. How do the verified routines perform in Firefox?

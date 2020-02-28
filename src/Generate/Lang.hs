@@ -319,7 +319,7 @@ declare ty var = do
   return $ if isClass ty
   then Decl $ CVar (className ty) var
   else Decl $ SVar (primTy ty) var 0
-declare _ _ = error "Class type is not set up yet"
+--declare _ _ = error "Class type is not set up yet"
 
 assign :: Codegen SExpr
        -> Codegen SExpr
