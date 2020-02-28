@@ -63,8 +63,8 @@ The results will all be generated in the results directory, in the following ord
 3. Are the VeRA proofs correct?
    Compare **results/quickcheck.txt** to 6.1's **Are VeRA proofs correct?**.
    Note that by default, our script runs quickcheck only 100 times per operator,
-   while for the paper we ran 1,000 times per operator. This is configureable (see
-   section 3 below), but we don't reccomend increasing it for time reasons. 
+   while for the paper we ran 1,000 times per operator. We provide an optional
+   way of running 1,000 quickcheck tests per operator.
 4. Do the verified routines work correctly in Firefox?
    TBD   
 5. How do the verified routines perform in Firefox?
@@ -81,13 +81,13 @@ Look at: results/verify_table.pdf
 
 Compare to: Figure 8
 
-Expected time:
+Expected time: Overnight
 
 The script for generating Figure 8 is called make_verif_table.py This
 script uses command `stack test --ta '-p Verification',` which verifies
-each range analysis operator correct wrt to JavaScript semantics. It
-will generate a standalone PDF of the time it took each verification
-condition to verify in verify_table.pdf
+each range analysis operator correct wrt to JavaScript semantics with
+a timeout of 20 minutes. It will generate a standalone PDF of the time
+it took each verification condition to verify in verify_table.pdf
 
 ### (2) Can VeRA proofs catch real correctness bugs?
 
@@ -118,12 +118,13 @@ Compare to: 6.1's **Are VeRA proofs correct?**
 Expected time: ~30 minutes 
 
 The script for generating the quickcheck tests in 6.1 is in quickcheck.py.
-It runs the command `stack test --ta -p JS/Cpp`. 
+It runs the command `stack test --ta -p JS100/Cpp100`. 
 By default, the script runs **100** random tests for each JS or C++ operator.
 In the paper, we run quickcheck tests 1,000 times per operator---we do not
 do so for time reasons in the artifact eval. If you would like to run quickcheck
-for longer, you can configure it by WHATTTTT:DS. Still, it will not be the exact
-result from the paper, since each run of quickcheck produces new random tests.
+for longer, you can use quickcheck_long.py in the same way as quickcheck.py. 
+Still, it will not be the exact result from the paper, since each run of quickcheck
+produces new random tests.
 
 ### (4) Do the verified routines work correctly in Firefox?
 

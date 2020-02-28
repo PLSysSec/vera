@@ -20,9 +20,11 @@ allTests :: [BenchTest]
 allTests = [ brokenIntersectTest
            , brokenCeilTest
            , genIonMonkeyTests
-           , jsTests
-           , cppTests
+           , jsTests100
+           , cppTests100
            , sanityCheck
+           , jsTests1000
+           , cppTests1000
            ]
 
 

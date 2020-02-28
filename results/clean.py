@@ -1,10 +1,11 @@
 import os
 
 # should probably validate were in the results directory....
-os.system("rm *~")
-os.system("rm *.txt")
-os.system("rm *.aux")
-os.system("rm *.log")
-os.system("rm *.pdf")
-os.system("rm *.csv")
-os.system("rm *.tex")
+os.system("rm *~ &> /dev/null")
+os.system("rm *.txt &> /dev/null")
+os.system("rm *.aux &> /dev/null")
+os.system("rm *.log &> /dev/null")
+os.system("rm *.pdf &> /dev/null")
+os.system("rm *.csv &> /dev/null")
+os.system("rm *.tex &> /dev/null")
+print("Cleaned")

@@ -1,4 +1,6 @@
-module Cpp (cppTests) where
+module Cpp ( cppTests100
+           , cppTests1000
+           ) where
 import           ActiveCode.Cpp
 import           BenchUtils
 import           Data.Int
@@ -11,120 +13,226 @@ import qualified Test.QuickCheck.Monadic as Q
 import qualified Test.Tasty.QuickCheck   as Q
 import           Utils
 
--- | QC tests to run
-nrTests :: Int
-nrTests = 100
-
 -- | Wrapper for runnign QC more than 100 times
-benchTestPropertyQ name prop = benchTestProperty name $ Q.withMaxSuccess nrTests prop
+-- nr is the number of tests
+benchTestPropertyQ name prop nr = benchTestProperty name $ Q.withMaxSuccess nr prop
 
 
-cppTests :: BenchTest
-cppTests = benchTestGroup "Cpp" [
+cppTests100 :: BenchTest
+cppTests100 = benchTestGroup "Cpp100" [
   benchTestGroup "QuickCheck tests on doubles" [
-      benchTestGroup "Arithmetic binary ops" [ cppBinDoubleOpTest CppAdd
-                                             , cppBinDoubleOpTest CppSub
-                                             , cppBinDoubleOpTest CppMul
-                                             , cppBinDoubleOpTest CppMin
-                                             , cppBinDoubleOpTest CppMax
+      benchTestGroup "Arithmetic binary ops" [ cppBinDoubleOpTest CppAdd 100
+                                             , cppBinDoubleOpTest CppSub 100
+                                             , cppBinDoubleOpTest CppMul 100
+                                             , cppBinDoubleOpTest CppMin 100
+                                             , cppBinDoubleOpTest CppMax 100
                                              ],
-      benchTestGroup "Comparison ops" [ cppCmpDoubleOpTest CppGt
-                                      , cppCmpDoubleOpTest CppGte
-                                      , cppCmpDoubleOpTest CppLt
-                                      , cppCmpDoubleOpTest CppLte
+      benchTestGroup "Comparison ops" [ cppCmpDoubleOpTest CppGt 100
+                                      , cppCmpDoubleOpTest CppGte 100
+                                      , cppCmpDoubleOpTest CppLt 100
+                                      , cppCmpDoubleOpTest CppLte 100
                                       ]
-    , benchTestGroup "Unary ops" [ cppUniDoubleOpTest CppAbs
-                                 , cppUniDoubleOpTest CppNeg ]
+    , benchTestGroup "Unary ops" [ cppUniDoubleOpTest CppAbs 100
+                                 , cppUniDoubleOpTest CppNeg 100 ]
     ],
   benchTestGroup "QuickCheck tests on int32s" [
-      benchTestGroup "Arithmetic binary ops" [ cppBinI32OpTest CppAdd
-                                             , cppBinI32OpTest CppSub
-                                             , cppBinI32OpTest CppMul
-                                             , cppBinI32OpTest CppMin
-                                             , cppBinI32OpTest CppMax
+      benchTestGroup "Arithmetic binary ops" [ cppBinI32OpTest CppAdd 100
+                                             , cppBinI32OpTest CppSub 100
+                                             , cppBinI32OpTest CppMul 100
+                                             , cppBinI32OpTest CppMin 100
+                                             , cppBinI32OpTest CppMax 100
                                              ],
-      benchTestGroup "Comparison ops" [ cppCmpI32OpTest CppGt
-                                      , cppCmpI32OpTest CppGte
-                                      , cppCmpI32OpTest CppLt
-                                      , cppCmpI32OpTest CppLte
+      benchTestGroup "Comparison ops" [ cppCmpI32OpTest CppGt 100
+                                      , cppCmpI32OpTest CppGte 100
+                                      , cppCmpI32OpTest CppLt 100
+                                      , cppCmpI32OpTest CppLte 100
                                       ],
-      benchTestGroup "Unary ops" [ cppUniI32OpTest CppAbs
-                                 , cppUniI32OpTest CppNeg ]
+      benchTestGroup "Unary ops" [ cppUniI32OpTest CppAbs 100
+                                 , cppUniI32OpTest CppNeg 100 ]
     ],
   benchTestGroup "QuickCheck tests on int16s" [
-      benchTestGroup "Arithmetic binary ops" [ cppBinI16OpTest CppAdd
-                                             , cppBinI16OpTest CppSub
-                                             , cppBinI16OpTest CppMul
-                                             , cppBinI16OpTest CppMin
-                                             , cppBinI16OpTest CppMax
+      benchTestGroup "Arithmetic binary ops" [ cppBinI16OpTest CppAdd 100
+                                             , cppBinI16OpTest CppSub 100
+                                             , cppBinI16OpTest CppMul 100
+                                             , cppBinI16OpTest CppMin 100
+                                             , cppBinI16OpTest CppMax 100
                                              ],
-      benchTestGroup "Comparison ops" [ cppCmpI16OpTest CppGt
-                                      , cppCmpI16OpTest CppGte
-                                      , cppCmpI16OpTest CppLt
-                                      , cppCmpI16OpTest CppLte
+      benchTestGroup "Comparison ops" [ cppCmpI16OpTest CppGt 100
+                                      , cppCmpI16OpTest CppGte 100
+                                      , cppCmpI16OpTest CppLt 100
+                                      , cppCmpI16OpTest CppLte 100
                                       ],
       benchTestGroup "Unary ops" [ -- cppUniI16OpTest CppAbs
-                                   cppUniI16OpTest CppNeg ]
+                                   cppUniI16OpTest CppNeg 100 ]
     ],
   benchTestGroup "QuickCheck tests on int8s" [
-      benchTestGroup "Arithmetic binary ops" [ cppBinI8OpTest CppAdd
-                                             , cppBinI8OpTest CppSub
-                                             , cppBinI8OpTest CppMul
-                                             , cppBinI8OpTest CppMin
-                                             , cppBinI8OpTest CppMax
+      benchTestGroup "Arithmetic binary ops" [ cppBinI8OpTest CppAdd 100
+                                             , cppBinI8OpTest CppSub 100
+                                             , cppBinI8OpTest CppMul 100
+                                             , cppBinI8OpTest CppMin 100
+                                             , cppBinI8OpTest CppMax 100
                                              ],
-      benchTestGroup "Comparison ops" [ cppCmpI8OpTest CppGt
-                                      , cppCmpI8OpTest CppGte
-                                      , cppCmpI8OpTest CppLt
-                                      , cppCmpI8OpTest CppLte
+      benchTestGroup "Comparison ops" [ cppCmpI8OpTest CppGt 100
+                                      , cppCmpI8OpTest CppGte 100
+                                      , cppCmpI8OpTest CppLt 100
+                                      , cppCmpI8OpTest CppLte 100
                                       ],
       benchTestGroup "Unary ops" [ -- cppUniI8OpTest CppAbs
-                                  cppUniI8OpTest CppNeg ]
+                                  cppUniI8OpTest CppNeg 100 ]
     ],
   benchTestGroup "QuickCheck tests on uint32s" [
-      benchTestGroup "Arithmetic binary ops" [ cppBinW32OpTest CppAdd
-                                             , cppBinW32OpTest CppSub
-                                             , cppBinW32OpTest CppMul
-                                             , cppBinW32OpTest CppMin
-                                             , cppBinW32OpTest CppMax
+      benchTestGroup "Arithmetic binary ops" [ cppBinW32OpTest CppAdd 100
+                                             , cppBinW32OpTest CppSub 100
+                                             , cppBinW32OpTest CppMul 100
+                                             , cppBinW32OpTest CppMin 100
+                                             , cppBinW32OpTest CppMax 100
                                              ],
-      benchTestGroup "Comparison ops" [ cppCmpW32OpTest CppGt
-                                      , cppCmpW32OpTest CppGte
-                                      , cppCmpW32OpTest CppLt
-                                      , cppCmpW32OpTest CppLte
+      benchTestGroup "Comparison ops" [ cppCmpW32OpTest CppGt 100
+                                      , cppCmpW32OpTest CppGte 100
+                                      , cppCmpW32OpTest CppLt 100
+                                      , cppCmpW32OpTest CppLte 100
                                       ],
       benchTestGroup "Unary ops" [ --cppUniW32OpTest CppAbs
-                                   cppUniW32OpTest CppNeg ]
+                                   cppUniW32OpTest CppNeg 100 ]
     ],
   benchTestGroup "QuickCheck tests on uint16s" [
-      benchTestGroup "Arithmetic binary ops" [ cppBinW16OpTest CppAdd
-                                             , cppBinW16OpTest CppSub
-                                             , cppBinW16OpTest CppMul
-                                             , cppBinW16OpTest CppMin
-                                             , cppBinW16OpTest CppMax
+      benchTestGroup "Arithmetic binary ops" [ cppBinW16OpTest CppAdd 100
+                                             , cppBinW16OpTest CppSub 100
+                                             , cppBinW16OpTest CppMul 100
+                                             , cppBinW16OpTest CppMin 100
+                                             , cppBinW16OpTest CppMax 100
                                              ],
-      benchTestGroup "Comparison ops" [ cppCmpW16OpTest CppGt
-                                      , cppCmpW16OpTest CppGte
-                                      , cppCmpW16OpTest CppLt
-                                      , cppCmpW16OpTest CppLte
+      benchTestGroup "Comparison ops" [ cppCmpW16OpTest CppGt 100
+                                      , cppCmpW16OpTest CppGte 100
+                                      , cppCmpW16OpTest CppLt 100
+                                      , cppCmpW16OpTest CppLte 100
                                       ],
       benchTestGroup "Unary ops" [ --cppUniW16OpTest CppAbs
-                                   cppUniW16OpTest CppNeg ]
+                                   cppUniW16OpTest CppNeg 100 ]
     ],
   benchTestGroup "QuickCheck tests on uint8s" [
-      benchTestGroup "Arithmetic binary ops" [ cppBinW8OpTest CppAdd
-                                             , cppBinW8OpTest CppSub
-                                             , cppBinW8OpTest CppMul
-                                             , cppBinW8OpTest CppMin
-                                             , cppBinW8OpTest CppMax
+      benchTestGroup "Arithmetic binary ops" [ cppBinW8OpTest CppAdd 100
+                                             , cppBinW8OpTest CppSub 100
+                                             , cppBinW8OpTest CppMul 100
+                                             , cppBinW8OpTest CppMin 100
+                                             , cppBinW8OpTest CppMax 100
                                              ],
-      benchTestGroup "Comparison ops" [ cppCmpW8OpTest CppGt
-                                      , cppCmpW8OpTest CppGte
-                                      , cppCmpW8OpTest CppLt
-                                      , cppCmpW8OpTest CppLte
+      benchTestGroup "Comparison ops" [ cppCmpW8OpTest CppGt 100
+                                      , cppCmpW8OpTest CppGte 100
+                                      , cppCmpW8OpTest CppLt 100
+                                      , cppCmpW8OpTest CppLte 100
                                       ],
       benchTestGroup "Unary ops" [ -- cppUniW8OpTest CppAbs
-                                  cppUniW8OpTest CppNeg ]
+                                  cppUniW8OpTest CppNeg 100 ]
+    ]
+  ]
+
+cppTests1000 :: BenchTest
+cppTests1000 = benchTestGroup "Cpp1000" [
+  benchTestGroup "QuickCheck tests on doubles" [
+      benchTestGroup "Arithmetic binary ops" [ cppBinDoubleOpTest CppAdd 1000
+                                             , cppBinDoubleOpTest CppSub 1000
+                                             , cppBinDoubleOpTest CppMul 1000
+                                             , cppBinDoubleOpTest CppMin 1000
+                                             , cppBinDoubleOpTest CppMax 1000
+                                             ],
+      benchTestGroup "Comparison ops" [ cppCmpDoubleOpTest CppGt 1000
+                                      , cppCmpDoubleOpTest CppGte 1000
+                                      , cppCmpDoubleOpTest CppLt 1000
+                                      , cppCmpDoubleOpTest CppLte 1000
+                                      ]
+    , benchTestGroup "Unary ops" [ cppUniDoubleOpTest CppAbs 1000
+                                 , cppUniDoubleOpTest CppNeg 1000 ]
+    ],
+  benchTestGroup "QuickCheck tests on int32s" [
+      benchTestGroup "Arithmetic binary ops" [ cppBinI32OpTest CppAdd 1000
+                                             , cppBinI32OpTest CppSub 1000
+                                             , cppBinI32OpTest CppMul 1000
+                                             , cppBinI32OpTest CppMin 1000
+                                             , cppBinI32OpTest CppMax 1000
+                                             ],
+      benchTestGroup "Comparison ops" [ cppCmpI32OpTest CppGt 1000
+                                      , cppCmpI32OpTest CppGte 1000
+                                      , cppCmpI32OpTest CppLt 1000
+                                      , cppCmpI32OpTest CppLte 1000
+                                      ],
+      benchTestGroup "Unary ops" [ cppUniI32OpTest CppAbs 1000
+                                 , cppUniI32OpTest CppNeg 1000 ]
+    ],
+  benchTestGroup "QuickCheck tests on int16s" [
+      benchTestGroup "Arithmetic binary ops" [ cppBinI16OpTest CppAdd 1000
+                                             , cppBinI16OpTest CppSub 1000
+                                             , cppBinI16OpTest CppMul 1000
+                                             , cppBinI16OpTest CppMin 1000
+                                             , cppBinI16OpTest CppMax 1000
+                                             ],
+      benchTestGroup "Comparison ops" [ cppCmpI16OpTest CppGt 1000
+                                      , cppCmpI16OpTest CppGte 1000
+                                      , cppCmpI16OpTest CppLt 1000
+                                      , cppCmpI16OpTest CppLte 1000
+                                      ],
+      benchTestGroup "Unary ops" [ -- cppUniI16OpTest CppAbs
+                                   cppUniI16OpTest CppNeg 1000 ]
+    ],
+  benchTestGroup "QuickCheck tests on int8s" [
+      benchTestGroup "Arithmetic binary ops" [ cppBinI8OpTest CppAdd 1000
+                                             , cppBinI8OpTest CppSub 1000
+                                             , cppBinI8OpTest CppMul 1000
+                                             , cppBinI8OpTest CppMin 1000
+                                             , cppBinI8OpTest CppMax 1000
+                                             ],
+      benchTestGroup "Comparison ops" [ cppCmpI8OpTest CppGt 1000
+                                      , cppCmpI8OpTest CppGte 1000
+                                      , cppCmpI8OpTest CppLt 1000
+                                      , cppCmpI8OpTest CppLte 1000
+                                      ],
+      benchTestGroup "Unary ops" [ -- cppUniI8OpTest CppAbs
+                                  cppUniI8OpTest CppNeg 1000 ]
+    ],
+  benchTestGroup "QuickCheck tests on uint32s" [
+      benchTestGroup "Arithmetic binary ops" [ cppBinW32OpTest CppAdd 1000
+                                             , cppBinW32OpTest CppSub 1000
+                                             , cppBinW32OpTest CppMul 1000
+                                             , cppBinW32OpTest CppMin 1000
+                                             , cppBinW32OpTest CppMax 1000
+                                             ],
+      benchTestGroup "Comparison ops" [ cppCmpW32OpTest CppGt 1000
+                                      , cppCmpW32OpTest CppGte 1000
+                                      , cppCmpW32OpTest CppLt 1000
+                                      , cppCmpW32OpTest CppLte 1000
+                                      ],
+      benchTestGroup "Unary ops" [ --cppUniW32OpTest CppAbs
+                                   cppUniW32OpTest CppNeg 1000 ]
+    ],
+  benchTestGroup "QuickCheck tests on uint16s" [
+      benchTestGroup "Arithmetic binary ops" [ cppBinW16OpTest CppAdd 1000
+                                             , cppBinW16OpTest CppSub 1000
+                                             , cppBinW16OpTest CppMul 1000
+                                             , cppBinW16OpTest CppMin 1000
+                                             , cppBinW16OpTest CppMax 1000
+                                             ],
+      benchTestGroup "Comparison ops" [ cppCmpW16OpTest CppGt 1000
+                                      , cppCmpW16OpTest CppGte 1000
+                                      , cppCmpW16OpTest CppLt 1000
+                                      , cppCmpW16OpTest CppLte 1000
+                                      ],
+      benchTestGroup "Unary ops" [ --cppUniW16OpTest CppAbs
+                                   cppUniW16OpTest CppNeg 1000 ]
+    ],
+  benchTestGroup "QuickCheck tests on uint8s" [
+      benchTestGroup "Arithmetic binary ops" [ cppBinW8OpTest CppAdd 1000
+                                             , cppBinW8OpTest CppSub 1000
+                                             , cppBinW8OpTest CppMul 1000
+                                             , cppBinW8OpTest CppMin 1000
+                                             , cppBinW8OpTest CppMax 1000
+                                             ],
+      benchTestGroup "Comparison ops" [ cppCmpW8OpTest CppGt 1000
+                                      , cppCmpW8OpTest CppGte 1000
+                                      , cppCmpW8OpTest CppLt 1000
+                                      , cppCmpW8OpTest CppLte 1000
+                                      ],
+      benchTestGroup "Unary ops" [ -- cppUniW8OpTest CppAbs
+                                  cppUniW8OpTest CppNeg 1000 ]
     ]
   ]
 

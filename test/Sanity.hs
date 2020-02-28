@@ -10,5 +10,5 @@ import           Utils
 
 sanityCheck = benchTestGroup "Sanity" [ signTests
                                       , brokenCeilTest
-                                      , jsBinOpTest JSAdd
+                                      , jsBinOpTest JSAdd 10
                                       ]
