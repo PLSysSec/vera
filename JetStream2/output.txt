@@ -1,0 +1,284 @@
+Starting JetStream2
+Running UniPoker:
+    Startup: 111.111
+    Worst Case: 259.740
+    Average: 302.013
+    Score: 205.798
+    Wall time: 0:00.196
+Running tagcloud-SP:
+    Startup: 96.154
+    Worst Case: 181.818
+    Average: 198.238
+    Score: 151.332
+    Wall time: 0:00.282
+Running string-unpack-code-SP:
+    Startup: 128.205
+    Worst Case: 232.558
+    Average: 247.253
+    Score: 194.622
+    Wall time: 0:00.224
+Running stanford-crypto-sha256:
+    Startup: 217.391
+    Worst Case: 425.532
+    Average: 478.723
+    Score: 353.796
+    Wall time: 0:00.120
+Running stanford-crypto-pbkdf2:
+    Startup: 172.414
+    Worst Case: 370.370
+    Average: 436.893
+    Score: 303.292
+    Wall time: 0:00.135
+Running stanford-crypto-aes:
+    Startup: 135.135
+    Worst Case: 322.581
+    Average: 328.467
+    Score: 242.828
+    Wall time: 0:00.188
+Running splay:
+    Startup: 64.935
+    Worst Case: 112.994
+    Average: 139.752
+    Score: 100.840
+    Wall time: 0:00.601
+Running richards:
+    Startup: 263.158
+    Worst Case: 606.061
+    Average: 642.857
+    Score: 468.039
+    Wall time: 0:00.091
+Running regexp:
+    Startup: 238.095
+    Worst Case: 256.410
+    Average: 277.778
+    Score: 256.918
+    Wall time: 0:00.251
+Running regex-dna-SP:
+    Startup: 263.158
+    Worst Case: 377.358
+    Average: 381.356
+    Score: 335.815
+    Wall time: 0:00.143
+Running raytrace:
+    Startup: 128.205
+    Worst Case: 476.190
+    Average: 592.105
+    Score: 330.645
+    Wall time: 0:00.250
+Running prepack-wtb:
+    Startup: 9.804
+    Worst Case: 20.704
+    Average: 22.422
+    Score: 16.572
+    Wall time: 0:02.278
+Running pdfjs:
+    Startup: 33.557
+    Worst Case: 38.835
+    Average: 62.241
+    Score: 43.287
+    Wall time: 0:00.947
+Running octane-code-load:
+    Startup: 454.545
+    Worst Case: 625
+    Average: 633.803
+    Score: 564.682
+    Wall time: 0:00.085
+Running navier-stokes:
+    Startup: 98.039
+    Worst Case: 363.636
+    Average: 569.620
+    Score: 272.825
+    Wall time: 0:00.137
+Running n-body-SP:
+    Startup: 625
+    Worst Case: 909.091
+    Average: 957.447
+    Score: 816.333
+    Wall time: 0:00.057
+Running multi-inspector-code-load:
+    Startup: 104.167
+    Worst Case: 111.111
+    Average: 118.421
+    Score: 111.081
+    Wall time: 0:00.462
+Running ML:
+    Startup: 17.182
+    Worst Case: 21.598
+    Average: 22.091
+    Score: 20.164
+    Wall time: 0:01.884
+Running json-stringify-inspector:
+    Startup: 142.857
+    Worst Case: 84.034
+    Average: 126.404
+    Score: 114.914
+    Wall time: 0:00.591
+Running json-parse-inspector:
+    Startup: 60.976
+    Worst Case: 49.751
+    Average: 75.758
+    Score: 61.253
+    Wall time: 0:00.942
+Running jshint-wtb:
+    Startup: 11.261
+    Worst Case: 13.459
+    Average: 15.649
+    Score: 13.336
+    Wall time: 0:02.758
+Running hash-map:
+    Startup: 96.154
+    Worst Case: 102.740
+    Average: 195.730
+    Score: 124.582
+    Wall time: 0:00.336
+Running gbemu:
+    Startup: 28.902
+    Worst Case: 88.496
+    Average: 124.654
+    Score: 68.315
+    Wall time: 0:00.563
+Running gaussian-blur:
+    Startup: 89.286
+    Worst Case: 277.778
+    Average: 283.019
+    Score: 191.469
+    Wall time: 0:00.230
+Running FlightPlanner:
+    Startup: 106.383
+    Worst Case: 198.020
+    Average: 215.311
+    Score: 165.532
+    Wall time: 0:00.676
+Running first-inspector-code-load:
+    Startup: 106.383
+    Worst Case: 100.503
+    Average: 113.636
+    Score: 106.706
+    Wall time: 0:00.464
+Running earley-boyer:
+    Startup: 178.571
+    Worst Case: 303.030
+    Average: 398.230
+    Score: 278.277
+    Wall time: 0:00.150
+Running delta-blue:
+    Startup: 151.515
+    Worst Case: 800
+    Average: 1022.727
+    Score: 498.619
+    Wall time: 0:00.078
+Running date-format-xparb-SP:
+    Startup: 65.789
+    Worst Case: 51.151
+    Average: 61.141
+    Score: 59.036
+    Wall time: 0:00.814
+Running date-format-tofte-SP:
+    Startup: 142.857
+    Worst Case: 215.054
+    Average: 218.447
+    Score: 188.624
+    Wall time: 0:00.242
+Running crypto-sha1-SP:
+    Startup: 263.158
+    Worst Case: 476.190
+    Average: 529.412
+    Score: 404.821
+    Wall time: 0:00.105
+Running crypto-md5-SP:
+    Startup: 166.667
+    Worst Case: 465.116
+    Average: 489.130
+    Score: 335.953
+    Wall time: 0:00.123
+Running crypto-aes-SP:
+    Startup: 142.857
+    Worst Case: 289.855
+    Average: 338.346
+    Score: 241.073
+    Wall time: 0:00.172
+Running crypto:
+    Startup: 238.095
+    Worst Case: 740.741
+    Average: 849.057
+    Score: 531.029
+    Wall time: 0:00.089
+Running chai-wtb:
+    Startup: 23.697
+    Worst Case: 42.918
+    Average: 45.767
+    Score: 35.972
+    Wall time: 0:01.419
+Running cdjs:
+    Startup: 37.594
+    Worst Case: 55.556
+    Average: 57.692
+    Score: 49.392
+    Wall time: 0:00.915
+Running Box2D:
+    Startup: 49.505
+    Worst Case: 243.902
+    Average: 306.122
+    Score: 154.616
+    Wall time: 0:00.261
+Running Basic:
+    Startup: 70.423
+    Worst Case: 86.580
+    Average: 96.360
+    Score: 83.755
+    Wall time: 0:00.542
+Running base64-SP:
+    Startup: 92.593
+    Worst Case: 129.870
+    Average: 199.115
+    Score: 133.782
+    Wall time: 0:00.283
+Running Babylon:
+    Startup: 47.170
+    Worst Case: 169.492
+    Average: 263.158
+    Score: 128.137
+    Wall time: 0:00.285
+Running async-fs:
+    Startup: 68.493
+    Worst Case: 80
+    Average: 82.160
+    Score: 76.642
+    Wall time: 0:00.501
+Running Air:
+    Startup: 58.140
+    Worst Case: 150.376
+    Average: 198.238
+    Score: 120.119
+    Wall time: 0:00.325
+Running ai-astar:
+    Startup: 151.515
+    Worst Case: 298.507
+    Average: 335.821
+    Score: 247.651
+    Wall time: 0:00.365
+Running 3d-raytrace-SP:
+    Startup: 138.889
+    Worst Case: 327.869
+    Average: 362.903
+    Score: 254.714
+    Wall time: 0:00.162
+Running 3d-cube-SP:
+    Startup: 86.207
+    Worst Case: 246.914
+    Average: 283.019
+    Score: 181.956
+    Wall time: 0:00.218
+
+
+First: 96.008
+Worst: 174.755
+Average: 207.121
+
+Total Score:  151.468 
+
+
+
+{"JetStream2.0":{"metrics":{"Score":["Geometric"]},"tests":{"UniPoker":{"metrics":{"Score":{"current":[205.79793000098644]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[45]}}},"Worst":{"metrics":{"Time":{"current":[19.25]}}},"Average":{"metrics":{"Time":{"current":[16.555555555555557]}}}}},"tagcloud-SP":{"metrics":{"Score":{"current":[151.3318040032116]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[52]}}},"Worst":{"metrics":{"Time":{"current":[27.5]}}},"Average":{"metrics":{"Time":{"current":[25.22222222222222]}}}}},"string-unpack-code-SP":{"metrics":{"Score":{"current":[194.62233967493933]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[39]}}},"Worst":{"metrics":{"Time":{"current":[21.5]}}},"Average":{"metrics":{"Time":{"current":[20.22222222222222]}}}}},"stanford-crypto-sha256":{"metrics":{"Score":{"current":[353.79605722978425]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[23]}}},"Worst":{"metrics":{"Time":{"current":[11.75]}}},"Average":{"metrics":{"Time":{"current":[10.444444444444445]}}}}},"stanford-crypto-pbkdf2":{"metrics":{"Score":{"current":[303.2921551297637]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[29]}}},"Worst":{"metrics":{"Time":{"current":[13.5]}}},"Average":{"metrics":{"Time":{"current":[11.444444444444445]}}}}},"stanford-crypto-aes":{"metrics":{"Score":{"current":[242.82841829766403]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[37]}}},"Worst":{"metrics":{"Time":{"current":[15.5]}}},"Average":{"metrics":{"Time":{"current":[15.222222222222221]}}}}},"splay":{"metrics":{"Score":{"current":[100.83954641509487]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[77]}}},"Worst":{"metrics":{"Time":{"current":[44.25]}}},"Average":{"metrics":{"Time":{"current":[35.77777777777778]}}}}},"richards":{"metrics":{"Score":{"current":[468.0392890431417]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[19]}}},"Worst":{"metrics":{"Time":{"current":[8.25]}}},"Average":{"metrics":{"Time":{"current":[7.777777777777778]}}}}},"regexp":{"metrics":{"Score":{"current":[256.91800081825323]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[21]}}},"Worst":{"metrics":{"Time":{"current":[19.5]}}},"Average":{"metrics":{"Time":{"current":[18]}}}}},"regex-dna-SP":{"metrics":{"Score":{"current":[335.8151965911875]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[19]}}},"Worst":{"metrics":{"Time":{"current":[13.25]}}},"Average":{"metrics":{"Time":{"current":[13.11111111111111]}}}}},"raytrace":{"metrics":{"Score":{"current":[330.64478300616076]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[39]}}},"Worst":{"metrics":{"Time":{"current":[10.5]}}},"Average":{"metrics":{"Time":{"current":[8.444444444444445]}}}}},"prepack-wtb":{"metrics":{"Score":{"current":[16.571911789313443]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[509.99999999999994]}}},"Worst":{"metrics":{"Time":{"current":[241.5]}}},"Average":{"metrics":{"Time":{"current":[223]}}}}},"pdfjs":{"metrics":{"Score":{"current":[43.28727425268676]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[149]}}},"Worst":{"metrics":{"Time":{"current":[128.75]}}},"Average":{"metrics":{"Time":{"current":[80.33333333333333]}}}}},"octane-code-load":{"metrics":{"Score":{"current":[564.6818564859425]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[11]}}},"Worst":{"metrics":{"Time":{"current":[8]}}},"Average":{"metrics":{"Time":{"current":[7.888888888888889]}}}}},"navier-stokes":{"metrics":{"Score":{"current":[272.82501366703616]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[50.99999999999999]}}},"Worst":{"metrics":{"Time":{"current":[13.75]}}},"Average":{"metrics":{"Time":{"current":[8.777777777777779]}}}}},"n-body-SP":{"metrics":{"Score":{"current":[816.3329553995059]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[8]}}},"Worst":{"metrics":{"Time":{"current":[5.5]}}},"Average":{"metrics":{"Time":{"current":[5.222222222222222]}}}}},"multi-inspector-code-load":{"metrics":{"Score":{"current":[111.0806446683688]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[48]}}},"Worst":{"metrics":{"Time":{"current":[45]}}},"Average":{"metrics":{"Time":{"current":[42.22222222222222]}}}}},"ML":{"metrics":{"Score":{"current":[20.163805660299086]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[291]}}},"Worst":{"metrics":{"Time":{"current":[231.5]}}},"Average":{"metrics":{"Time":{"current":[226.33333333333334]}}}}},"json-stringify-inspector":{"metrics":{"Score":{"current":[114.91388428730095]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[35]}}},"Worst":{"metrics":{"Time":{"current":[59.5]}}},"Average":{"metrics":{"Time":{"current":[39.55555555555556]}}}}},"json-parse-inspector":{"metrics":{"Score":{"current":[61.25319139565472]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[82]}}},"Worst":{"metrics":{"Time":{"current":[100.5]}}},"Average":{"metrics":{"Time":{"current":[66]}}}}},"jshint-wtb":{"metrics":{"Score":{"current":[13.336210877147707]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[444]}}},"Worst":{"metrics":{"Time":{"current":[371.5]}}},"Average":{"metrics":{"Time":{"current":[319.5]}}}}},"hash-map":{"metrics":{"Score":{"current":[124.58157331471214]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[52]}}},"Worst":{"metrics":{"Time":{"current":[48.666666666666664]}}},"Average":{"metrics":{"Time":{"current":[25.545454545454547]}}}}},"gbemu":{"metrics":{"Score":{"current":[68.31513378892204]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[173]}}},"Worst":{"metrics":{"Time":{"current":[56.5]}}},"Average":{"metrics":{"Time":{"current":[40.111111111111114]}}}}},"gaussian-blur":{"metrics":{"Score":{"current":[191.46892046825266]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[55.99999999999999]}}},"Worst":{"metrics":{"Time":{"current":[18]}}},"Average":{"metrics":{"Time":{"current":[17.666666666666668]}}}}},"FlightPlanner":{"metrics":{"Score":{"current":[165.53214088906284]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[47]}}},"Worst":{"metrics":{"Time":{"current":[25.25]}}},"Average":{"metrics":{"Time":{"current":[23.22222222222222]}}}}},"first-inspector-code-load":{"metrics":{"Score":{"current":[106.7059895980691]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[47]}}},"Worst":{"metrics":{"Time":{"current":[49.75]}}},"Average":{"metrics":{"Time":{"current":[44]}}}}},"earley-boyer":{"metrics":{"Score":{"current":[278.27703527860416]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[27.999999999999996]}}},"Worst":{"metrics":{"Time":{"current":[16.5]}}},"Average":{"metrics":{"Time":{"current":[12.555555555555555]}}}}},"delta-blue":{"metrics":{"Score":{"current":[498.6187774938742]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[33]}}},"Worst":{"metrics":{"Time":{"current":[6.25]}}},"Average":{"metrics":{"Time":{"current":[4.888888888888889]}}}}},"date-format-xparb-SP":{"metrics":{"Score":{"current":[59.03570898758952]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[76]}}},"Worst":{"metrics":{"Time":{"current":[97.75]}}},"Average":{"metrics":{"Time":{"current":[81.77777777777777]}}}}},"date-format-tofte-SP":{"metrics":{"Score":{"current":[188.62449939045075]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[35]}}},"Worst":{"metrics":{"Time":{"current":[23.25]}}},"Average":{"metrics":{"Time":{"current":[22.88888888888889]}}}}},"crypto-sha1-SP":{"metrics":{"Score":{"current":[404.82149610447624]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[19]}}},"Worst":{"metrics":{"Time":{"current":[10.5]}}},"Average":{"metrics":{"Time":{"current":[9.444444444444445]}}}}},"crypto-md5-SP":{"metrics":{"Score":{"current":[335.952846650968]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[30]}}},"Worst":{"metrics":{"Time":{"current":[10.75]}}},"Average":{"metrics":{"Time":{"current":[10.222222222222221]}}}}},"crypto-aes-SP":{"metrics":{"Score":{"current":[241.0726337164098]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[35]}}},"Worst":{"metrics":{"Time":{"current":[17.25]}}},"Average":{"metrics":{"Time":{"current":[14.777777777777779]}}}}},"crypto":{"metrics":{"Score":{"current":[531.0285387776319]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[21]}}},"Worst":{"metrics":{"Time":{"current":[6.75]}}},"Average":{"metrics":{"Time":{"current":[5.888888888888889]}}}}},"chai-wtb":{"metrics":{"Score":{"current":[35.97162540913974]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[211]}}},"Worst":{"metrics":{"Time":{"current":[116.50000000000001]}}},"Average":{"metrics":{"Time":{"current":[109.25]}}}}},"cdjs":{"metrics":{"Score":{"current":[49.391769999605756]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[133]}}},"Worst":{"metrics":{"Time":{"current":[90]}}},"Average":{"metrics":{"Time":{"current":[86.66666666666667]}}}}},"Box2D":{"metrics":{"Score":{"current":[154.61560267713057]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[101]}}},"Worst":{"metrics":{"Time":{"current":[20.5]}}},"Average":{"metrics":{"Time":{"current":[16.333333333333332]}}}}},"Basic":{"metrics":{"Score":{"current":[83.75455487758194]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[71]}}},"Worst":{"metrics":{"Time":{"current":[57.74999999999999]}}},"Average":{"metrics":{"Time":{"current":[51.888888888888886]}}}}},"base64-SP":{"metrics":{"Score":{"current":[133.78164485232878]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[54]}}},"Worst":{"metrics":{"Time":{"current":[38.5]}}},"Average":{"metrics":{"Time":{"current":[25.11111111111111]}}}}},"Babylon":{"metrics":{"Score":{"current":[128.13747946792648]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[106]}}},"Worst":{"metrics":{"Time":{"current":[29.500000000000004]}}},"Average":{"metrics":{"Time":{"current":[19]}}}}},"async-fs":{"metrics":{"Score":{"current":[76.64171108772848]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[73]}}},"Worst":{"metrics":{"Time":{"current":[62.5]}}},"Average":{"metrics":{"Time":{"current":[60.85714285714285]}}}}},"Air":{"metrics":{"Score":{"current":[120.11913279289728]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[86]}}},"Worst":{"metrics":{"Time":{"current":[33.25]}}},"Average":{"metrics":{"Time":{"current":[25.22222222222222]}}}}},"ai-astar":{"metrics":{"Score":{"current":[247.650755729375]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[33]}}},"Worst":{"metrics":{"Time":{"current":[16.75]}}},"Average":{"metrics":{"Time":{"current":[14.88888888888889]}}}}},"3d-raytrace-SP":{"metrics":{"Score":{"current":[254.71400875908344]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[36]}}},"Worst":{"metrics":{"Time":{"current":[15.25]}}},"Average":{"metrics":{"Time":{"current":[13.777777777777779]}}}}},"3d-cube-SP":{"metrics":{"Score":{"current":[181.95645164236234]},"Time":["Geometric"]},"tests":{"First":{"metrics":{"Time":{"current":[58]}}},"Worst":{"metrics":{"Time":{"current":[20.25]}}},"Average":{"metrics":{"Time":{"current":[17.666666666666668]}}}}}}}}
+
+
