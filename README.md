@@ -34,7 +34,7 @@ From the **results** directory, run `python clean.py`. This will get rid of all 
 and all intermediate files (there shouldn't be any to begin with, but you can use this
 anytime to clean up the directory).
 
-## Sanity check that everything is working
+## Getting started
 
 Run: From the **results** directory, `python sanity.py`
 
