@@ -12,11 +12,27 @@ Our paper evaluation (Section 6) has six parts:
 6. How hard is it to integrate the verified routines into Firefox?
 
 We are able to reproduce the results from points 1-5 (the sixth is a bit more subjective).
-Note that all timing results may vary slightly, as will the counterexamples the
-solver chooses to display for buggy routines.
+Note that all timing results may vary, as will the counterexamples the solver chooses to
+display for buggy routines.
 
-## Install
-INSTRUCTIONS HERE
+## Setup
+
+1. Install virtualbox from virtualbox.org
+
+2. Unzip whatever
+
+3. Use the 'import appliance' option from the file menu in virtualbox to import
+   vera.ova. You can either accept or modify the default options. 
+
+4. Push the start button at the top of the screen to start the vm.
+
+5a. For a graphical interface, a login screen will pop up after starting the vm.
+    Login with username: vera and password: vera_user
+
+5b. For a non-graphical interface, you can connect to port 22222 on localhost: 
+    ssh -p 22222 vera@127.0.0.1 with password vera_user 
+
+6. Navigate to the ~/lejit/results directory 
 
 ## Clean the results directory
 
