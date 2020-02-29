@@ -16,20 +16,20 @@ Note that all timing results may vary slightly, as will the counterexamples the
 solver chooses to display for buggy routines.
 
 ## Install
-This is for reference setting up the vm, and should be removed probably.
-Need pdflatex and python2 !!
+INSTRUCTIONS HERE
 
 ## Clean the results directory
 
-From the **results** directory, run `python clean.py`. This will get rid of all results
+From the **results** directory, run `python2 clean.py`. This will get rid of all results
 and all intermediate files (there shouldn't be any to begin with, but you can use this
 anytime to clean up the directory).
 
 ## Getting started
 
-Make sure you are in the **results** directory!
+Make sure you are in the **results** directory! All python scripts should be run with
+python2. 
 
-Run: From the **results** directory, `python sanity.py`
+Run: From the **results** directory, `python2 sanity.py`
 
 Expected result: Two files show up, verif_sanity.txt and ff_sanity.txt.
 verif_sanity.txt should have a bunch of output followed by **1 out of 16 tests failed**.
@@ -44,7 +44,7 @@ differs from the expected output, please indicate so on HotCRP so we can quickly
 
 Make sure you are in the **results** directory!
 
-From the **results** directory, type `python repro_all.py` to reproduce all
+From the **results** directory, type `python2 repro_all.py` to reproduce all
 results in the paper.
 
 Expected time: Overnight
