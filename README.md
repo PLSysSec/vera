@@ -132,10 +132,22 @@ Run: firefox-js-tests.py
 
 Look at: firefox-js-tests.txt
 
+Compare to: 6.2's **Do the verified routines work correctly?**
+
 Firefox has 3 main test suites for Javascript and the JIT: `jstests`,
 `jsapi-tests`, and `jit-test`. The script runs all three and logs their
 results.
 
 ### (5) How do the verified routines perform in Firefox?
 
+Run: jetstream2.py
+
+Look at: `jetstream2.pdf`
+
+Compare to: 6.2's **How do the verified routines perform?**
+
+Expected time: ~30 minutes 
+
+This script executes the JetStream2 benchmark suite for both versions of firefox
+and produces a graph comparing the results. **TODO about latency test**
 
