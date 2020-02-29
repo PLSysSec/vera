@@ -15,15 +15,6 @@ We are able to reproduce the results from points 1-5 (the sixth is a bit more su
 Note that all timing results may vary slightly, as will the counterexamples the
 solver chooses to display for buggy routines.
 
-## TODOS
-
-1. make sanitycheck
-2. make clean
-3. put it all in a vm
-4. all firefox
-5. time estimates for everything
-6. re-run verification overnight for extra sanity
-
 ## Install
 This is for reference setting up the vm, and should be removed probably.
 Need pdflatex and python2 !!
@@ -35,6 +26,8 @@ and all intermediate files (there shouldn't be any to begin with, but you can us
 anytime to clean up the directory).
 
 ## Getting started
+
+Make sure you are in the **results** directory!
 
 Run: From the **results** directory, `python sanity.py`
 
@@ -48,6 +41,8 @@ This does a single run of a number of tests and verification routines. If the ou
 differs from the expected output, please indicate so on HotCRP so we can quickly fix it. 
 
 ## Generate results for the entire paper at once
+
+Make sure you are in the **results** directory!
 
 From the **results** directory, type `python repro_all.py` to reproduce all
 results in the paper.
@@ -66,9 +61,10 @@ The results will all be generated in the results directory, in the following ord
    while for the paper we ran 1,000 times per operator. We provide an optional
    way of running 1,000 quickcheck tests per operator below.
 4. Do the verified routines work correctly in Firefox?
-   TBD   
+   Compare **results/firefox-js-tests.txt** to 6.2's **Do the verified routines
+   work correctly?**.
 5. How do the verified routines perform in Firefox?
-   TBD
+   Compare **results/jetstream2.pdf** to 6.2's **How do the verified routines perform?**.
 
 Alternatively, to generate results for each claim individually, use the
 following instructions:
@@ -133,6 +129,8 @@ Run: firefox-js-tests.py
 Look at: firefox-js-tests.txt
 
 Compare to: 6.2's **Do the verified routines work correctly?**
+
+Expected time: ~30 minutes
 
 Firefox has 3 main test suites for Javascript and the JIT: `jstests`,
 `jsapi-tests`, and `jit-test`. The script runs all three and logs their
