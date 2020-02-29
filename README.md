@@ -162,6 +162,18 @@ Compare to: 6.2's **How do the verified routines perform?**
 
 Expected time: ~30 minutes 
 
-This script executes the JetStream2 benchmark suite for both versions of firefox
-and produces a graph comparing the results. **TODO about latency test**
+This script executes the JetStream2 benchmark suite for both versions of
+firefox and produces an itemized graph comparing the results. For display
+purposes, the individual benchmarks are sorted based on score. This may cause
+the order to differ slightly from the paper, because these benchmarks have a
+tendency to be noisy. On the topic of noise, any large differences in performance
+between the two should steady out on further runs.
 
+
+
+** Note: We do not reproduce the latency numbers but the graph can be built **
+
+The results of the latency test can be found in
+`~/proofmonkey-gecko-dev[-original]/testing/mozharness/build/local.json`, and
+the graph can be built by running `firefox-latency.py` in the `results`
+directory.
