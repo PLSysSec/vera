@@ -1,22 +1,24 @@
 import os
+import subprocess
 from subprocess import Popen, PIPE
 
-def pipe_out(cmd):
-    os.system(cmd + " >> firefox-js-tests")
+with open('firefox-js-tests.txt', 'w+') as file:
+    def pipe_out(cmd, err=PIPE):
+        out = subprocess.Popen(cmd.split(' '), stdout=PIPE, stderr=err)
+        file.write(out.stdout.read())
 
-def tee(s):
-    print(s)
-    pipe_out("echo \"" + s + "\"")
+    def tee(s):
+        print(s)
+        file.write(s)
 
-os.system("echo '' > firefox-js-tests.txt")
-tee("Running JSAPI Tests...")
-#pipe_out("./mach jsapik)
-pipe_out("echo foo")
-tee("Running JIT-Tests...")
-#pipe_out("./mach jit-test")
-pipe_out("echo foo")
-tee("Running JS Tests... (takes ~30min)")
-#pipe_out("./mach jstests")
-pipe_out("echo foo")
+    owd = os.getcwd()
+    os.chdir("../../proofmonkey-gecko-dev")
+    tee("Running JSAPI Tests...")
+    pipe_out("./mach jsapi-tests")
+    tee("Running JIT-Tests...")
+    pipe_out("./mach jit-test")
+    tee("Running JS Tests... (takes ~30min)\n")
+    pipe_out("./mach jstests")
 
-print("Results written to firefox-js-tests.txt")
+    os.chdir(owd)
+    print("Results written to firefox-js-tests.txt")
