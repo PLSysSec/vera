@@ -19,20 +19,18 @@ display for buggy routines.
 
 1. Install virtualbox from virtualbox.org
 
-2. Unzip whatever
-
-3. Use the 'import appliance' option from the file menu in virtualbox to import
+2. Use the 'import appliance' option from the file menu in virtualbox to import
    vera.ova. You can either accept or modify the default options. 
 
-4. Push the start button at the top of the screen to start the vm.
+3. Push the start button at the top of the screen to start the vm.
 
-5a. For a graphical interface, a login screen will pop up after starting the vm.
+4a. For a graphical interface, a login screen will pop up after starting the vm.
     Login with username: vera and password: vera_user
 
-5b. For a non-graphical interface, you can connect to port 22222 on localhost: 
+4b. For a non-graphical interface, you can connect to port 22222 on localhost: 
     ssh -p 22222 vera@127.0.0.1 with password vera_user 
 
-6. Navigate to the ~/lejit/results directory 
+5. Navigate to the ~/lejit/results directory 
 
 ## Clean the results directory
 
@@ -47,11 +45,10 @@ python2.
 
 Run: From the **results** directory, `python2 sanity.py`
 
-Expected result: Two files show up, verify_sanity.txt and ff_sanity.txt.
-verify_sanity.txt should have a bunch of output followed by **1 out of 16 tests failed**.
-ff_sanity.txt should have....
-
 Expected time: under a minute
+
+Expected result: verify_sanity.txt has a bunch of output followed by
+**1 out of 16 tests failed**.
 
 This does a single run of a number of tests and verification routines. If the output
 differs from the expected output, please indicate so on HotCRP so we can quickly fix it. 
@@ -81,6 +78,9 @@ The results will all be generated in the results directory, in the following ord
    work correctly?**.
 5. How do the verified routines perform in Firefox?
    Compare **results/jetstream2.pdf** to 6.2's **How do the verified routines perform?**.
+   Note that we do NOT re-run the latency experiments for 6.2, since these are graphical
+   tests and our artifact is a virtual machine with limited graphics capabilities.
+   You can re-generate the graphs from our original data, though (see point 5 below).
 
 Alternatively, to generate results for each claim individually, use the
 following instructions:
@@ -163,13 +163,11 @@ Compare to: 6.2's **How do the verified routines perform?**
 Expected time: ~30 minutes 
 
 This script executes the JetStream2 benchmark suite for both versions of
-firefox and produces an itemized graph comparing the results. For display
+Firefox and produces an itemized graph comparing the results. For display
 purposes, the individual benchmarks are sorted based on score. This may cause
 the order to differ slightly from the paper, because these benchmarks have a
 tendency to be noisy. On the topic of noise, any large differences in performance
 between the two should steady out on further runs.
-
-
 
 ** Note: We do not reproduce the latency numbers but the graph can be built **
 
