@@ -21,22 +21,22 @@ benchTestPropertyQ name prop nr = benchTestProperty name $ Q.withMaxSuccess nr p
 
 jsTests100 :: BenchTest
 jsTests100 = benchTestGroup "JS_Fast" [
-    benchTestGroup "Arithmetic binary ops" [ jsBinOpTest JSAdd 1
-                                           , jsBinOpTest JSSub 1
-                                           , jsBinOpTest JSMul 1
-                                           , jsBinOpTest JSMin 1
-                                           , jsBinOpTest JSMax 1 ]
- ,  benchTestGroup "Bitwise ops" [ jsBitI32Test JSAnd 1
-                                 , jsBitI32Test JSOr 1
-                                 , jsBitI32Test JSXor 1
-                                 , jsBitI32Test JSShl 1
-                                 , jsShrTest 1
-                                 , jsUshrTest 1
-                                 , jsNotTest 1 ]
-  , benchTestGroup "Unary ops" [ jsUniOpTest JSAbs 1
-                               , jsUniOpTest JSFloor 1
-                               , jsUniOpTest JSCeil 1
-                               , jsUniOpTest JSSign 1 ]
+    benchTestGroup "Arithmetic binary ops" [ jsBinOpTest JSAdd 100
+                                           , jsBinOpTest JSSub 100
+                                           , jsBinOpTest JSMul 100
+                                           , jsBinOpTest JSMin 100
+                                           , jsBinOpTest JSMax 100 ]
+ ,  benchTestGroup "Bitwise ops" [ jsBitI32Test JSAnd 100
+                                 , jsBitI32Test JSOr 100
+                                 , jsBitI32Test JSXor 100
+                                 , jsBitI32Test JSShl 100
+                                 , jsShrTest 100
+                                 , jsUshrTest 100
+                                 , jsNotTest 100 ]
+  , benchTestGroup "Unary ops" [ jsUniOpTest JSAbs 100
+                               , jsUniOpTest JSFloor 100
+                               , jsUniOpTest JSCeil 100
+                               , jsUniOpTest JSSign 100 ]
   ]
 
 jsTests1000 :: BenchTest
