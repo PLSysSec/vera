@@ -15,6 +15,9 @@ We are able to reproduce the results from points 1-5 (the sixth is a bit more su
 Note that all timing results may vary, as will the counterexamples the solver chooses to
 display for buggy routines.
 
+**WARNING: Expect to need around 110 GB of free disk space to run this evaluation.**
+We're sorry, it contains multiple versions of the Firefox browser.
+
 ## Setup
 
 1. Install virtualbox from virtualbox.org
