@@ -47,7 +47,7 @@ Make sure you are in the **results** directory!
 From the **results** directory, type `python repro_all.py` to reproduce all
 results in the paper.
 
-Expected time: XXXX
+Expected time: Overnight
 
 The results will all be generated in the results directory, in the following order:
 1. Can VeRA prove Firefox range analysis correctness?
