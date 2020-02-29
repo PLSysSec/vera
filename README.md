@@ -128,6 +128,14 @@ produces new random tests.
 
 ### (4) Do the verified routines work correctly in Firefox?
 
+Run: firefox-js-tests.py
+
+Look at: firefox-js-tests.txt
+
+Firefox has 3 main test suites for Javascript and the JIT: `jstests`,
+`jsapi-tests`, and `jit-test`. The script runs all three and logs their
+results.
+
 ### (5) How do the verified routines perform in Firefox?
 
 
