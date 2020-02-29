@@ -31,8 +31,8 @@ python2.
 
 Run: From the **results** directory, `python2 sanity.py`
 
-Expected result: Two files show up, verif_sanity.txt and ff_sanity.txt.
-verif_sanity.txt should have a bunch of output followed by **1 out of 16 tests failed**.
+Expected result: Two files show up, verify_sanity.txt and ff_sanity.txt.
+verify_sanity.txt should have a bunch of output followed by **1 out of 16 tests failed**.
 ff_sanity.txt should have....
 
 Expected time: under a minute
