@@ -21,7 +21,7 @@ function declareFFGlobals(obj) {
 let g = newGlobal();
 declareFFGlobals(g);
 
-let driver = './watch-cli.js';
+let driver = './cli.js';
 evalcx(`
 dumpJSONResults=true;
 ` + read(driver), g);
