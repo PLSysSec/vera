@@ -1,4 +1,39 @@
-# VeRA Artifact Evaluation
+
+# VeRA code 
+
+## Install dependencies
+
+- z3
+- The Haskell tool [Stack](https://docs.haskellstack.org/en/stable/README/)
+
+## Build project
+
+One you have all the dependencies installed, you can build the project:
+```
+stack build
+```
+
+## Run verification
+
+To try to verify all the range analysis routines, run:
+```
+stack test --ta '-p Verification'
+```
+
+This will take a long time (overnight-ish)!
+
+## Code map
+
+Source:
+-- ActiveCode: Generate QuickCheck tests for C++/JS semantics
+-- DSL: Implementation of C++ and JavaScript semantics
+-- Generate: Generate SMT from C++
+-- IonMonkeyGenerated:
+---- code.cpp: Firefox's range analysis routines in VeRA C++
+---- Operations: Connecting the VeRA C++ implementations to Haskell so we can verify them
+---- Verify: Verification code
+
+# VeRA Artifact Evaluation (instructions from the AE submission)
 
 Hello, and thanks for evaluating this artifact!
 
