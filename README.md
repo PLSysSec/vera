@@ -2,7 +2,10 @@
 # VeRA code 
 
 Welcome to the submission version of the VeRA code/artifact!
+
 Paper is [here](https://www.cs.utexas.edu/~hovav/dist/vera.pdf)
+
+Artifact will be here once it's posted
 
 ## Install dependencies
 
