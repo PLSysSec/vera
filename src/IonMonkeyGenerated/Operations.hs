@@ -1,35 +1,42 @@
 {-# LANGUAGE QuasiQuotes #-}
-module IonMonkeyGenerated.Operations ( add -- FRACT
-                                     , sub -- FRACT
-                                     , mul -- FRACT
-                                     , and -- FRACT
-                                     , or -- FRACT
-                                     , xor -- FRACT
-                                     , not -- FRACT
-                                     , lsh -- FRACT
-                                     , rsh -- FRACT
-                                     , ursh -- needs assumption, FRACT
-                                     , lsh' -- FRACT
-                                     , rsh' -- FRACT
-                                     , ursh' -- needs assumption, FRACT
-                                     , abs -- FRACT
-                                     , min -- FRACT
-                                     , max -- FRACT
-                                     , floor -- FRACT. WHY DIDNT THIS VERIFY BEFORE
-                                     , ceil -- TEST
-                                     , sign -- done
-                                     , intersect -- ish
+module IonMonkeyGenerated.Operations ( add
+                                     , sub
+                                     , mul
+                                     , and
+                                     , or
+                                     , xor
+                                     , not
+                                     , lsh
+                                     , rsh
+                                     , ursh
+                                     , lsh'
+                                     , rsh'
+                                     , ursh'
+                                     , abs
+                                     , min
+                                     , max
+                                     , floor
+                                     , ceil
+                                     , sign
+                                     , intersect
                                      , brokenIntersect
                                      , union
                                      ) where
 import           Control.Monad
-import           DSL.Typed                  (Type (..))
 import           Data.List                  (find)
+import           DSL.Typed                  (Type (..))
 import           Generate.Lang
 import           Generate.QQ
 import           IonMonkeyGenerated.Helpers
 import           Prelude                    hiding (abs, and, div, floor, max,
                                              min, mod, not, or)
+
+{-|
+
+This just hooks up Haskell references to all RA functions with their CPP definitions
+in code.cpp
+
+-}
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#744
 add :: FunctionDef
@@ -51,8 +58,7 @@ or = fn "or_"
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#893
 xor :: FunctionDef
 xor = fn "xor_"
-  
--- Two trys (neg . not)
+
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#955
 not :: FunctionDef
 not =  fn "not_"
@@ -63,7 +69,7 @@ mul = fn "mul"
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#999
 lsh :: FunctionDef
-lsh = fn "lsh" 
+lsh = fn "lsh"
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1016
 rsh :: FunctionDef
@@ -71,7 +77,7 @@ rsh = fn "rsh"
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1023
 ursh :: FunctionDef
-ursh = fn "ursh" 
+ursh = fn "ursh"
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1042
 lsh' :: FunctionDef
@@ -87,9 +93,8 @@ ursh' = fn "ursh_p"
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1089
 abs :: FunctionDef
-abs = fn "abs" 
+abs = fn "abs"
 
--- Nan thing
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1104
 min :: FunctionDef
 min = fn "min"
@@ -98,16 +103,14 @@ min = fn "min"
 max :: FunctionDef
 max = fn "max"
 
--- Add fractional part
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1142
 floor :: FunctionDef
-floor = fn "floor" 
+floor = fn "floor"
 
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1166
 ceil :: FunctionDef
 ceil =  fn "ceil"
-  
--- Not doing nan thing
+
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#1184
 sign :: FunctionDef
 sign = fn "sign"
@@ -116,6 +119,7 @@ sign = fn "sign"
 intersect :: FunctionDef
 intersect = fn "intersect"
 
+-- GROSS! Inline DSL
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.cpp#485
 brokenIntersect :: FunctionDef
 brokenIntersect =

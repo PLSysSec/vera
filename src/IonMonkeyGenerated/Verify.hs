@@ -23,21 +23,21 @@ wellFormedRange =
              , version_ $ v "rvf"
              , assert_ $ not_ (v "rvf" .->. "isEmpty")
 
-             , assert_ $ (v "rvf" .->. "lower") .=>. jsIntMin -- done
-             , assert_ $ (v "rvf" .->. "lower") .<=. jsIntMax -- done
-             , assert_ $ (v "rvf" .->. "upper") .=>. jsIntMin -- done
-             , assert_ $ (v "rvf" .->. "upper") .<=. jsIntMax -- done
+             , assert_ $ (v "rvf" .->. "lower") .=>. jsIntMin
+             , assert_ $ (v "rvf" .->. "lower") .<=. jsIntMax
+             , assert_ $ (v "rvf" .->. "upper") .=>. jsIntMin
+             , assert_ $ (v "rvf" .->. "upper") .<=. jsIntMax
              , assert_ $ (v "rvf" .->. "upper") .=>. (v "rvf" .->. "lower")
 
-             , implies_ (not_ $ v "rvf" .->. "hasInt32LowerBound") (v "rvf" .->. "lower" .==. jsIntMin) -- done
-             , implies_ (not_ $ v "rvf" .->. "hasInt32UpperBound") (v "rvf" .->. "upper" .==. jsIntMax) -- done
+             , implies_ (not_ $ v "rvf" .->. "hasInt32LowerBound") (v "rvf" .->. "lower" .==. jsIntMin)
+             , implies_ (not_ $ v "rvf" .->. "hasInt32UpperBound") (v "rvf" .->. "upper" .==. jsIntMax)
 
              , implies_ (v "rvf" .->. "canBeNegativeZero") (call "contains" [v "rvf", n Signed 0])
-               -- cant do
+
 
              , assert_ $ (v "rvf" .->. "maxExponent" .==. includesInfinityAndNan) .||. (v "rvf" .->. "maxExponent" .==. includesInfinity) .||. (v "rvf" .->. "maxExponent" .<=. maxFiniteExponent)
 
-             , implies_ (v "rvf" .->. "hasInt32LowerBound" .&&. (v "rvf" .->. "hasInt32UpperBound")) (v "rvf" .->. "maxExponent" .==. (fpExp (cast (max_ (abs_ $ v "rvf" .->. "lower") (abs_ $ v "rvf" .->. "upper")) Double))) -- cant do
+             , implies_ (v "rvf" .->. "hasInt32LowerBound" .&&. (v "rvf" .->. "hasInt32UpperBound")) (v "rvf" .->. "maxExponent" .==. (fpExp (cast (max_ (abs_ $ v "rvf" .->. "lower") (abs_ $ v "rvf" .->. "upper")) Double)))
 
              , implies_ (v "rvf" .->. "hasInt32LowerBound") (v "rvf" .->. "maxExponent" .=>. (fpExp (cast (abs_ $ v "rvf" .->. "lower") Double)))
 
@@ -71,6 +71,7 @@ fInRange =
 
                -- this is not asserting that the actual exponent bits of the
                -- number are under 1023
+               -- it's just float well-formed-ness (no bogus numbers)
              , assert_ $ (isInf $ v "fval") .||. (isNan $ v "fval") .||. (fpExp (v "fval") .<=. maxFiniteExponent)
              , implies_ ((v "fval" .<=. d Double 1) .&&. (v "fval" .=>. d Double (-1))) (fpExp (v "fval") .==. n Unsigned16 0)
 
@@ -635,7 +636,6 @@ defineAll op = do
   define verifyExp
   define canBeInfiniteOrNan
   define setLowerInit
-  define optimize
   define setUpperInit
   define range3
   define range6

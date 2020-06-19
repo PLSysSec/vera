@@ -9,7 +9,6 @@ import           Generate.Lang
 import           Generate.SMTGen
 import           Generate.State
 import           GenIonMonkey
-import           IonMonkeyGenerated.Bugs
 import           IonMonkeyGenerated.Helpers
 import           IonMonkeyGenerated.Objects
 import           IonMonkeyGenerated.Operations
@@ -29,5 +28,4 @@ sanityCheck = benchTestGroup "Sanity" [ signTests
 
 brokenCeilTest :: BenchTest
 brokenCeilTest = makeTest "ceil_sanity" $ testNegZ $ Unary "ceil" ceil jsCeil
-  where makeTest str act = benchTestCase str $ evalCodegen Nothing act
-
+    where makeTest str act = benchTestCase str $ evalCodegen Nothing act

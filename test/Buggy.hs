@@ -24,4 +24,4 @@ brokenIntersectTest = benchTestCase "Broken_intersect" $ evalCodegen Nothing $ t
 
 brokenCeilTest :: BenchTest
 brokenCeilTest = makeTest "Broken_ceil" $ testNegZ $ Unary "ceil" ceil jsCeil
-  where makeTest str act = benchTestCase str $ evalCodegen Nothing act
+    where makeTest str act = benchTestCase str $ evalCodegen Nothing act

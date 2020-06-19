@@ -9,7 +9,6 @@ import           DSL.Typed                     (Type (..))
 import           Generate.Lang
 import           Generate.SMTGen
 import           Generate.State
-import           IonMonkeyGenerated.Bugs
 import           IonMonkeyGenerated.Helpers
 import           IonMonkeyGenerated.Objects
 import           IonMonkeyGenerated.Operations
@@ -21,10 +20,7 @@ import           Utils
 
 genIonMonkeyTests :: BenchTest
 genIonMonkeyTests = benchTestGroup "Verification"
-                    [ -- unionTest
-                    -- , intersectTest
-                    -- , brokenIntersectTest
-                     addTests
+                    [ addTests
                     , subTests
                     , andTests
                     , orTests
@@ -112,23 +108,4 @@ signTests :: BenchTest
 signTests = mkFloatTests "XX Sign" "XXX Sign" $ Unary "sign" sign jsSign
 
 
--- Union and intersection
-
--- oldBugTests :: BenchTest
--- oldBugTests = benchTestGroup "Old bugs" [ badModTest
---                                         , goodModTest
---                                         ]
-
--- unionIntersectTest :: BenchTest
--- unionIntersectTest = benchTestCase "union and intersection" $ evalCodegen Nothing $ verifyMetaUnion
-
--- Old bugs
-
--- badModTest :: BenchTest
--- badModTest = benchTestCase "badMod32" $ evalCodegen Nothing $ verifyFpFunction "badMod32" jsRem [badMod32, newInt32Range]
-
--- goodModTest :: BenchTest
--- goodModTest = benchTestCase "goodMod32" $ evalCodegen Nothing $ verifyFpFunction "goodMod32" jsRem [goodMod32, newInt32Range]
-
--- FP
 

@@ -15,11 +15,7 @@ newInt32InputRange =
 
 newFloatInputRange :: FunctionDef
 newFloatInputRange =
-  -- // To facilitate this trick, we maintain the invariants that:
-  -- // 1) hasInt32LowerBound_ == false implies lower_ == JSVAL_INT_MIN
-  -- // 2) hasInt32UpperBound_ == false implies upper_ == JSVAL_INT_MAX
-  let body = [ declare (c "range") "rvfl"
-             ]
+  let body = [ declare (c "range") "rvfl" ]
   in Function "newFloatInputRange" (c "range") [] body
 
 -- | The IonMonkey range object

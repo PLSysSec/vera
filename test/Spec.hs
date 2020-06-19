@@ -1,7 +1,6 @@
 import           BenchUtils
 import           Buggy
 import           Cpp
-import           GenHelpers
 import           GenIonMonkey
 import           JavaScript
 import           Lang

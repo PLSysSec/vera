@@ -8,6 +8,14 @@ import           Generate.QQ
 import           Generate.SMTAST
 import           Generate.State
 
+{-|
+
+This file is here because we used to do all DSL-writing as EDSL-writing before
+John wrote the parser (!!!). The BrokenIntersect function is still expressed in
+the EDSL, though, which is why I haven't eliminated this file.
+
+-}
+
 p :: Program
 p = [progFile|src/IonMonkeyGenerated/code.cpp|]
 
@@ -31,29 +39,6 @@ range6 = fn "Range6"
 -- | https://searchfox.org/mozilla-central/source/js/src/jit/RangeAnalysis.h#394
 newInt32Range :: FunctionDef
 newInt32Range = fn "newInt32Range"
-
-optimize :: FunctionDef
-optimize =
-  let args = [ ("opt_range", c "range") ]
-      body = [ declare (c "range") "optrv"
-             , v "optrv" `assign` v "opt_range"
-             , declare (t Unsigned16) "newExponent"
-             , v "newExponent" `assign` n Unsigned16 0
-
-             , if_ (call "hasInt32Bounds" [v "opt_range"])
-               [v "newExponent" `assign` (call "exponentImpliedByInt32Bounds" [v "opt_range"])
-               , if_ (v "newExponent" .<. (v "opt_range" .->. "maxExponent"))
-                 [v "optrv" .->. "maxExponent" `assign` v "newExponent" ] []
-               , if_ ((v "opt_range" .->. "canHaveFractionalPart") .&&. ((v "opt_range" .->. "lower") .==. (v "opt_range" .->. "upper")))
-                 [v "optrv" .->. "canHaveFractionalPart" `assign` excludesFractionalParts] []
-               ] []
-
-             , if_ (v "opt_range" .->. "canBeNegativeZero" .&&. (not_ $ call "canBeZero" [v "opt_range"]))
-               [v "optrv" .->. "canBeNegativeZero" `assign` excludesNegativeZero] []
-
-             , return_ $ v "optrv"
-             ]
-  in Function "optimize" (c "range") args body
 
 newUInt32Range :: FunctionDef
 newUInt32Range = fn "newUInt32Range"
