@@ -63,9 +63,12 @@ import           Data.Char                  (digitToInt)
 import           Data.List                  (foldl')
 import           Data.List.Split
 import qualified Data.Map.Strict            as M
-import           Data.Maybe                 (catMaybes)
+import           Data.Maybe                 (catMaybes, isJust)
 import           DSL.Z3Wrapper
 import qualified DSL.Z3Wrapper              as Z3
+import           System.Environment         (lookupEnv)
+import           System.Posix.Temp          (mkstemps)
+import           System.IO                  (hPutStrLn, hClose, hFlush)
 import           Prelude                    hiding (exp, exponent, map, max,
                                              min, not)
 import qualified Z3.Monad                   as Z
@@ -120,6 +123,23 @@ runVerif _mTimeout (Verif act) =
   -- Z.evalZ3 $ runStateT act emptyVerifState
   Z.evalZ3With Nothing (Z.opt "timeout" (1200000 :: Int)) $ runStateT act emptyVerifState
 
+shouldDumpSMT :: IO Bool
+shouldDumpSMT = isJust `liftM` lookupEnv "DUMP_SMT"
+
+dumpSMT :: Verif ()
+dumpSMT = do
+  -- liftZ3 $ Z.setASTPrintMode Z.Z3_PRINT_SMTLIB_FULL
+  liftZ3 $ Z.setASTPrintMode Z.Z3_PRINT_SMTLIB2_COMPLIANT
+  str <- liftZ3 $ Z.solverToString
+  liftIO $ do
+    (_, fh) <- mkstemps "/tmp/vera" ".smtlib"
+    hPutStrLn fh str
+    hPutStrLn fh "(check-sat)"
+    hFlush fh
+    hClose fh
+
+  where liftZ3 = Verif . lift
+
 evalVerif :: Maybe Integer -> Verif a -> IO a
 evalVerif mt act = fst <$> runVerif mt act
 
@@ -128,18 +148,21 @@ execVerif mt act = snd <$> runVerif mt act
 
 runSolver :: Verif SMTResult
 runSolver = do
-  z3result <- Z.solverCheck
-  result <- case z3result of
-    Z.Sat -> do
-      model <- Z.solverGetModel
-      strModel <- Z.modelToString model
-      intModel <- liftIO $ getIntModel strModel
-      return $ SolverSat intModel
-    Z.Unsat -> return SolverUnsat
-    _ -> return SolverFailed
-  s0 <- get
-  put $ s0 { solverResult = result }
-  return result
+  dump <- liftIO $ shouldDumpSMT
+  if dump
+    then dumpSMT >> return SolverFailed
+    else do z3result <- Z.solverCheck
+            result <- case z3result of
+              Z.Sat -> do
+                model <- Z.solverGetModel
+                strModel <- Z.modelToString model
+                intModel <- liftIO $ getIntModel strModel
+                return $ SolverSat intModel
+              Z.Unsat -> return SolverUnsat
+              _ -> return SolverFailed
+            s0 <- get
+            put $ s0 { solverResult = result }
+            return result
 
 
 getIntModel :: String -> IO (M.Map String Double)
