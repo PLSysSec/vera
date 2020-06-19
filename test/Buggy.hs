@@ -8,7 +8,6 @@ import           DSL.Typed                     (Type (..))
 import           Generate.Lang
 import           Generate.SMTGen
 import           Generate.State
-import           IonMonkeyGenerated.Bugs
 import           IonMonkeyGenerated.Helpers
 import           IonMonkeyGenerated.Objects
 import           IonMonkeyGenerated.Operations
