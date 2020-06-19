@@ -31,13 +31,13 @@ This will take a long time (overnight-ish)!
 ## Code map
 
 Source:
--- ActiveCode: Generate QuickCheck tests for C++/JS semantics
--- DSL: Implementation of C++ and JavaScript semantics
--- Generate: Generate SMT from C++
--- IonMonkeyGenerated:
----- code.cpp: Firefox's range analysis routines in VeRA C++
----- Operations: Connecting the VeRA C++ implementations to Haskell so we can verify them
----- Verify: Verification code
+- ActiveCode: Generate QuickCheck tests for C++/JS semantics
+- DSL: Implementation of C++ and JavaScript semantics
+- Generate: Generate SMT from C++
+- IonMonkeyGenerated:
+  - code.cpp: Firefox's range analysis routines in VeRA C++
+  - Operations: Connecting the VeRA C++ implementations to Haskell so we can verify them
+  - Verify: Verification code
 
 # VeRA Artifact Evaluation (instructions from the AE submission)
 
