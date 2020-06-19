@@ -1,6 +1,9 @@
 
 # VeRA code 
 
+Welcome to the submission version of the VeRA code/artifact!
+Paper is [here](https://www.cs.utexas.edu/~hovav/dist/vera.pdf)
+
 ## Install dependencies
 
 - z3
